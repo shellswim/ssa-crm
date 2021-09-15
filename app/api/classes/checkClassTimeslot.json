@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "instructor"
+      },
+      {
+        "type": "text",
+        "name": "day"
+      },
+      {
+        "type": "text",
+        "name": "starttimedecimal"
+      },
+      {
+        "type": "text",
+        "name": "endtimedecimal"
+      },
+      {
+        "type": "text",
+        "name": "classid"
+      },
+      {
+        "type": "text",
+        "name": "isactive"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "",
+      "module": "core",
+      "action": "condition",
+      "options": {
+        "if": "{{$_GET.isactive == true}}",
+        "then": {
+          "steps": {
+            "name": "classTSAvailability",
+            "module": "dbupdater",
+            "action": "custom",
+            "options": {
+              "connection": "db",
+              "sql": {
+                "query": "SELECT\n    c.*,\n    d.name as dayName,\n    CONCAT_WS(' ', i.firstName, CONCAT(LEFT(i.lastName, 1), '.')) AS instructorName,\n    cl.name AS levelName\nFROM\n    classes c JOIN\n    staff i ON c.instructor = i.id JOIN\n    days d ON c.day = d.id JOIN\n    classLevels cl ON c.classLevel = cl.id\nWHERE\n    c.day = :P1 AND\n    c.instructor = :P2 AND\n    ((c.startTimeDecimal > :P3 AND c.startTimeDecimal < :P4) OR (c.startTimeDecimal = :P3 AND c.endTimeDecimal = :P4) OR (endTimeDecimal > :P3 AND endTimeDecimal < :P4)) AND\n    c.id <> :P5 AND\n    c.isactive = 1",
+                "params": [
+                  {
+                    "name": ":P1",
+                    "value": "{{$_GET.day}}",
+                    "test": "3"
+                  },
+                  {
+                    "name": ":P2",
+                    "value": "{{$_GET.instructor}}",
+                    "test": "10"
+                  },
+                  {
+                    "name": ":P3",
+                    "value": "{{$_GET.starttimedecimal}}",
+                    "test": "16.5"
+                  },
+                  {
+                    "name": ":P4",
+                    "value": "{{$_GET.endtimedecimal}}",
+                    "test": "17"
+                  },
+                  {
+                    "name": ":P5",
+                    "value": "{{$_GET.classid}}",
+                    "test": "1"
+                  }
+                ]
+              }
+            },
+            "output": true,
+            "meta": [
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "endTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "isactive",
+                "type": "number"
+              },
+              {
+                "name": "instructor",
+                "type": "number"
+              },
+              {
+                "name": "classLevel",
+                "type": "number"
+              },
+              {
+                "name": "day",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "endTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "dayName",
+                "type": "text"
+              },
+              {
+                "name": "instructorName",
+                "type": "text"
+              },
+              {
+                "name": "levelName",
+                "type": "text"
+              }
+            ],
+            "outputType": "array"
+          }
+        }
+      },
+      "outputType": "boolean"
+    }
+  }
+}

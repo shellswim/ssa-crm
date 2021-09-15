@@ -1,0 +1,254 @@
+<!-- Wappler include head-page="layouts/standardHeaderFooter" fontawesome_4="local" id="families" fontawesome_5="cdn" dmx-on:load="run([{wait:{delay:300}},{run:{action:`queryManager.removeAll()`}},{run:{action:`queryManager.set(\'limit\',10)`}},{run:{action:`queryManager.set(\'sort\',\'fullname\')`}},{run:{action:`queryManager.set(\'dir\',\'asc\')`}},{run:{action:`queryManager.set(\'offset\',0)`}}])" components="{dmxStateManagement:{},dmxDatastore:{},dmxBootstrap4Modal:{},dmxBootstrap4Collapse:{},dmxBootstrap4PagingGenerator:{},dmxValidator:{},dmxBootstrap4TableGenerator:{}}" is="dmx-app" appconnect="local" jquery_35="cdn" bootstrap5="local" -->
+<dmx-session-manager id="ss_FamilyFilters"></dmx-session-manager>
+<dmx-preloader id="preloader1" class="absolute-preloader" spinner="circle" color="#ed145b">
+</dmx-preloader>
+
+<meta name="ac:route" content="/families">
+<dmx-datastore id="guardianTempStore"></dmx-datastore>
+<div class="modal fade" id="newGuardianModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="run([{run:{action:`newGuardian.reset()`}},{run:{action:`datastore1.clear()`,name:'ClearDatastore'}},{run:{action:`newGuardianModal.newGuardian.var1.setValue(1)`,name:'SetVar'}}])">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex w-100 align-items-center justify-content-start flex-row">
+                    <h3 class="modal-title ms-2 text-start">Create a New Family.</h3>
+                </div>
+
+
+
+            </div>
+            <div class="modal-body">
+                <div class="row justify-content-md-between align-items-md-start">
+                    <div class="col-3 border-end w-auto">
+                        <div class="d-flex flex-column justify-content-center align-items-stretch">
+                            <ul class="list-group mh-100 list-group-md-horizontal">
+                                <li class="list-group-item" dmx-class:active="newGuardian.var1.value === 1">Family Address
+                                </li>
+                                <li class="list-group-item" dmx-class:active="newGuardian.var1.value === 2">Guardians</li>
+                            </ul>
+
+                        </div>
+                    </div>
+                    <div class="col">
+                        <form id="newGuardian" method="post" is="dmx-serverconnect-form" action="api/createFamilyWithGuardians">
+                            <dmx-value id="var1" dmx-bind:value="1"></dmx-value>
+
+                            <div class="row gx-3" dmx-hide="var1.value != 1" id="familyAddress">
+
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <h6>Add Families Main Address</h6>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <input id="street1" name="street1" type="text" class="form-control" placeholder="Street Address" required="">
+                                        </div>
+                                        <div class="col-12 mb-2">
+                                            <input id="street2" name="street2" type="text" class="form-control" placeholder="Street Address" data-msg-required="">
+                                        </div>
+                                        <div class="col-md-6 col-8">
+                                            <input id="suburb" name="suburb" type="text" class="form-control" placeholder="Suburb" required="">
+                                        </div>
+                                        <div class="col-md-3 col-4">
+                                            <input id="state" name="state" class="form-control" placeholder="State" data-msg-required="" required="">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex w-100 mt-3 pt-2 border-top justify-content-end">
+                                        <button id="next" class="btn btn-outline-primary" dmx-on:click="newGuardian.var1.setValue(newGuardian.var1.value +1)" dmx-bind:disabled="newGuardian.var1.value == 2">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row" dmx-hide="var1.value != 2" id="addGuardians">
+
+
+                                <div class="col-12">
+                                    <h6>Create Guardians</h6>
+                                </div>
+                                <div class="col-12">
+                                    <div class="row gx-3 w-100 mb-2 row-cols-12">
+                                        <div class="col">
+                                            <input id="guardianFirstName" name="firstName" type="text" class="form-control" placeholder="First Name" data-msg-required="" required="" dmx-on:blur="guardianFirstName.validate()">
+                                        </div>
+                                        <div class="col">
+                                            <input id="guardianLastName" name="lastName" type="text" class="form-control" placeholder="Last Name" data-msg-required="" required="" dmx-on:blur="guardianLastName.validate()">
+                                        </div>
+                                        <div class="col-4">
+                                            <input id="guardianPhone" name="guardianPhone" type="tel" class="form-control" placeholder="Phone" data-msg-required="" dmx-on:blur="guardianPhone.validate()" required="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="row gx-3 w-100 mb-2">
+
+
+
+                                        <div class="col">
+
+
+                                            <input id="guardianEmail" name="guardianEmail" type="email" class="form-control" placeholder="Email" data-msg-email="" data-rule-email="" data-msg-pattern="" dmx-on:keypress="guardianEmail.validate()">
+                                        </div>
+                                        <div class="col">
+                                            <select id="relationshipSelect" class="form-control" dmx-bind:options="getRelationships.data.query" optiontext="type" optionvalue="id" name="Relationship" data-msg-required="" required="">
+                                                <option value="">Relationship</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col d-flex justify-content-end"><button id="btn2" class="btn btn-primary" dmx-on:click="run({condition:{if:`newGuardianModal.newGuardian.guardianFirstName.invalid || newGuardianModal.newGuardian.guardianLastName.invalid || newGuardianModal.newGuardian.guardianPhone.invalid || newGuardianModal.newGuardian.guardianEmail.invalid`,then:{steps:[{run:{action:`newGuardian.guardianFirstName.validate();newGuardian.guardianLastName.validate();newGuardian.guardianPhone.validate();newGuardian.guardianEmail.validate();newGuardian.relationshipSelect.validate()`}},{'bootbox.alert':{title:'Oops... Something went wrong.',message:'Please ensure required fields are filled out.',buttons:{ok:{className:'btn-warning'}}}}]},else:{steps:[{run:{action:`arr1.addUniq(({\'firstName\':guardianFirstName.value, \'lastName\':guardianLastName.value, \'phone\':guardianPhone.value, \'email\': guardianEmail.value, \'relationship\': relationshipSelect.value, \'relationshipDisplay\': getRelationships.data.query[relationshipSelect.selectedIndex - 1].type}))`,disabled:true}},{run:{action:`guardianTempStore.insert({firstName: newGuardianModal.newGuardian.guardianFirstName.value, lastName: newGuardianModal.newGuardian.guardianLastName.value, email: newGuardianModal.newGuardian.guardianEmail.value, phone: newGuardianModal.newGuardian.guardianPhone.value, relationship: newGuardianModal.newGuardian.relationshipSelect.value})`}},{run:{action:`newGuardian.reset()`}}]}}})">
+                                                <font face="Font Awesome 5 Free"><i class="fas fa-plus-circle me-1"></i>Add</font>
+                                            </button></div>
+                                    </div>
+                                </div>
+                                <div class="col-12" id="guardianTable">
+
+                                    <div class="table-responsive mt-4 pt-1">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>First name</th>
+                                                    <th>Last name</th>
+                                                    <th>Phone</th>
+                                                    <th>Email</th>
+                                                    <th>Relationship</th>
+                                                    <th>
+
+                                                        <i class="person_crop_circle_badge_xmark"></i>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="guardianTempStore.data" id="tableRepeat3">
+                                                <tr>
+                                                    <td dmx-text="$id"></td>
+                                                    <td dmx-text="firstName"></td>
+                                                    <td dmx-text="lastName"></td>
+                                                    <td dmx-text="phone"></td>
+                                                    <td dmx-text="email"></td>
+                                                    <td dmx-text="relationship+': '+getRelationships.data.query[relationship - 1].type"></td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center flex-row justify-content-end">
+                                                            <button id="btn3" class="btn text-dark border btn-sm" dmx-on:click="guardianTempStore.delete({$id: $id})"><i class="fa fa-times fa-fw"></i></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col" id="nextPrevButtons">
+                                    <div class="d-flex w-100 justify-content-between mt-3 pt-2 border-top">
+                                        <button id="prev1" class="btn btn-outline-secondary" dmx-on:click="newGuardian.var1.setValue(newGuardian.var1.value - 1)" dmx-bind:disabled="newGuardian.var1.value == 1">Back</button>
+                                        <button id="next1" class="btn btn-outline-primary" dmx-on:click="newGuardian.var1.setValue(newGuardian.var1.value +1)" dmx-bind:disabled="newGuardian.var1.value == 2">Next</button>
+                                    </div>
+                                </div>
+                                <div class="col d-none" id="hiddenGuardianInputs">
+                                    <div id="repeatGuardianInputs" is="dmx-repeat" dmx-bind:repeat="datastore1.data">
+
+                                        <input type="hidden" class="form-control" id="inp_firstName" name="firstName" dmx-bind:value="firstName" dmx-bind:name="record[{{$index}}][firstName]" aria-describedby="inp_firstName_help" placeholder="Enter First name">
+
+                                        <input type="hidden" class="form-control" id="inp_lastName" name="lastName" dmx-bind:value="lastName" dmx-bind:name="record[{{$index}}][lastName]" aria-describedby="inp_lastName_help" placeholder="Enter Last name">
+
+                                        <input type="hidden" class="form-control" id="inp_phone" name="phone" dmx-bind:value="phone" dmx-bind:name="record[{{$index}}][phone]" aria-describedby="inp_phone_help" placeholder="Enter Phone">
+
+                                        <input type="hidden" class="form-control" id="inp_email" name="email" dmx-bind:value="email" dmx-bind:name="record[{{$index}}][email]" aria-describedby="inp_email_help" placeholder="Enter Email">
+                                        <input type="hidden" class="form-control" id="inp_relationship" name="relationship" dmx-bind:value="relationship" dmx-bind:name="record[{{$index}}][relationship]" aria-describedby="inp_relationship_help" placeholder="Enter Relationship">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between w-100">
+                    <button class="btn h-auto w-auto ps-4 pe-4 btn-secondary" dmx-on:click="form1.submit()" data-bs-toggle="modal" data-bs-target="#newGuardianModal"><i class="fa fa-times fa-fw" dmx-on:click="newGuardian.submit()"><i class="ant"></i></i>Cancel</button><button class="btn h-auto w-auto ps-4 pe-4 btn-success" id="FamilySaveButton" dmx-on:click="newGuardian.submit(true)" dmx-bind:disabled="newGuardian.var1.value !== 2" dmx-bind:popover-title="'ggg'"><i class="fa fa-check fa-fw"></i>Save&nbsp;
+
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>
+<dmx-serverconnect id="createFamily" url="api/createFamilyWithGuardians" noload=""></dmx-serverconnect>
+
+<dmx-serverconnect id="getAllFamilies" url="api/getFamilies_paged" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch">
+</dmx-serverconnect>
+<dmx-serverconnect id="getRelationships" url="api/getRelationships"></dmx-serverconnect>
+<main class="d-flex flex-grow-1">
+    <div class="row flex-grow-1 g-0">
+        <div class="layoutSidebar bg-white border-end">
+            <%- await include('/partials/_familiesFilterSidebar', Object.assign({}, locals)) %>
+        </div>
+        <div class="col p-3">
+            <div class="row align-items-center">
+                <div class="col d-flex justify-content-start flex-row align-items-center">
+                    <h2 class="text-uppercase"><i class="fas fa-user-friends fa-fw me-2"></i>FAMILIES</h2>
+                </div>
+                <div class="col d-flex justify-content-end flex-row">
+                    <div class="mb-3">
+                        <label for="selectLimit" class="mb-0 col-form-label form-label">Results / Page</label>
+
+                        <select id="selectLimit" class="form-select" dmx-bind:value="10" dmx-on:updated="queryManager.set('limit',value)" width="50">
+                            <option selected="" value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                            <option value="200">200</option>
+                            <option value="250">250</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="d-flex">
+                        <div class="table-responsive w-100">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="row">Actions</th>
+                                        <th>Guardian</th>
+                                        <th>Phone numbers</th>
+                                        <th>Emails</th>
+                                        <th>Students</th>
+                                    </tr>
+                                </thead>
+                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getAllFamilies.data.query.data" id="tableRepeat4">
+                                    <tr>
+                                        <td class="align-middle">
+                                            <a class="btn text-dark btn-sm btn-light" dmx-bind:href="'/families/familydetail/'+id"><i class="fas fa-user-friends"></i></a>
+                                        </td>
+                                        <td dmx-text="guardian" class="align-middle"></td>
+                                        <td dmx-text="phoneNumbers" class="align-middle"></td>
+                                        <td dmx-text="emails" class="align-middle"></td>
+                                        <td dmx-text="students" class="align-middle"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <ul class="pagination justify-content-center" dmx-populate="getAllFamilies.data.query" dmx-state="queryManager" dmx-offset="offset" dmx-generator="bs5paging">
+                        <li class="page-item" dmx-class:disabled="getAllFamilies.data.query.page.current == 1" aria-label="Previous">
+                            <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.query.page.offset.prev)"><span aria-hidden="true" class="visually-hidden">&lsaquo;</span></a>
+                        </li>
+                        <li class="page-item" dmx-class:active="title == getAllFamilies.data.query.page.current" dmx-class:disabled="!active" dmx-repeat="getAllFamilies.data.query.getServerConnectPagination(0,1,'...')">
+                            <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',(page-1)*getAllFamilies.data.query.limit)">{{title}}</a>
+                        </li>
+                        <li class="page-item" dmx-class:disabled="getAllFamilies.data.query.page.current ==  getAllFamilies.data.query.page.total" aria-label="Next">
+                            <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.query.page.offset.next)"><span aria-hidden="true" class="visually-hidden">&rsaquo;</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</main>

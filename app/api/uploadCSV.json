@@ -1,0 +1,350 @@
+{
+  "meta": {
+    "options": {
+      "linkedFile": "/views/importCSV.ejs",
+      "linkedForm": "form1"
+    },
+    "$_POST": [
+      {
+        "type": "array",
+        "name": "record",
+        "sub": [
+          {
+            "type": "text",
+            "name": "first_name"
+          },
+          {
+            "type": "text",
+            "name": "last_name"
+          },
+          {
+            "type": "date",
+            "name": "dob"
+          },
+          {
+            "type": "text",
+            "name": "rollsheetComment"
+          },
+          {
+            "type": "text",
+            "name": "rollsheetMedical"
+          },
+          {
+            "type": "text",
+            "name": "additionalMedical"
+          },
+          {
+            "type": "text",
+            "name": "gender"
+          },
+          {
+            "type": "text",
+            "name": "level"
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "fieldName": "file1",
+        "name": "file1",
+        "sub": [
+          {
+            "type": "text",
+            "name": "name"
+          },
+          {
+            "type": "text",
+            "name": "type"
+          },
+          {
+            "type": "number",
+            "name": "size"
+          },
+          {
+            "type": "text",
+            "name": "error"
+          }
+        ],
+        "outputType": "file"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "upload1",
+        "module": "upload",
+        "action": "upload",
+        "options": {
+          "path": "/public/uploads",
+          "fields": "{{$_POST.file1}}"
+        },
+        "meta": [
+          {
+            "name": "name",
+            "type": "text"
+          },
+          {
+            "name": "path",
+            "type": "text"
+          },
+          {
+            "name": "url",
+            "type": "text"
+          },
+          {
+            "name": "type",
+            "type": "text"
+          },
+          {
+            "name": "size",
+            "type": "text"
+          },
+          {
+            "name": "error",
+            "type": "number"
+          }
+        ],
+        "outputType": "file"
+      },
+      {
+        "name": "csvImport",
+        "module": "import",
+        "action": "csv",
+        "options": {
+          "path": "{{upload1.path}}",
+          "fields": [
+            "first_name",
+            "last_name",
+            "gender",
+            "level",
+            "rollsheetComment",
+            "rollsheetMedical",
+            "additionalMedical",
+            "dob"
+          ],
+          "header": true
+        },
+        "meta": [
+          {
+            "name": "first_name",
+            "type": "text"
+          },
+          {
+            "name": "last_name",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetComment",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "output": true
+      },
+      {
+        "name": "repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{csvImport}}",
+          "outputFields": [
+            "first_name",
+            "last_name",
+            "dob"
+          ],
+          "exec": {
+            "steps": {
+              "name": "insert",
+              "module": "dbupdater",
+              "action": "insert",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "insert",
+                  "values": [
+                    {
+                      "table": "students",
+                      "column": "firstName",
+                      "type": "text",
+                      "value": "{{first_name}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "lastName",
+                      "type": "text",
+                      "value": "{{last_name}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "dob",
+                      "type": "date",
+                      "value": "{{dob}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "rollSheetComments",
+                      "type": "text",
+                      "value": "{{rollsheetComment}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "rollSheetMedical",
+                      "type": "text",
+                      "value": "{{rollsheetMedical}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "additionalMedical",
+                      "type": "text",
+                      "value": "{{additionalMedical}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "gender",
+                      "type": "text",
+                      "value": "{{gender}}"
+                    },
+                    {
+                      "table": "students",
+                      "column": "level",
+                      "type": "text",
+                      "value": "{{level}}"
+                    }
+                  ],
+                  "table": "students",
+                  "returning": "id",
+                  "query": "INSERT INTO students\n(firstName, lastName, dob, rollSheetComments, rollSheetMedical, additionalMedical, gender, level) VALUES (:P1 /* {{first_name}} */, :P2 /* {{last_name}} */, :P3 /* {{dob}} */, :P4 /* {{rollsheetComment}} */, :P5 /* {{rollsheetMedical}} */, :P6 /* {{additionalMedical}} */, :P7 /* {{gender}} */, :P8 /* {{level}} */)",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{first_name}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{last_name}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{dob}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{rollsheetComment}}"
+                    },
+                    {
+                      "name": ":P5",
+                      "type": "expression",
+                      "value": "{{rollsheetMedical}}"
+                    },
+                    {
+                      "name": ":P6",
+                      "type": "expression",
+                      "value": "{{additionalMedical}}"
+                    },
+                    {
+                      "name": ":P7",
+                      "type": "expression",
+                      "value": "{{gender}}"
+                    },
+                    {
+                      "name": ":P8",
+                      "type": "expression",
+                      "value": "{{level}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "identity",
+                  "type": "text"
+                },
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "first_name",
+            "type": "text"
+          },
+          {
+            "name": "last_name",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetComment",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

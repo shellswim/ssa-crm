@@ -1,0 +1,389 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "enrolmentid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "enrolment",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "enrolments"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM enrolments\nWHERE id = :P1 /* {{$_GET.enrolmentid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.enrolmentid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "enrolments.id",
+                  "field": "enrolments.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.enrolmentid}}",
+                  "data": {
+                    "table": "enrolments",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "startDate",
+            "type": "date"
+          },
+          {
+            "name": "dropDate",
+            "type": "date"
+          },
+          {
+            "name": "isValid",
+            "type": "boolean"
+          },
+          {
+            "name": "student",
+            "type": "text"
+          },
+          {
+            "name": "enrolmentType",
+            "type": "number"
+          },
+          {
+            "name": "classId",
+            "type": "number"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "student",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "students"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.id",
+                  "field": "students.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{enrolment.student}}",
+                  "data": {
+                    "table": "students",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM students\nWHERE id = :P1 /* {{enrolment.student}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{enrolment.student}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "class",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "classes",
+                "column": "id"
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDecimal"
+              },
+              {
+                "table": "classes",
+                "column": "endTimeDecimal"
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "classes",
+                "column": "endTimeDisplay"
+              },
+              {
+                "table": "classes",
+                "column": "max"
+              },
+              {
+                "table": "days",
+                "column": "name",
+                "alias": "dayName",
+                "aggregate": ""
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "alias": "instructorFirstName"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "alias": "instructorLastName"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "levelName"
+              },
+              {
+                "table": "classLevels",
+                "column": "colour",
+                "alias": "levelColour"
+              }
+            ],
+            "table": {
+              "name": "classes"
+            },
+            "joins": [
+              {
+                "table": "days",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "instructor"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "classLevel"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "query": "SELECT classes.id, classes.startTimeDecimal, classes.endTimeDecimal, classes.startTimeDisplay, classes.endTimeDisplay, classes.max, days.name AS dayName, staff.firstName AS instructorFirstName, staff.lastName AS instructorLastName, classLevels.name AS levelName, classLevels.colour AS levelColour\nFROM classes\nINNER JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN classLevels ON (classLevels.id = classes.classLevel)\nWHERE classes.id = :P1 /* {{enrolment.classId}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{enrolment.classId}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "classes.id",
+                  "field": "classes.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{enrolment.classId}}",
+                  "data": {
+                    "table": "classes",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "startTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "endTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "endTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "max",
+            "type": "number"
+          },
+          {
+            "name": "dayName",
+            "type": "text"
+          },
+          {
+            "name": "instructorFirstName",
+            "type": "text"
+          },
+          {
+            "name": "instructorLastName",
+            "type": "text"
+          },
+          {
+            "name": "levelName",
+            "type": "text"
+          },
+          {
+            "name": "levelColour",
+            "type": "text"
+          }
+        ],
+        "outputType": "object"
+      }
+    ]
+  }
+}

@@ -1,0 +1,511 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "instructor"
+      },
+      {
+        "type": "text",
+        "name": "startdecimal"
+      },
+      {
+        "type": "text",
+        "name": "day"
+      },
+      {
+        "type": "text",
+        "name": "classlevel"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "classQuery",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "classes",
+                "column": "id",
+                "alias": "classid"
+              },
+              {
+                "table": "days",
+                "column": "name",
+                "alias": "day"
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "classes",
+                "column": "endTimeDisplay"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "classLevel"
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "alias": "instructorFirst"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "alias": "instructorLast"
+              }
+            ],
+            "table": {
+              "name": "classes"
+            },
+            "joins": [
+              {
+                "table": "days",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "classLevel"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "instructor"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "query": "SELECT classes.id AS classid, days.name AS day, classes.startTimeDisplay, classes.endTimeDisplay, classLevels.name AS classLevel, staff.firstName AS instructorFirst, staff.lastName AS instructorLast\nFROM classes\nINNER JOIN days ON (days.id = classes.day) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor)\nWHERE (classes.startTimeDecimal = :P1 /* {{$_GET.startdecimal}} */) AND (classes.instructor = :P2 /* {{$_GET.instructor}} */) AND (classes.classLevel = :P3 /* {{$_GET.classlevel}} */) AND (classes.isactive = true) AND (classes.day = :P4 /* {{$_GET.day}} */)\nORDER BY classes.day ASC, classes.startTimeDecimal ASC, classLevels.name ASC, staff.firstName ASC, staff.lastName ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.startdecimal}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.instructor}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P3",
+                "value": "{{$_GET.classlevel}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P4",
+                "value": "{{$_GET.day}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "classes.startTimeDecimal",
+                      "field": "classes.startTimeDecimal",
+                      "type": "double",
+                      "operator": "equal",
+                      "value": "{{$_GET.startdecimal}}",
+                      "data": {
+                        "table": "classes",
+                        "column": "startTimeDecimal",
+                        "type": "number"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.startdecimal}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "classes.instructor",
+                      "field": "classes.instructor",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.instructor}}",
+                      "data": {
+                        "table": "classes",
+                        "column": "instructor",
+                        "type": "text"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.instructor}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "classes.classLevel",
+                      "field": "classes.classLevel",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.classlevel}}",
+                      "data": {
+                        "table": "classes",
+                        "column": "classLevel",
+                        "type": "text"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.classlevel}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "classes.isactive",
+                      "field": "classes.isactive",
+                      "type": "boolean",
+                      "operator": "equal",
+                      "value": true,
+                      "data": {
+                        "table": "classes",
+                        "column": "isactive",
+                        "type": "boolean"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": null
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "classes.day",
+                      "field": "classes.day",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.day}}",
+                      "data": {
+                        "table": "classes",
+                        "column": "day",
+                        "type": "text"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.day}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": [
+              {
+                "table": "classes",
+                "column": "day",
+                "direction": "ASC"
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDecimal",
+                "direction": "ASC"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "direction": "ASC"
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "direction": "ASC"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "direction": "ASC"
+              }
+            ],
+            "limit": 10
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "classid",
+            "type": "text"
+          },
+          {
+            "name": "day",
+            "type": "text"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "endTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "classLevel",
+            "type": "text"
+          },
+          {
+            "name": "instructorFirst",
+            "type": "text"
+          },
+          {
+            "name": "instructorLast",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "type": "dbconnector_select"
+      },
+      {
+        "name": "classesSearch",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{classQuery}}",
+          "outputFields": [
+            "classid",
+            "day",
+            "startTimeDisplay",
+            "endTimeDisplay",
+            "classLevel",
+            "instructorFirst",
+            "instructorLast"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "custom",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT c.*, (select COUNT(id) from enrolments where classId = c.id and isValid = 1 and enrolmentType in (1,2,3)) as ae,\n    (CASE\n    WHEN (select COUNT(id) from enrolments where classId = c.id and isValid = 1 and enrolmentType in (1,2,3)) < c.max THEN 'Available'\n    WHEN (select COUNT(id) from enrolments where classId = c.id and isValid = 1 and enrolmentType in (1,2,3)) > c.max THEN 'OVERBOOKED'\n    ELSE 'FULL'\nEND) as availability\nFROM classes c\nWHERE isactive = 1 AND c.id = :P1",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{classid}}",
+                        "test": "42"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "isactive",
+                    "type": "number"
+                  },
+                  {
+                    "name": "instructor",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classLevel",
+                    "type": "number"
+                  },
+                  {
+                    "name": "day",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "max",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "actEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "muEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "trEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "waEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "ae",
+                    "type": "number"
+                  },
+                  {
+                    "name": "availability",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "availability",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{custom[0].availability}}"
+                },
+                "output": true
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "classid",
+            "type": "text"
+          },
+          {
+            "name": "day",
+            "type": "text"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "endTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "classLevel",
+            "type": "text"
+          },
+          {
+            "name": "instructorFirst",
+            "type": "text"
+          },
+          {
+            "name": "instructorLast",
+            "type": "text"
+          },
+          {
+            "name": "availability",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "output": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,951 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "enrolid"
+      },
+      {
+        "type": "text",
+        "name": "chargeid"
+      },
+      {
+        "type": "text",
+        "name": "studentid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "classBreakdown",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "pw",
+                "column": "*"
+              }
+            ],
+            "table": {
+              "name": "perWeekEnrolmentCharges",
+              "alias": "pw"
+            },
+            "joins": [],
+            "orders": [
+              {
+                "table": "perWeekEnrolmentCharges",
+                "column": "startofweek",
+                "direction": "ASC"
+              },
+              {
+                "table": "pw",
+                "column": "classId",
+                "direction": "ASC"
+              }
+            ],
+            "query": "SELECT *\nFROM perWeekEnrolmentCharges AS pw\nWHERE studentid = :P1 /* {{$_GET.studentid}} */ AND chargeId = :P2 /* {{$_GET.chargeid}} */\nORDER BY startofweek ASC, classId ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.studentid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.chargeid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "pw.studentid",
+                  "field": "pw.studentid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.studentid}}",
+                  "data": {
+                    "table": "pw",
+                    "column": "studentid",
+                    "type": "number"
+                  },
+                  "operation": "="
+                },
+                {
+                  "id": "pw.chargeId",
+                  "field": "pw.chargeId",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.chargeid}}",
+                  "data": {
+                    "table": "pw",
+                    "column": "chargeId",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "startofweek",
+            "type": "date"
+          },
+          {
+            "name": "classId",
+            "type": "number"
+          },
+          {
+            "name": "studentid",
+            "type": "number"
+          },
+          {
+            "name": "classTypeId",
+            "type": "number"
+          },
+          {
+            "name": "enrolid",
+            "type": "number"
+          },
+          {
+            "name": "classDate",
+            "type": "date"
+          },
+          {
+            "name": "enrolCount",
+            "type": "text"
+          },
+          {
+            "name": "baseRate",
+            "type": "number"
+          },
+          {
+            "name": "discAmt",
+            "type": "number"
+          },
+          {
+            "name": "netAmt",
+            "type": "number"
+          },
+          {
+            "name": "enrolNumber",
+            "type": "number"
+          },
+          {
+            "name": "discType",
+            "type": "text"
+          },
+          {
+            "name": "discVal",
+            "type": "number"
+          },
+          {
+            "name": "_procedure",
+            "type": "text"
+          },
+          {
+            "name": "fd_sum_before",
+            "type": "number"
+          },
+          {
+            "name": "fd_type",
+            "type": "text"
+          },
+          {
+            "name": "fd_value",
+            "type": "number"
+          },
+          {
+            "name": "fd_amt",
+            "type": "number"
+          },
+          {
+            "name": "fd_procedure",
+            "type": "text"
+          },
+          {
+            "name": "netAmt_total",
+            "type": "number"
+          },
+          {
+            "name": "enr_grandTotal",
+            "type": "number"
+          },
+          {
+            "name": "net_grandTotal",
+            "type": "number"
+          },
+          {
+            "name": "discDir",
+            "type": "text"
+          },
+          {
+            "name": "chargeId",
+            "type": "text"
+          },
+          {
+            "name": "lineInvNumber",
+            "type": "text"
+          },
+          {
+            "name": "status",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "type": "dbconnector_select"
+      },
+      {
+        "name": "studentClassBreakdown",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{classBreakdown}}",
+          "outputFields": [
+            "startofweek",
+            "classId",
+            "studentid",
+            "id",
+            "classTypeId",
+            "enrolid",
+            "classDate",
+            "enrolCount",
+            "baseRate",
+            "discAmt",
+            "netAmt",
+            "enrolNumber",
+            "discType",
+            "discVal",
+            "_procedure",
+            "fd_sum_before",
+            "fd_type",
+            "fd_value",
+            "fd_amt",
+            "fd_procedure",
+            "netAmt_total",
+            "enr_grandTotal",
+            "net_grandTotal",
+            "discDir",
+            "chargeId",
+            "lineInvNumber",
+            "status"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "classInformation",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "c",
+                        "column": "*"
+                      },
+                      {
+                        "table": "d",
+                        "column": "name",
+                        "alias": "dayname"
+                      },
+                      {
+                        "table": "i",
+                        "column": "firstName",
+                        "alias": "instructorFirst",
+                        "aggregate": ""
+                      },
+                      {
+                        "table": "i",
+                        "column": "lastName",
+                        "alias": "instructorLast",
+                        "aggregate": ""
+                      }
+                    ],
+                    "table": {
+                      "name": "classes",
+                      "alias": "c"
+                    },
+                    "joins": [
+                      {
+                        "table": "days",
+                        "column": "*",
+                        "alias": "d",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "d",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "c",
+                                "column": "day"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "table": "staff",
+                        "column": "*",
+                        "alias": "i",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "i",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "c",
+                                "column": "instructor"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "table": "classLevels",
+                        "column": "*",
+                        "alias": "cl",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "cl",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "c",
+                                "column": "classLevel"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "c.id",
+                          "field": "c.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{classId}}",
+                          "data": {
+                            "table": "c",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT c.*, d.name AS dayname, i.firstName AS instructorFirst, i.lastName AS instructorLast\nFROM classes AS c\nLEFT JOIN days AS d ON (d.id = c.day) LEFT JOIN staff AS i ON (i.id = c.instructor) LEFT JOIN classLevels AS cl ON (cl.id = c.classLevel)\nWHERE c.id = :P1 /* {{classId}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{classId}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "isactive",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "instructor",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classLevel",
+                    "type": "text"
+                  },
+                  {
+                    "name": "day",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "max",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "actEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "muEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "trEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "waEnr",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dayname",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorFirst",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorLast",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "instructorInformation",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "staff"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "staff.id",
+                          "field": "staff.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{classInformation.instructor}}",
+                          "data": {
+                            "table": "staff",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM staff\nWHERE id = :P1 /* {{classInformation.instructor}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{classInformation.instructor}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "phone",
+                    "type": "text"
+                  },
+                  {
+                    "name": "email",
+                    "type": "text"
+                  },
+                  {
+                    "name": "staffTypes",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "classLevel",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "classLevels"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "classLevels.id",
+                          "field": "classLevels.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{classInformation.classLevel}}",
+                          "data": {
+                            "table": "classLevels",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM classLevels\nWHERE id = :P1 /* {{classInformation.classLevel}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{classInformation.classLevel}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "isValid",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "colour",
+                    "type": "text"
+                  },
+                  {
+                    "name": "order",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "studentInformation",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "students"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "students.id",
+                          "field": "students.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{studentid}}",
+                          "data": {
+                            "table": "students",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM students\nWHERE id = :P1 /* {{studentid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{studentid}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dob",
+                    "type": "date"
+                  },
+                  {
+                    "name": "rollSheetComments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "rollSheetMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "additionalMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "text"
+                  },
+                  {
+                    "name": "level",
+                    "type": "text"
+                  },
+                  {
+                    "name": "age",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "enrolmentInformation",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.id",
+                          "field": "enrolments.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{enrolid}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM enrolments\nWHERE id = :P1 /* {{enrolid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{enrolid}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolmentType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "isValid",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "student",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "classId",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropReason",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "startofweek",
+            "type": "date"
+          },
+          {
+            "name": "classId",
+            "type": "number"
+          },
+          {
+            "name": "studentid",
+            "type": "number"
+          },
+          {
+            "name": "classTypeId",
+            "type": "number"
+          },
+          {
+            "name": "enrolid",
+            "type": "number"
+          },
+          {
+            "name": "classDate",
+            "type": "date"
+          },
+          {
+            "name": "enrolCount",
+            "type": "text"
+          },
+          {
+            "name": "baseRate",
+            "type": "number"
+          },
+          {
+            "name": "discAmt",
+            "type": "number"
+          },
+          {
+            "name": "netAmt",
+            "type": "number"
+          },
+          {
+            "name": "enrolNumber",
+            "type": "number"
+          },
+          {
+            "name": "discType",
+            "type": "text"
+          },
+          {
+            "name": "discVal",
+            "type": "number"
+          },
+          {
+            "name": "_procedure",
+            "type": "text"
+          },
+          {
+            "name": "fd_sum_before",
+            "type": "number"
+          },
+          {
+            "name": "fd_type",
+            "type": "text"
+          },
+          {
+            "name": "fd_value",
+            "type": "number"
+          },
+          {
+            "name": "fd_amt",
+            "type": "number"
+          },
+          {
+            "name": "fd_procedure",
+            "type": "text"
+          },
+          {
+            "name": "netAmt_total",
+            "type": "number"
+          },
+          {
+            "name": "enr_grandTotal",
+            "type": "number"
+          },
+          {
+            "name": "net_grandTotal",
+            "type": "number"
+          },
+          {
+            "name": "discDir",
+            "type": "text"
+          },
+          {
+            "name": "chargeId",
+            "type": "text"
+          },
+          {
+            "name": "lineInvNumber",
+            "type": "text"
+          },
+          {
+            "name": "status",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "startofweek",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT DISTINCT pw.startofweek \nFROM perWeekEnrolmentCharges pw\nWHERE pw.studentid = :studentid AND pw.chargeId = :chargeid",
+            "params": [
+              {
+                "name": ":studentid",
+                "value": "{{$_GET.studentid}}",
+                "test": "14939"
+              },
+              {
+                "name": ":chargeid",
+                "value": "{{$_GET.chargeid}}",
+                "test": "14"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "startofweek",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      }
+    ]
+  }
+}

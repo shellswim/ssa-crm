@@ -1,0 +1,1449 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "number",
+        "name": "familyid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "familyCharges",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "familyCharges"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM familyCharges\nWHERE family = :P1 /* {{$_GET.familyid}} */\nORDER BY chargeFor DESC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "familyCharges.family",
+                  "field": "familyCharges.family",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "familyCharges",
+                    "column": "family",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": [
+              {
+                "table": "familyCharges",
+                "column": "chargeFor",
+                "direction": "DESC"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "chargeAmount",
+            "type": "number"
+          },
+          {
+            "name": "chargeDateTo",
+            "type": "date"
+          },
+          {
+            "name": "chargeDateFrom",
+            "type": "date"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor",
+            "type": "date"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "getStudentCharges",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{familyCharges}}",
+          "outputFields": [
+            "id",
+            "chargeAmount",
+            "chargeFor",
+            "chargeDateTo",
+            "chargeDateFrom",
+            "family",
+            "description",
+            "title",
+            "reference"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "chargeid",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{id}}"
+                },
+                "outputType": "number"
+              },
+              {
+                "name": "familyPaymentsList",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT *\nFROM tuitionPayments t\nWHERE t.charges = :P1",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "14"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "paymentType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "charges",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "chargePaymentsTotal",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT SUM(amount)\nFROM tuitionPayments t\nWHERE t.charges = :P1",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "14"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "SUM(amount)",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "students",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT s.id, s.firstName, s.lastName, COUNT(DISTINCT e.enrolid) AS enrolmentsCount, SUM(e.enr_grandTotal) AS enrolmentsTotal\nFROM students s JOIN perWeekEnrolmentCharges e ON s.id = e.studentid\nWHERE s.family = :P1 AND e.chargeId = :P2 \nGROUP BY s.id, s.firstName, s.lastName",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{family}}",
+                        "test": "36"
+                      },
+                      {
+                        "name": ":P2",
+                        "value": "{{id}}",
+                        "test": "5"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolmentsCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolmentsTotal",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "getEnrolmentChargeIds",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{students}}",
+                  "outputFields": [
+                    "id",
+                    "firstName",
+                    "lastName",
+                    "enrolmentsCount",
+                    "enrolmentsTotal"
+                  ],
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "enrolmentIds",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "perWeekEnrolmentCharges",
+                                "column": "enr_grandTotal",
+                                "aggregate": "SUM",
+                                "alias": "classTotal"
+                              },
+                              {
+                                "table": "perWeekEnrolmentCharges",
+                                "column": "enrolid"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "startDate"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "dropDate"
+                              },
+                              {
+                                "table": "classes",
+                                "column": "startTimeDisplay",
+                                "alias": "classStartTime"
+                              },
+                              {
+                                "table": "classes",
+                                "column": "endTimeDisplay",
+                                "alias": "classEndTime"
+                              },
+                              {
+                                "table": "classLevels",
+                                "column": "name",
+                                "alias": "classLevelName"
+                              },
+                              {
+                                "table": "days",
+                                "column": "name",
+                                "alias": "classDay"
+                              },
+                              {
+                                "table": "staff",
+                                "column": "firstName",
+                                "alias": "instructorFirst"
+                              },
+                              {
+                                "table": "staff",
+                                "column": "lastName",
+                                "alias": "instructorLast"
+                              },
+                              {
+                                "table": "perWeekEnrolmentCharges",
+                                "column": "classId"
+                              }
+                            ],
+                            "table": {
+                              "name": "perWeekEnrolmentCharges"
+                            },
+                            "joins": [
+                              {
+                                "table": "enrolments",
+                                "column": "*",
+                                "type": "LEFT",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "enrolments",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "perWeekEnrolmentCharges",
+                                        "column": "enrolid"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "table": "classes",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "classes",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "perWeekEnrolmentCharges",
+                                        "column": "classId"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "table": "classLevels",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "classLevels",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "classes",
+                                        "column": "classLevel"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "table": "days",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "days",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "classes",
+                                        "column": "day"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "table": "staff",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "staff",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "classes",
+                                        "column": "instructor"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "perWeekEnrolmentCharges.chargeId",
+                                  "field": "perWeekEnrolmentCharges.chargeId",
+                                  "type": "string",
+                                  "operator": "equal",
+                                  "value": "{{chargeid}}",
+                                  "data": {
+                                    "table": "perWeekEnrolmentCharges",
+                                    "column": "chargeId",
+                                    "type": "text"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "perWeekEnrolmentCharges.studentid",
+                                  "field": "perWeekEnrolmentCharges.studentid",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{id}}",
+                                  "data": {
+                                    "table": "perWeekEnrolmentCharges",
+                                    "column": "studentid",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT DISTINCT SUM(perWeekEnrolmentCharges.enr_grandTotal) AS classTotal, perWeekEnrolmentCharges.enrolid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay AS classStartTime, classes.endTimeDisplay AS classEndTime, classLevels.name AS classLevelName, days.name AS classDay, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, perWeekEnrolmentCharges.classId\nFROM perWeekEnrolmentCharges\nLEFT JOIN enrolments ON (enrolments.id = perWeekEnrolmentCharges.enrolid) INNER JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor)\nWHERE perWeekEnrolmentCharges.chargeId = :P1 /* {{chargeid}} */ AND perWeekEnrolmentCharges.studentid = :P2 /* {{id}} */\nGROUP BY perWeekEnrolmentCharges.enrolid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay, classes.endTimeDisplay, classLevels.name, days.name, staff.firstName, staff.lastName, perWeekEnrolmentCharges.classId",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{chargeid}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{id}}"
+                              }
+                            ],
+                            "distinct": true,
+                            "orders": [],
+                            "groupBy": [
+                              {
+                                "table": "perWeekEnrolmentCharges",
+                                "column": "enrolid"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "startDate"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "dropDate"
+                              },
+                              {
+                                "table": "classes",
+                                "column": "startTimeDisplay"
+                              },
+                              {
+                                "table": "classes",
+                                "column": "endTimeDisplay"
+                              },
+                              {
+                                "table": "classLevels",
+                                "column": "name"
+                              },
+                              {
+                                "table": "days",
+                                "column": "name"
+                              },
+                              {
+                                "table": "staff",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "staff",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "perWeekEnrolmentCharges",
+                                "column": "classId"
+                              }
+                            ]
+                          }
+                        },
+                        "output": false,
+                        "meta": [
+                          {
+                            "name": "classTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startDate",
+                            "type": "date"
+                          },
+                          {
+                            "name": "dropDate",
+                            "type": "date"
+                          },
+                          {
+                            "name": "classStartTime",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classEndTime",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classLevelName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classDay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "instructorFirst",
+                            "type": "text"
+                          },
+                          {
+                            "name": "instructorLast",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classId",
+                            "type": "number"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "allEnrolmentCharges",
+                        "module": "core",
+                        "action": "repeat",
+                        "options": {
+                          "repeat": "{{enrolmentIds}}",
+                          "outputFields": [
+                            "classTotal",
+                            "enrolid",
+                            "startDate",
+                            "dropDate",
+                            "classStartTime",
+                            "classEndTime",
+                            "classLevelName",
+                            "classDay",
+                            "instructorFirst",
+                            "instructorLast",
+                            "classId",
+                            "student"
+                          ],
+                          "exec": {
+                            "steps": {
+                              "name": "enrolmentCharges",
+                              "module": "dbconnector",
+                              "action": "select",
+                              "options": {
+                                "connection": "db",
+                                "sql": {
+                                  "type": "SELECT",
+                                  "columns": [
+                                    {
+                                      "table": "perWeekEnrolmentCharges",
+                                      "column": "*"
+                                    }
+                                  ],
+                                  "table": {
+                                    "name": "perWeekEnrolmentCharges"
+                                  },
+                                  "joins": [],
+                                  "wheres": {
+                                    "condition": "AND",
+                                    "rules": [
+                                      {
+                                        "id": "perWeekEnrolmentCharges.chargeId",
+                                        "field": "perWeekEnrolmentCharges.chargeId",
+                                        "type": "string",
+                                        "operator": "equal",
+                                        "value": "{{chargeid}}",
+                                        "data": {
+                                          "table": "perWeekEnrolmentCharges",
+                                          "column": "chargeId",
+                                          "type": "text"
+                                        },
+                                        "operation": "="
+                                      },
+                                      {
+                                        "id": "perWeekEnrolmentCharges.enrolid",
+                                        "field": "perWeekEnrolmentCharges.enrolid",
+                                        "type": "double",
+                                        "operator": "equal",
+                                        "value": "{{enrolid}}",
+                                        "data": {
+                                          "table": "perWeekEnrolmentCharges",
+                                          "column": "enrolid",
+                                          "type": "number"
+                                        },
+                                        "operation": "="
+                                      }
+                                    ],
+                                    "conditional": null,
+                                    "valid": true
+                                  },
+                                  "query": "SELECT DISTINCT *\nFROM perWeekEnrolmentCharges\nWHERE chargeId = :P1 /* {{chargeid}} */ AND enrolid = :P2 /* {{enrolid}} */",
+                                  "params": [
+                                    {
+                                      "operator": "equal",
+                                      "type": "expression",
+                                      "name": ":P1",
+                                      "value": "{{chargeid}}"
+                                    },
+                                    {
+                                      "operator": "equal",
+                                      "type": "expression",
+                                      "name": ":P2",
+                                      "value": "{{enrolid}}"
+                                    }
+                                  ],
+                                  "distinct": true,
+                                  "orders": []
+                                }
+                              },
+                              "output": true,
+                              "meta": [
+                                {
+                                  "name": "id",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "startofweek",
+                                  "type": "date"
+                                },
+                                {
+                                  "name": "classId",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "studentid",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "classTypeId",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "enrolid",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "classDate",
+                                  "type": "date"
+                                },
+                                {
+                                  "name": "enrolCount",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "baseRate",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "discAmt",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "netAmt",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "enrolNumber",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "discType",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "discVal",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "_procedure",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "fd_sum_before",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "fd_type",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "fd_value",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "fd_amt",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "fd_procedure",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "netAmt_total",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "enr_grandTotal",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "net_grandTotal",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "discDir",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "chargeId",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "lineInvNumber",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "status",
+                                  "type": "text"
+                                }
+                              ],
+                              "outputType": "array"
+                            }
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "name": "$index",
+                            "type": "number"
+                          },
+                          {
+                            "name": "$number",
+                            "type": "number"
+                          },
+                          {
+                            "name": "$name",
+                            "type": "text"
+                          },
+                          {
+                            "name": "$value",
+                            "type": "object"
+                          },
+                          {
+                            "name": "classTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startDate",
+                            "type": "date"
+                          },
+                          {
+                            "name": "dropDate",
+                            "type": "date"
+                          },
+                          {
+                            "name": "classStartTime",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classEndTime",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classLevelName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classDay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "instructorFirst",
+                            "type": "text"
+                          },
+                          {
+                            "name": "instructorLast",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classId",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolmentCharges",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "id",
+                                "type": "text"
+                              },
+                              {
+                                "name": "startofweek",
+                                "type": "date"
+                              },
+                              {
+                                "name": "classId",
+                                "type": "number"
+                              },
+                              {
+                                "name": "studentid",
+                                "type": "number"
+                              },
+                              {
+                                "name": "classTypeId",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enrolid",
+                                "type": "number"
+                              },
+                              {
+                                "name": "classDate",
+                                "type": "date"
+                              },
+                              {
+                                "name": "enrolCount",
+                                "type": "text"
+                              },
+                              {
+                                "name": "baseRate",
+                                "type": "number"
+                              },
+                              {
+                                "name": "discAmt",
+                                "type": "number"
+                              },
+                              {
+                                "name": "netAmt",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enrolNumber",
+                                "type": "number"
+                              },
+                              {
+                                "name": "discType",
+                                "type": "text"
+                              },
+                              {
+                                "name": "discVal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "_procedure",
+                                "type": "text"
+                              },
+                              {
+                                "name": "fd_sum_before",
+                                "type": "number"
+                              },
+                              {
+                                "name": "fd_type",
+                                "type": "text"
+                              },
+                              {
+                                "name": "fd_value",
+                                "type": "number"
+                              },
+                              {
+                                "name": "fd_amt",
+                                "type": "number"
+                              },
+                              {
+                                "name": "fd_procedure",
+                                "type": "text"
+                              },
+                              {
+                                "name": "netAmt_total",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enr_grandTotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "net_grandTotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "discDir",
+                                "type": "text"
+                              },
+                              {
+                                "name": "chargeId",
+                                "type": "text"
+                              },
+                              {
+                                "name": "lineInvNumber",
+                                "type": "text"
+                              },
+                              {
+                                "name": "status",
+                                "type": "text"
+                              }
+                            ]
+                          }
+                        ],
+                        "outputType": "array"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolmentsCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolmentsTotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "allEnrolmentCharges",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "classTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "student",
+                        "type": "text"
+                      },
+                      {
+                        "name": "startDate",
+                        "type": "date"
+                      },
+                      {
+                        "name": "dropDate",
+                        "type": "date"
+                      },
+                      {
+                        "name": "classStartTime",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classEndTime",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classLevelName",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classDay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "instructorFirst",
+                        "type": "text"
+                      },
+                      {
+                        "name": "instructorLast",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classId",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolmentCharges",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "id",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startofweek",
+                            "type": "date"
+                          },
+                          {
+                            "name": "classId",
+                            "type": "number"
+                          },
+                          {
+                            "name": "studentid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classTypeId",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classDate",
+                            "type": "date"
+                          },
+                          {
+                            "name": "enrolCount",
+                            "type": "text"
+                          },
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "discAmt",
+                            "type": "number"
+                          },
+                          {
+                            "name": "netAmt",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolNumber",
+                            "type": "number"
+                          },
+                          {
+                            "name": "discType",
+                            "type": "text"
+                          },
+                          {
+                            "name": "discVal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "_procedure",
+                            "type": "text"
+                          },
+                          {
+                            "name": "fd_sum_before",
+                            "type": "number"
+                          },
+                          {
+                            "name": "fd_type",
+                            "type": "text"
+                          },
+                          {
+                            "name": "fd_value",
+                            "type": "number"
+                          },
+                          {
+                            "name": "fd_amt",
+                            "type": "number"
+                          },
+                          {
+                            "name": "fd_procedure",
+                            "type": "text"
+                          },
+                          {
+                            "name": "netAmt_total",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enr_grandTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "net_grandTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "discDir",
+                            "type": "text"
+                          },
+                          {
+                            "name": "chargeId",
+                            "type": "text"
+                          },
+                          {
+                            "name": "lineInvNumber",
+                            "type": "text"
+                          },
+                          {
+                            "name": "status",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "chargeAmount",
+            "type": "number"
+          },
+          {
+            "name": "chargeDateTo",
+            "type": "date"
+          },
+          {
+            "name": "chargeDateFrom",
+            "type": "date"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor",
+            "type": "date"
+          },
+          {
+            "name": "getEnrolmentChargeIds",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "enrolmentsCount",
+                "type": "number"
+              },
+              {
+                "name": "enrolmentsTotal",
+                "type": "number"
+              },
+              {
+                "name": "allEnrolmentCharges",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "classTotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "student",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "dropDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "classStartTime",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classEndTime",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classLevelName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classDay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorFirst",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorLast",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classId",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolmentCharges",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "id",
+                        "type": "text"
+                      },
+                      {
+                        "name": "startofweek",
+                        "type": "date"
+                      },
+                      {
+                        "name": "classId",
+                        "type": "number"
+                      },
+                      {
+                        "name": "studentid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classTypeId",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classDate",
+                        "type": "date"
+                      },
+                      {
+                        "name": "enrolCount",
+                        "type": "text"
+                      },
+                      {
+                        "name": "baseRate",
+                        "type": "number"
+                      },
+                      {
+                        "name": "discAmt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "netAmt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolNumber",
+                        "type": "number"
+                      },
+                      {
+                        "name": "discType",
+                        "type": "text"
+                      },
+                      {
+                        "name": "discVal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "_procedure",
+                        "type": "text"
+                      },
+                      {
+                        "name": "fd_sum_before",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fd_type",
+                        "type": "text"
+                      },
+                      {
+                        "name": "fd_value",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fd_amt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fd_procedure",
+                        "type": "text"
+                      },
+                      {
+                        "name": "netAmt_total",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enr_grandTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "net_grandTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "discDir",
+                        "type": "text"
+                      },
+                      {
+                        "name": "chargeId",
+                        "type": "text"
+                      },
+                      {
+                        "name": "lineInvNumber",
+                        "type": "text"
+                      },
+                      {
+                        "name": "status",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

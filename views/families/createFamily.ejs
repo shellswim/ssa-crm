@@ -1,0 +1,390 @@
+<!-- Wappler include head-page="layouts/standardHeaderFooter" jquery_slim_33="cdn" is="dmx-app" id="createFamily" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Tooltips:{},dmxFormatter:{},dmxValidator:{},dmxDatastore:{},dmxBootstrap4TableGenerator:{}}" moment_2="cdn" bootstrap5="local" -->
+<dmx-datastore id="studentDatastore"></dmx-datastore>
+<dmx-serverconnect id="getStates" url="/api/baseActions/getCountryStates" noload></dmx-serverconnect>
+<dmx-datastore id="guardianDatastore"></dmx-datastore>
+
+<dmx-serverconnect id="getRelationshipsSingle" url="/api/getRelationships_SINGLE" noload></dmx-serverconnect>
+<dmx-serverconnect id="createFamilyWithGuardians" url="/api/createFamilyWithGuardians" noload></dmx-serverconnect>
+<meta name="ac:route" content="/families/createFamily">
+<main>
+
+    <dmx-value id="var_multiformDisplay" dmx-bind:value="1"></dmx-value>
+    <section>
+        <header class="mb-4">
+            <h2 class="text-uppercase"><i class="fas fa-user-friends me-2 fa-fw"></i>Create New Family</h2>
+        </header>
+    </section>
+    <button dmx-on:click="emailsDatastore.clear();phoneNumbersDatastore.clear();guardianDatastore.clear();studentDatastore.clear()" id="addGuardianBtn1" class="btn btn-outline-primary"><i class="fas fa-dumpster-fire"></i>CLEAR DATASTORES</button>
+    <section class="mb-3">
+        <div class="row">
+            <div class="col d-flex justify-content-xl-end">
+                <button id="btn7" class="btn btn-outline-dark me-3" dmx-on:click="var_multiformDisplay.setValue(var_multiformDisplay.value - 1)" dmx-bind:disabled="var_multiformDisplay.value === 1"><i class="fas fa-arrow-left">&nbsp;</i>Back</button>
+                <button id="btn6" class="btn btn-success" dmx-on:click="var_multiformDisplay.setValue(var_multiformDisplay.value +1)" dmx-bind:disabled="var_multiformDisplay.value === 3">Next&nbsp;<i class="fas fa-arrow-right"></i></button></div>
+        </div>
+    </section>
+    <section dmx-hide="var_multiformDisplay.value != 1">
+        <div class="row mb-5">
+
+            <div class="col">
+                <div class="card">
+                    <div class="card-header text-light bg-dark">
+                        <h4 class="mb-0">Add Guardians&nbsp;&nbsp;</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="row row-cols-1">
+                            <div class="col">
+                                <form id="createGuardiansForm" method="post" onsubmit="preventDefault()">
+                                    <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                                        <div class="col">
+
+                                            <div class="mb-3">
+                                                <label for="inp_firstName1" class="col-form-label form-label">First Name</label>
+                                                <input type="text" class="form-control" id="inp_firstName1" name="firstName1" aria-describedby="input1_help" placeholder="First Name" required dmx-on:blur="inp_firstName1.validate()">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="inp_lastName" class="col-form-label form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="inp_lastName" name="lastName" aria-describedby="input1_help" placeholder="Last Name" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="inp_phone" class="col-form-label form-label">Phone Number</label>
+                                                <input type="text" class="form-control" id="inp_phone" required="" data-msg-digits="" name="phone" placeholder="Phone Number">
+
+
+
+                                            </div>
+
+                                        </div>
+                                        <div class="col">
+
+
+                                            <div class="mb-3">
+                                                <label for="inp_email" class="col-form-label form-label">Email Address</label><input type="email" class="form-control" id="inp_email" name="email" aria-describedby="input1_help" placeholder="Email"
+                                                    data-rule-email="" data-msg-required="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+
+
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="inp_relationship" class="col-form-label form-label">Relationship</label>
+                                                <select id="inp_relationship" class="form-select" dmx-bind:options="getRelationships.data.query" name="relationship" required="" optiontext="type" optionvalue="id">
+                                                    <option selected="" value="">Please select...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+
+
+
+                                    </div>
+                                    <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                                        <div class="col-12 align-self-end">
+
+                                            <div class="mb-3 mt-3">
+                                                <button onclick="document.querySelector('#createGuardiansForm').requestSubmit()"
+                                                    dmx-on:click="run([{run:{action:`getRelationshipsSingle.load({getid: createGuardiansForm.inp_relationship.value})`}},{wait:{delay:100}},{condition:{if:`createGuardiansForm.inp_firstName1.invalid || createGuardiansForm.inp_lastName.invalid || createGuardiansForm.inp_relationship.invalid`,then:{steps:{'bootbox.alert':{title:'Oops... Something went wrong.',message:'Please ensure you have filled out all required fields.'}}},else:{steps:{condition:{if:`guardianDatastore.data.length === 0`,then:{steps:{run:{action:`guardianDatastore.insert({firstName: createGuardiansForm.inp_firstName1.value, lastName: createGuardiansForm.inp_lastName.value, relationship: createGuardiansForm.inp_relationship.value, relationshipName: getRelationshipsSingle.data.query[0].type, phoneNumbers: arr_phoneNumbers, emails: arr_emails, isPrimary: true, email: createGuardiansForm.inp_email.value, phoneNumber: createGuardiansForm.inp_phone.value});createGuardiansForm.reset()`,name:'addRecordResetForm'}}},else:{steps:{run:{action:`guardianDatastore.insert({firstName: createGuardiansForm.inp_firstName1.value, lastName: createGuardiansForm.inp_lastName.value, relationship: createGuardiansForm.inp_relationship.value, relationshipName: getRelationshipsSingle.data.query[0].type, phoneNumbers: arr_phoneNumbers, emails: arr_emails, isPrimary: false, email: createGuardiansForm.inp_email.value, phoneNumber: createGuardiansForm.inp_phone.value});createGuardiansForm.reset()`,name:'addRecordResetForm'}}}}}}}}])"
+                                                    id="addGuardianBtn" class="btn btn-outline-primary"><i class="fas fa-plus-circle fa-fw me-1"></i>Add
+                                                    Guardian</button>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <hr>
+                            <div class="col">
+                                <header>
+                                    <h5>Guardian List</h5>
+                                </header>
+                                <div id="cr_datastoreIsEmpty" is="dmx-if" dmx-bind:condition="guardianDatastore.data.length === 0">
+                                    <p class="border p-3 text-center text-danger rounded">Add family guardians above. All guardians need to be added here before creating family.</p>
+                                </div>
+
+                                <div id="cr_datastoreHasItems" is="dmx-if" dmx-bind:condition="guardianDatastore.data.length > 0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;" class="border-0 text-center" dmx-bs-tooltip="'Check to make primary guardian.'" data-bs-placement="right" data-bs-animation="false">Primary?</th>
+                                                    <th>First name</th>
+
+                                                    <th>Phone Numbers</th>
+                                                    <th>Email Addresses</th>
+                                                    <th style="width: 100px;">Relationship</th>
+                                                    <th style="width: 40px;" class="border-0"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="guardianDatastore.data" id="tableRepeat2">
+                                                <tr>
+                                                    <td class="align-middle p-0" dmx-class:bg-success="isPrimary">
+                                                        <div id="cr_isNotPrimary" is="dmx-if" dmx-bind:condition="!guardianDatastore.data[$index].isPrimary" class="text-center"><button id="btn2" class="btn btn-sm w-100 text-black-50"
+                                                                dmx-on:click="guardianDatastore.update({isPrimary: true},{isPrimary: false});guardianDatastore.update({$id: $id},{isPrimary: true})"><i class="fas fa-check-circle"></i></button></div>
+                                                        <div id="cr_isPrimary" is="dmx-if" dmx-bind:condition="guardianDatastore.data[$index].isPrimary" class="text-center">
+                                                            <i class="fas fa-check-circle" dmx-class:text-light="guardianDatastore.data[$index].isPrimary"></i>
+                                                        </div>
+
+                                                    </td>
+                                                    <td dmx-text="firstName +' '+lastName" class="align-middle"></td>
+                                                    <td class="align-middle" dmx-text="phoneNumber">
+                                                    </td>
+                                                    <td dmx-text="email" class="align-middle"></td>
+                                                    <td class="align-middle">{{getRelationshipSingle.data.getRelationship.type}}
+                                                        <dmx-serverconnect id="getRelationshipSingle" url="/api/getRelationships_SINGLE" dmx-param:getid="relationship">
+                                                        </dmx-serverconnect>
+
+                                                    </td>
+
+                                                    <td class="border-0 align middle">
+                                                        <button id="btn1" class="btn btn-outline-danger btn-sm"
+                                                            dmx-on:click="run({'bootbox.confirm':{title:'Hold Up',message:'Are you sure you want to remove this guardian?',then:{steps:{run:{action:`guardianDatastore.delete({$id: $id})`}}},name:'confirmGuardianRemoval'}})"><i
+                                                                class="fas fa-minus-circle"></i></button>
+
+                                                    </td>
+
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <dmx-value id="var_relationshipId"></dmx-value>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section dmx-hide="var_multiformDisplay.value != 2">
+        <div class="row mb-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header text-light bg-dark">
+                        <h4 class="mb-0">Add Students</h4>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <form id="createStudentsForm" method="post" onsubmit="preventDefault()">
+                            <dmx-value id="var_getLevelName"></dmx-value>
+                            <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                                <div class="col">
+
+                                    <div class="mb-3">
+                                        <label for="inp_studentFirstName" class="col-form-label form-label">First Name</label>
+                                        <input type="text" class="form-control" id="inp_studentFirstName" name="firstName" aria-describedby="input1_help" placeholder="First Name" required="">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="inp_studentLastName" class="col-form-label form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="inp_studentLastName" name="lastName" aria-describedby="input1_help" placeholder="Last Name" required="">
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="inp_studentDOB" class="col-form-label form-label">Date of Birth (dd/mm/yyyy)</label>
+                                        <input class="form-control" id="inp_studentDOB" name="dob" aria-describedby="input1_help" placeholder="Date of Birth" required="" type="date" format="dd/mm/yyyy">
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+
+
+
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="inp_classLevel" class="col-form-label form-label">Level</label>
+                                        <select id="inp_classLevel" class="form-select" dmx-bind:options="getLevels.data.query" name="level" required="" optiontext="name" optionvalue="id">
+                                            <option selected="" value="">Please select...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                                <div class="col d-flex align-items-end flex-row align-self-xl-center justify-content-xl-start justify-content-start">
+
+                                    <div class="mb-3 mt-3">
+                                        <button id="addStudents" class="btn btn-outline-primary" onclick="document.querySelector('#createStudentsForm').requestSubmit()"
+                                            dmx-on:click="run([{wait:{delay:100}},{condition:{if:`createStudentsForm.inp_studentFirstName.invalid || createStudentsForm.inp_studentLastName.invalid  || createStudentsForm.inp_studentDOB.invalid || createStudentsForm.inp_classLevel.invalid`,then:{steps:{'bootbox.alert':{title:'Oops... Something went wrong.',message:'Please ensure you have filled out all required fields.'}}},else:{steps:[{run:{action:`getLevelSingle.load({levelid: createStudentsForm.inp_classLevel.value})`}},{wait:{delay:100}},{run:{action:`studentDatastore.insert({firstName: inp_studentFirstName.value, lastName: inp_studentLastName.value, dob: inp_studentDOB.value, level: inp_classLevel.value, levelName: getLevelSingle.data.query[0].name});createStudentsForm.reset()`}}]}}}])"><i
+                                                class="fas fa-plus-circle fa-fw me-1"></i>Add Student to Family</button></div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="row mt-3 pt-3 border-top">
+                            <div class="col">
+                                <header>
+                                    <h5>Student List</h5>
+                                </header>
+                                <div id="cr_datastoreIsEmpty1" is="dmx-if" dmx-bind:condition="studentDatastore.data.length === 0">
+                                    <p class="border p-3 text-center text-danger rounded">Add students above. All students need to be added here before creating family.</p>
+                                </div>
+
+                                <div id="cr_datastoreHasItems1" is="dmx-if" dmx-bind:condition="studentDatastore.data.length > 0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>First name</th>
+                                                    <th>Last name</th>
+                                                    <th>Date of Birth</th>
+                                                    <th>Level</th>
+                                                    <th style="width: 50px;" class="border-0"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="studentDatastore.data" id="tableRepeat1">
+                                                <tr>
+                                                    <td dmx-text="firstName" class="align-middle"></td>
+                                                    <td dmx-text="lastName" class="align-middle">&nbsp;</td>
+                                                    <td dmx-text="dob.formatDate('dd MMM yyyy')" class="align-middle"></td>
+                                                    <td class="align-middle">{{getLevelSingle.data.level.name}}
+                                                        <dmx-serverconnect id="getLevelSingle" url="/api/getLevels_SINGLE" dmx-param:levelid="level"></dmx-serverconnect>
+                                                    </td>
+                                                    <td class="border-0">
+                                                        <button id="btn3" class="btn btn-outline-danger btn-sm" dmx-on:click="studentDatastore.delete({$id: $id})"><i class="fas fa-minus-circle"></i></button>
+
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section dmx-hide="var_multiformDisplay.value != 3">
+
+
+        <div class="row mb-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header text-light bg-dark">
+                        <h4 class="mb-0">Family Address</h4>
+
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row row-cols-md-2 row-cols-1">
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label for="inp_street1" class="col-form-label form-label">Street 1</label>
+                                    <input type="text" class="form-control" id="inp_street1" name="street1" aria-describedby="input1_help">
+                                </div>
+
+
+
+                            </div>
+                        </div>
+                        <div class="row row-cols-md-2 row-cols-1">
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label for="inp_street2" class="col-form-label form-label">Street 2</label>
+                                    <input type="text" class="form-control" id="inp_street2" name="street2" aria-describedby="input1_help">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                            <div class="col col-xl">
+                                <div class="mb-3">
+                                    <label for="inp_suburb" class="col-form-label form-label">Suburb</label>
+                                    <input type="text" class="form-control" id="inp_suburb" name="suburb" aria-describedby="input1_help">
+                                </div>
+                            </div>
+                            <div class="col col-xl">
+                                <div class="mb-3">
+                                    <label for="sel_state" class="col-form-label form-label">State</label>
+                                    <select id="sel_state" class="form-select" name="state" dmx-bind:disabled="getStates.data.states.length < 1 || !getStates.data.states" dmx-bind:options="getStates.data.states" optiontext="name" optionvalue="id">
+                                        <option disabled selected="" value="">Please select...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col col-xl">
+                                <div class="mb-3">
+                                    <label for="inp_postcode" class="col-form-label form-label">Postcode</label>
+                                    <input type="text" class="form-control" id="inp_postcode" name="postcode" aria-describedby="input1_help">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label for="sel_country" class="col-form-label form-label">Country</label>
+                                    <select id="sel_country" class="form-select" name="country" dmx-bind:options="getCountries.data.countries" optiontext="name" optionvalue="id" dmx-on:changed="getStates.load({countryid: value})"
+                                        dmx-bind:value="appSettings.default_country" dmx-on:change="getStates.load({countryid: value})">
+                                        <option value="" disabled selected="true">Please Select...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mt-4 align-self-end" dmx-hide="var_multiformDisplay.value !== 3">
+        <div class="row">
+            <div class="col"></div>
+            <div class="col-auto">
+                <div class="row">
+                    <div class="col">
+                        <button id="btn4" class="btn btn-outline-secondary">Cancel</button>
+                    </div>
+                    <div class="col">
+                        <button id="submitFamilyBtn" class="btn text-nowrap btn-primary" form="hiddenInputsForm" dmx-on:click="hiddenInputsForm.submit()" dmx-bind:disabled="guardianDatastore.data.length === 0 || studentDatastore.data.length === 0"><i
+                                class="fas fa-save me-1 fa-fw"></i>Save &amp; Go to Family.</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+    <section id="hiddenInputsSection">
+        <form is="dmx-serverconnect-form" id="hiddenInputsForm" method="post" action="/api/createFamilyWithGuardians"
+            dmx-on:success="browser1.goto('/families/familydetail/'+content.hiddenInputsForm.data.newFamilyIdentity,true);studentDatastore.clear();guardianDatastore.clear()">
+            <div class="row" id="hiddenInputs">
+                <div id="guardianInputs" is="dmx-repeat" dmx-bind:repeat="guardianDatastore.data">
+
+                    <input id="inp_guard_firstName" name="firstName" type="hidden" class="form-control" data-msg-required="" dmx-bind:value="firstName" dmx-bind:name="guard_record[{{$index}}][guard_firstName]">
+                    <input id="inp_guard_lastName" name="lastName" type="hidden" class="form-control" dmx-bind:value="lastName" dmx-bind:name="guard_record[{{$index}}][guard_lastName]">
+                    <input id="inp_guard_relationship" name="relationship" type="hidden" class="form-control" dmx-bind:value="relationship" dmx-bind:name="guard_record[{{$index}}][relationship]">
+                    <input id="inp_guard_email" name="email" type="hidden" class="form-control" dmx-bind:value="email" dmx-bind:name="guard_record[{{$index}}][email]">
+                    <input id="inp_guard_phone" name="phone" type="hidden" class="form-control" dmx-bind:value="phoneNumber" dmx-bind:name="guard_record[{{$index}}][phone]">
+                    <input class="form-control" type="hidden" id="inp_guard_primary" dmx-bind:name="guard_record[{{$index}}][isPrimary]" dmx-bind:value="isPrimary">
+                </div>
+                <div id="studentInputs" is="dmx-repeat" dmx-bind:repeat="studentDatastore.data">
+                    <input id="inp_stud_firstName" type="hidden" class="form-control" data-msg-required="" dmx-bind:value="firstName" dmx-bind:name="stud_record[{{$index}}][stud_firstName]">
+                    <input id="inp_stud_lastName" type="hidden" class="form-control" dmx-bind:value="lastName" dmx-bind:name="stud_record[{{$index}}][stud_lastName]">
+                    <input id="inp_stud_level" type="hidden" class="form-control" dmx-bind:value="level" dmx-bind:name="stud_record[{{$index}}][level]">
+                    <input id="inp_stud_dob" type="hidden" class="form-control" dmx-bind:value="dob" dmx-bind:name="stud_record[{{$index}}][dob]">
+                </div>
+                <input type="hidden" class="form-control" id="inp_street1_hdn" name="street1" dmx-bind:value="inp_street1.value">
+                <input type="hidden" class="form-control" id="inp_street2_hdn" name="street2" dmx-bind:value="inp_street2.value">
+                <input type="hidden" class="form-control" id="inp_suburb_hdn" name="suburb" dmx-bind:value="inp_suburb.value">
+                <input type="hidden" class="form-control" id="inp_state_hdn" name="state" dmx-bind:value="sel_state.value">
+                <input type="hidden" class="form-control" id="inp_postcode_hdn" name="postcode" dmx-bind:value="inp_postcode.value">
+                <input type="hidden" class="form-control" id="inp_country_hdn" name="country" dmx-bind:value="sel_country.value">
+            </div>
+        </form>
+    </section>
+</main>

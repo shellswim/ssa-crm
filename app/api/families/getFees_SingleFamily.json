@@ -1,0 +1,727 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "monthtocount"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "studentsEnrolments",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT f.id,\n       JSON_ARRAYAGG(\n               JSON_OBJECT(\n                       'fistName', s.firstName,\n                       'lastName', s.lastName,\n                       'enrolmentsCount', (SELECT COUNT(*)\n                                           FROM enrolments e\n                                           WHERE e.student = s.id\n                                             AND e.isValid = 1\n                                             AND (e.dropDate >= NOW() OR e.dropDate IS NULL)),\n                       'enrolments',\n                       (\n                           SELECT JSON_ARRAYAGG(\n                                          JSON_OBJECT(\n                                                  'enrolmentId', e.id,\n                                                  'startDate', e.startDate,\n                                                  'dropDate', e.dropDate,\n                                                  'enrolmentActive', e.isValid,\n                                                  'classMeetings', JSON_OBJECT(\n                                                          'daysMeeting',\n                                                          (SELECT countWeekday(:monthToCount, CAST((c.day - 1) AS JSON),\n                                                                               e.startDate, e.dropDate)),\n                                                          'forSelectedMonth', IF(\n                                                                          (SELECT st.value FROM settings st WHERE st.name = 'billing_cycle') =\n                                                                          'Month',\n                                                                          CONCAT_WS(', ', MONTHNAME(:monthToCount), YEAR(:monthToCount)),\n                                                                          null)\n                                                      ),\n                                                  'classDetails',\n                                                  JSON_OBJECT(\n                                                          'classId', c.id,\n                                                          'day', c.day - 1,\n                                                          'maxEnrolments', c.max,\n                                                          'classIsActive', c.isactive,\n                                                          'instructor',\n                                                          CONCAT(i.firstName, ' ', SUBSTR(i.lastName, 1, 1), '.'),\n                                                          'times', JSON_OBJECT(\n                                                                  'startTimeDecimal',\n                                                                  c.startTimeDecimal,\n                                                                  'endTimeDecimal', c.endTimeDecimal,\n                                                                  'startTimeDisplay',\n                                                                  c.startTimeDisplay,\n                                                                  'endTimeDisplay', c.endTimeDisplay\n                                                              )\n                                                      )\n                                              )\n                                      )\n                           FROM enrolments e\n                                    join classes c on e.classId = c.id\n                                    join staff i on c.instructor = i.id\n                           WHERE e.student = s.id\n                             AND e.isValid = 1\n                             AND (e.dropDate >= NOW() OR e.dropDate IS NULL)\n                       )\n                   )\n           ) AS studentInformation\nFROM families f\n         join students s on f.id = s.family\nWHERE f.id = :fid",
+            "params": [
+              {
+                "name": ":fid",
+                "value": "{{$_GET.familyid}}",
+                "test": "36"
+              },
+              {
+                "name": ":monthToCount",
+                "value": "{{$_GET.monthtocount}}",
+                "test": "2021-06-02"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "studentInformation",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "allStudents",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "students"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM students\nWHERE family = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ],
+            "orders": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.family",
+                  "field": "students.family",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "family",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      },
+      {
+        "name": "rp_studentEnrolments",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{allStudents}}",
+          "outputFields": [
+            "firstName",
+            "lastName"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "studentEnrolments",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.student",
+                          "field": "enrolments.student",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "student",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "condition": "OR",
+                          "rules": [
+                            {
+                              "id": "enrolments.dropDate",
+                              "field": "enrolments.dropDate",
+                              "type": "date",
+                              "operator": "greater_or_equal",
+                              "value": "{{NOW}}",
+                              "data": {
+                                "table": "enrolments",
+                                "column": "dropDate",
+                                "type": "date"
+                              },
+                              "operation": ">="
+                            },
+                            {
+                              "id": "enrolments.dropDate",
+                              "field": "enrolments.dropDate",
+                              "type": "date",
+                              "operator": "is_null",
+                              "value": null,
+                              "data": {
+                                "table": "enrolments",
+                                "column": "dropDate",
+                                "type": "date"
+                              },
+                              "operation": "IS NULL"
+                            }
+                          ],
+                          "conditional": "{{enrolments.dropDate}}"
+                        },
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT e.*, SELECT countWeekday(NOW(),(CAST(:dayArray AS JSON)), :startDate, :dropDate) as weekdayCount \nFROM enrolments e\nWHERE student = :P1 /* {{id}} */ AND (dropDate >= :P2 /* {{NOW}} */ OR dropDate IS NULL) AND isValid = true",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      },
+                      {
+                        "operator": "greater_or_equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{NOW}}"
+                      },
+                      {
+                        "name": ":monthToCount",
+                        "value": "{{$_GET.monthToCount}}",
+                        "test": "2021-07-14"
+                      },
+                      {
+                        "name": ":dayArray",
+                        "value": "{{getClassDetails.day - 1}}",
+                        "test": "3"
+                      },
+                      {
+                        "name": ":startDate",
+                        "value": "{{startDate}}",
+                        "test": "2021-07-14"
+                      },
+                      {
+                        "name": ":dropDate",
+                        "value": "{{dropDate}}",
+                        "test": "2021-07-28"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolmentType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "isValid",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "student",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "classId",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropReason",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array",
+                "disabled": true
+              },
+              {
+                "name": "enrolmentsDetails",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{studentEnrolments}}",
+                  "outputFields": [],
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "getClassDetails",
+                        "module": "dbconnector",
+                        "action": "single",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "classes",
+                                "column": "day"
+                              },
+                              {
+                                "table": "classTypes",
+                                "column": "baseRate"
+                              }
+                            ],
+                            "table": {
+                              "name": "classes"
+                            },
+                            "joins": [
+                              {
+                                "table": "classTypes",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "classTypes",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "classes",
+                                        "column": "classType"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "classes.id",
+                                  "field": "classes.id",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{classId}}",
+                                  "data": {
+                                    "table": "classes",
+                                    "column": "id",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT classes.day, classTypes.baseRate\nFROM classes\nINNER JOIN classTypes ON (classTypes.id = classes.classType)\nWHERE classes.id = :P1 /* {{classId}} */",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{classId}}"
+                              }
+                            ]
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "name": "day",
+                            "type": "text"
+                          },
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          }
+                        ],
+                        "outputType": "object"
+                      },
+                      {
+                        "name": "calculateEnrolmentDays",
+                        "module": "dbupdater",
+                        "action": "custom",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "query": "SELECT countWeekday(NOW(),(CAST(:dayArray AS JSON)), :startDate, :dropDate) as weekdayCount;",
+                            "params": [
+                              {
+                                "name": ":monthToCount",
+                                "value": "{{$_GET.monthToCount}}",
+                                "test": "2021-07-14"
+                              },
+                              {
+                                "name": ":dayArray",
+                                "value": "{{getClassDetails.day - 1}}",
+                                "test": "3"
+                              },
+                              {
+                                "name": ":startDate",
+                                "value": "{{startDate}}",
+                                "test": "2021-07-14"
+                              },
+                              {
+                                "name": ":dropDate",
+                                "value": "{{dropDate}}",
+                                "test": "2021-07-28"
+                              }
+                            ]
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "name": "weekdayCount",
+                            "type": "number"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "enrolmentPrice",
+                        "module": "core",
+                        "action": "setvalue",
+                        "options": {
+                          "value": "{{(calculateEnrolmentDays[0].weekdayCount) * getClassDetails.baseRate}}",
+                          "key": "testArrayGlobal"
+                        },
+                        "output": true,
+                        "outputType": "object"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolmentType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "isValid",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "student",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "classId",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dropReason",
+                    "type": "text"
+                  },
+                  {
+                    "name": "getClassDetails",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "day",
+                        "type": "text"
+                      },
+                      {
+                        "name": "baseRate",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "calculateEnrolmentDays",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "weekdayCount",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "enrolmentPrice",
+                    "type": "object"
+                  }
+                ],
+                "outputType": "array",
+                "disabled": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          },
+          {
+            "name": "studentEnrolments",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "enrolmentType",
+                "type": "number"
+              },
+              {
+                "name": "dropDate",
+                "type": "date"
+              },
+              {
+                "name": "isValid",
+                "type": "boolean"
+              },
+              {
+                "name": "student",
+                "type": "text"
+              },
+              {
+                "name": "startDate",
+                "type": "date"
+              },
+              {
+                "name": "classId",
+                "type": "number"
+              },
+              {
+                "name": "dropReason",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "enrolmentsDetails",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "enrolmentType",
+                "type": "number"
+              },
+              {
+                "name": "dropDate",
+                "type": "date"
+              },
+              {
+                "name": "isValid",
+                "type": "boolean"
+              },
+              {
+                "name": "student",
+                "type": "text"
+              },
+              {
+                "name": "startDate",
+                "type": "date"
+              },
+              {
+                "name": "classId",
+                "type": "number"
+              },
+              {
+                "name": "dropReason",
+                "type": "text"
+              },
+              {
+                "name": "getClassDetails",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "day",
+                    "type": "text"
+                  },
+                  {
+                    "name": "baseRate",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "calculateEnrolmentDays",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "weekdayCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "enrolmentPrice",
+                "type": "object"
+              }
+            ]
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      }
+    ]
+  }
+}

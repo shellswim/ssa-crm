@@ -1,0 +1,555 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "searchtextfilter"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "families",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT DISTINCT SUM(score) as score, data.family\n    FROM (\n                  SELECT g.family AS family,\n                         SUM((MATCH(g.firstName, g.lastName) AGAINST(:P1 IN BOOLEAN MODE)) +\n                         (MATCH(s.firstName, s.lastName) AGAINST(:P1 IN BOOLEAN MODE))) as score\n                  FROM guardians g join students s on g.family = s.family\n                    GROUP BY g.family\n              ) as data\nWHERE (score) > 0\nGROUP BY score, data.family\nORDER BY score DESC",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.searchtextfilter}}",
+                "test": "tobias zelvis"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "studentsAndFamilies",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{families}}",
+          "outputFields": [
+            "family",
+            "score"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "students",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT DISTINCT \nscore, MAX(score) as max_score, \ns.id, \ns.firstName, \ns.lastName, \ncl.name as level, \ns.family, \ns.gender, \ns.dob, \ns.id,\nCONCAT_WS(' ',\n        CONCAT(TIMESTAMPDIFF( YEAR, s.dob, now() ), 'y'),\n        CONCAT(TIMESTAMPDIFF( MONTH, s.dob, now() ) % 12, 'm')) AS age, \n:P1 as term\nFROM (\n    SELECT MATCH(firstName, lastName) AGAINST(:P1 IN BOOLEAN MODE) AS score, firstName, lastName, level, family, gender, dob, id\n    FROM students ) AS s join families f ON s.family = f.id join guardians g on f.id = g.family join classLevels cl on s.level = cl.id\nWHERE s.family = :P2\nGROUP BY score, s.id, s.firstName, s.lastName, s.level, s.family, s.gender, s.dob, s.id\nORDER BY score desc, s.firstName, s.lastName",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{$_GET.searchtextfilter}}",
+                        "test": "tobias zelvis"
+                      },
+                      {
+                        "name": ":P2",
+                        "value": "{{family}}",
+                        "test": "36"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "max_score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "level",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dob",
+                    "type": "text"
+                  },
+                  {
+                    "name": "age",
+                    "type": "text"
+                  },
+                  {
+                    "name": "term",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "students",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "students"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "students.family",
+                          "field": "students.family",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{family}}",
+                          "data": {
+                            "table": "students",
+                            "column": "family",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM students\nWHERE family = :P1 /* {{family}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{family}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dob",
+                    "type": "date"
+                  },
+                  {
+                    "name": "rollSheetComments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "rollSheetMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "additionalMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "text"
+                  },
+                  {
+                    "name": "level",
+                    "type": "text"
+                  },
+                  {
+                    "name": "age",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array",
+                "disabled": true
+              },
+              {
+                "name": "guardians",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "guardians"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "guardians.family",
+                          "field": "guardians.family",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{family}}",
+                          "data": {
+                            "table": "guardians",
+                            "column": "family",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM guardians\nWHERE family = :P1 /* {{family}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{family}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "relationship",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "primaryGuardian",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "guardians",
+                        "column": "id"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "family"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "relationship"
+                      }
+                    ],
+                    "table": {
+                      "name": "guardians"
+                    },
+                    "joins": [
+                      {
+                        "table": "families",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "families",
+                              "column": "primaryGuardian",
+                              "operator": "equal",
+                              "value": {
+                                "table": "guardians",
+                                "column": "id"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "families.id",
+                          "field": "families.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{family}}",
+                          "data": {
+                            "table": "families",
+                            "column": "id",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT guardians.id, guardians.firstName, guardians.lastName, guardians.family, guardians.relationship\nFROM guardians\nINNER JOIN families ON (families.primaryGuardian = guardians.id)\nWHERE families.id = :P1 /* {{family}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{family}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "relationship",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "object"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "students",
+            "type": "array",
+            "sub": [
+              {
+                "name": "score",
+                "type": "number"
+              },
+              {
+                "name": "max_score",
+                "type": "number"
+              },
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "level",
+                "type": "text"
+              },
+              {
+                "name": "family",
+                "type": "number"
+              },
+              {
+                "name": "gender",
+                "type": "text"
+              },
+              {
+                "name": "dob",
+                "type": "text"
+              },
+              {
+                "name": "age",
+                "type": "text"
+              },
+              {
+                "name": "term",
+                "type": "text"
+              },
+              {
+                "name": "rollSheetComments",
+                "type": "text"
+              },
+              {
+                "name": "rollSheetMedical",
+                "type": "text"
+              },
+              {
+                "name": "additionalMedical",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "guardians",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "family",
+                "type": "text"
+              },
+              {
+                "name": "relationship",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "primaryGuardian",
+            "type": "object",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "family",
+                "type": "text"
+              },
+              {
+                "name": "relationship",
+                "type": "text"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

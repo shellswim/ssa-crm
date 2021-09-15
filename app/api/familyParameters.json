@@ -1,0 +1,1079 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "familyDetails",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "families",
+                "column": "students"
+              },
+              {
+                "table": "families",
+                "column": "primaryGuardian"
+              },
+              {
+                "table": "families",
+                "column": "street1"
+              },
+              {
+                "table": "families",
+                "column": "street2"
+              },
+              {
+                "table": "families",
+                "column": "suburb"
+              },
+              {
+                "table": "families",
+                "column": "state"
+              },
+              {
+                "table": "families",
+                "column": "id"
+              }
+            ],
+            "table": {
+              "name": "families"
+            },
+            "joins": [
+              {
+                "table": "guardians",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "guardians",
+                      "column": "family",
+                      "operator": "equal",
+                      "value": {
+                        "table": "families",
+                        "column": "id"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "families.id",
+                  "field": "families.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "families",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT families.students, families.primaryGuardian, families.street1, families.street2, families.suburb, families.state, families.id\nFROM families\nINNER JOIN guardians ON (guardians.family = families.id)\nWHERE families.id = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "students",
+            "type": "text"
+          },
+          {
+            "name": "primaryGuardian",
+            "type": "text"
+          },
+          {
+            "name": "street1",
+            "type": "text"
+          },
+          {
+            "name": "street2",
+            "type": "text"
+          },
+          {
+            "name": "suburb",
+            "type": "text"
+          },
+          {
+            "name": "state",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "getGuardiansWContactsRAW",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT\n       f.id,\n       f.primaryGuardian,\n       g.id,\n       g.firstName,\n       g.lastName,\n       g.relationship,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, p.phone) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM phoneNumbers p LEFT JOIN contactTypes cT on p.type = cT.id\n            WHERE guardianId = g.id\n        ) AS phoneNumbers,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, e.address) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM emails e LEFT JOIN contactTypes cT on e.type = cT.id\n            WHERE guardianId = g.id\n        ) AS emailAddresses\nFROM\n     families f\n         LEFT JOIN guardians g on f.id = g.family\nWHERE\n    f.id = :P1\nGROUP BY\n        f.id,\n        g.id,\n        g.firstName,\n        g.lastName",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}",
+                "test": "36"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "primaryGuardian",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "number"
+          },
+          {
+            "name": "phoneNumbers",
+            "type": "text"
+          },
+          {
+            "name": "emailAddresses",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "getGuardiansWContacts",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{getGuardiansWContactsRAW}}",
+          "outputFields": [
+            "id",
+            "primaryGuardian",
+            "firstName",
+            "lastName",
+            "relationship",
+            "phoneNumbers",
+            "emailAddresses"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "phoneNumbersArray",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "phoneNumbers"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "phoneNumbers.guardianId",
+                          "field": "phoneNumbers.guardianId",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "phoneNumbers",
+                            "column": "guardianId",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM phoneNumbers\nWHERE guardianId = :P1 /* {{id}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "phone",
+                    "type": "text"
+                  },
+                  {
+                    "name": "guardianId",
+                    "type": "text"
+                  },
+                  {
+                    "name": "type",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "emailAddressesArray",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "emails"
+                    },
+                    "joins": [],
+                    "query": "SELECT *\nFROM emails\nWHERE guardianId = :P1 /* {{id}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "emails.guardianId",
+                          "field": "emails.guardianId",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "emails",
+                            "column": "guardianId",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    }
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "address",
+                    "type": "text"
+                  },
+                  {
+                    "name": "guardianId",
+                    "type": "text"
+                  },
+                  {
+                    "name": "type",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "primaryGuardian",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "number"
+          },
+          {
+            "name": "phoneNumbers",
+            "type": "text"
+          },
+          {
+            "name": "emailAddresses",
+            "type": "text"
+          },
+          {
+            "name": "phoneNumbersArray",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "phone",
+                "type": "text"
+              },
+              {
+                "name": "guardianId",
+                "type": "text"
+              },
+              {
+                "name": "type",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "emailAddressesArray",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "address",
+                "type": "text"
+              },
+              {
+                "name": "guardianId",
+                "type": "text"
+              },
+              {
+                "name": "type",
+                "type": "text"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "getAllGuardians_RAW",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "guardians",
+                "column": "id"
+              },
+              {
+                "table": "guardians",
+                "column": "firstName"
+              },
+              {
+                "table": "guardians",
+                "column": "lastName"
+              },
+              {
+                "table": "guardians",
+                "column": "family"
+              },
+              {
+                "table": "guardians",
+                "column": "relationship"
+              }
+            ],
+            "table": {
+              "name": "guardians"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.family",
+                  "field": "guardians.family",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "family",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT id, firstName, lastName, family, relationship\nFROM guardians\nWHERE family = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "familyNotes",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "familyNotes",
+                "column": "id"
+              },
+              {
+                "table": "familyNotes",
+                "column": "content"
+              },
+              {
+                "table": "familyNotes",
+                "column": "priority"
+              },
+              {
+                "table": "familyNotes",
+                "column": "family"
+              },
+              {
+                "table": "familyNotes",
+                "column": "subject"
+              },
+              {
+                "table": "familyNotes",
+                "column": "priority",
+                "alias": "maxPriority",
+                "aggregate": "MAX"
+              }
+            ],
+            "table": {
+              "name": "familyNotes"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "familyNotes.family",
+                  "field": "familyNotes.family",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "familyNotes",
+                    "column": "family",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT id, content, priority, family, subject, MAX(priority) AS maxPriority\nFROM familyNotes\nWHERE family = :P1 /* {{$_GET.familyid}} */\nGROUP BY id, content, priority, family, subject\nORDER BY priority DESC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ],
+            "orders": [
+              {
+                "table": "familyNotes",
+                "column": "priority",
+                "direction": "DESC",
+                "recid": 1
+              }
+            ],
+            "groupBy": [
+              {
+                "table": "familyNotes",
+                "column": "id"
+              },
+              {
+                "table": "familyNotes",
+                "column": "content"
+              },
+              {
+                "table": "familyNotes",
+                "column": "priority"
+              },
+              {
+                "table": "familyNotes",
+                "column": "family"
+              },
+              {
+                "table": "familyNotes",
+                "column": "subject"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "content",
+            "type": "text"
+          },
+          {
+            "name": "priority",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "subject",
+            "type": "text"
+          },
+          {
+            "name": "maxPriority",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "primaryGuardian",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "guardians",
+                "column": "firstName"
+              },
+              {
+                "table": "guardians",
+                "column": "lastName"
+              },
+              {
+                "table": "guardians",
+                "column": "id"
+              },
+              {
+                "table": "guardians",
+                "column": "relationship"
+              },
+              {
+                "table": "guardians",
+                "column": "family"
+              }
+            ],
+            "table": {
+              "name": "guardians"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.id",
+                  "field": "guardians.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{familyDetails.primaryGuardian}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT firstName, lastName, id, relationship, family\nFROM guardians\nWHERE id = :P1 /* {{familyDetails.primaryGuardian}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{familyDetails.primaryGuardian}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "getStudentsInFamily",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT\n    s.id,\n    s.id,\n    s.firstname,\n    s.lastname,\n    s.dob,\n    CONCAT_WS(' ',\n        CONCAT(TIMESTAMPDIFF( YEAR, s.dob, now() ), 'y'),\n        CONCAT(TIMESTAMPDIFF( MONTH, s.dob, now() ) % 12, 'm')) AS age,\n    s.rollsheetcomments,\n    s.rollsheetmedical,\n    s.additionalmedical,\n    s.family,\n    s.gender,\n    s.level\nFROM students s\nWHERE family = :P1",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}",
+                "test": "36"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "firstname",
+            "type": "text"
+          },
+          {
+            "name": "lastname",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "text"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetcomments",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetmedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalmedical",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "loopThroughStudents",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{getStudentsInFamily}}",
+          "outputFields": [
+            "id",
+            "firstname",
+            "lastname",
+            "age",
+            "dob",
+            "level"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "getStudentNotes",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "studentNotes",
+                        "column": "priority"
+                      },
+                      {
+                        "table": "studentNotes",
+                        "column": "content"
+                      },
+                      {
+                        "table": "studentNotes",
+                        "column": "id"
+                      },
+                      {
+                        "table": "studentNotes",
+                        "column": "student"
+                      },
+                      {
+                        "table": "studentNotes",
+                        "column": "subject"
+                      }
+                    ],
+                    "table": {
+                      "name": "studentNotes"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "studentNotes.student",
+                          "field": "studentNotes.student",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "studentNotes",
+                            "column": "student",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT priority, content, id, student, subject\nFROM studentNotes\nWHERE student = :P1 /* {{id}} */\nORDER BY priority DESC",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": [
+                      {
+                        "table": "studentNotes",
+                        "column": "priority",
+                        "direction": "DESC",
+                        "recid": 1
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "priority",
+                    "type": "number"
+                  },
+                  {
+                    "name": "content",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "student",
+                    "type": "text"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "groupedPriorities",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "select COUNT(*), priority,\n        case\n            when priority = 1 then 'Lowest'\n            when priority = 2 then 'Low'\n            when priority = 3 then 'Medium'\n            when priority = 4 then 'High'\n            when priority = 5 then 'Critical'\n        end as priority_name\nfrom studentNotes join students s on s.id = studentNotes.student\nwhere s.id = :P1\ngroup by priority\norder by priority desc",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "251"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "COUNT(*)",
+                    "type": "number"
+                  },
+                  {
+                    "name": "priority",
+                    "type": "number"
+                  },
+                  {
+                    "name": "priority_name",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "firstname",
+            "type": "text"
+          },
+          {
+            "name": "lastname",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "text"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetcomments",
+            "type": "text"
+          },
+          {
+            "name": "rollsheetmedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalmedical",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "number"
+          },
+          {
+            "name": "getStudentNotes",
+            "type": "array",
+            "sub": [
+              {
+                "name": "priority",
+                "type": "number"
+              },
+              {
+                "name": "content",
+                "type": "text"
+              },
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "student",
+                "type": "text"
+              },
+              {
+                "name": "subject",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "groupedPriorities",
+            "type": "array",
+            "sub": [
+              {
+                "name": "COUNT(*)",
+                "type": "number"
+              },
+              {
+                "name": "priority",
+                "type": "number"
+              },
+              {
+                "name": "priority_name",
+                "type": "text"
+              }
+            ]
+          }
+        ],
+        "outputType": "array",
+        "output": true
+      }
+    ]
+  }
+}

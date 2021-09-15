@@ -1,0 +1,125 @@
+<!-- Wappler include head-page="classes/classes" appconnect="local" is="dmx-app" jquery_35="local" fontawesome_5="cdn" bootstrap5="local" -->
+<dmx-session-manager id="ss_ClassFilters"></dmx-session-manager>
+<div class="col pt-3 pb-3 px-3 bg-white">
+    <div class="row">
+        <div class="col mb-3 pb-3 border-bottom">
+            <button id="createNewClassButton" class="btn rounded-0 w-100 btn-outline-primary" dmx-on:click="createClassModal.show()"><i class="fas fa-plus me-2 fa-sm"></i>Create Class
+            </button>
+        </div>
+    </div>
+    <div class="row no-gutters" id="con_filters">
+        <div class="col p-2">
+            <div class="row no-gutters">
+                <div class="col">
+                    <h6 class="text-uppercase">Class Filters:</h6>
+                    <div class="row">
+                        <div class="col">
+
+                            <div class="row mb-1 flex-column pb-2 mb-2 border-bottom" id="daysFilterRow">
+                                <div class="col">
+                                    <dmx-array id="arr_dayFilter" dmx-bind:items="ss_ClassFilters.data.days"></dmx-array>
+                                    <dmx-array id="arr_dayGet"
+                                        dmx-on:updated="run([{run:{action:`classesQuery.set(\'days\',items)`}},{run:{action:`ss_ClassFilters.set(\'days\',arr_dayFilter.items); ss_ClassFilters.set(\'dayGet\',arr_dayGet.items)`}},{condition:{if:`content.arr_dayGet.count == 0`,then:{steps:{run:{action:`classesQuery.remove(\'days\')`}}}}}])"
+                                        dmx-bind:items="ss_ClassFilters.data.dayGet">
+                                    </dmx-array>
+                                    <div class="mb-3">
+                                        <label for="f_sel_day" class="col-form-label form-label">Day</label>
+                                        <select id="f_sel_day" class="form-control form-select" dmx-bind:options="classesBase.data.days.days" optiontext="name" optionvalue="id" name="days" data-msg-required=""
+                                            dmx-on:changed="run([{run:{action:`arr_dayFilter.addUniq(classesBase.data.days.days[value - 1]);arr_dayGet.addUniq(classesBase.data.days.days[value - 1].id);queryManager.remove('offset')`}},{wait:{delay:500}},{runJS:{function:'optionDisable',args:['#f_sel_day',`content.arr_dayFilter.items`,'disable']}},{run:{action:`f_sel_day.setValue(null)`}}])">
+                                            <option value="" selected="">Filter Days...</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+                                <div class="col" is="dmx-if" id="daysFilterTagsConditional" dmx-bind:condition="arr_dayFilter.count > 0">
+                                    <p class="mb-0 small">Days:&nbsp;<a href="#" class="small" dmx-on:click="run([{run:{action:`arr_dayFilter.empty();arr_dayGet.empty()`}},{runJS:{function:'optionDisable',args:['#f_sel_day','','all']}}])"><em>Clear
+                                                Days</em></a>
+                                    </p>
+                                    <div id="rp_selectedDays" is="dmx-repeat" dmx-bind:repeat="arr_dayFilter.items">
+                                        <button id="dayTags" class="btn border rounded-0 me-1 pe-2 ps-2 btn-sm w-100 text-start d-flex justify-content-between align-items-center fw-bold bg-white"
+                                            dmx-on:click="run([{runJS:{function:'optionDisable',args:['#f_sel_day',`$value.id`]}},{wait:{delay:50}},{run:{action:`arr_dayFilter.removeAt($index);arr_dayGet.removeAt($key)`}}])">{{$value.name}}<i
+                                                class="fas fa-times fa-xs fa-fw"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row flex-column mb-2 pb-2 border-bottom" id="timesFilterRow">
+                                <div class="col">
+                                    <dmx-array id="arr_timeFilter" dmx-bind:items="ss_ClassFilters.data.times"></dmx-array>
+                                    <dmx-array id="arr_timeGet"
+                                        dmx-on:updated="run([{run:{action:`classesQuery.set(\'times\',items)`}},{run:{action:`ss_ClassFilters.set(\'times\',arr_timeFilter.items); ss_ClassFilters.set(\'timeGet\',arr_timeGet.items)`}},{condition:{if:`content.arr_timeGet.count == 0`,then:{steps:{run:{action:`classesQuery.remove(\'times\')`}}}}}])"
+                                        dmx-bind:items="ss_ClassFilters.data.timeGet">
+                                    </dmx-array>
+                                    <div class="mb-3">
+                                        <label for="f_sel_times" class="col-form-label form-label">Start Times</label>
+                                        <select id="f_sel_times" class="form-control form-select" dmx-bind:options="appSettings.ct_array" optiontext="display" optionvalue="decimal"
+                                            dmx-on:changed="run([{condition:{if:`value != \'\'`,then:{steps:{run:{action:`arr_timeFilter.addUniq(appSettings.ct_array[selectedIndex - 1]);arr_timeGet.addUniq(appSettings.ct_array[selectedIndex - 1].decimal);queryManager.remove('offset')`}}}}},{wait:{delay:500}},{run:{action:`f_sel_times.setValue(null)`}}])">
+                                            <option value="">Filter Start Times...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col" is="dmx-if" id="filterTimesConditional" dmx-bind:condition="arr_timeFilter.count > 0">
+                                    <p class="mb-0 small">Times:&nbsp;&nbsp;<a href="#" class="small" dmx-on:click="arr_timeFilter.empty();arr_timeGet.empty()"><em>Clear Times</em></a></p>
+                                    <div id="rp_selectedTimes" is="dmx-repeat" dmx-bind:repeat="arr_timeFilter.items">
+                                        <button id="timeTags" class="btn border rounded-0 me-1 pe-2 ps-2 btn-sm w-100 text-start d-flex justify-content-between align-items-center fw-bold bg-white"
+                                            dmx-on:click="arr_timeFilter.removeAt($index); arr_timeGet.removeAt($index)">{{$value.display}}
+                                            <i class="fas fa-times fa-xs fa-fw"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row flex-column mb-2 pb-2 border-bottom" id="levelsFilterRow">
+                                <div class="col">
+                                    <dmx-array id="arr_levelFilter" dmx-bind:items="ss_ClassFilters.data.levels"></dmx-array>
+                                    <dmx-array id="arr_levelGet"
+                                        dmx-on:updated="run([{run:{action:`classesQuery.set(\'levels\',items)`}},{run:{action:`ss_ClassFilters.set(\'levels\',arr_levelFilter.items); ss_ClassFilters.set(\'levelGet\',arr_levelGet.items)`}},{condition:{if:`content.arr_levelGet.count == 0`,then:{steps:{run:{action:`classesQuery.remove(\'levels\')`}}}}}])"
+                                        dmx-bind:items="ss_ClassFilters.data.levelGet">
+                                    </dmx-array>
+                                    <div class="mb-3">
+                                        <label for="f_sel_levels" class="col-form-label form-label">Levels</label>
+                                        <select id="f_sel_levels" class="form-control form-select" dmx-bind:options="getLevels.data.query" optiontext="name"
+                                            dmx-on:changed="run([{condition:{if:`value != \'\'`,then:{steps:{run:{action:`arr_levelFilter.addUniq(appSettings.classLevels[f_sel_levels.value]);arr_levelGet.addUniq(appSettings.classLevels[f_sel_levels.value].id);queryManager.remove('offset')`}}}}},{wait:{delay:500}},{run:{action:`f_sel_levels.setValue(null)`}}])"
+                                            optionvalue="name">
+                                            <option value="">Filter Levels...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col" is="dmx-if" id="filterLevelsConditional" dmx-bind:condition="arr_levelFilter.count > 0">
+                                    <p class="mb-0 small">Levels:&nbsp;&nbsp;<a href="#" class="small" dmx-on:click="arr_levelFilter.empty(); arr_levelGet.empty();"><em>Clear Levels</em></a></p>
+                                    <div id="rp_selectedTimes1" is="dmx-repeat" dmx-bind:repeat="arr_levelFilter.items"><button id="timeTags1"
+                                            class="btn border rounded-0 me-1 pe-2 ps-2 btn-sm w-100 text-start d-flex justify-content-between align-items-center fw-bold bg-white"
+                                            dmx-on:click="arr_levelFilter.removeAt($index); arr_levelGet.removeAt($index);">{{$value.name}}<i class="fas fa-times fa-xs fa-fw"></i></button></div>
+                                </div>
+                            </div>
+                            <div class="row flex-column mb-2 pb-2 border-bottom" id="instructorFilterRow">
+                                <div class="col">
+                                    <dmx-array id="arr_instructorFilter" dmx-bind:items="ss_ClassFilters.data.instructors"></dmx-array>
+                                    <dmx-array id="arr_instructorGet"
+                                        dmx-on:updated="run([{run:{action:`classesQuery.set(\'instructors\',items)`}},{run:{action:`ss_ClassFilters.set(\'instructors\',arr_instructorFilter.items); ss_ClassFilters.set(\'instructorGet\',arr_instructorGet.items)`}},{condition:{if:`content.arr_instructorGet.count == 0`,then:{steps:{run:{action:`classesQuery.remove(\'instructors\')`}}}}}])"
+                                        dmx-bind:items="ss_ClassFilters.data.instructorGet">
+                                    </dmx-array>
+                                    <div class="mb-3">
+                                        <label for="f_sel_instructors" class="col-form-label form-label">Instructors</label>
+                                        <select id="f_sel_instructors" class="form-control form-select" dmx-bind:options="instructors" optiontext="firstName +' '+lastName.trunc(1, true, '.')"
+                                            dmx-on:changed="run([{condition:{if:`value != \'\'`,then:{steps:{run:{action:`arr_instructorFilter.addUniq(instructors[selectedIndex - 1]);arr_instructorGet.addUniq(instructors[selectedIndex - 1].id);queryManager.remove('offset')`}}}}},{wait:{delay:500}},{run:{action:`f_sel_instructors.setValue(null)`}}])"
+                                            optionvalue="id">
+                                            <option value="">Filter Instructor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col" is="dmx-if" id="filterInstructorsConditional" dmx-bind:condition="arr_instructorFilter.count > 0">
+                                    <p class="mb-0 small">Instructors:&nbsp;&nbsp;<a href="#" class="small" dmx-on:click="arr_instructorFilter.empty(); arr_instructorGet.empty();"><em>Clear Instructors</em></a></p>
+                                    <div id="rp_selectedInstructors" is="dmx-repeat" dmx-bind:repeat="arr_instructorFilter.items">
+                                        <button id="instructorTags" class="btn border rounded-0 me-1 pe-2 ps-2 btn-sm w-100 text-start d-flex justify-content-between align-items-center fw-bold bg-white"
+                                            dmx-on:click="arr_instructorFilter.removeAt($index); arr_instructorGet.removeAt($index);">{{$value.firstName + ' ' + $value.lastName.trunc(1, true, '.')}}<i class="fas fa-times fa-xs fa-fw"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

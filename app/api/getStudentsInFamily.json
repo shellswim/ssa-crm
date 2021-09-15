@@ -1,0 +1,477 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              },
+              {
+                "table": "students",
+                "column": "dob"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetComments"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetMedical"
+              },
+              {
+                "table": "students",
+                "column": "additionalMedical"
+              },
+              {
+                "table": "students",
+                "column": "id"
+              },
+              {
+                "table": "students",
+                "column": "family"
+              },
+              {
+                "table": "classLevels",
+                "column": "name"
+              },
+              {
+                "table": "students",
+                "column": "gender"
+              },
+              {
+                "table": "students",
+                "column": "level"
+              },
+              {
+                "table": "studentNotes",
+                "column": "id",
+                "aggregate": "COUNT",
+                "alias": "studentNotesCount"
+              },
+              {
+                "table": "studentNotes",
+                "column": "priority",
+                "alias": "studentNotesMaxPriority",
+                "aggregate": "MAX"
+              }
+            ],
+            "table": {
+              "name": "students"
+            },
+            "joins": [
+              {
+                "table": "families",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "families",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "students",
+                        "column": "family"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "students",
+                        "column": "level"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "studentNotes",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "studentNotes",
+                      "column": "student",
+                      "operator": "equal",
+                      "value": {
+                        "table": "students",
+                        "column": "id"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "orders": [],
+            "query": "SELECT students.firstName, students.lastName, students.dob, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.id, students.family, classLevels.name, students.gender, students.level, COUNT(studentNotes.id) AS studentNotesCount, MAX(studentNotes.priority) AS studentNotesMaxPriority\nFROM students\nINNER JOIN families ON (families.id = students.family) INNER JOIN classLevels ON (classLevels.id = students.level) LEFT JOIN studentNotes ON (studentNotes.student = students.id)\nWHERE students.family = :P1 /* {{$_GET.familyid}} */\nGROUP BY students.firstName, students.lastName, students.dob, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.id, students.family, classLevels.name, students.gender, students.level",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.family",
+                  "field": "students.family",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "family",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "distinct": false,
+            "groupBy": [
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              },
+              {
+                "table": "students",
+                "column": "dob"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetComments"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetMedical"
+              },
+              {
+                "table": "students",
+                "column": "additionalMedical"
+              },
+              {
+                "table": "students",
+                "column": "id"
+              },
+              {
+                "table": "students",
+                "column": "family"
+              },
+              {
+                "table": "classLevels",
+                "column": "name"
+              },
+              {
+                "table": "students",
+                "column": "gender"
+              },
+              {
+                "table": "students",
+                "column": "level"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "name",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "studentNotesCount",
+            "type": "text"
+          },
+          {
+            "name": "studentNotesMaxPriority",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query}}",
+          "outputFields": [],
+          "exec": {
+            "steps": {
+              "name": "getStudentNotes",
+              "module": "dbconnector",
+              "action": "select",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [
+                    {
+                      "table": "studentNotes",
+                      "column": "id"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "content"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "student"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "priority"
+                    }
+                  ],
+                  "table": {
+                    "name": "studentNotes"
+                  },
+                  "joins": [],
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "studentNotes.student",
+                        "field": "studentNotes.student",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{id}}",
+                        "data": {
+                          "table": "studentNotes",
+                          "column": "student",
+                          "type": "text"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "SELECT id, content, student, priority\nFROM studentNotes\nWHERE student = :P1 /* {{id}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{id}}"
+                    }
+                  ]
+                }
+              },
+              "output": true,
+              "meta": [
+                {
+                  "name": "id",
+                  "type": "text"
+                },
+                {
+                  "name": "content",
+                  "type": "text"
+                },
+                {
+                  "name": "student",
+                  "type": "text"
+                },
+                {
+                  "name": "priority",
+                  "type": "number"
+                }
+              ],
+              "outputType": "array"
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "name",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "text"
+          },
+          {
+            "name": "studentNotesCount",
+            "type": "text"
+          },
+          {
+            "name": "studentNotesMaxPriority",
+            "type": "number"
+          },
+          {
+            "name": "getStudentNotes",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "text"
+              },
+              {
+                "name": "content",
+                "type": "text"
+              },
+              {
+                "name": "student",
+                "type": "text"
+              },
+              {
+                "name": "priority",
+                "type": "number"
+              }
+            ]
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      }
+    ]
+  }
+}
