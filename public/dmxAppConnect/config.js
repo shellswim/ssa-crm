@@ -5410,7 +5410,399 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "rp_chargePayments": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "paymentType",
+          "type": "number"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "charges",
+          "type": "number"
+        },
+        {
+          "name": "payref",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "notes",
+          "type": "text"
+        },
+        {
+          "name": "paymentdate",
+          "type": "text"
+        },
+        {
+          "name": "lineItems",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "text"
+            },
+            {
+              "name": "enrolment",
+              "type": "text"
+            },
+            {
+              "name": "updated",
+              "type": "datetime"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_paymentLineItems": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
+          "type": "date"
+        },
+        {
+          "name": "chargeDateFrom",
+          "type": "date"
+        },
+        {
+          "name": "family",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "date"
+        },
+        {
+          "name": "dueDate",
+          "type": "date"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "chargePaymentsTotal",
+          "type": "array",
+          "sub": [
+            {
+              "name": "SUM(amount)",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "getEnrolmentChargeIds",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "firstName",
+              "type": "text"
+            },
+            {
+              "name": "lastName",
+              "type": "text"
+            },
+            {
+              "name": "enrolmentsCount",
+              "type": "number"
+            },
+            {
+              "name": "enrolmentsTotal",
+              "type": "number"
+            },
+            {
+              "name": "allEnrolmentCharges",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "classTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolid",
+                  "type": "number"
+                },
+                {
+                  "name": "student",
+                  "type": "text"
+                },
+                {
+                  "name": "startDate",
+                  "type": "date"
+                },
+                {
+                  "name": "dropDate",
+                  "type": "date"
+                },
+                {
+                  "name": "classStartTime",
+                  "type": "text"
+                },
+                {
+                  "name": "classEndTime",
+                  "type": "text"
+                },
+                {
+                  "name": "classLevelName",
+                  "type": "text"
+                },
+                {
+                  "name": "classDay",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorFirst",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorLast",
+                  "type": "text"
+                },
+                {
+                  "name": "classId",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolmentCharges",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "id",
+                      "type": "text"
+                    },
+                    {
+                      "name": "startofweek",
+                      "type": "date"
+                    },
+                    {
+                      "name": "classId",
+                      "type": "number"
+                    },
+                    {
+                      "name": "studentid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "classTypeId",
+                      "type": "number"
+                    },
+                    {
+                      "name": "enrolid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "classDate",
+                      "type": "date"
+                    },
+                    {
+                      "name": "enrolCount",
+                      "type": "text"
+                    },
+                    {
+                      "name": "baseRate",
+                      "type": "number"
+                    },
+                    {
+                      "name": "discAmt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "netAmt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "enrolNumber",
+                      "type": "number"
+                    },
+                    {
+                      "name": "discType",
+                      "type": "text"
+                    },
+                    {
+                      "name": "discVal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "_procedure",
+                      "type": "text"
+                    },
+                    {
+                      "name": "fd_sum_before",
+                      "type": "number"
+                    },
+                    {
+                      "name": "fd_type",
+                      "type": "text"
+                    },
+                    {
+                      "name": "fd_value",
+                      "type": "number"
+                    },
+                    {
+                      "name": "fd_amt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "fd_procedure",
+                      "type": "text"
+                    },
+                    {
+                      "name": "netAmt_total",
+                      "type": "number"
+                    },
+                    {
+                      "name": "enr_grandTotal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "net_grandTotal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "discDir",
+                      "type": "text"
+                    },
+                    {
+                      "name": "chargeId",
+                      "type": "text"
+                    },
+                    {
+                      "name": "lineInvNumber",
+                      "type": "text"
+                    },
+                    {
+                      "name": "status",
+                      "type": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "paymentLineItemsList",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            },
+            {
+              "name": "paymentType",
+              "type": "number"
+            },
+            {
+              "name": "family",
+              "type": "number"
+            },
+            {
+              "name": "charges",
+              "type": "number"
+            },
+            {
+              "name": "payref",
+              "type": "text"
+            },
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "notes",
+              "type": "text"
+            },
+            {
+              "name": "paymentdate",
+              "type": "text"
+            },
+            {
+              "name": "lineItems",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "id",
+                  "type": "text"
+                },
+                {
+                  "name": "enrolment",
+                  "type": "text"
+                },
+                {
+                  "name": "updated",
+                  "type": "datetime"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "localStorage": [
+      {
+        "type": "array",
+        "name": "new"
+      }
+    ],
+    "sessionStorage": [
+      {
+        "type": "array",
+        "name": "paymentLineItems"
+      },
+      {
+        "type": "text",
+        "name": "paymentTotal"
+      },
+      {
+        "type": "text",
+        "name": "paymentTitle"
+      }
+    ]
   },
   "createFamily": {
     "studentDatastore": [

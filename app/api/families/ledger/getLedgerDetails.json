@@ -25,7 +25,12 @@
           "connection": "db",
           "sql": {
             "type": "SELECT",
-            "columns": [],
+            "columns": [
+              {
+                "table": "familyCharges",
+                "column": "*"
+              }
+            ],
             "table": {
               "name": "familyCharges"
             },
@@ -63,7 +68,8 @@
               {
                 "table": "familyCharges",
                 "column": "chargeFor",
-                "direction": "DESC"
+                "direction": "DESC",
+                "recid": 1
               }
             ]
           }
@@ -105,6 +111,14 @@
           {
             "name": "chargeFor",
             "type": "date"
+          },
+          {
+            "name": "dueDate",
+            "type": "date"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
           }
         ],
         "outputType": "array"
@@ -118,13 +132,15 @@
           "outputFields": [
             "id",
             "chargeAmount",
-            "chargeFor",
             "chargeDateTo",
             "chargeDateFrom",
             "family",
             "description",
             "title",
-            "reference"
+            "reference",
+            "chargeFor",
+            "dueDate",
+            "chargeType"
           ],
           "exec": {
             "steps": [
@@ -144,7 +160,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT *\nFROM tuitionPayments t\nWHERE t.charges = :P1",
+                    "query": "SELECT *\nFROM tuitionPayments t\nWHERE t.charges = :P1\nORDER BY t.paymentDate DESC",
                     "params": [
                       {
                         "name": ":P1",
@@ -154,7 +170,7 @@
                     ]
                   }
                 },
-                "output": true,
+                "output": false,
                 "meta": [
                   {
                     "name": "id",
@@ -174,6 +190,382 @@
                   },
                   {
                     "name": "charges",
+                    "type": "number"
+                  },
+                  {
+                    "name": "payref",
+                    "type": "text"
+                  },
+                  {
+                    "name": "title",
+                    "type": "text"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "text"
+                  },
+                  {
+                    "name": "paymentdate",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "paymentLineItemsList",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{familyPaymentsList}}",
+                  "outputFields": [
+                    "id",
+                    "amount",
+                    "paymentType",
+                    "charges",
+                    "family",
+                    "title",
+                    "payref",
+                    "notes",
+                    "paymentdate"
+                  ],
+                  "exec": {
+                    "steps": {
+                      "name": "lineItems",
+                      "module": "dbconnector",
+                      "action": "select",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "SELECT",
+                          "columns": [
+                            {
+                              "table": "tuitionLinePayments",
+                              "column": "paymentid"
+                            },
+                            {
+                              "table": "tuitionLinePayments",
+                              "column": "amount"
+                            },
+                            {
+                              "table": "students",
+                              "column": "firstName",
+                              "alias": "studentFirst"
+                            },
+                            {
+                              "table": "students",
+                              "column": "lastName",
+                              "alias": "studentLast"
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "classDate"
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "net_grandTotal"
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "enr_grandTotal"
+                            },
+                            {
+                              "table": "days",
+                              "column": "name",
+                              "alias": "dayName"
+                            },
+                            {
+                              "table": "classes",
+                              "column": "startTimeDisplay"
+                            },
+                            {
+                              "table": "classLevels",
+                              "column": "name",
+                              "alias": "levelName"
+                            },
+                            {
+                              "table": "staff",
+                              "column": "firstName",
+                              "alias": "instructorFirst"
+                            },
+                            {
+                              "table": "staff",
+                              "column": "lastName",
+                              "alias": "instructorLast"
+                            }
+                          ],
+                          "table": {
+                            "name": "tuitionLinePayments"
+                          },
+                          "joins": [
+                            {
+                              "table": "students",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "students",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "tuitionLinePayments",
+                                      "column": "studentid"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "perWeekEnrolmentCharges",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "tuitionLinePayments",
+                                      "column": "enrolchargeid"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "table": "classes",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "classes",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "perWeekEnrolmentCharges",
+                                      "column": "classId"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "table": "classLevels",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "classLevels",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "classes",
+                                      "column": "classLevel"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "table": "staff",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "staff",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "classes",
+                                      "column": "instructor"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "table": "days",
+                              "column": "*",
+                              "type": "INNER",
+                              "clauses": {
+                                "condition": "AND",
+                                "rules": [
+                                  {
+                                    "table": "days",
+                                    "column": "id",
+                                    "operator": "equal",
+                                    "value": {
+                                      "table": "classes",
+                                      "column": "day"
+                                    },
+                                    "operation": "="
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "query": "SELECT tuitionLinePayments.paymentid, tuitionLinePayments.amount, students.firstName AS studentFirst, students.lastName AS studentLast, perWeekEnrolmentCharges.classDate, perWeekEnrolmentCharges.net_grandTotal, perWeekEnrolmentCharges.enr_grandTotal, days.name AS dayName, classes.startTimeDisplay, classLevels.name AS levelName, staff.firstName AS instructorFirst, staff.lastName AS instructorLast\nFROM tuitionLinePayments\nINNER JOIN students ON (students.id = tuitionLinePayments.studentid) INNER JOIN perWeekEnrolmentCharges ON (perWeekEnrolmentCharges.id = tuitionLinePayments.enrolchargeid) INNER JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN days ON (days.id = classes.day)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{id}} */\nORDER BY tuitionLinePayments.studentid ASC, perWeekEnrolmentCharges.enrolid ASC",
+                          "params": [
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P1",
+                              "value": "{{id}}"
+                            }
+                          ],
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "tuitionLinePayments.paymentid",
+                                "field": "tuitionLinePayments.paymentid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{id}}",
+                                "data": {
+                                  "table": "tuitionLinePayments",
+                                  "column": "paymentid",
+                                  "type": "text"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "orders": [
+                            {
+                              "table": "tuitionLinePayments",
+                              "column": "studentid",
+                              "direction": "ASC",
+                              "recid": 1
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "enrolid",
+                              "direction": "ASC",
+                              "recid": 2
+                            }
+                          ]
+                        }
+                      },
+                      "output": true,
+                      "meta": [
+                        {
+                          "name": "paymentid",
+                          "type": "text"
+                        },
+                        {
+                          "name": "amount",
+                          "type": "number"
+                        },
+                        {
+                          "name": "studentFirst",
+                          "type": "text"
+                        },
+                        {
+                          "name": "studentLast",
+                          "type": "text"
+                        },
+                        {
+                          "name": "classDate",
+                          "type": "date"
+                        },
+                        {
+                          "name": "net_grandTotal",
+                          "type": "number"
+                        },
+                        {
+                          "name": "dayName",
+                          "type": "text"
+                        },
+                        {
+                          "name": "startTimeDisplay",
+                          "type": "text"
+                        },
+                        {
+                          "name": "levelName",
+                          "type": "text"
+                        },
+                        {
+                          "name": "instructorFirst",
+                          "type": "text"
+                        },
+                        {
+                          "name": "instructorLast",
+                          "type": "text"
+                        }
+                      ],
+                      "outputType": "array"
+                    }
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "paymentType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "charges",
+                    "type": "number"
+                  },
+                  {
+                    "name": "payref",
+                    "type": "text"
+                  },
+                  {
+                    "name": "title",
+                    "type": "text"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "text"
+                  },
+                  {
+                    "name": "paymentdate",
                     "type": "text"
                   }
                 ],
@@ -1246,6 +1638,24 @@
           {
             "name": "chargeFor",
             "type": "date"
+          },
+          {
+            "name": "dueDate",
+            "type": "date"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
+          },
+          {
+            "name": "chargePaymentsTotal",
+            "type": "array",
+            "sub": [
+              {
+                "name": "SUM(amount)",
+                "type": "number"
+              }
+            ]
           },
           {
             "name": "getEnrolmentChargeIds",
