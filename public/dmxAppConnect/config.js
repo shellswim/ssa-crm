@@ -7157,31 +7157,15 @@ dmx.config({
           "type": "number"
         },
         {
-          "name": "firstname",
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
           "type": "text"
         },
         {
-          "name": "lastname",
-          "type": "text"
-        },
-        {
-          "name": "dob",
-          "type": "text"
-        },
-        {
-          "name": "age",
-          "type": "text"
-        },
-        {
-          "name": "rollsheetcomments",
-          "type": "text"
-        },
-        {
-          "name": "rollsheetmedical",
-          "type": "text"
-        },
-        {
-          "name": "additionalmedical",
+          "name": "chargeDateFrom",
           "type": "text"
         },
         {
@@ -7189,53 +7173,67 @@ dmx.config({
           "type": "number"
         },
         {
-          "name": "gender",
+          "name": "description",
           "type": "text"
         },
         {
-          "name": "level",
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
           "type": "number"
         },
         {
-          "name": "getStudentNotes",
-          "type": "array",
-          "sub": [
-            {
-              "name": "priority",
-              "type": "number"
-            },
-            {
-              "name": "content",
-              "type": "text"
-            },
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "subject",
-              "type": "text"
-            }
-          ]
+          "name": "totalOwing",
+          "type": "number"
         },
         {
-          "name": "groupedPriorities",
+          "name": "owingLineItems",
           "type": "array",
           "sub": [
             {
-              "name": "COUNT(*)",
+              "name": "id",
               "type": "number"
             },
             {
-              "name": "priority",
+              "name": "studentid",
               "type": "number"
             },
             {
-              "name": "priority_name",
+              "name": "startofweek",
+              "type": "text"
+            },
+            {
+              "name": "enr_grandTotal",
+              "type": "number"
+            },
+            {
+              "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "remaining",
+              "type": "text"
+            },
+            {
+              "name": "totalPaid",
               "type": "text"
             }
           ]
@@ -7424,28 +7422,86 @@ dmx.config({
           "type": "number"
         },
         {
-          "name": "studentid",
+          "name": "chargeAmount",
           "type": "number"
         },
         {
-          "name": "startofweek",
+          "name": "chargeDateTo",
           "type": "text"
         },
         {
-          "name": "enr_grandTotal",
+          "name": "chargeDateFrom",
+          "type": "text"
+        },
+        {
+          "name": "family",
           "type": "number"
         },
         {
-          "name": "enrolid",
-          "type": "number"
+          "name": "description",
+          "type": "text"
         },
         {
-          "name": "remaining",
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
           "type": "text"
         },
         {
           "name": "totalPaid",
-          "type": "text"
+          "type": "number"
+        },
+        {
+          "name": "totalOwing",
+          "type": "number"
+        },
+        {
+          "name": "owingLineItems",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "startofweek",
+              "type": "text"
+            },
+            {
+              "name": "enr_grandTotal",
+              "type": "number"
+            },
+            {
+              "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "remaining",
+              "type": "text"
+            },
+            {
+              "name": "totalPaid",
+              "type": "text"
+            }
+          ]
         }
       ],
       "outputType": "array"
@@ -7544,6 +7600,89 @@ dmx.config({
             },
             {
               "name": "totalPaid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "studentLinesRepeat": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
+          "type": "text"
+        },
+        {
+          "name": "chargeDateFrom",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
+          "type": "number"
+        },
+        {
+          "name": "totalOwing",
+          "type": "number"
+        },
+        {
+          "name": "classDetails",
+          "type": "object",
+          "sub": [
+            {
+              "name": "startTimeDisplay",
+              "type": "text"
+            },
+            {
+              "name": "instructorFirst",
+              "type": "text"
+            },
+            {
+              "name": "instructorLast",
+              "type": "text"
+            },
+            {
+              "name": "levelName",
+              "type": "text"
+            },
+            {
+              "name": "dayName",
               "type": "text"
             }
           ]
