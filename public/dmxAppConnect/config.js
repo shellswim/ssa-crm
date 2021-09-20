@@ -7689,6 +7689,16 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "selectedChargesStore": [
+      {
+        "type": "text",
+        "name": "chargeid"
+      },
+      {
+        "type": "number",
+        "name": "remaining"
+      }
+    ]
   }
 });

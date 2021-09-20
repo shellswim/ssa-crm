@@ -1,10 +1,11 @@
-<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxStateManagement:{},dmxPreloader:{},dmxFormatter:{}}" -->
+<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDatastore:{},dmxPreloader:{},dmxBrowser:{}}" -->
 <meta name="ac:route" content="/families/familydetail/:familyid/newFamilyPayment/chargesForPayment">
 
 <dmx-preloader id="preloader1" class="absolute-preloader" color="#000000" spinner="foldingCube"></dmx-preloader>
 
 <dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
-<dmx-serverconnect id="owing" url="/api/families/ledger/outstandingCharges" dmx-param:familyid="query.familyid"></dmx-serverconnect>
+<dmx-datastore id="selectedChargesStore"></dmx-datastore>
+<dmx-serverconnect id="owing" url="/api/families/ledger/outstandingCharges" dmx-param:familyid="query.familyid" dmx-on:start="selectedChargesStore.clear()"></dmx-serverconnect>
 <main class="w-100 d-flex flex-grow-1 flex-direction-column align-items-start" dmx-style:padding-bottom.important="browser1.location.pathparts.contains('newFamilyPayment') ? '100px' : 'initial'">
     <div class="wappler-block p-5 container ms-4">
         <div class="row">
@@ -51,6 +52,7 @@
             </div>
             <div class="col offset-1">
                 <h3 class="text-decoration-underline fw-bold">Charges.</h3>
+                <h3 class="text-decoration-underline fw-bold" dmx-text="selectedChargesStore.data.sum('remaining').formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Charges.</h3>
                 <div class="row row-cols-1 g-0" id="chargeRepeat" is="dmx-repeat" dmx-bind:repeat="owing.data.owingCharges">
                     <div class="col p-2 border rounded mb-2">
                         <div class="row">
@@ -85,15 +87,21 @@
                         </div>
                         <div class="row row-cols-1 g-0 pb-2" is="dmx-repeat" id="studentRepeat" dmx-bind:repeat="studentOwingLines">
                             <div class="col pt-2">
-                                <p class="fw-bold mb-1" dmx-text="id+': '+firstName +' '+lastName">Student Name</p>
+                                <div class="row">
+                                    <div class="col d-flex flex-row align-items-center justify-content-start"><input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentSelect" dmx-bind:id="studentSelect_{{$index}}_{{id}}" dmx-bind:checked="chargeCheck.checked">
+                                        <p class="fw-bold mb-0" dmx-text="firstName +' '+lastName">Student Name</p>
+                                    </div>
+                                </div>
+
+
                                 <div class="row row-cols-1 g-0" is="dmx-repeat" id="studentLinesRepeat" dmx-bind:repeat="lineItems">
                                     <div class="col">
                                         <div class="row">
                                             <div class="col-auto d-flex justify-content-center offset-1 align-items-center p-0">
-                                                <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1">
+                                                <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1" dmx-bind:checked="studentSelect.checked" dmx-on:updated="checked ? selectedChargesStore.insert({chargeid: id, remaining: remaining}) : selectedChargesStore.delete({chargeid: id})">
                                             </div>
                                             <div class="align-self-center col-7">
-                                                <p class="mb-0 small" dmx-bind:for="studentLineCheck_{{id}}" dmx-text="classDate.formatDate('dd/MM/yyyy')+' - '+classDetails.dayName.trunc(3,true,' ') +' '+classDetails.startTimeDisplay +' '+classDetails.levelName+' '+classDetails.instructorFirst +' '+classDetails.instructorLast.trunc(1,true,'.')">Sun 2:30 PM Goldfish</p>
+                                                <label class="mb-0 small user-select-none clickable" dmx-bind:for="studentLineCheck_{{id}}" dmx-text="classDate.formatDate('dd/MM/yyyy')+' - '+classDetails.dayName.trunc(3,true,' ') +' '+classDetails.startTimeDisplay +' '+classDetails.levelName+' '+classDetails.instructorFirst +' '+classDetails.instructorLast.trunc(1,true,'.')">Sun 2:30 PM Goldfish</label>
                                             </div>
                                             <div class="col align-self-center">
                                                 <p class="mb-0 small text-end" dmx-text="remaining">$15.55</p>
