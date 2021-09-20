@@ -1,8 +1,10 @@
-<dmx-preloader id="preloader1" class="absolute-preloader" spinner="circle" color="#ed145b"></dmx-preloader><!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxStateManagement:{},dmxPreloader:{}}" -->
+<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxStateManagement:{},dmxPreloader:{},dmxFormatter:{}}" -->
 <meta name="ac:route" content="/families/familydetail/:familyid/newFamilyPayment/chargesForPayment">
 
-<dmx-serverconnect id="familyLedger" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
+<dmx-preloader id="preloader1" class="absolute-preloader" color="#000000" spinner="foldingCube"></dmx-preloader>
+
 <dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="owing" url="/api/families/ledger/outstandingCharges" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 <main class="w-100 d-flex flex-grow-1 flex-direction-column align-items-start">
     <div class="wappler-block p-5 container ms-4">
         <div class="row">
@@ -13,7 +15,7 @@
 
                 <div class="row row-cols-1 row-cols-xl-3 mt-lg-4 pt-lg-4 border-top">
                     <div class="col-12 mb-4">
-                        <p class="mb-0">Choose one of the following ways to make a payment.&nbsp;</p>
+                        <p class="mb-0">Choose one of the following ways to make a payment. Charges do not need to be selected, however, there will be unapplied payments on the family file until it's attached to a charge.</p>
                     </div>
                     <div class="col">
                         <h3 class="fw-bold m-0 text-decoration-underline">Type amount.</h3>
@@ -33,25 +35,54 @@
 
             </div>
         </div>
-        <div class="row mb-3">
-            <div class="col col-3">
+        <div class="row">
+            <div class="col-3">
                 <h3 class="text-decoration-underline fw-bold">Payment.</h3>
 
-                <div class="row row-cols-1" is="dmx-repeat" id="guardianRepeat" dmx-bind:repeat="familyDetails.data.getGuardiansWContactsRAW">
-                    <div class="col py-2 d-flex flex-row">
-                        <i class="bi-arrow-return-right me-2"></i>
-                        <p class="mb-0" dmx-text="firstName+' '+lastName">&nbsp;John Doe</p>
-
+                <div class="row row-cols-1">
+                    <div class="col">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">**</span>
+                            <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" placeholder="100.00">
+                        </div>
                     </div>
                 </div>
 
             </div>
-            <div class="col">
-                <h3 class="text-decoration-underline fw-bold">Select charges.</h3>
-                <div class="row row-cols-1" is="dmx-repeat" id="studentRepeat" dmx-bind:repeat="familyDetails.data.loopThroughStudents">
-                    <div class="col py-2 d-flex flex-row">
-                        <i class="bi-arrow-return-right me-2"></i>
-                        <p class="mb-0" dmx-text="firstname+' '+lastname">&nbsp;John Doe Jr.</p>
+            <div class="col offset-1">
+                <h3 class="text-decoration-underline fw-bold">Charges.</h3>
+                <div class="row row-cols-1" id="chargeRepeat" is="dmx-repeat" dmx-bind:repeat="owing.data.owingCharges">
+                    <div class="col py-2">
+                        <div class="row py-2 border rounded">
+                            <div class="col-auto align-self-center">
+                                <input type="checkbox" class="btn-check" id="chargeCheck" autocomplete="off" dmx-bind:id="chargeCheck_{{$index}}">
+                                <label class="btn border" dmx-bind:for="chargeCheck_{{$index}}" dmx-class:btn-primary="chargeCheck.checked">
+                                    <i dmx-hide="chargeCheck.checked" class="bi-check-circle"></i>
+                                    <i dmx-hide="!chargeCheck.checked" class="bi-check-circle-fill"></i>
+                                </label>
+                            </div>
+                            <div class="col">
+                                <p class="mb-0">For:</p>
+                                <p class="mb-0 fw-bold" dmx-text="chargeFor.formatDate('MMM yyyy')">JUN 2021</p>
+
+                            </div>
+                            <div class="col">
+                                <p class="mb-0">Total:</p>
+                                <p class="mb-0 fw-bold" dmx-text="chargeAmount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</p>
+                            </div>
+                            <div class="col">
+                                <p class="mb-0">Due Date:</p>
+                                <p class="mb-0 fw-bold" dmx-text="dueDate.formatDate('dd/MM/yyyy')">31/05/2021</p>
+                            </div>
+                            <div class="col">
+                                <p class="mb-0">Paid:</p>
+                                <p class="mb-0 fw-bold" dmx-text="totalPaid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$20.00</p>
+                            </div>
+                            <div class="col">
+                                <p class="mb-0">Remaining:</p>
+                                <p class="mb-0 fw-bold" dmx-text="totalOwing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$55.54</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

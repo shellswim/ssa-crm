@@ -7459,6 +7459,97 @@ dmx.config({
         "type": "number",
         "name": "price"
       }
-    ]
+    ],
+    "chargeRepeat": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
+          "type": "text"
+        },
+        {
+          "name": "chargeDateFrom",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
+          "type": "number"
+        },
+        {
+          "name": "totalOwing",
+          "type": "number"
+        },
+        {
+          "name": "owingLineItems",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "startofweek",
+              "type": "text"
+            },
+            {
+              "name": "enr_grandTotal",
+              "type": "number"
+            },
+            {
+              "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "remaining",
+              "type": "text"
+            },
+            {
+              "name": "totalPaid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    }
   }
 });
