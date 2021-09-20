@@ -151,7 +151,7 @@
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT\n       f.id,\n       f.primaryGuardian,\n       g.id,\n       g.firstName,\n       g.lastName,\n       g.relationship,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, p.phone) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM phoneNumbers p LEFT JOIN contactTypes cT on p.type = cT.id\n            WHERE guardianId = g.id\n        ) AS phoneNumbers,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, e.address) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM emails e LEFT JOIN contactTypes cT on e.type = cT.id\n            WHERE guardianId = g.id\n        ) AS emailAddresses\nFROM\n     families f\n         LEFT JOIN guardians g on f.id = g.family\nWHERE\n    f.id = :P1\nGROUP BY\n        f.id,\n        g.id,\n        g.firstName,\n        g.lastName",
+            "query": "SELECT\n       f.id,\n       f.primaryGuardian,\n       g.id,\n       g.firstName,\n       g.lastName,\n       g.relationship,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, p.phone) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM phoneNumbers p LEFT JOIN contactTypes cT on p.type = cT.id\n            WHERE guardianId = g.id\n        ) AS phoneNumbers,\n        (\n          SELECT e.address FROM emails e WHERE guardianId = g.id LIMIT 1\n        ) as email,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.type, e.address) SEPARATOR ',\\n ') AS emails\n            FROM emails e LEFT JOIN contactTypes cT on e.type = cT.id\n            WHERE guardianId = g.id\n            LIMIT 1\n        ) AS emailAddresses,\n        (SELECT COUNT(*) FROM emails e WHERE guardianId = g.id) - 1 AS plusEmails\nFROM\n     families f\n         LEFT JOIN guardians g on f.id = g.family\nWHERE\n    f.id = :P1\nGROUP BY\n        f.id,\n        g.id,\n        g.firstName,\n        g.lastName;",
             "params": [
               {
                 "name": ":P1",
@@ -188,8 +188,16 @@
             "type": "text"
           },
           {
+            "name": "email",
+            "type": "text"
+          },
+          {
             "name": "emailAddresses",
             "type": "text"
+          },
+          {
+            "name": "plusEmails",
+            "type": "number"
           }
         ],
         "outputType": "array"
@@ -207,7 +215,9 @@
             "lastName",
             "relationship",
             "phoneNumbers",
-            "emailAddresses"
+            "emailAddresses",
+            "email",
+            "plusEmails"
           ],
           "exec": {
             "steps": [
@@ -388,8 +398,16 @@
             "type": "text"
           },
           {
+            "name": "email",
+            "type": "text"
+          },
+          {
             "name": "emailAddresses",
             "type": "text"
+          },
+          {
+            "name": "plusEmails",
+            "type": "number"
           },
           {
             "name": "phoneNumbersArray",

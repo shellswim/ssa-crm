@@ -5802,7 +5802,48 @@ dmx.config({
         "type": "text",
         "name": "paymentTitle"
       }
-    ]
+    ],
+    "rp_familyPayments": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "paymentType",
+          "type": "number"
+        },
+        {
+          "name": "family",
+          "type": "text"
+        },
+        {
+          "name": "charges",
+          "type": "number"
+        },
+        {
+          "name": "payref",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "notes",
+          "type": "text"
+        },
+        {
+          "name": "paymentdate",
+          "type": "datetime"
+        }
+      ],
+      "outputType": "array"
+    }
   },
   "createFamily": {
     "studentDatastore": [
@@ -7058,6 +7099,365 @@ dmx.config({
       {
         "type": "text",
         "name": "textsearch"
+      }
+    ]
+  },
+  "newFamilyPayment": {
+    "query": [
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ],
+    "guardianRepeat": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "phoneNumbers",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "emailAddresses",
+          "type": "text"
+        },
+        {
+          "name": "plusEmails",
+          "type": "number"
+        }
+      ],
+      "outputType": "array"
+    },
+    "studentRepeat": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstname",
+          "type": "text"
+        },
+        {
+          "name": "lastname",
+          "type": "text"
+        },
+        {
+          "name": "dob",
+          "type": "text"
+        },
+        {
+          "name": "age",
+          "type": "text"
+        },
+        {
+          "name": "rollsheetcomments",
+          "type": "text"
+        },
+        {
+          "name": "rollsheetmedical",
+          "type": "text"
+        },
+        {
+          "name": "additionalmedical",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "gender",
+          "type": "text"
+        },
+        {
+          "name": "level",
+          "type": "number"
+        },
+        {
+          "name": "getStudentNotes",
+          "type": "array",
+          "sub": [
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "content",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "text"
+            },
+            {
+              "name": "student",
+              "type": "text"
+            },
+            {
+              "name": "subject",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "groupedPriorities",
+          "type": "array",
+          "sub": [
+            {
+              "name": "COUNT(*)",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "priority_name",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "charges": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
+          "type": "text"
+        },
+        {
+          "name": "chargeDateFrom",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
+          "type": "number"
+        },
+        {
+          "name": "owingLineItems",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "startofweek",
+              "type": "text"
+            },
+            {
+              "name": "enr_grandTotal",
+              "type": "number"
+            },
+            {
+              "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "remaining",
+              "type": "text"
+            },
+            {
+              "name": "totalPaid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_owingCharge": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "chargeAmount",
+          "type": "number"
+        },
+        {
+          "name": "chargeDateTo",
+          "type": "text"
+        },
+        {
+          "name": "chargeDateFrom",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
+          "type": "number"
+        },
+        {
+          "name": "owingLineItems",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "startofweek",
+              "type": "text"
+            },
+            {
+              "name": "enr_grandTotal",
+              "type": "number"
+            },
+            {
+              "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "remaining",
+              "type": "text"
+            },
+            {
+              "name": "totalPaid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "repeat1": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "studentid",
+          "type": "number"
+        },
+        {
+          "name": "startofweek",
+          "type": "text"
+        },
+        {
+          "name": "enr_grandTotal",
+          "type": "number"
+        },
+        {
+          "name": "enrolid",
+          "type": "number"
+        },
+        {
+          "name": "remaining",
+          "type": "text"
+        },
+        {
+          "name": "totalPaid",
+          "type": "text"
+        }
+      ],
+      "outputType": "array"
+    },
+    "sessionStorage": [
+      {
+        "type": "text",
+        "name": "id"
+      },
+      {
+        "type": "number",
+        "name": "price"
       }
     ]
   }

@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "number",
+        "name": "familyid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "owingCharges",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.chargeAmount - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.chargeAmount) AS totalOwing\nFROM familyCharges fc\nWHERE\n    (\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ) < fc.chargeAmount AND fc.family = :P1\nORDER BY fc.chargeFor;",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}",
+                "test": "36"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "chargeAmount",
+            "type": "number"
+          },
+          {
+            "name": "chargeDateTo",
+            "type": "text"
+          },
+          {
+            "name": "chargeDateFrom",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor",
+            "type": "text"
+          },
+          {
+            "name": "dueDate",
+            "type": "text"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
+          },
+          {
+            "name": "totalPaid",
+            "type": "number"
+          },
+          {
+            "name": "totalOwing",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "owingCharges",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{owingCharges}}",
+          "outputFields": [
+            "id",
+            "chargeAmount",
+            "chargeDateTo",
+            "chargeDateFrom",
+            "family",
+            "description",
+            "title",
+            "reference",
+            "chargeFor",
+            "dueDate",
+            "chargeType",
+            "totalPaid",
+            "totalOwing"
+          ],
+          "exec": {
+            "steps": {
+              "name": "owingLineItems",
+              "module": "dbupdater",
+              "action": "custom",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "query": "SELECT\n       pw.id,\n       pw.studentid,\n       pw.startofweek,\n       pw.enr_grandTotal,\n       pw.enrolid,\n       IFNULL((pw.enr_grandTotal - (\n           SELECT SUM(tl.amount)\n           FROM tuitionLinePayments tl\n               JOIN perWeekEnrolmentCharges pWEC ON tl.enrolchargeid = pWEC.id\n           WHERE pWEC.id = pw.id\n           )),pw.enr_grandTotal) AS remaining,\n       IFNULL((\n           SELECT SUM(tl.amount)\n           FROM tuitionLinePayments tl\n               JOIN perWeekEnrolmentCharges pWEC ON tl.enrolchargeid = pWEC.id\n           WHERE pWEC.id = pw.id\n           ),0.00) AS totalPaid\nFROM perWeekEnrolmentCharges pw LEFT OUTER JOIN tuitionLinePayments tl on tl.enrolchargeid = pw.id\nWHERE (tl.id IS NULL OR tl.amount < pw.enr_grandTotal) AND pw.chargeId = :P1\nGROUP BY pw.id, pw.studentid, pw.startofweek, pw.enr_grandTotal, pw.enrolid\nORDER BY pw.studentid, pw.startofweek, pw.enrolid;",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "value": "{{id}}",
+                      "test": "14"
+                    }
+                  ]
+                }
+              },
+              "output": true,
+              "meta": [
+                {
+                  "name": "id",
+                  "type": "number"
+                },
+                {
+                  "name": "studentid",
+                  "type": "number"
+                },
+                {
+                  "name": "startofweek",
+                  "type": "text"
+                },
+                {
+                  "name": "enr_grandTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolid",
+                  "type": "number"
+                },
+                {
+                  "name": "remaining",
+                  "type": "text"
+                },
+                {
+                  "name": "totalPaid",
+                  "type": "text"
+                }
+              ],
+              "outputType": "array"
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "chargeAmount",
+            "type": "number"
+          },
+          {
+            "name": "chargeDateTo",
+            "type": "text"
+          },
+          {
+            "name": "chargeDateFrom",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor",
+            "type": "text"
+          },
+          {
+            "name": "dueDate",
+            "type": "text"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
+          },
+          {
+            "name": "totalPaid",
+            "type": "number"
+          },
+          {
+            "name": "totalOwing",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

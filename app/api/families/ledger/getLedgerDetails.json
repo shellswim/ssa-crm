@@ -74,7 +74,7 @@
             ]
           }
         },
-        "output": true,
+        "output": false,
         "meta": [
           {
             "name": "id",
@@ -144,6 +144,71 @@
           ],
           "exec": {
             "steps": [
+              {
+                "name": "duepaid",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT SUM(tp.amount) as paid, (SELECT SUM(pw.enr_grandTotal) FROM perWeekEnrolmentCharges pw WHERE pw.chargeId = :P1) as enrolTotals\nFROM tuitionLinePayments tp JOIN perWeekEnrolmentCharges pw ON tp.enrolchargeid = pw.id WHERE pw.chargeId = :P1;",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "13"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "SUM(tp.amount)",
+                    "type": "number"
+                  },
+                  {
+                    "name": "SUM(p.enr_grandTotal)",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "chargeOverdue",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT CONVERT_TZ(NOW(), '+00:00','Australia/Sydney') > c.dueDate as overdue\nFROM familyCharges c\nWHERE c.id = :P1\nLIMIT 1;",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "14"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "overdue",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "chargeOverdue",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{chargeOverdue[0].overdue ? true : false}}"
+                },
+                "output": true
+              },
               {
                 "name": "chargeid",
                 "module": "core",
@@ -490,6 +555,10 @@
                           "type": "number"
                         },
                         {
+                          "name": "enr_grandTotal",
+                          "type": "number"
+                        },
+                        {
                           "name": "dayName",
                           "type": "text"
                         },
@@ -588,7 +657,7 @@
                     ]
                   }
                 },
-                "output": true,
+                "output": false,
                 "meta": [
                   {
                     "name": "SUM(amount)",
@@ -596,6 +665,15 @@
                   }
                 ],
                 "outputType": "array"
+              },
+              {
+                "name": "chargePaymentsTotal",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{chargePaymentsTotal[0]['SUM(amount)']}}"
+                },
+                "output": true
               },
               {
                 "name": "students",
@@ -1646,16 +1724,6 @@
           {
             "name": "chargeType",
             "type": "text"
-          },
-          {
-            "name": "chargePaymentsTotal",
-            "type": "array",
-            "sub": [
-              {
-                "name": "SUM(amount)",
-                "type": "number"
-              }
-            ]
           },
           {
             "name": "getEnrolmentChargeIds",
