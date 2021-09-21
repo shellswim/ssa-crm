@@ -7703,6 +7703,27 @@ dmx.config({
     "var_payType": {
       "meta": null,
       "outputType": "boolean"
+    },
+    "var_flatPayment": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "var_chargePayment": {
+      "meta": [
+        {
+          "name": "$id",
+          "type": "number"
+        },
+        {
+          "type": "text",
+          "name": "chargeid"
+        },
+        {
+          "type": "number",
+          "name": "remaining"
+        }
+      ],
+      "outputType": "array"
     }
   }
 });
