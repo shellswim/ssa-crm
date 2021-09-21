@@ -1,6 +1,7 @@
-<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="confirmChargePayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{}}" -->
+<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="confirmChargePayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{}}" moment_2="cdn with locales" -->
 <dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 <dmx-datastore id="selectedChargesStore"></dmx-datastore>
+<dmx-datetime id="currentDateTime" interval="days" utc="true"></dmx-datetime>
 <meta name="ac:route" content="/families/familydetail/:familyid/newFamilyPayment/confirmChargePayment">
 
 <main class="w-100 d-flex flex-grow-1 flex-direction-column align-items-start" dmx-style:padding-bottom.important="browser1.location.pathparts.contains('newFamilyPayment') ? '100px' : 'initial'">
@@ -23,24 +24,87 @@
                     </div>
                 </div>
             </form>
-            <form id="chargesSubmitForm">
-                <div class="row" is="dmx-repeat" id="repeat1">
-                    <div class="col"></div>
+            <div class="row row-cols-1" id="payment">
+                <div class="col">
+                    <form id="chargesSubmitForm" method="post" is="dmx-serverconnect-form" action="/api/families/ledger/addLinePayments">
+                        <div class="row">
+                            <div class="col">
+                                <div class="mb-3 row">
+                                    <label for="inp_paymentdate" class="col-sm-2 col-form-label">Payment Date</label>
+                                    <div class="col-sm-3">
+                                        <input class="form-control" id="inp_paymentdate" name="paymentdate" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd')" type="date">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_title" class="col-sm-2 col-form-label">Title</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control" id="inp_title" name="title" aria-describedby="inp_title_help" placeholder="Enter Title" value="Tuition Payment">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_amount" class="col-sm-2 col-form-label">Amount</label>
+                                    <div class="col-sm-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">*</span>
+                                            <input type="number" class="form-control" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_paymentType" class="col-sm-2 col-form-label">Payment type:</label>
+                                    <div class="col-sm-3">
+                                        <select id="sel_paymentType" class="form-select clickable" name="paymentType" dmx-bind:options="appSettings.data.paymentTypes" optiontext="pay_type" optionvalue="id">
+                                            <option selected="" value="">Please select...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_payref" class="col-sm-2 col-form-label">Reference:</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="inp_payref" name="payref" aria-describedby="inp_payref_help" placeholder="Enter Payref">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_notes" class="col-sm-2 col-form-label">Notes</label>
+                                    <div class="col-sm-10">
+                                        <textarea rows="3" type="text" class="form-control" id="inp_notes" name="notes" aria-describedby="inp_notes_help" placeholder="Enter Notes"></textarea>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label for="inp_family" class="col-sm-2 col-form-label">Family</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="inp_family" name="family" aria-describedby="inp_family_help" placeholder="Enter Family">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <div class="col-sm-10">
+                                        <button type="submit" class="btn btn-primary">Save</button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>
+                    <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="selectedChargesStore.data">
+
+                        <input id="enrolchargeid" name="enrolchargeid[]" type="text" class="form-control" multiple="true" dmx-bind:value="chargeid" dmx-bind:name="record[{{$index}}].enrolchargeid">
+
+                        <input id="studentid" name="studentid[]" type="text" class="form-control" multiple="true" dmx-bind:value="payment.0].studentid" dmx-bind:name="record[{{$index}}].studentid">
+
+                        <input id="amount" name="amount[]" type="text" class="form-control" multiple="true" dmx-bind:value="remaining" dmx-bind:name="record[{{$index}}].amount">
+                    </div>
+
                 </div>
-            </form>
+            </div>
         </section>
         <section>
             <div class="row">
                 <div class="col d-flex justify-content-between">
                     <a class="btn btn-secondary" href="#" dmx-bind:href="'/families/familydetail/'+query.familyid+'/newFamilyPayment/chargesForPayment'"><i class="bi-arrow-left me-1"></i>Previous</a>
-                    <a class="btn btn-success" href="#" dmx-bind:href="'/families/familydetail/'+query.familyid+'/newFamilyPayment/chargesForPayment'"><i class="bi-cart-check-fill me-1"></i>Submit Payment</a>
+                    <button type="submit" class="btn btn-success" href="#" form="chargesSubmitForm"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
 
                 </div>
             </div>
         </section>
-
-
-
-
     </div>
 </main>

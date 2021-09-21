@@ -7698,6 +7698,10 @@ dmx.config({
       {
         "type": "number",
         "name": "remaining"
+      },
+      {
+        "type": "number",
+        "name": "studentid"
       }
     ],
     "var_payType": {
@@ -7721,6 +7725,64 @@ dmx.config({
         {
           "type": "number",
           "name": "remaining"
+        }
+      ],
+      "outputType": "array"
+    }
+  },
+  "confirmChargePayment": {
+    "repeat1": {
+      "meta": [
+        {
+          "name": "$id",
+          "type": "number"
+        },
+        {
+          "type": "text",
+          "name": "chargeid"
+        },
+        {
+          "type": "number",
+          "name": "remaining"
+        },
+        {
+          "type": "number",
+          "name": "studentid"
+        }
+      ],
+      "outputType": "array"
+    },
+    "selectedChargesStore": [
+      {
+        "type": "text",
+        "name": "chargeid"
+      },
+      {
+        "type": "number",
+        "name": "remaining"
+      },
+      {
+        "type": "number",
+        "name": "studentid"
+      }
+    ],
+    "rp_hiddenChargeInputs": {
+      "meta": [
+        {
+          "name": "$id",
+          "type": "number"
+        },
+        {
+          "type": "text",
+          "name": "chargeid"
+        },
+        {
+          "type": "number",
+          "name": "remaining"
+        },
+        {
+          "type": "number",
+          "name": "studentid"
         }
       ],
       "outputType": "array"

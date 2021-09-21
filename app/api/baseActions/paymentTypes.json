@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "paymentTypeGroups",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "paymentTypes",
+                "column": "pay_type_group"
+              },
+              {
+                "table": "paymentTypes",
+                "column": "group_order"
+              }
+            ],
+            "table": {
+              "name": "paymentTypes"
+            },
+            "joins": [],
+            "query": "SELECT DISTINCT pay_type_group, group_order\nFROM paymentTypes\nORDER BY group_order ASC",
+            "params": [],
+            "distinct": true,
+            "orders": [
+              {
+                "table": "paymentTypes",
+                "column": "group_order",
+                "direction": "ASC",
+                "recid": 1
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "pay_type_group",
+            "type": "text"
+          },
+          {
+            "name": "group_order",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "payTypes_Subs",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{paymentTypeGroups}}",
+          "outputFields": [
+            "pay_type_group",
+            "group_order"
+          ],
+          "exec": {
+            "steps": {
+              "name": "paymentTypes",
+              "module": "dbconnector",
+              "action": "select",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [],
+                  "table": {
+                    "name": "paymentTypes"
+                  },
+                  "joins": [],
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "paymentTypes.pay_type_group",
+                        "field": "paymentTypes.pay_type_group",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{pay_type_group}}",
+                        "data": {
+                          "table": "paymentTypes",
+                          "column": "pay_type_group",
+                          "type": "text"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "SELECT *\nFROM paymentTypes\nWHERE pay_type_group = :P1 /* {{pay_type_group}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{pay_type_group}}"
+                    }
+                  ]
+                }
+              },
+              "output": true,
+              "meta": [
+                {
+                  "name": "id",
+                  "type": "text"
+                },
+                {
+                  "name": "pay_type",
+                  "type": "text"
+                },
+                {
+                  "name": "pay_type_group",
+                  "type": "text"
+                },
+                {
+                  "name": "group_order",
+                  "type": "number"
+                }
+              ],
+              "outputType": "array"
+            }
+          }
+        },
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "pay_type_group",
+            "type": "text"
+          },
+          {
+            "name": "group_order",
+            "type": "number"
+          }
+        ],
+        "outputType": "array",
+        "output": true
+      }
+    ]
+  }
+}
