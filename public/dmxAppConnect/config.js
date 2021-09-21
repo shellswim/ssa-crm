@@ -7699,6 +7699,10 @@ dmx.config({
         "type": "number",
         "name": "remaining"
       }
-    ]
+    ],
+    "var_payType": {
+      "meta": null,
+      "outputType": "boolean"
+    }
   }
 });

@@ -1,7 +1,7 @@
-<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDatastore:{},dmxPreloader:{},dmxBrowser:{}}" -->
+<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="newFamilyPayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDatastore:{},dmxPreloader:{},dmxBrowser:{},dmxBootstrap5Popovers:{},dmxValidator:{}}" -->
 <meta name="ac:route" content="/families/familydetail/:familyid/newFamilyPayment/chargesForPayment">
 
-<dmx-preloader id="preloader1" class="absolute-preloader" color="#000000" spinner="foldingCube"></dmx-preloader>
+
 
 <dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 <dmx-datastore id="selectedChargesStore"></dmx-datastore>
@@ -14,48 +14,36 @@
                 <h1 dmx-text="familyDetails.data.primaryGuardian.lastName+' Family'">XXXXXXXXX Family</h1>
 
 
-                <div class="row row-cols-1 row-cols-xl-3 mt-lg-4 pt-lg-4 border-top">
-                    <div class="col-12 mb-4 pb-4">
-                        <p class="mb-0">Choose one of the following ways to make a payment. Charges do not need to be selected, however, there will be unapplied payments on the family file until it's attached to a charge.</p>
-                    </div>
-                    <div class="col">
-                        <h3 class="fw-bold text-decoration-underline">Type amount.</h3>
-                        <p class="mb-0">Type the amount to be paid in the input box then choose the charges for the payment to be attached to.</p>
+                <a class="btn btn-primary mt-4" dmx-bind:href="'/families/familydetail/'+query.familyid" internal><i class="bi-x-circle me-1"></i>Cancel &amp; Return</a>
 
-                    </div>
-                    <div class="col col-xl-auto align-self-xl-center">
-                        <h3 class="fw-bold m-0 p-5 pt-lg-4 pb-lg-4 ps-lg-0 ps-xl-5">OR</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p dmx-text="var_payType.value">A nice paragraph</p>
 
-
-                    </div>
-                    <div class="col">
-                        <h3 class="fw-bold text-decoration-underline">Select charges.</h3>
-                        <p class="mb-0">Select the charges&nbsp;</p>
-                    </div>
-                </div>
+            </div>
+            <div class="col-auto d-flex flex-row justify-content-center align-items-center">
+                <dmx-value id="var_payType" dmx-bind:value="payType_charge.checked ? 'charge' : payType_flat.checked ? 'flat' : 0"></dmx-value>
+                <input type="radio" class="btn-check" name="payType" id="payType_charge" autocomplete="off" value="charge">
+                <label class="btn btn-outline-danger" for="payType_charge">Select Charges</label>
+                <h4 class="fw-bold mb-0 px-3">OR</h4>
+                <input type="radio" class="btn-check" name="payType" id="payType_flat" autocomplete="off" value="flat">
+                <label class="btn btn-outline-danger" for="payType_flat">Flat Payment</label>
+            </div>
+            <div class="col">
+                <i class="bi-question-circle-fill clickable" dmx-bs-popover="'Choose if you want the payment amount to be calculated automatically by selecting the charges, or whether the family is paying a flat amount towards their fees.'" dmx-bind:popover-title="'Select Charges or Flat Payment'" data-bs-trigger="hover"></i>
 
             </div>
         </div>
         <div class="row mt-4">
-            <div class="col-3">
-                <h3 class="text-decoration-underline fw-bold">Payment.</h3>
-
-                <div class="row row-cols-1">
-                    <div class="col">
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">**</span>
-                            <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" placeholder="100.00">
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            <div class="col offset-1">
+            <div class="offset-0 col-8">
                 <h3 class="text-decoration-underline fw-bold">Charges.</h3>
-                <h3 class="text-decoration-underline fw-bold" dmx-text="selectedChargesStore.data.sum('remaining').formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Charges.</h3>
+                <p>Select charges to autocalculate payment.</p>
+
                 <div class="row row-cols-1 g-0" id="chargeRepeat" is="dmx-repeat" dmx-bind:repeat="owing.data.owingCharges">
-                    <div class="col p-2 border rounded mb-2">
-                        <div class="row">
+                    <div class="col border rounded mb-2">
+                        <div class="row p-2 pb-0">
                             <div class="col-auto align-self-center">
                                 <input type="checkbox" class="btn-check" id="chargeCheck" autocomplete="off" dmx-bind:id="chargeCheck_{{$index}}">
                                 <label class="btn border" dmx-bind:for="chargeCheck_{{$index}}" dmx-class:btn-primary="chargeCheck.checked">
@@ -85,19 +73,20 @@
                                 <p class="mb-0 fw-bold" dmx-text="totalOwing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$55.54</p>
                             </div>
                         </div>
+
                         <div class="row row-cols-1 g-0 pb-2" is="dmx-repeat" id="studentRepeat" dmx-bind:repeat="studentOwingLines">
-                            <div class="col pt-2">
+                            <div class="col py-2 px-3 mt-2 border-top">
                                 <div class="row">
                                     <div class="col d-flex flex-row align-items-center justify-content-start"><input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentSelect" dmx-bind:id="studentSelect_{{$index}}_{{id}}" dmx-bind:checked="chargeCheck.checked">
-                                        <p class="fw-bold mb-0" dmx-text="firstName +' '+lastName">Student Name</p>
+                                        <p class="fw-bold mb-0" dmx-text="firstName +' '+lastName">Jane Doe</p>
                                     </div>
                                 </div>
 
 
                                 <div class="row row-cols-1 g-0" is="dmx-repeat" id="studentLinesRepeat" dmx-bind:repeat="lineItems">
-                                    <div class="col">
-                                        <div class="row">
-                                            <div class="col-auto d-flex justify-content-center offset-1 align-items-center p-0">
+                                    <div class="col ps-5">
+                                        <div class="row border-bottom">
+                                            <div class="col-auto d-flex justify-content-center align-items-center p-0">
                                                 <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1" dmx-bind:checked="studentSelect.checked" dmx-on:updated="checked ? selectedChargesStore.insert({chargeid: id, remaining: remaining}) : selectedChargesStore.delete({chargeid: id})">
                                             </div>
                                             <div class="align-self-center col-7">
@@ -116,6 +105,21 @@
                     </div>
                 </div>
             </div>
+            <div class="col">
+                <h3 class="text-decoration-underline fw-bold">Payment.</h3>
+
+                <p>Add payment &amp; apply to charges on next screen.</p>
+                <div class="row row-cols-1">
+                    <div class="col">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">*</span>
+                            <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" placeholder="100.00">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
         <div class="row mt-3">
             <div class="col d-flex justify-content-end">
@@ -132,7 +136,8 @@
 
         <div class="row">
             <div class="col d-flex flex-row justify-content-start">
-                <a class="btn btn-primary" dmx-bind:href="'/families/familydetail/'+query.familyid" internal><i class="bi-x-circle me-1"></i>Cancel &amp; Go Back</a>
+                <h1 class="fw-bold" dmx-text="'Payment: '+selectedChargesStore.data.sum('remaining').formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Payment: $75.54&nbsp;</h1>
+
 
             </div>
         </div>
