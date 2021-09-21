@@ -49,6 +49,15 @@ function appSettingsObject() {
     //Set appSettings
     dmx.app.set('appSettings', s);
 }
+
+// Function to add "please select..." before dynamic optgroups -- Must be run from app root finished loading.
+function payTypesPsel() {
+    let x = document.querySelector('#payTypeSelect'), y = document.createElement('option'), z = document.querySelector('#optgroup_0');
+    if (x) {
+        y.text = 'Please select...'; y.disabled = "true"; y.selected = "true";
+        x.insertBefore(y, z);
+    }
+}
 // Functions to get base values
 function baseValues(d, n) {
     dmx.app.set(n, d);
