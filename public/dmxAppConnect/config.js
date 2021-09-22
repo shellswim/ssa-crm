@@ -1337,6 +1337,14 @@ dmx.config({
       {
         "type": "text",
         "name": "searchtextfilter"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "payamount"
       }
     ],
     "tableRepeat1": {
@@ -7107,6 +7115,10 @@ dmx.config({
       {
         "type": "text",
         "name": "familyid"
+      },
+      {
+        "type": "number",
+        "name": "payamount"
       }
     ],
     "guardianRepeat": {
@@ -7508,12 +7520,8 @@ dmx.config({
     },
     "sessionStorage": [
       {
-        "type": "text",
-        "name": "id"
-      },
-      {
         "type": "number",
-        "name": "price"
+        "name": "flatpay_tuition_payamount"
       }
     ],
     "chargeRepeat": {
@@ -7701,7 +7709,7 @@ dmx.config({
       },
       {
         "type": "number",
-        "name": "studentid"
+        "name": "stid"
       }
     ],
     "var_payType": {
@@ -7709,8 +7717,25 @@ dmx.config({
       "outputType": "boolean"
     },
     "var_flatPayment": {
-      "meta": null,
-      "outputType": "text"
+      "meta": [
+        {
+          "name": "$id",
+          "type": "number"
+        },
+        {
+          "type": "text",
+          "name": "chargeid"
+        },
+        {
+          "type": "number",
+          "name": "remaining"
+        },
+        {
+          "type": "number",
+          "name": "stid"
+        }
+      ],
+      "outputType": "array"
     },
     "var_chargePayment": {
       "meta": [
@@ -7763,7 +7788,7 @@ dmx.config({
       },
       {
         "type": "number",
-        "name": "studentid"
+        "name": "stid"
       }
     ],
     "rp_hiddenChargeInputs": {

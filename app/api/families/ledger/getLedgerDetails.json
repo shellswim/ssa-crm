@@ -225,7 +225,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT *\nFROM tuitionPayments t\nWHERE t.charges = :P1\nORDER BY t.paymentDate DESC",
+                    "query": "SELECT DISTINCT tpayments.*, pt.pay_type\nFROM (\n    SELECT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments LEFT JOIN paymentTypes pt ON tpayments.paymentType = pt.id",
                     "params": [
                       {
                         "name": ":P1",
@@ -254,10 +254,6 @@
                     "type": "number"
                   },
                   {
-                    "name": "charges",
-                    "type": "number"
-                  },
-                  {
                     "name": "payref",
                     "type": "text"
                   },
@@ -271,6 +267,10 @@
                   },
                   {
                     "name": "paymentdate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "pay_type",
                     "type": "text"
                   }
                 ],
@@ -286,12 +286,12 @@
                     "id",
                     "amount",
                     "paymentType",
-                    "charges",
                     "family",
-                    "title",
                     "payref",
+                    "title",
                     "notes",
-                    "paymentdate"
+                    "paymentdate",
+                    "pay_type"
                   ],
                   "exec": {
                     "steps": {
@@ -618,10 +618,6 @@
                     "type": "number"
                   },
                   {
-                    "name": "charges",
-                    "type": "number"
-                  },
-                  {
                     "name": "payref",
                     "type": "text"
                   },
@@ -636,6 +632,64 @@
                   {
                     "name": "paymentdate",
                     "type": "text"
+                  },
+                  {
+                    "name": "pay_type",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lineItems",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "paymentid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "amount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "studentFirst",
+                        "type": "text"
+                      },
+                      {
+                        "name": "studentLast",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classDate",
+                        "type": "date"
+                      },
+                      {
+                        "name": "net_grandTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enr_grandTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "dayName",
+                        "type": "text"
+                      },
+                      {
+                        "name": "startTimeDisplay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "levelName",
+                        "type": "text"
+                      },
+                      {
+                        "name": "instructorFirst",
+                        "type": "text"
+                      },
+                      {
+                        "name": "instructorLast",
+                        "type": "text"
+                      }
+                    ]
                   }
                 ],
                 "outputType": "array"
@@ -647,7 +701,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT SUM(amount)\nFROM tuitionPayments t\nWHERE t.charges = :P1",
+                    "query": "SELECT SUM(tpayments.amount) AS paymentsTotal\nFROM (\n    SELECT DISTINCT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments",
                     "params": [
                       {
                         "name": ":P1",
@@ -657,10 +711,9 @@
                     ]
                   }
                 },
-                "output": false,
                 "meta": [
                   {
-                    "name": "SUM(amount)",
+                    "name": "paymentsTotal",
                     "type": "number"
                   }
                 ],
@@ -671,9 +724,10 @@
                 "module": "core",
                 "action": "setvalue",
                 "options": {
-                  "value": "{{chargePaymentsTotal[0]['SUM(amount)']}}"
+                  "value": "{{chargePaymentsTotal[0].paymentsTotal}}"
                 },
-                "output": true
+                "output": true,
+                "outputType": "number"
               },
               {
                 "name": "students",
@@ -1724,6 +1778,124 @@
           {
             "name": "chargeType",
             "type": "text"
+          },
+          {
+            "name": "duepaid",
+            "type": "array",
+            "sub": [
+              {
+                "name": "SUM(tp.amount)",
+                "type": "number"
+              },
+              {
+                "name": "SUM(p.enr_grandTotal)",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "chargeOverdue",
+            "type": "text"
+          },
+          {
+            "name": "paymentLineItemsList",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "amount",
+                "type": "number"
+              },
+              {
+                "name": "paymentType",
+                "type": "number"
+              },
+              {
+                "name": "family",
+                "type": "number"
+              },
+              {
+                "name": "payref",
+                "type": "text"
+              },
+              {
+                "name": "title",
+                "type": "text"
+              },
+              {
+                "name": "notes",
+                "type": "text"
+              },
+              {
+                "name": "paymentdate",
+                "type": "text"
+              },
+              {
+                "name": "charges",
+                "type": "text"
+              },
+              {
+                "name": "lineItems",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "paymentid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "studentFirst",
+                    "type": "text"
+                  },
+                  {
+                    "name": "studentLast",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "net_grandTotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enr_grandTotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "dayName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "levelName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorFirst",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructorLast",
+                    "type": "text"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "chargePaymentsTotal",
+            "type": "number"
           },
           {
             "name": "getEnrolmentChargeIds",
