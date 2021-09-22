@@ -225,7 +225,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT tpayments.*, pt.pay_type\nFROM (\n    SELECT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments LEFT JOIN paymentTypes pt ON tpayments.paymentType = pt.id",
+                    "query": "SELECT DISTINCT tpayments.*, pt.pay_type\nFROM (\n    SELECT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments LEFT JOIN paymentTypes pt ON tpayments.paymentType = pt.id\nORDER BY tpayments.paymentdate DESC",
                     "params": [
                       {
                         "name": ":P1",
@@ -483,7 +483,7 @@
                               }
                             }
                           ],
-                          "query": "SELECT tuitionLinePayments.paymentid, tuitionLinePayments.amount, students.firstName AS studentFirst, students.lastName AS studentLast, perWeekEnrolmentCharges.classDate, perWeekEnrolmentCharges.net_grandTotal, perWeekEnrolmentCharges.enr_grandTotal, days.name AS dayName, classes.startTimeDisplay, classLevels.name AS levelName, staff.firstName AS instructorFirst, staff.lastName AS instructorLast\nFROM tuitionLinePayments\nINNER JOIN students ON (students.id = tuitionLinePayments.studentid) INNER JOIN perWeekEnrolmentCharges ON (perWeekEnrolmentCharges.id = tuitionLinePayments.enrolchargeid) INNER JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN days ON (days.id = classes.day)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{id}} */\nORDER BY tuitionLinePayments.studentid ASC, perWeekEnrolmentCharges.enrolid ASC",
+                          "query": "SELECT tuitionLinePayments.paymentid, tuitionLinePayments.amount, students.firstName AS studentFirst, students.lastName AS studentLast, perWeekEnrolmentCharges.classDate, perWeekEnrolmentCharges.net_grandTotal, perWeekEnrolmentCharges.enr_grandTotal, days.name AS dayName, classes.startTimeDisplay, classLevels.name AS levelName, staff.firstName AS instructorFirst, staff.lastName AS instructorLast\nFROM tuitionLinePayments\nINNER JOIN students ON (students.id = tuitionLinePayments.studentid) INNER JOIN perWeekEnrolmentCharges ON (perWeekEnrolmentCharges.id = tuitionLinePayments.enrolchargeid) INNER JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN days ON (days.id = classes.day)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{id}} */\nORDER BY tuitionLinePayments.studentid ASC, perWeekEnrolmentCharges.classDate ASC, perWeekEnrolmentCharges.enrolid ASC",
                           "params": [
                             {
                               "operator": "equal",
@@ -516,14 +516,17 @@
                             {
                               "table": "tuitionLinePayments",
                               "column": "studentid",
-                              "direction": "ASC",
-                              "recid": 1
+                              "direction": "ASC"
+                            },
+                            {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "classDate",
+                              "direction": "ASC"
                             },
                             {
                               "table": "perWeekEnrolmentCharges",
                               "column": "enrolid",
-                              "direction": "ASC",
-                              "recid": 2
+                              "direction": "ASC"
                             }
                           ]
                         }
@@ -701,7 +704,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT SUM(tpayments.amount) AS paymentsTotal\nFROM (\n    SELECT DISTINCT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments",
+                    "query": "SELECT SUM(tpayments.amount) AS paymentsTotal\nFROM (\n    SELECT DISTINCT tlp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN perWeekEnrolmentCharges pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments",
                     "params": [
                       {
                         "name": ":P1",
@@ -724,7 +727,7 @@
                 "module": "core",
                 "action": "setvalue",
                 "options": {
-                  "value": "{{chargePaymentsTotal[0].paymentsTotal}}"
+                  "value": "{{chargePaymentsTotal[0].paymentsTotal || 0}}"
                 },
                 "output": true,
                 "outputType": "number"
@@ -1834,7 +1837,7 @@
                 "type": "text"
               },
               {
-                "name": "charges",
+                "name": "pay_type",
                 "type": "text"
               },
               {

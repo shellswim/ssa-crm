@@ -24,7 +24,7 @@
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.chargeAmount - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.chargeAmount) AS totalOwing\nFROM familyCharges fc\nWHERE\n    (\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ) < fc.chargeAmount AND fc.family = :P1\nORDER BY fc.chargeFor;",
+            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.chargeAmount - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.chargeAmount) AS totalOwing\nFROM familyCharges fc\nWHERE\n    IFNULL((\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ),0.00) < fc.chargeAmount AND fc.family = :P1\nORDER BY fc.chargeFor;",
             "params": [
               {
                 "name": ":P1",
@@ -115,7 +115,7 @@
           "exec": {
             "steps": [
               {
-                "name": "familyStudents",
+                "name": "familyStudents_old",
                 "module": "dbconnector",
                 "action": "select",
                 "options": {
@@ -205,6 +205,49 @@
                     "type": "text"
                   }
                 ],
+                "outputType": "array",
+                "disabled": true
+              },
+              {
+                "name": "familyStudents",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT DISTINCT sl.studentid as id, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        pw.studentid\n    FROM perWeekEnrolmentCharges pw\n        LEFT OUTER JOIN\n        tuitionLinePayments tl on tl.enrolchargeid = pw.id\n    WHERE\n        (tl.id IS NULL OR tl.amount < pw.enr_grandTotal)\n        AND pw.chargeId = :P1\n        AND IFNULL((pw.enr_grandTotal - (\n               SELECT SUM(tl.amount)\n               FROM tuitionLinePayments tl\n                   JOIN perWeekEnrolmentCharges pWEC\n                    ON tl.enrolchargeid = pWEC.id\n               WHERE pWEC.id = pw.id\n               )),pw.enr_grandTotal) > 0\n    GROUP BY pw.id, pw.studentid, pw.startofweek, pw.enr_grandTotal, pw.enrolid, pw.classDate\n    ORDER BY pw.studentid, pw.startofweek, pw.enrolid\n         ) AS sl JOIN students s ON sl.studentid = s.id",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{id}}",
+                        "test": "13"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "level",
+                    "type": "number"
+                  }
+                ],
                 "outputType": "array"
               },
               {
@@ -222,11 +265,11 @@
                 "options": {
                   "repeat": "{{familyStudents}}",
                   "outputFields": [
-                    "id",
                     "firstName",
                     "lastName",
+                    "family",
                     "level",
-                    "family"
+                    "id"
                   ],
                   "exec": {
                     "steps": [

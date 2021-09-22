@@ -5851,6 +5851,10 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "rp_payLineItems": {
+      "meta": null,
+      "outputType": "array"
     }
   },
   "createFamily": {
@@ -7811,6 +7815,26 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "localStorage": [
+      {
+        "type": "text",
+        "name": "paymentid"
+      }
+    ],
+    "sessionStorage": [
+      {
+        "type": "number",
+        "name": "paymentidentity"
+      }
+    ]
+  },
+  "payment_success": {
+    "sessionStorage": [
+      {
+        "type": "number",
+        "name": "paymentidentity"
+      }
+    ]
   }
 });

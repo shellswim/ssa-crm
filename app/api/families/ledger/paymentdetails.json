@@ -1,0 +1,274 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "number",
+        "name": "paymentid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "getPayment",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "tuitionPayments",
+                "column": "*"
+              },
+              {
+                "table": "paymentTypes",
+                "column": "pay_type"
+              }
+            ],
+            "table": {
+              "name": "tuitionPayments"
+            },
+            "joins": [
+              {
+                "table": "paymentTypes",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "paymentTypes",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "tuitionPayments",
+                        "column": "paymentType"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "query": "SELECT tuitionPayments.*, paymentTypes.pay_type\nFROM tuitionPayments\nINNER JOIN paymentTypes ON (paymentTypes.id = tuitionPayments.paymentType)\nWHERE tuitionPayments.id = :P1 /* {{$_GET.paymentid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.paymentid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "tuitionPayments.id",
+                  "field": "tuitionPayments.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.paymentid}}",
+                  "data": {
+                    "table": "tuitionPayments",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "amount",
+            "type": "number"
+          },
+          {
+            "name": "paymentType",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "text"
+          },
+          {
+            "name": "payref",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "notes",
+            "type": "text"
+          },
+          {
+            "name": "paymentdate",
+            "type": "datetime"
+          },
+          {
+            "name": "pay_type",
+            "type": "text"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "paidlineitems",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "weekly_enrolmentLinesOwing",
+                "column": "*"
+              }
+            ],
+            "table": {
+              "name": "weekly_enrolmentLinesOwing"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "weekly_enrolmentLinesOwing.paymentid",
+                  "field": "weekly_enrolmentLinesOwing.paymentid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.paymentid}}",
+                  "data": {
+                    "table": "weekly_enrolmentLinesOwing",
+                    "column": "paymentid",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": [
+              {
+                "table": "weekly_enrolmentLinesOwing",
+                "column": "studentid",
+                "direction": "ASC"
+              },
+              {
+                "table": "weekly_enrolmentLinesOwing",
+                "column": "classDate",
+                "direction": "ASC"
+              },
+              {
+                "table": "weekly_enrolmentLinesOwing",
+                "column": "total_enrpaid",
+                "direction": "ASC",
+                "condition": ""
+              }
+            ],
+            "query": "SELECT *\nFROM weekly_enrolmentLinesOwing\nWHERE paymentid = :P1 /* {{$_GET.paymentid}} */\nORDER BY studentid ASC, classDate ASC, total_enrpaid ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.paymentid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "startofweek",
+            "type": "date"
+          },
+          {
+            "name": "studentid",
+            "type": "number"
+          },
+          {
+            "name": "classDate",
+            "type": "date"
+          },
+          {
+            "name": "enr_grandTotal",
+            "type": "number"
+          },
+          {
+            "name": "paymentid",
+            "type": "number"
+          },
+          {
+            "name": "levelname",
+            "type": "text"
+          },
+          {
+            "name": "instructorFirst",
+            "type": "text"
+          },
+          {
+            "name": "instructorLast",
+            "type": "text"
+          },
+          {
+            "name": "classStart",
+            "type": "text"
+          },
+          {
+            "name": "dayname",
+            "type": "text"
+          },
+          {
+            "name": "studentfirst",
+            "type": "text"
+          },
+          {
+            "name": "studentlast",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "total_enrpaid",
+            "type": "number"
+          },
+          {
+            "name": "remainingBalance",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}
