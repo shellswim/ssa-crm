@@ -1,4 +1,6 @@
-<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="payment_success" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDatastore:{},dmxDatePicker:{},dmxStateManagement:{},dmxFormatter:{},dmxBootstrap5TableGenerator:{}}" -->
+<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="payment_success" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDatastore:{},dmxDatePicker:{},dmxStateManagement:{},dmxFormatter:{},dmxBootstrap5TableGenerator:{},dmxDownload:{}}" -->
+<dmx-value id="var_download" dmx-bind:value="0"></dmx-value>
+<dmx-download id="receiptdownload" dmx-bind:url="generateReceipt.data.paymentreceipt.FilePath.replace('/public', '')"></dmx-download>
 
 <!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="confirmChargePayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{},dmxValidator:{},dmxStateManagement:{}}" moment_2="cdn with locales" -->
 
@@ -21,12 +23,15 @@
             <h5 class="fw-bold mb-3">Generate Receipts</h5>
             <div class="col">
                 <div class="row">
+                    <dmx-serverconnect id="generateReceipt" url="/api/families/ledger/payreceipt" dmx-param:paymentid="paysubmitDetails.data.getPayment.id" dmx-param:familyname="familyDetails.data.primaryGuardian.lastName" dmx-param:paymenttotal="paysubmitDetails.data.getPayment.amount" dmx-param:record="paysubmitDetails.data.paidlineitems" dmx-param:paymentdate="paysubmitDetails.data.getPayment.paymentdate" dmx-param:paymenttype="paysubmitDetails.data.getPayment.pay_type" dmx-param:reference="paysubmitDetails.data.getPayment.payref" dmx-param:notes="paysubmitDetails.data.getPayment.notes" dmx-param:paymenttitle="paysubmitDetails.data.getPayment.title" dmx-param:host="browser1.location.protocol+'//'+browser1.location.host" noload dmx-on:success="run({condition:{if:`var_download.value == 1`,then:{steps:[{run:{action:`var_download.setValue(0)`}},{assign:{value:`generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`,name:'url'}},{run:{action:`browser1.goto(generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\'))`,disabled:true}},{runJS:{function:'openFile',args:[`generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`]}}]}}})"></dmx-serverconnect>
 
-                    <div class="col-auto"><button id="emailReceipt_button" class="btn btn-light border" dmx-on:click="run({serverConnect:{url:'/api/families/ledger/payreceipt',site:'SSA-CRM',params:{paymentid:`paysubmitDetails.data.getPayment.id`,familyname:`familyDetails.data.primaryGuardian.lastName`,paymenttotal:`paysubmitDetails.data.getPayment.amount`,record:`paysubmitDetails.data.paidlineitems`,paymentdate:`paysubmitDetails.data.getPayment.paymentdate`,paymenttype:`paysubmitDetails.data.getPayment.pay_type`,reference:`paysubmitDetails.data.getPayment.payref`,notes:`paysubmitDetails.data.getPayment.notes`,paymenttitle:`paysubmitDetails.data.getPayment.title`},name:'sc'}})"><i class="bi-envelope-fill me-2"></i>Email</button></div>
-                    <div class="col-auto"><button id="downloadReceipt_button" class="btn btn-light border"><i class="bi-cloud-download-fill me-2"></i>Download</button></div>
+                    <div class="col-auto"><button id="emailReceipt_button" class="btn btn-light border" dmx-on:click="generateReceipt.load({})"><i class="bi-envelope-fill me-2"></i>Email</button></div>
+                    <div class="col-auto"><button id="downloadReceipt_button" class="btn btn-light border" dmx-on:click="run({run:{action:`var_download.setValue(1);generateReceipt.load({})`}})">
+                            <span class="spinner-border spinner-border-sm " role="status" aria-hidden="true" dmx-show="var_download.value == 1 &amp;&amp; generateReceipt.state.executing"></span>
+                            <i class="bi-cloud-download-fill me-2" dmx-hide="var_download.value == 1 &amp;&amp; generateReceipt.state.executing"></i>Download</button>
+                        <a href="#" target="_blank" dmx-bind:href="generateReceipt.data.paymentreceipt.FilePath.replace('/public', '')"></a>
+                    </div>
                 </div>
-
-
             </div>
         </div>
         <section>
