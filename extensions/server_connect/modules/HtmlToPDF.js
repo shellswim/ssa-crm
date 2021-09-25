@@ -70,7 +70,7 @@ exports.ConvertToPDF = async function (options) {
     // removing default padding and margin from body applied by Pupperteer
     var html = '<style>body { padding: 0 !important; margin: 0 !important}</style>' + options.bodyHTML; // main body html
 
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] });
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--cap - add=SYS_ADMIN '] });
     const page = await browser.newPage(); // adding a new page
 
     // waiting for dom to load complete html
@@ -80,6 +80,8 @@ exports.ConvertToPDF = async function (options) {
     
     // hack to allow web fonts to load correctly
     await page.evaluateHandle('document.fonts.ready');
+    const watchDog = page.waitForFunction('initMergeTable');
+    await watchDog;
     await page.screenshot();
 
     // generate and save pdf output

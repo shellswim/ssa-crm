@@ -7835,6 +7835,75 @@ dmx.config({
         "type": "number",
         "name": "paymentidentity"
       }
-    ]
+    ],
+    "record": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "startofweek",
+          "type": "date"
+        },
+        {
+          "name": "studentid",
+          "type": "number"
+        },
+        {
+          "name": "classDate",
+          "type": "date"
+        },
+        {
+          "name": "enr_grandTotal",
+          "type": "number"
+        },
+        {
+          "name": "paymentid",
+          "type": "number"
+        },
+        {
+          "name": "levelname",
+          "type": "text"
+        },
+        {
+          "name": "instructorFirst",
+          "type": "text"
+        },
+        {
+          "name": "instructorLast",
+          "type": "text"
+        },
+        {
+          "name": "classStart",
+          "type": "text"
+        },
+        {
+          "name": "dayname",
+          "type": "text"
+        },
+        {
+          "name": "studentfirst",
+          "type": "text"
+        },
+        {
+          "name": "studentlast",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "total_enrpaid",
+          "type": "number"
+        },
+        {
+          "name": "remainingBalance",
+          "type": "number"
+        }
+      ],
+      "outputType": "array"
+    }
   }
 });
