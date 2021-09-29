@@ -1,9 +1,10 @@
 dmx.Attribute('bs-tooltip', 'mounted', function(node, attr) {
   this.$addBinding(attr.value, function(value) {
     $(node).tooltip({
+      trigger: node.getAttribute('data-trigger') || 'hover',
       placement: function(node) {
         var pexpression = node.getAttribute('dmx-bs-placement') || '';
-        return dmx.parse(pexpression) || node.getAttribute('data-bs-placement') || 'auto';
+        return dmx.parse(pexpression) || node.getAttribute('data-placement') || 'auto';
       },
       title: function() {
         var expression = this.getAttribute('dmx-bs-tooltip') || '';
@@ -21,7 +22,7 @@ $(function () {
     trigger: 'hover',
     placement: function(node) {
       var pexpression = node.getAttribute('dmx-bs-placement') || '';
-      return dmx.parse(pexpression) || node.getAttribute('data-bs-placement') || 'auto';
+      return dmx.parse(pexpression) || node.getAttribute('data-placement') || 'auto';
     },
     title: function() {
       var expression = this.getAttribute('dmx-bs-tooltip') || '';

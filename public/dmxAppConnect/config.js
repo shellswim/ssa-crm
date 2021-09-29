@@ -7905,5 +7905,36 @@ dmx.config({
       ],
       "outputType": "array"
     }
+  },
+  "layoutMain": {
+    "repeat1": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "staffTypes",
+          "type": "text"
+        }
+      ],
+      "outputType": "array"
+    }
   }
 });
