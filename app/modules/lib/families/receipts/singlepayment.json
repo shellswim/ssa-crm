@@ -1,0 +1,547 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "paymentid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "paymentid"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "students",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "tuitionLinePayments",
+                "column": "studentid"
+              },
+              {
+                "table": "tuitionLinePayments",
+                "column": "paymentid"
+              },
+              {
+                "table": "students",
+                "column": "firstName",
+                "aggregate": ""
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "tuitionLinePayments"
+            },
+            "joins": [
+              {
+                "table": "tuitionPayments",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "tuitionPayments",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "tuitionLinePayments",
+                        "column": "paymentid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "students",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "students",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "tuitionLinePayments",
+                        "column": "studentid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "distinct": true,
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "tuitionLinePayments.paymentid",
+                  "field": "tuitionLinePayments.paymentid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.paymentid}}",
+                  "data": {
+                    "table": "tuitionLinePayments",
+                    "column": "paymentid",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": [
+              {
+                "table": "tuitionLinePayments",
+                "column": "studentid",
+                "direction": "ASC"
+              }
+            ],
+            "query": "SELECT DISTINCT tuitionLinePayments.studentid, tuitionLinePayments.paymentid, students.firstName, students.lastName\nFROM tuitionLinePayments\nLEFT JOIN tuitionPayments ON (tuitionPayments.id = tuitionLinePayments.paymentid) LEFT JOIN students ON (students.id = tuitionLinePayments.studentid)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{$_POST.paymentid}} */\nORDER BY tuitionLinePayments.studentid ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.paymentid}}"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "studentid",
+            "type": "number"
+          },
+          {
+            "name": "paymentid",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "payment",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{students}}",
+          "outputFields": [
+            "studentid",
+            "paymentid",
+            "firstName",
+            "lastName"
+          ],
+          "exec": {
+            "steps": {
+              "name": "lineitems",
+              "module": "dbconnector",
+              "action": "select",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [
+                    {
+                      "table": "tlp",
+                      "column": "amount"
+                    },
+                    {
+                      "table": "students",
+                      "column": "firstName"
+                    },
+                    {
+                      "table": "students",
+                      "column": "lastName"
+                    },
+                    {
+                      "table": "perWeekEnrolmentCharges",
+                      "column": "classDate",
+                      "alias": "classDate"
+                    },
+                    {
+                      "table": "perWeekEnrolmentCharges",
+                      "column": "enr_grandTotal",
+                      "alias": "enrolmentTotal"
+                    },
+                    {
+                      "table": "classes",
+                      "column": "startTimeDisplay"
+                    },
+                    {
+                      "table": "days",
+                      "column": "name",
+                      "alias": "dayname"
+                    },
+                    {
+                      "table": "staff",
+                      "column": "firstName",
+                      "alias": "instructorfirst"
+                    },
+                    {
+                      "table": "staff",
+                      "column": "lastName",
+                      "alias": "instructorlast"
+                    },
+                    {
+                      "table": "classLevels",
+                      "column": "name",
+                      "alias": "levelname"
+                    }
+                  ],
+                  "table": {
+                    "name": "tuitionLinePayments",
+                    "alias": "tlp"
+                  },
+                  "joins": [
+                    {
+                      "table": "students",
+                      "column": "*",
+                      "type": "LEFT",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "students",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "tlp",
+                              "column": "studentid"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "table": "perWeekEnrolmentCharges",
+                      "column": "*",
+                      "type": "LEFT",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "perWeekEnrolmentCharges",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "tlp",
+                              "column": "enrolchargeid"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "table": "classes",
+                      "column": "*",
+                      "type": "LEFT",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "classes",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "perWeekEnrolmentCharges",
+                              "column": "classId"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "table": "days",
+                      "column": "*",
+                      "type": "LEFT",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "days",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "classes",
+                              "column": "day"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "table": "staff",
+                      "column": "*",
+                      "type": "INNER",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "staff",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "classes",
+                              "column": "instructor"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "table": "classLevels",
+                      "column": "*",
+                      "type": "INNER",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "classLevels",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "classes",
+                              "column": "classLevel"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "tlp.paymentid",
+                        "field": "tlp.paymentid",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{paymentid}}",
+                        "data": {
+                          "table": "tlp",
+                          "column": "paymentid",
+                          "type": "number"
+                        },
+                        "operation": "="
+                      },
+                      {
+                        "id": "tlp.studentid",
+                        "field": "tlp.studentid",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{studentid}}",
+                        "data": {
+                          "table": "tlp",
+                          "column": "studentid",
+                          "type": "number"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "orders": [
+                    {
+                      "table": "perWeekEnrolmentCharges",
+                      "column": "classDate",
+                      "direction": "ASC",
+                      "recid": 1
+                    }
+                  ],
+                  "query": "SELECT tlp.amount, students.firstName, students.lastName, perWeekEnrolmentCharges.classDate AS classDate, perWeekEnrolmentCharges.enr_grandTotal AS enrolmentTotal, classes.startTimeDisplay, days.name AS dayname, staff.firstName AS instructorfirst, staff.lastName AS instructorlast, classLevels.name AS levelname\nFROM tuitionLinePayments AS tlp\nLEFT JOIN students ON (students.id = tlp.studentid) LEFT JOIN perWeekEnrolmentCharges ON (perWeekEnrolmentCharges.id = tlp.enrolchargeid) LEFT JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) LEFT JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN classLevels ON (classLevels.id = classes.classLevel)\nWHERE tlp.paymentid = :P1 /* {{paymentid}} */ AND tlp.studentid = :P2 /* {{studentid}} */\nORDER BY perWeekEnrolmentCharges.classDate ASC",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{paymentid}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P2",
+                      "value": "{{studentid}}"
+                    }
+                  ]
+                }
+              },
+              "output": true,
+              "meta": [
+                {
+                  "name": "amount",
+                  "type": "number"
+                },
+                {
+                  "name": "firstName",
+                  "type": "text"
+                },
+                {
+                  "name": "lastName",
+                  "type": "text"
+                },
+                {
+                  "name": "classDate",
+                  "type": "date"
+                },
+                {
+                  "name": "enrolmentTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "startTimeDisplay",
+                  "type": "text"
+                },
+                {
+                  "name": "dayname",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorfirst",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorlast",
+                  "type": "text"
+                },
+                {
+                  "name": "levelname",
+                  "type": "text"
+                }
+              ],
+              "outputType": "array"
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "studentid",
+            "type": "number"
+          },
+          {
+            "name": "paymentid",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "lineitems",
+            "type": "array",
+            "sub": [
+              {
+                "name": "amount",
+                "type": "number"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "classDate",
+                "type": "date"
+              },
+              {
+                "name": "enrolmentTotal",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "dayname",
+                "type": "text"
+              },
+              {
+                "name": "instructorfirst",
+                "type": "text"
+              },
+              {
+                "name": "instructorlast",
+                "type": "text"
+              },
+              {
+                "name": "levelname",
+                "type": "text"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

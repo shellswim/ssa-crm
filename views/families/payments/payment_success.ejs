@@ -8,6 +8,7 @@
 <dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 <dmx-serverconnect id="paysubmitDetails" url="/api/families/ledger/paymentdetails" dmx-param:paymentid="paymentSessionStorage.data.paymentidentity"></dmx-serverconnect>
 <dmx-datastore id="selectedChargesStore"></dmx-datastore>
+<dmx-value id="receiptFilepath"></dmx-value>
 <dmx-datetime id="currentDateTime" utc="true"></dmx-datetime>
 <meta name="ac:route" content="/families/familydetail/:familyid/payment/payment_success">
 
@@ -22,13 +23,24 @@
             <h5 class="fw-bold mb-3">Generate Receipts</h5>
             <div class="col">
                 <div class="row">
+
                     <dmx-serverconnect id="generateReceipt" url="/api/families/ledger/payreceipt" dmx-param:paymentid="paysubmitDetails.data.getPayment.id" dmx-param:familyname="familyDetails.data.primaryGuardian.lastName" dmx-param:paymenttotal="paysubmitDetails.data.getPayment.amount" dmx-param:record="paysubmitDetails.data.paidlineitems" dmx-param:paymentdate="paysubmitDetails.data.getPayment.paymentdate" dmx-param:paymenttype="paysubmitDetails.data.getPayment.pay_type" dmx-param:reference="paysubmitDetails.data.getPayment.payref" dmx-param:notes="paysubmitDetails.data.getPayment.notes" dmx-param:paymenttitle="paysubmitDetails.data.getPayment.title" dmx-param:host="browser1.location.protocol+'//'+browser1.location.host" noload dmx-on:success="run({condition:{if:`var_download.value == 1`,then:{steps:[{run:{action:`var_download.setValue(0)`}},{assign:{value:`generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`,name:'url'}},{run:{action:`browser1.goto(generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\'))`,disabled:true}},{runJS:{function:'openFile',args:[`generateReceipt.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`]}}]}}})"></dmx-serverconnect>
 
                     <div class="col-auto"><button id="emailReceipt_button" class="btn btn-light border" dmx-on:click="generateReceipt.load({})"><i class="bi-envelope-fill me-2"></i>Email</button></div>
-                    <div class="col-auto"><button id="downloadReceipt_button" class="btn btn-light border" dmx-on:click="run({run:{action:`var_download.setValue(1);payreceiptDetailForm.submit()`}})">
-                            <span class="spinner-border spinner-border-sm " role="status" aria-hidden="true" dmx-show="var_download.value == 1 &amp;&amp; generateReceipt.state.executing"></span>
-                            <i class="bi-cloud-download-fill me-2" dmx-hide="var_download.value == 1 &amp;&amp; generateReceipt.state.executing"></i>Download</button>
-                        <a href="#" target="_blank" dmx-bind:href="generateReceipt.data.paymentreceipt.FilePath.replace('/public', '')"></a>
+                    <div class="col-auto">
+                        <form id="formDownloadReceipt" method="post" is="dmx-serverconnect-form" action="/api/families/ledger/payreceipt_json" dmx-on:start="var_download.setValue(1)" dmx-on:done="var_download.setValue(0)" dmx-on:success="run([{run:{action:`receiptFilepath.setValue(formDownloadReceipt.data.PDFGenerate.downloadPath)`}},{wait:{delay:1000}},{run:{action:`downloadReceipt.download()`}}])">
+
+                            <dmx-download id="downloadReceipt" dmx-bind:url="receiptFilepath.value"></dmx-download>
+
+                            <input id="inp_familyid" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                            <input id="inp_paymentid" name="paymentid" type="hidden" class="form-control" dmx-bind:value="paymentSessionStorage.data.paymentidentity">
+                            <input id="inp_host" name="host" type="hidden" class="form-control" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.host">
+                            <button id="downloadReceiptButton" class="btn btn-light border" type="submit" dmx-bind:disabled="var_download.value === 1">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" dmx-show="var_download.value === 1" id="downloadReceiptButton"></span>
+                                <i class="bi-cloud-download-fill me-2" dmx-hide="var_download.value === 1"></i>Download</button>
+                        </form>
+                        <p dmx-text="receiptFilepath.value">Enter your content here</p>
+
                     </div>
                 </div>
             </div>
@@ -127,32 +139,32 @@
                 </div>
             </div>
         </section>
-<section>
-<div class="row">
+        <section>
+            <div class="row">
 
 
-<form is="dmx-serverconnect-form" id="payreceiptDetailForm" method="post" action="/api/families/ledger/payreceipt_copy" dmx-generator="bootstrap5" dmx-form-type="horizontal" dmx-on:success="run({condition:{if:`var_download.value == 1`,then:{steps:[{run:{action:`var_download.setValue(0)`}},{assign:{value:`payreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`,name:'url'}},{run:{action:`browser1.goto(paymentreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\'))`,disabled:true}},{runJS:{function:'openFile',args:[`payreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`]}}]}}})">
-<input type="text" class="form-control" id="inp_paymenttitle" name="paymenttitle" dmx-bind:value="paysubmitDetails.data.getPayment.title" aria-describedby="inp_paymenttitle_help" placeholder="Enter Paymenttitle">
-<input type="number" class="form-control" id="inp_paymentid" name="paymentid" dmx-bind:value="paysubmitDetails.data.getPayment.id" aria-describedby="inp_paymentid_help" placeholder="Enter Paymentid">
-<input type="text" class="form-control" id="inp_familyname" name="familyname" dmx-bind:value="familyDetails.data.primaryGuardian.lastName" aria-describedby="inp_familyname_help" placeholder="Enter Familyname">
-<input type="text" class="form-control" id="inp_paymenttotal" name="paymenttotal" dmx-bind:value="paysubmitDetails.data.getPayment.amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" aria-describedby="inp_paymenttotal_help" placeholder="Enter Paymenttotal">
-<input type="text" class="form-control" id="inp_paymentdate" name="paymentdate" dmx-bind:value="paysubmitDetails.data.getPayment.paymentdate.formatDate('dd/MM/yyyy')" aria-describedby="inp_paymentdate_help" placeholder="Enter Paymentdate">
-<input type="text" class="form-control" id="inp_paymenttype" name="paymenttype" dmx-bind:value="paysubmitDetails.data.getPayment.pay_type" aria-describedby="inp_paymenttype_help" placeholder="Enter Paymenttype">
-<input type="text" class="form-control" id="inp_reference" name="reference" dmx-bind:value="paysubmitDetails.data.getPayment.payref" aria-describedby="inp_reference_help" placeholder="Enter Reference">
-<input type="text" class="form-control" id="inp_notes" name="notes" dmx-bind:value="paysubmitDetails.data.getPayment.notes" aria-describedby="inp_notes_help" placeholder="Enter Notes">
-<input type="text" class="form-control" id="inp_host" name="host" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.hostname" aria-describedby="inp_host_help" placeholder="Enter Host">
+                <form is="dmx-serverconnect-form" id="payreceiptDetailForm" method="post" action="/api/families/ledger/payreceipt_copy" dmx-generator="bootstrap5" dmx-form-type="horizontal" dmx-on:success="run({condition:{if:`var_download.value == 1`,then:{steps:[{run:{action:`var_download.setValue(0)`}},{assign:{value:`payreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`,name:'url'}},{run:{action:`browser1.goto(paymentreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\'))`,disabled:true}},{runJS:{function:'openFile',args:[`payreceiptDetailForm.data.paymentreceipt.FilePath.replace(\'/public\', \'\')`]}}]}}})">
+                    <input type="hidden" class="form-control" id="inp_paymenttitle" name="paymenttitle" dmx-bind:value="paysubmitDetails.data.getPayment.title" aria-describedby="inp_paymenttitle_help" placeholder="Enter Paymenttitle">
+                    <input type="hidden" class="form-control" id="inp_paymentid" name="paymentid" dmx-bind:value="paysubmitDetails.data.getPayment.id" aria-describedby="inp_paymentid_help" placeholder="Enter Paymentid">
+                    <input type="hidden" class="form-control" id="inp_familyname" name="familyname" dmx-bind:value="familyDetails.data.primaryGuardian.lastName" aria-describedby="inp_familyname_help" placeholder="Enter Familyname">
+                    <input type="hidden" class="form-control" id="inp_paymenttotal" name="paymenttotal" dmx-bind:value="paysubmitDetails.data.getPayment.amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" aria-describedby="inp_paymenttotal_help" placeholder="Enter Paymenttotal">
+                    <input type="hidden" class="form-control" id="inp_paymentdate" name="paymentdate" dmx-bind:value="paysubmitDetails.data.getPayment.paymentdate.formatDate('dd/MM/yyyy')" aria-describedby="inp_paymentdate_help" placeholder="Enter Paymentdate">
+                    <input type="hidden" class="form-control" id="inp_paymenttype" name="paymenttype" dmx-bind:value="paysubmitDetails.data.getPayment.pay_type" aria-describedby="inp_paymenttype_help" placeholder="Enter Paymenttype">
+                    <input type="hidden" class="form-control" id="inp_reference" name="reference" dmx-bind:value="paysubmitDetails.data.getPayment.payref" aria-describedby="inp_reference_help" placeholder="Enter Reference">
+                    <input type="hidden" class="form-control" id="inp_notes" name="notes" dmx-bind:value="paysubmitDetails.data.getPayment.notes" aria-describedby="inp_notes_help" placeholder="Enter Notes">
+                    <input type="hidden" class="form-control" id="inp_host" name="host" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.hostname" aria-describedby="inp_host_help" placeholder="Enter Host">
 
-<div id="record" is="dmx-repeat" dmx-bind:repeat="paysubmitDetails.data.paidlineitems">
-    <input type="number" class="form-control" id="inp_enrolid" name="enrolid" dmx-bind:id="insp_enrolid_{{$index}}" dmx-bind:aria-describedby="insp_enrolid_{{$index}}_help" dmx-bind:name="record[{{$index}}][id]" aria-describedby="inp_enrolid_help" placeholder="enrolid" dmx-bind:value="id">
-    <input type="text" class="form-control" id="inp_studentname" name="studentname" dmx-bind:id="insp_studentname_{{$index}}" dmx-bind:aria-describedby="insp_studentname_{{$index}}_help" dmx-bind:name="record[{{$index}}][studentname]" aria-describedby="inp_studentname_help" placeholder="studentname" dmx-bind:value="studentfirst+' '+studentlast">
-    <input type="text" class="form-control" id="inp_classdetail" name="classdetail" dmx-bind:id="insp_classdetail_{{$index}}" dmx-bind:aria-describedby="insp_classdetail_{{$index}}_help" dmx-bind:name="record[{{$index}}][classname]" aria-describedby="inp_classdetail_help" placeholder="classdetail" dmx-bind:value="dayname.trunc(3, true, ' ')+levelname+' '+classStart+' - '+instructorFirst+' '+instructorLast.trunc(1,true,'.')">
-    <input type="text" class="form-control" id="inp_classdate" name="classdate" dmx-bind:id="insp_classdate_{{$index}}" dmx-bind:aria-describedby="insp_classdate_{{$index}}_help" dmx-bind:name="record[{{$index}}][classdate]" aria-describedby="inp_classdate_help" placeholder="date" dmx-bind:value="classDate.formatDate('dd/MM/yyyy')">
-    <input type="text" class="form-control" id="inp_paid" name="paid" dmx-bind:id="insp_paid_{{$index}}" dmx-bind:aria-describedby="insp_paid_{{$index}}_help" dmx-bind:name="record[{{$index}}][linepaid]" aria-describedby="inp_paid_help" placeholder="paid" dmx-bind:value="total_enrpaid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
-    <input type="text" class="form-control" id="inp_remaining" name="remaining" dmx-bind:id="insp_remaining_{{$index}}" dmx-bind:aria-describedby="insp_remaining_{{$index}}_help" dmx-bind:name="record[{{$index}}][lineremaining]" aria-describedby="inp_remaining_help" placeholder="Remaining" dmx-bind:value="remainingBalance.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
-</div>
+                    <div id="record" is="dmx-repeat" dmx-bind:repeat="paysubmitDetails.data.paidlineitems">
+                        <input type="hidden" class="form-control" id="inp_enrolid" name="enrolid" dmx-bind:id="insp_enrolid_{{$index}}" dmx-bind:aria-describedby="insp_enrolid_{{$index}}_help" dmx-bind:name="record[{{$index}}][id]" aria-describedby="inp_enrolid_help" placeholder="enrolid" dmx-bind:value="id">
+                        <input type="hidden" class="form-control" id="inp_studentname" name="studentname" dmx-bind:id="insp_studentname_{{$index}}" dmx-bind:aria-describedby="insp_studentname_{{$index}}_help" dmx-bind:name="record[{{$index}}][studentname]" aria-describedby="inp_studentname_help" placeholder="studentname" dmx-bind:value="studentfirst+' '+studentlast">
+                        <input type="hidden" class="form-control" id="inp_classdetail" name="classdetail" dmx-bind:id="insp_classdetail_{{$index}}" dmx-bind:aria-describedby="insp_classdetail_{{$index}}_help" dmx-bind:name="record[{{$index}}][classname]" aria-describedby="inp_classdetail_help" placeholder="classdetail" dmx-bind:value="dayname.trunc(3, true, ' ')+levelname+' '+classStart+' - '+instructorFirst+' '+instructorLast.trunc(1,true,'.')">
+                        <input type="hidden" class="form-control" id="inp_classdate" name="classdate" dmx-bind:id="insp_classdate_{{$index}}" dmx-bind:aria-describedby="insp_classdate_{{$index}}_help" dmx-bind:name="record[{{$index}}][classdate]" aria-describedby="inp_classdate_help" placeholder="date" dmx-bind:value="classDate.formatDate('dd/MM/yyyy')">
+                        <input type="hidden" class="form-control" id="inp_paid" name="paid" dmx-bind:id="insp_paid_{{$index}}" dmx-bind:aria-describedby="insp_paid_{{$index}}_help" dmx-bind:name="record[{{$index}}][linepaid]" aria-describedby="inp_paid_help" placeholder="paid" dmx-bind:value="total_enrpaid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
+                        <input type="hidden" class="form-control" id="inp_remaining" name="remaining" dmx-bind:id="insp_remaining_{{$index}}" dmx-bind:aria-describedby="insp_remaining_{{$index}}_help" dmx-bind:name="record[{{$index}}][lineremaining]" aria-describedby="inp_remaining_help" placeholder="Remaining" dmx-bind:value="remainingBalance.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
+                    </div>
 
-</form>
-</div>
-</section>
+                </form>
+            </div>
+        </section>
     </div>
 </main>

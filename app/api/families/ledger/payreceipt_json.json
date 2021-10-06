@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "paymentid"
+      },
+      {
+        "type": "text",
+        "name": "host"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "paymentid"
+      },
+      {
+        "type": "text",
+        "name": "host"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "families/receipts/singlepayment"
+        },
+        "disabled": true
+      },
+      {
+        "name": "host",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "host",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_POST.host.contains('localhost')}}",
+          "then": {
+            "steps": {
+              "name": "host",
+              "module": "core",
+              "action": "setvalue",
+              "options": {
+                "key": "host",
+                "value": "http://ssacrm:3000"
+              },
+              "meta": [],
+              "outputType": "text"
+            }
+          },
+          "else": {
+            "steps": {
+              "name": "host",
+              "module": "core",
+              "action": "setvalue",
+              "options": {
+                "key": "host",
+                "value": "{{$_POST.host}}"
+              },
+              "meta": [],
+              "outputType": "text"
+            }
+          }
+        },
+        "outputType": "boolean"
+      },
+      "lib/families/receipts/singlepayment",
+      {
+        "name": "templatepath",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "templatepath",
+          "value": "/pdf_templates/receipts/tuition_receipt.ejs"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "PDFGenerate",
+        "module": "HTMLPDFWrapper",
+        "action": "ssaPDFConvert",
+        "options": {
+          "papersize": "A4",
+          "folderName": "/temp/tuition_receipts",
+          "fileName": "{{TIMESTAMP}}",
+          "jsonresponse": "{{payment}}",
+          "hostname": "{{host}}",
+          "tempPath": "{{templatepath}}",
+          "webscale": 0.8,
+          "topMargin": 10,
+          "rightMargin": 10,
+          "bottomMargin": 10,
+          "leftMargin": 10,
+          "orientation": "p",
+          "printbackground": "true"
+        },
+        "meta": [
+          {
+            "name": "FileName",
+            "type": "text"
+          },
+          {
+            "name": "FilePath",
+            "type": "text"
+          }
+        ],
+        "output": true
+      }
+    ]
+  }
+}

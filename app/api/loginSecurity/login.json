@@ -9,20 +9,69 @@
         "type": "text",
         "name": "password"
       }
+    ],
+    "$_COOKIE": [
+      {
+        "type": "text",
+        "name": "_publ"
+      }
     ]
   },
   "exec": {
     "steps": {
-      "name": "identity",
-      "module": "auth",
-      "action": "login",
+      "name": "",
+      "module": "core",
+      "action": "condition",
       "options": {
-        "provider": "security",
-        "remember": "",
-        "password": "{{$_POST.password.sha512(nb8ZIK6tXQKwdoDhfaxLMn00eQQcwQJi)}}"
+        "if": "{{$_COOKIE._publ}}",
+        "then": {
+          "steps": {
+            "name": "identity_copy",
+            "module": "auth",
+            "action": "login",
+            "options": {
+              "provider": "pptr",
+              "remember": ""
+            },
+            "output": true,
+            "meta": []
+          }
+        },
+        "else": {
+          "steps": [
+            {
+              "name": "basicauth",
+              "module": "core",
+              "action": "setsession",
+              "options": {
+                "value": "Basic {{($_POST.username + ':' + $_POST.password).encodeBase64()}}"
+              }
+            },
+            {
+              "name": "identity",
+              "module": "auth",
+              "action": "login",
+              "options": {
+                "provider": "security",
+                "remember": "",
+                "password": "{{$_POST.password.sha512(nb8ZIK6tXQKwdoDhfaxLMn00eQQcwQJi)}}"
+              },
+              "output": true,
+              "meta": []
+            },
+            {
+              "name": "exec",
+              "module": "core",
+              "action": "exec",
+              "options": {
+                "exec": "base/pptr_user"
+              },
+              "output": true
+            }
+          ]
+        }
       },
-      "output": true,
-      "meta": []
+      "outputType": "boolean"
     }
   }
 }

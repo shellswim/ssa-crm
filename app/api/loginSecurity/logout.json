@@ -1,16 +1,91 @@
-[
-  {
-    "name": "",
-    "module": "auth",
-    "action": "logout",
-    "options": {
-      "provider": "security"
-    }
+{
+  "meta": {
+    "$_COOKIE": [
+      {
+        "type": "text",
+        "name": "_publx"
+      }
+    ]
   },
-  {
-    "name": "removeSession",
-    "module": "core",
-    "action": "removesession",
-    "options": {}
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "logout",
+        "options": {
+          "provider": "security"
+        }
+      },
+      {
+        "name": "ssa_crm",
+        "module": "core",
+        "action": "removesession",
+        "options": {}
+      },
+      {
+        "name": "delete",
+        "module": "dbupdater",
+        "action": "delete",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "delete",
+            "table": "temp_usr",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "user",
+                  "field": "user",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_COOKIE._publx}}",
+                  "data": {
+                    "column": "user"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "DELETE\nFROM temp_usr\nWHERE user = :P1 /* {{$_COOKIE._publx}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_COOKIE._publx}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "_publ",
+        "module": "core",
+        "action": "removecookie",
+        "options": {}
+      },
+      {
+        "name": "_publx",
+        "module": "core",
+        "action": "removecookie",
+        "options": {}
+      },
+      {
+        "name": "_publent",
+        "module": "core",
+        "action": "removecookie",
+        "options": {}
+      }
+    ]
   }
-]
+}

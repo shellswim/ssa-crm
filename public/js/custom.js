@@ -174,7 +174,6 @@ function mergeTable() {
 }
 // Init mergeTable function then call on table.
 function initMergeTable(el, exclude) {
-    document.write('hello!');
     let table = document.querySelector(el);
     let clone = table.cloneNode(true);
     let parent = table.parentNode;
