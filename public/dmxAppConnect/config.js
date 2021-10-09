@@ -5855,6 +5855,202 @@ dmx.config({
     "rp_payLineItems": {
       "meta": null,
       "outputType": "array"
+    },
+    "dd_guardianInfo": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "phoneNumbers",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "emailAddresses",
+          "type": "text"
+        },
+        {
+          "name": "phoneNumbersArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "phone"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        },
+        {
+          "name": "emailAddressesArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "address"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_guardianPhones": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "phone"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_guardianEmails": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "address"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_studentInfo": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstname",
+          "type": "text"
+        },
+        {
+          "name": "lastname",
+          "type": "text"
+        },
+        {
+          "name": "dob",
+          "type": "text"
+        },
+        {
+          "name": "age",
+          "type": "text"
+        },
+        {
+          "name": "level",
+          "type": "number"
+        },
+        {
+          "name": "getStudentNotes",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "priority"
+            },
+            {
+              "type": "text",
+              "name": "content"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "student"
+            },
+            {
+              "type": "text",
+              "name": "subject"
+            }
+          ]
+        },
+        {
+          "name": "groupedPriorities",
+          "type": "array",
+          "sub": [
+            {
+              "name": "COUNT(*)",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "priority_name",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
     }
   },
   "createFamily": {

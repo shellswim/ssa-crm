@@ -2,7 +2,21 @@
 // Find Key in Array of Objects
 
 function appSettingsObject() {
-    var l = dmx.parse('appSettings.data.getSettings'), cl = dmx.parse('getLevels.data.query'), s = {}, mn, mx, r = false, ta = [], da = [], cla = {}, claid = {};
+    var l = dmx.parse('appSettings.data.getSettings'), 
+    cl = dmx.parse('getLevels.data.query'), 
+    rl = dmx.parse('getRelationships.data.query'), 
+    ct = dmx.parse('getContactTypes.data.contactTypes'), 
+    s = {}, 
+    mn, 
+    mx, 
+    r = false, 
+    ta = [], 
+    da = [], 
+    cla = {}, 
+    claid = {}, 
+    ra = {}
+    cta = {};
+
     for (i = 0; i < l.length; i++) {
         var n = l[i].name, v = l[i].value;
         s[n] = v;
@@ -45,6 +59,20 @@ function appSettingsObject() {
         claid[id] = { "name": n, "colour": c, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
+
+    // Get Relationships by ID
+    for(let i = 0; i < rl.length; i++) {
+        let r = rl[i];
+        ra[r.id] = {"id": r.id, "name": r.type};
+    }
+    s["relationships"] = ra;
+
+    // Get contact types by ID
+    for(let i = 0; i < ct.length; i++) {
+        let c = ct[i];
+        cta[c.id] = {"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr};
+    }
+    s["contactTypes"] = cta;
 
     //Set appSettings
     dmx.app.set('appSettings', s);
