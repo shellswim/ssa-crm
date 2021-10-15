@@ -958,7 +958,97 @@ dmx.config({
         "type": "text",
         "name": "textsearch"
       }
-    ]
+    ],
+    "phone_holding": [
+      {
+        "type": "text",
+        "name": "phone"
+      },
+      {
+        "type": "text",
+        "name": "type"
+      }
+    ],
+    "email_holding": [
+      {
+        "type": "text",
+        "name": "address"
+      },
+      {
+        "type": "text",
+        "name": "type"
+      }
+    ],
+    "guard_datastore": [
+      {
+        "type": "text",
+        "name": "firstname"
+      },
+      {
+        "type": "text",
+        "name": "lastname"
+      },
+      {
+        "type": "number",
+        "name": "relationship"
+      },
+      {
+        "type": "array",
+        "name": "phones"
+      },
+      {
+        "type": "array",
+        "name": "emails"
+      }
+    ],
+    "validateGuardians": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "isupdate"
+          },
+          {
+            "type": "text",
+            "name": "id"
+          }
+        ]
+      },
+      {
+        "name": "validations",
+        "type": "text"
+      },
+      {
+        "name": "var_flow",
+        "type": "text"
+      },
+      {
+        "name": "var_flow",
+        "type": "text"
+      },
+      {
+        "name": "var_flow",
+        "type": "text"
+      },
+      {
+        "name": "var_flow",
+        "type": "text"
+      },
+      {
+        "name": "var_id",
+        "type": "text"
+      }
+    ],
+    "var_guardianFormValid": {
+      "meta": null,
+      "outputType": "boolean"
+    },
+    "phonesrepeat": {
+      "meta": null,
+      "outputType": "array"
+    }
   },
   "index layoutMain": {
     "guardians": {
@@ -1800,7 +1890,19 @@ dmx.config({
     "var_studentRelevance": {
       "meta": null,
       "outputType": "number"
-    }
+    },
+    "global": [
+      {
+        "type": "boolean",
+        "name": "navbarToggle"
+      }
+    ],
+    "cookies": [
+      {
+        "type": "boolean",
+        "name": "navbarToggle"
+      }
+    ]
   },
   "familyDetails": {
     "guardianDatastore": [
@@ -6051,6 +6153,294 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "checkEmail": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "email"
+          }
+        ]
+      },
+      {
+        "name": "checkemail",
+        "type": "object",
+        "sub": [
+          {
+            "name": "data",
+            "type": "object",
+            "sub": [
+              {
+                "name": "emailCheck",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "text",
+                    "name": "address"
+                  },
+                  {
+                    "type": "number",
+                    "name": "guardianId"
+                  },
+                  {
+                    "type": "number",
+                    "name": "type"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "type": "object",
+            "sub": [
+              {
+                "name": "executing",
+                "type": "boolean"
+              },
+              {
+                "name": "uploading",
+                "type": "boolean"
+              },
+              {
+                "name": "processing",
+                "type": "boolean"
+              },
+              {
+                "name": "downloading",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "uploadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "downloadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "lastError",
+            "type": "object",
+            "sub": [
+              {
+                "name": "status",
+                "type": "number"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "response",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "checkEmailFlow": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "email"
+          }
+        ]
+      },
+      {
+        "name": "checkemail",
+        "type": "object",
+        "sub": [
+          {
+            "name": "data",
+            "type": "object",
+            "sub": [
+              {
+                "name": "emailCheck",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "text",
+                    "name": "address"
+                  },
+                  {
+                    "type": "number",
+                    "name": "guardianId"
+                  },
+                  {
+                    "type": "number",
+                    "name": "type"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "type": "object",
+            "sub": [
+              {
+                "name": "executing",
+                "type": "boolean"
+              },
+              {
+                "name": "uploading",
+                "type": "boolean"
+              },
+              {
+                "name": "processing",
+                "type": "boolean"
+              },
+              {
+                "name": "downloading",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "uploadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "downloadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "lastError",
+            "type": "object",
+            "sub": [
+              {
+                "name": "status",
+                "type": "number"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "response",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "var_checkEmailStatus": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "checkEmailArray": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "email"
+          },
+          {
+            "type": "array",
+            "name": "emailArr"
+          }
+        ]
+      },
+      {
+        "name": "var_continue",
+        "type": "text"
+      },
+      {
+        "name": "var_continue",
+        "type": "text"
+      },
+      {
+        "name": "var_continue",
+        "type": "text"
+      }
+    ],
+    "newGuardianId": {
+      "meta": null,
+      "outputType": "text"
     }
   },
   "createFamily": {
@@ -8132,5 +8522,69 @@ dmx.config({
       ],
       "outputType": "array"
     }
+  },
+  "create_family": {
+    "guard_datastore": [
+      {
+        "type": "text",
+        "name": "firstname"
+      },
+      {
+        "type": "text",
+        "name": "lastname"
+      },
+      {
+        "type": "number",
+        "name": "relationship"
+      },
+      {
+        "type": "array",
+        "name": "emails",
+        "sub": [
+          {
+            "type": "text",
+            "name": "address"
+          },
+          {
+            "type": "text",
+            "name": "type"
+          }
+        ]
+      },
+      {
+        "type": "array",
+        "name": "phones",
+        "sub": [
+          {
+            "type": "text",
+            "name": "phone"
+          },
+          {
+            "type": "text",
+            "name": "type"
+          }
+        ]
+      }
+    ],
+    "phone_holding": [
+      {
+        "type": "text",
+        "name": "phone"
+      },
+      {
+        "type": "text",
+        "name": "type"
+      }
+    ],
+    "email_holding": [
+      {
+        "type": "text",
+        "name": "address"
+      },
+      {
+        "type": "text",
+        "name": "type"
+      }
+    ]
   }
 });

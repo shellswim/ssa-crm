@@ -1,0 +1,181 @@
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="create_family" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" components="{dmxValidator:{},dmxDatastore:{},dmxBootstrap5TableGenerator:{}}" -->
+<meta name="ac:route" content="/families/create_family">
+<dmx-datastore id="phone_holding"></dmx-datastore>
+<dmx-datastore id="email_holding"></dmx-datastore>
+<dmx-datastore id="guard_datastore"></dmx-datastore>
+<main class="d-flex flex-grow-1 flex-column p-4">
+    <div class="row">
+        <div class="col">
+            <h3 class="fw-bold mb-0">Create New Family</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col my-3 p-3 bg-white border rounded-3 text-body">
+            <div class="row">
+                <div class="col mb-2">
+                    <h5 class="mb-0">
+                        Add Guardians</h5>
+                </div>
+            </div>
+            <form id="form_addGuardian" class="mb-3 pb-3 border-bottom">
+                <div class="row">
+                    <div class="col-xxl-7 col-lg-10">
+
+                        <div class="row row-cols-2 row-cols-lg-3">
+                            <div class="col">
+                                <div>
+                                    <label for="inp_guard_firstname" class="form-label col-form-label">First Name</label>
+                                    <input type="text" class="form-control" id="inp_guard_firstname" name="firstname" aria-describedby="input1_help" placeholder="Enter some text" required="">
+                                </div>
+
+                            </div>
+                            <div class="col">
+                                <div>
+                                    <label for="inp_guard_lastname" class="form-label col-form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="inp_guard_lastname" name="lastname" aria-describedby="input1_help" placeholder="Enter some text" required="">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div>
+                                    <label for="select1" class="form-label col-form-label">Relationship</label>
+                                    <select id="select1" class="form-select" dmx-bind:options="appSettings.relationships.relationshipArray" optiontext="name" optionvalue="id" name="relationship">
+                                        <option selected disabled>Please select...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <form id="form_addGuardianEmail" class="mb-3 pb-3 border-bottom" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/checkEmail" dmx-on:success="email_holding.upsert({address: form_addGuardianEmail.inp_guard_emailaddress.value},{address: form_addGuardianEmail.inp_guard_emailaddress.value, type: form_addGuardianEmail.sel_guard_emailtype.value});form_addGuardianEmail.reset()" dmx-on:error="">
+                <div class="row">
+                    <div class="col-xxl-7 col-lg-10 mb-sm-4 mb-lg-3">
+
+                        <div class="row g-4 row-cols-2 row-cols-lg-3 align-items-stretch">
+                            <div class="col">
+                                <label for="inp_guard_emailaddress" class="form-label col-form-label">Email</label>
+                                <input type="text" class="form-control" id="inp_guard_emailaddress" name="emailaddress" aria-describedby="input1_help" placeholder="example@puddle.io" required="" data-rule-email="">
+
+                            </div>
+                            <div class="col">
+                                <label for="sel_guard_emailtype" class="form-label col-form-label">Type</label>
+                                <select id="sel_guard_emailtype" class="form-select" dmx-bind:options="appSettings.contactTypes.emailContactTypes" optiontext="type" optionvalue="id" name="contacttype" required="">
+                                    <option selected="" disabled="">Please select...</option>
+                                </select>
+                            </div>
+                            <div class="col align-self-end">
+                                <button id="btn_addemail" class="btn btn-outline-primary mb-md-3 mb-3 mb-lg-0" type="submit">
+                                    <i class="bi-save2 me-2"></i> Add
+                                </button>
+                            </div>
+
+                        </div>
+                        <small class="text-muted">Add email addresses to this guardian. More than one can be added.</small>
+                        <div class="row g-0" is="dmx-if" id="cr_emailerror" dmx-bind:condition="form_addGuardianEmail.lastError.status !== 0">
+                            <div class="my-2 bg-danger rounded-3 col">
+                                <p class="mb-0 p-2 text-white" dmx-html="'<i class=&quot;bi-exclamation-diamond me-2&quot;></i>Error: '+form_addGuardianEmail.lastError.status+' - '+form_addGuardianEmail.lastError.response"><i class="bi-exclamation-diamond me-2"></i>Error: 409 - This email address already exists.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" is="dmx-if" id="cr_noguardemails" dmx-bind:condition="email_holding.data.length > 0">
+                    <div class="col-xxl-5 col-xl-7 col-lg-7 col-md-8">
+                        <div class="table-responsive small">
+                            <table class="table table-sm align-middle">
+                                <thead class="fw-bold text-uppercase">
+                                    <tr>
+                                        <th style="width: 1%; white-space: nowrap;"></th>
+                                        <th>Address</th>
+                                        <th>Type</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="email_holding.data" id="tableRepeat1">
+                                    <tr>
+                                        <td>
+                                            <a id="btn_editEmail" class="btn btn-sm text-danger btn-link" dmx-on:click="" wappler-command="editContent"><i class="bi-pencil me-2"></i>Edit
+                                            </a>
+                                        </td>
+                                        <td dmx-text="address">example@puddle.io</td>
+                                        <td dmx-text="appSettings.contactTypes[type].type">Home</td>
+                                        <td>
+                                            <button id="btn_deleteEmail" class="btn btn-link btn-sm text-danger" dmx-on:click="email_holding.delete({$id: $id})">Delete</button>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+            <form id="form_addGuardianPhone" dmx-on:submit="phone_holding.insert({phone: form_addGuardianPhone.inp_guard_phone.value, type: form_addGuardianPhone.sel_guard_phonetype.value})">
+                <div class="row">
+                    <div class="col-xxl-7 col-lg-10 mb-sm-4 mb-lg-3">
+
+                        <div class="row row-cols-2 row-cols-lg-3 align-items-stretch">
+                            <div class="col">
+                                <label for="inp_guard_phone" class="form-label col-form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="inp_guard_phone" name="phonenumber" aria-describedby="input1_help" placeholder="0400123456" required="" data-rule-digits="">
+
+                            </div>
+                            <div class="col">
+                                <label for="sel_guard_phonetype" class="form-label col-form-label">Type</label>
+                                <select id="sel_guard_phonetype" class="form-select" dmx-bind:options="appSettings.contactTypes.phoneContactTypes" optiontext="type" optionvalue="id" name="contacttype1">
+                                    <option selected="" disabled="">Please select...</option>
+                                </select>
+                            </div>
+                            <div class="col align-self-end">
+                                <button id="btn_addphone" class="btn btn-outline-primary mb-md-3 mb-3 mb-lg-0" type="submit">
+                                    <i class="bi-save2 me-2"></i> Add
+                                </button>
+                            </div>
+
+                        </div>
+                        <small class="text-muted">Add telephone numbers to this guardian. More than one can be added.</small>
+                    </div>
+                </div>
+                <div class="row" is="dmx-if" id="cr_noguardphones" dmx-bind:condition="phone_holding.data.length > 0">
+                    <div class="col-xxl-5 col-xl-7 col-lg-7 col-md-8">
+                        <div class="table-responsive small">
+                            <table class="table table-sm">
+                                <thead class="text-uppercase fw-bold">
+                                    <tr>
+                                        <th>Phone</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="phone_holding.data" id="tableRepeat3">
+                                    <tr>
+                                        <td dmx-text="phone"></td>
+                                        <td dmx-text="appSettings.contactTypes[type].type"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</main>
+
+<script>
+    window.addEventListener('beforeunload', function (e) {
+        e.preventDefault();
+        e.returnValue = '';
+    });
+    window.addEventListener('unload', function() {
+        dmx.parse('content.guard_datastore.clear()');
+        dmx.parse('content.phone_holding.clear()');
+        dmx.parse('content.email_holding.clear()');
+    });
+    window.addEventListener('load', function() {
+        dmx.parse('content.guard_datastore.clear()');
+        dmx.parse('content.phone_holding.clear()');
+        dmx.parse('content.email_holding.clear()');
+    });
+</script>

@@ -14,8 +14,12 @@ function appSettingsObject() {
     da = [], 
     cla = {}, 
     claid = {}, 
-    ra = {}
-    cta = {};
+    ra = {},
+    ra2 = [],
+    cta = {},
+    ct_arr = [],
+    ect = [],
+    pct = [];
 
     for (i = 0; i < l.length; i++) {
         var n = l[i].name, v = l[i].value;
@@ -64,15 +68,27 @@ function appSettingsObject() {
     for(let i = 0; i < rl.length; i++) {
         let r = rl[i];
         ra[r.id] = {"id": r.id, "name": r.type};
+        ra2.push({"id": r.id, "name": r.type});
     }
     s["relationships"] = ra;
+    s["relationships"]['relationshipArray'] = ra2;
 
     // Get contact types by ID
     for(let i = 0; i < ct.length; i++) {
         let c = ct[i];
         cta[c.id] = {"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr};
+        ct_arr.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
+        if(c.typesmatch === 'email' || c.typesmatch === 'all') {
+            ect.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
+        } 
+        if(c.typesmatch === 'phone' || c.typesmatch === 'all') {
+            pct.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
+        }
     }
     s["contactTypes"] = cta;
+    s["contactTypes"]["contactTypesArray"] = ct_arr;
+    s["contactTypes"]["emailContactTypes"] = ect;
+    s["contactTypes"]["phoneContactTypes"] = pct;
 
     //Set appSettings
     dmx.app.set('appSettings', s);

@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "emailaddress"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "check",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "emails"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "emails.address",
+                  "field": "emails.address",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.emailaddress}}",
+                  "data": {
+                    "table": "emails",
+                    "column": "address",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM emails\nWHERE address = :P1 /* {{$_POST.emailaddress}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.emailaddress}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "address"
+          },
+          {
+            "type": "number",
+            "name": "guardianId"
+          },
+          {
+            "type": "number",
+            "name": "type"
+          }
+        ],
+        "outputType": "array",
+        "type": "dbconnector_select",
+        "output": true
+      },
+      {
+        "name": "checkvalue",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{check.length}}",
+          "key": "checkvalue"
+        },
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "address",
+            "type": "text"
+          },
+          {
+            "name": "guardianId",
+            "type": "number"
+          },
+          {
+            "name": "type",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{checkvalue > 0}}",
+          "then": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 409,
+                "data": "This email address already exists."
+              }
+            }
+          },
+          "else": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 200
+              }
+            }
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}
