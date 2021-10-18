@@ -1011,14 +1011,10 @@ dmx.config({
             "name": "isupdate"
           },
           {
-            "type": "text",
+            "type": "number",
             "name": "id"
           }
         ]
-      },
-      {
-        "name": "validations",
-        "type": "text"
       },
       {
         "name": "var_flow",
@@ -1046,6 +1042,89 @@ dmx.config({
       "outputType": "boolean"
     },
     "phonesrepeat": {
+      "meta": null,
+      "outputType": "array"
+    },
+    "check_newFamilyEmails": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "address"
+          }
+        ]
+      },
+      {
+        "name": "var_error",
+        "type": "text"
+      },
+      {
+        "name": "var_emails",
+        "type": "text"
+      },
+      {
+        "name": "var_error",
+        "type": "text"
+      },
+      {
+        "name": "checkFamilyEmails",
+        "type": "array",
+        "sub": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          }
+        ]
+      }
+    ],
+    "repeat_guardians": {
+      "meta": [
+        {
+          "name": "$id",
+          "type": "number"
+        },
+        {
+          "type": "text",
+          "name": "firstname"
+        },
+        {
+          "type": "text",
+          "name": "lastname"
+        },
+        {
+          "type": "number",
+          "name": "relationship"
+        },
+        {
+          "type": "array",
+          "name": "phones"
+        },
+        {
+          "type": "array",
+          "name": "emails"
+        },
+        {
+          "type": "text",
+          "name": "rstring"
+        }
+      ],
+      "outputType": "array"
+    },
+    "emails": {
       "meta": null,
       "outputType": "array"
     }
@@ -6441,6 +6520,87 @@ dmx.config({
     "newGuardianId": {
       "meta": null,
       "outputType": "text"
+    },
+    "dd_guardianDetails": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "phoneNumbers",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "emailAddresses",
+          "type": "text"
+        },
+        {
+          "name": "phoneNumbersArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "phone"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        },
+        {
+          "name": "emailAddressesArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "address"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
     }
   },
   "createFamily": {

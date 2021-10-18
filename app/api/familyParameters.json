@@ -28,31 +28,11 @@
             "columns": [
               {
                 "table": "families",
-                "column": "students"
+                "column": "*"
               },
               {
-                "table": "families",
-                "column": "primaryGuardian"
-              },
-              {
-                "table": "families",
-                "column": "street1"
-              },
-              {
-                "table": "families",
-                "column": "street2"
-              },
-              {
-                "table": "families",
-                "column": "suburb"
-              },
-              {
-                "table": "families",
-                "column": "state"
-              },
-              {
-                "table": "families",
-                "column": "id"
+                "table": "guardians",
+                "column": "*"
               }
             ],
             "table": {
@@ -73,6 +53,26 @@
                       "value": {
                         "table": "families",
                         "column": "id"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "addresses",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "addresses",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "families",
+                        "column": "address"
                       },
                       "operation": "="
                     }
@@ -100,7 +100,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT families.students, families.primaryGuardian, families.street1, families.street2, families.suburb, families.state, families.id\nFROM families\nINNER JOIN guardians ON (guardians.family = families.id)\nWHERE families.id = :P1 /* {{$_GET.familyid}} */",
+            "query": "SELECT families.*, guardians.*\nFROM families\nINNER JOIN guardians ON (guardians.family = families.id) LEFT JOIN addresses ON (addresses.id = families.address)\nWHERE families.id = :P1 /* {{$_GET.familyid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -115,11 +115,88 @@
         "meta": [
           {
             "type": "number",
-            "name": "students"
+            "name": "id"
           },
           {
             "type": "number",
             "name": "primaryGuardian"
+          },
+          {
+            "type": "number",
+            "name": "specialDiscount"
+          },
+          {
+            "type": "number",
+            "name": "address"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "relationship"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "addresses",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "addresses"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM addresses\nWHERE family = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "addresses.family",
+                  "field": "addresses.family",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "addresses",
+                    "column": "family",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
           },
           {
             "type": "text",
@@ -131,18 +208,30 @@
           },
           {
             "type": "text",
+            "name": "unit"
+          },
+          {
+            "type": "text",
             "name": "suburb"
           },
           {
             "type": "text",
+            "name": "postcode"
+          },
+          {
+            "type": "number",
+            "name": "country"
+          },
+          {
+            "type": "number",
             "name": "state"
           },
           {
             "type": "number",
-            "name": "id"
+            "name": "family"
           }
         ],
-        "outputType": "object"
+        "outputType": "array"
       },
       {
         "name": "getGuardiansWContactsRAW",

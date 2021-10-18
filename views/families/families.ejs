@@ -1,152 +1,94 @@
-<!-- Wappler include head-page="layouts/layout2" fontawesome_4="local" id="families" fontawesome_5="cdn" dmx-on:load="run([{wait:{delay:300}},{run:{action:`queryManager.removeAll()`}},{run:{action:`queryManager.set(\'limit\',10)`}},{run:{action:`queryManager.set(\'sort\',\'fullname\')`}},{run:{action:`queryManager.set(\'dir\',\'asc\')`}},{run:{action:`queryManager.set(\'offset\',0)`}}])" components="{dmxStateManagement:{},dmxDatastore:{},dmxBootstrap4Modal:{},dmxBootstrap4Collapse:{},dmxBootstrap4PagingGenerator:{},dmxValidator:{},dmxBootstrap4TableGenerator:{},dmxBootstrap5Navigation:{},dmxPreloader:{},dmxBootstrap5Modal:{},dmxAnimateCSS:{},dmxBootstrap5Collapse:{},dmxBootstrap5TableGenerator:{}}" is="dmx-app" appconnect="local" jquery_35="cdn" bootstrap5="local" bootstrap_icons="cdn" -->
-
-<script is="dmx-flow" id="validateGuardians" type="text/dmx-flow" dmx-on:done="phone_holding.clear();email_holding.clear();modal_createFamily.form_addGuardian.reset()">{
+<!-- Wappler include head-page="layouts/layout2" fontawesome_4="local" id="families" fontawesome_5="cdn" dmx-on:load="run([{wait:{delay:300}},{run:{action:`queryManager.removeAll()`}},{run:{action:`queryManager.set(\'limit\',10)`}},{run:{action:`queryManager.set(\'sort\',\'fullname\')`}},{run:{action:`queryManager.set(\'dir\',\'asc\')`}},{run:{action:`queryManager.set(\'offset\',0)`}}])" components="{dmxStateManagement:{},dmxDatastore:{},dmxBootstrap4Modal:{},dmxBootstrap4Collapse:{},dmxBootstrap4PagingGenerator:{},dmxValidator:{},dmxBootstrap4TableGenerator:{},dmxBootstrap5Navigation:{},dmxPreloader:{},dmxBootstrap5Modal:{},dmxAnimateCSS:{},dmxBootstrap5Collapse:{},dmxBootstrap5TableGenerator:{},dmxMoment:{},dmxFormatter:{},dmxBootbox:{},dmxSlideshow:{}}" is="dmx-app" appconnect="local" jquery_35="cdn" bootstrap5="local" bootstrap_icons="cdn" moment_2="cdn" -->
+<script is="dmx-flow" id="check_newFamilyEmails" type="text/dmx-flow">{
   meta: {
     $param: [
-      {type: "text", name: "isupdate"},
-      {type: "text", name: "id"}
+      {type: "text", name: "address"}
     ]
   },
   exec: {
     steps: [
       {
-        run: {
-          action: "{{modal_createFamily.form_addGuardian.inp_guard_firstname.validate();modal_createFamily.form_addGuardian.inp_guard_lastname.validate();modal_createFamily.form_addGuardian.sel_relationship.validate()}}",
-          name: "validations",
-          output: true
-        }
+        assign: {value: "{{null}}", name: "var_error", output: true}
       },
       {
-        wait: {delay: 100}
+        assign: {value: "{{null}}", name: "var_emails", output: true}
       },
       {
-        condition: {
-          if: "{{modal_createFamily.form_addGuardian.var_guardianFormValid.value}}",
-          then: {
+        repeat: {
+          repeat: "{{guard_datastore.data}}",
+          outputFields: [],
+          exec: {
             steps: {
-              condition: {
-                if: "{{email_holding.data.length === 0 && phone_holding.data.length === 0}}",
-                then: {
+              repeat: {
+                repeat: "{{emails}}",
+                outputFields: [],
+                exec: {
                   steps: {
-                    confirm: {
-                      message: "Are you sure you want to add a guardian with no contact details? You won't be able to contact them in the future.",
+                    condition: {
+                      if: "{{address == $param.address}}",
                       then: {
                         steps: {
-                          condition: {
-                            if: "{{validateGuardians.$param.isupdate === true}}",
-                            then: {
-                              steps: [
-                                {
-                                  assign: {value: "No contacts, is update.", name: "var_flow", output: true}
-                                },
-                                {
-                                  run: {
-                                    action: "{{guard_datastore.update({$id: validateGuardians.$param.id},{firstname: modal_createFamily.form_addGuardian.inp_guard_firstname.value, lastname: modal_createFamily.form_addGuardian.inp_guard_lastname.value, relationship: modal_createFamily.form_addGuardian.sel_relationship.value})}}"
-                                  }
-                                }
-                              ]
-                            },
-                            else: {
-                              steps: [
-                                {
-                                  assign: {value: "No contacts, is NOT update.", name: "var_flow", output: true}
-                                },
-                                {
-                                  run: {
-                                    action: "{{guard_datastore.insert({firstname: modal_createFamily.form_addGuardian.inp_guard_firstname.value, lastname: modal_createFamily.form_addGuardian.inp_guard_lastname.value, relationship: modal_createFamily.form_addGuardian.sel_relationship.value})}}"
-                                  }
-                                }
-                              ]
-                            }
+                          assign: {
+                            value: "Error: You've already added this email to another guardian.",
+                            name: "var_error",
+                            output: true
                           }
                         }
                       }
                     }
                   }
                 },
-                else: {
-                  steps: {
-                    condition: {
-                      if: "{{validateGuardians.$param.isupdate === true}}",
-                      then: {
-                        steps: [
-                          {
-                            assign: {value: "With contacts, is update.", name: "var_flow", output: true}
-                          },
-                          {
-                            run: {
-                              action: "{{guard_datastore.update({$id: $param.id},{firstname: modal_createFamily.form_addGuardian.inp_guard_firstname.value, lastname: modal_createFamily.form_addGuardian.inp_guard_lastname.value, relationship: modal_createFamily.form_addGuardian.sel_relationship.value })}}"
-                            }
-                          }
-                        ]
-                      },
-                      else: {
-                        steps: [
-                          {
-                            assign: {value: "With contacts, NOT update.", name: "var_flow", output: true}
-                          },
-                          {
-                            run: {
-                              action: "{{guard_datastore.insert({firstname: modal_createFamily.form_addGuardian.inp_guard_firstname.value, lastname: modal_createFamily.form_addGuardian.inp_guard_lastname.value, relationship: modal_createFamily.form_addGuardian.sel_relationship.value })}}"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  }
-                }
+                name: "repeat"
               }
             }
           },
-          else: {
-            steps: {
-              run: {
-                action: "{{notifies1.warning('Cannot add guardian. Please fix errors indicated in your form.')}}"
-              }
-            }
-          }
+          name: "checkFamilyEmails",
+          output: true
         }
-      },
-      {
-        assign: {value: "{{$param.id}}", name: "var_id", output: true}
       }
     ]
   }
 }</script>
-<dmx-session-manager id="ss_FamilyFilters"></dmx-session-manager>
-
+<dmx-datetime id="var_dateTime" utc="true"></dmx-datetime>
 <meta name="ac:route" content="/families">
+
+<dmx-session-manager id="ss_FamilyFilters"></dmx-session-manager>
+<dmx-serverconnect id="createFamily" url="api/createFamilyWithGuardians" noload=""></dmx-serverconnect>
+<dmx-serverconnect id="getAllFamilies" url="api/getFamilies_paged" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch">
+</dmx-serverconnect>
+<dmx-serverconnect id="getRelationships" url="api/getRelationships"></dmx-serverconnect>
+
 <dmx-datastore id="phone_holding"></dmx-datastore>
 <dmx-datastore id="email_holding"></dmx-datastore>
-<dmx-datastore id="guard_datastore"></dmx-datastore>
-<div class="modal fade" id="modal_createFamily" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+<dmx-datastore id="guard_datastore" dmx-on:updated="toasts.show({message: 'Has been updated', icon: '/assets/images/logo/purple/favicon_purple-svg.svg'})"></dmx-datastore>
+<div class="modal fade" id="modal_createFamily" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="guard_datastore.clear();email_holding.clear();phone_holding.clear();modal_createFamily.form_addGuardian.reset();addGuardEmail.form_addGuardianEmail.reset();addGuardPhone.form_addGuardianPhone.reset();modal_createFamily.var_isupdate.setValue(false);modal_createFamily.form_addGuardian.var_datastoreid.setValue(null)">
     <div class="modal-dialog modal-dialog-scrollable modal-xl modal-fullscreen-xxl-down" role="document">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">
                 <h5 class="modal-title">Create Family</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body overflow-x-hidden" style="">
+
+                <div class="row">
+                    <div class="col mb-2">
+                        <h3 class="fw-bold my-3">
+                            Add Guardians</h3>
+                    </div>
+                </div>
                 <div class="row mb-4 pb-4 border-bottom">
                     <div class="col">
                         <dmx-value id="var_isupdate" dmx-bind:value="false"></dmx-value>
+
                         <div class="row">
-                            <div class="col mb-2">
-                                <h3 class="fw-bold">
-                                    Add Guardians</h3>
-                                <p dmx-text="validateGuardians.data.var_isupdate+' - '+validateGuardians.data.var_id">A nice paragraph</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
+                            <div class="col d-flex flex-column justify-content-start">
                                 <div class="row">
                                     <div class="col">
-                                        <form id="form_addGuardian" class="mb-2 p-3 pb-4 border rounded-3">
+                                        <form id="form_addGuardian" class="mb-2 p-3 pb-4 border rounded-3 bg-white" is="dmx-serverconnect-form" method="post" dmx-on:submit="run([{run:{action:`guard_datastore.upsert({$id: modal_createFamily.form_addGuardian.var_datastoreid.value},{firstname: inp_guard_firstname.value, lastname: inp_guard_lastname.value, relationship: sel_relationship.value, emails: email_holding.data, phones: phone_holding.data})`}},{wait:{delay:200}},{run:{action:`phone_holding.clear();email_holding.clear();form_addGuardian.reset();modal_createFamily.var_isupdate.setValue(false);modal_createFamily.form_addGuardian.var_datastoreid.setValue(null)`}}])">
                                             <div class="row">
                                                 <div class="col">
                                                     <h6 class="mb-0 text-muted">Personal Information</h6>
                                                     <div class="row row-cols-1">
-                                                        <dmx-value id="var_guardianFormValid" dmx-bind:value="inp_guard_firstname.invalid || inp_guard_lastname.invalid || sel_relationship.invalid ? false : true"></dmx-value>
+                                                        <dmx-value id="var_datastoreid"></dmx-value>
                                                         <input id="inp_hd_datastoreid" name="id" type="hidden" class="form-control">
                                                         <div class="col">
                                                             <div>
@@ -175,12 +117,13 @@
                                     </div>
                                 </div>
 
-                                <div class="row mt-4">
-                                    <div class="col d-flex justify-content-between">
-                                        <button id="createGuardianBtn" class="btn btn-primary" dmx-on:click="validateGuardians.run()" dmx-hide="var_isupdate.value === true"><i class="bi-save2 me-2"></i>Create Guardian
-                                        </button>
-                                        <button id="updateGuardianBtn" class="btn btn-secondary" dmx-on:click="validateGuardians.run({isupdate: true, id: modal_createFamily.form_addGuardian.inp_hd_datastoreid.value})" dmx-hide="var_isupdate.value === false"><i class="bi-save2 me-2"></i>Update Guardian</button>
-                                        <button id="cancel_updateGuardianBtn" class="btn btn-outline-danger" dmx-on:click="validateGuardians.run()" dmx-hide="var_isupdate.value === false"><i class="bi-save2 me-2"></i>Cancel</button>
+                                <div class="row">
+                                    <div class="col mb-2">
+                                        <div class="d-flex p-3 border rounded-3 bg-white justify-content-between"><button id="createGuardianBtn" class="btn btn-primary" dmx-on:click="form_addGuardian.submit();" dmx-hide="var_isupdate.value === true"><i class="bi-save2 me-2"></i>Create Guardian
+                                            </button><button id="updateGuardianBtn" class="btn btn-secondary" dmx-on:click="form_addGuardian.submit()" dmx-hide="var_isupdate.value === false"><i class="bi-save2 me-2"></i>Update Guardian</button><button id="cancel_updateGuardianBtn" class="btn btn-outline-danger" dmx-on:click="form_addGuardian.reset();email_holding.clear();phone_holding.clear();var_isupdate.setValue(false)" dmx-hide="var_isupdate.value === false"><i class="bi-save2 me-2"></i>Cancel Edit</button></div>
+
+
+
                                     </div>
                                 </div>
                             </div>
@@ -189,28 +132,26 @@
                                     <div class="col">
                                         <div class="row">
                                             <div class="col ">
-                                                <div class="d-flex flex-column mb-2 p-3 pb-4 border rounded-3">
+                                                <div class="d-flex flex-column mb-2 p-3 pb-4 border rounded-3 bg-white">
 
-                                                    <div class="row row-cols-1 row-cols-xl-2">
+                                                    <div class="row row-cols-1">
                                                         <div class="col">
                                                             <h6 class="text-muted">Contact Information</h6>
                                                         </div>
-                                                        <div class="col d-flex justify-content-xl-end flex-row justify-content-start">
-                                                            <button id="addEmailBtn_modal" class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addGuardEmail"><i class="bi-plus-circle me-2"></i>Add Email
-                                                            </button>
-                                                            <button id="addPhoneBtn_modal" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addGuardPhone"><i class="bi-plus-circle me-2"></i>Add Phone</button>
+                                                        <div class="col">
+                                                            <button id="addEmailBtn_modal" class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addGuardEmail"><i class="bi-plus-circle me-2"></i>Add/Edit Emails</button>
+                                                            <button id="addPhoneBtn_modal" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addGuardPhone"><i class="bi-plus-circle me-2"></i>Add/Edit Phones</button>
                                                         </div>
                                                     </div>
                                                     <div class="row mt-3 pt-3 border-top row-cols-1">
                                                         <div class="col">
-                                                            <h6>Emails</h6>
+                                                            <h6 class="text-muted text-uppercase fw-bold">Emails</h6>
                                                             <div id="cr_hasemails" is="dmx-if" dmx-bind:condition="email_holding.data.length > 0">
 
-                                                                <div class="table-responsive small">
-                                                                    <table class="table table-sm align-middle">
+                                                                <div class="table-responsive small  p-3 border rounded-3">
+                                                                    <table class="table table-sm align-middle mb-0">
                                                                         <thead class="fw-bold text-uppercase d-none">
                                                                             <tr>
-                                                                                <th style="width: 1%; white-space: nowrap;"></th>
                                                                                 <th style="width: 50%;">Address</th>
                                                                                 <th>Type</th>
                                                                                 <th></th>
@@ -218,10 +159,6 @@
                                                                         </thead>
                                                                         <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="email_holding.data" id="tableRepeat2" key="$id" class="position-relative">
                                                                             <tr>
-                                                                                <td style="width: 1%; white-space: nowrap;">
-                                                                                    <a id="btn_editEmail1" class="btn btn-sm btn-link" dmx-on:click="addGuardEmail.form_addGuardianEmail.inp_guard_emailaddress.setValue(address);addGuardEmail.show()" wappler-command="editContent" style="white-space: nowrap;" href="#"><i class="bi-pencil me-2"></i>Edit
-                                                                                    </a>
-                                                                                </td>
 
                                                                                 <td dmx-text="address" style="width: 40%;">example@puddle.io</td>
                                                                                 <td dmx-text="appSettings.contactTypes[type].type">Home</td>
@@ -243,8 +180,8 @@
                                                             </div>
 
                                                         </div>
-                                                        <div class="col">
-                                                            <h6>Phone Numbers</h6>
+                                                        <div class="col mt-3 pt-3 border-top">
+                                                            <h6 class="fw-bold text-uppercase text-muted">Phone Numbers</h6>
                                                             <div id="cr_nophones" is="dmx-if" dmx-bind:condition="phone_holding.data.length === 0">
                                                                 <div class="container-fluid d-flex align-items-center justify-content-center p-2 my-3 border rounded-3">
                                                                     <p class="mb-0 small">Use the "Add Phone" button to add phone numbers here.</p>
@@ -252,11 +189,10 @@
                                                                 </div>
                                                             </div>
                                                             <div id="cr_hasphones" is="dmx-if" dmx-bind:condition="phone_holding.data.length > 0">
-                                                                <div class="table-responsive small">
-                                                                    <table class="table table-sm align-middle">
+                                                                <div class="table-responsive small  p-3 border rounded-3">
+                                                                    <table class="table table-sm align-middle mb-0">
                                                                         <thead class="text-uppercase fw-bold d-none">
                                                                             <tr>
-                                                                                <th scope="row" style="width: 1%; white-space: nowrap;"></th>
                                                                                 <th style="width: 50%;">Phone</th>
                                                                                 <th>Type</th>
                                                                                 <th scope="row"></th>
@@ -264,10 +200,6 @@
                                                                         </thead>
                                                                         <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="phone_holding.data" id="tableRepeat5">
                                                                             <tr>
-                                                                                <td style="width: 1%; white-space: nowrap;">
-                                                                                    <a id="btn_editPhone1" class="btn btn-sm btn-link" dmx-on:click="addGuardPhone.form_addGuardianPhone.inp_guard_phone.setValue(phone);addGuardPhone.show()" wappler-command="editContent" style="white-space: nowrap;" href="#"><i class="bi-pencil me-2"></i>Edit
-                                                                                    </a>
-                                                                                </td>
                                                                                 <td dmx-text="phone" style="width: 40%;">0400123456</td>
                                                                                 <td dmx-text="appSettings.contactTypes[type].type">Work</td>
                                                                                 <td class="text-end">
@@ -291,10 +223,11 @@
 
                             </div>
                         </div>
-                        <div class="row mt-3 pt-3 border-top">
-                            <div class="col">
-                                <div class="table-responsive">
-                                    <table class="table table-sm small align-middle">
+
+                        <div class="row mt-3 pt-3 border-top row-cols-1">
+                            <div class="col" is="dmx-if" id="cr_hasguardians" dmx-bind:condition="guard_datastore.data.length > 0">
+                                <div class="table-responsive p-3 border rounded-3 bg-white">
+                                    <table class="table table-sm small align-top">
                                         <thead class="fw-bold text-uppercase">
                                             <tr>
                                                 <th scope="row" class="collapse-cell"></th>
@@ -305,13 +238,13 @@
                                                 <th scope="row" class="collapse-cell"></th>
                                             </tr>
                                         </thead>
-                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="guard_datastore.data" id="tableRepeat6">
-                                            <tr>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="guard_datastore.data" id="tableRepeat6" key="$id" class="position-relative">
+                                            <tr dmx-animate-enter.duration:300="fadeIn" dmx-animate-leave.duration:150="fadeOutLeft">
                                                 <td class="collapse-cell">
-                                                    <button id="btn_editGuardian" class="btn btn-sm btn-link" dmx-on:click="run({confirm:{message:'Are you sure you want to edit this guardian? Any email or phone data above will be deleted and replaced.',then:{steps:[{run:{action:`email_holding.clear();phone_holding.clear();modal_createFamily.form_addGuardian.inp_guard_firstname.setValue(firstname);modal_createFamily.form_addGuardian.inp_guard_lastname.setValue(lastname);modal_createFamily.form_addGuardian.sel_relationship.setValue(relationship);modal_createFamily.var_isupdate.setValue(true);modal_createFamily.form_addGuardian.inp_hd_datastoreid.setValue($id)`}},{repeat:{repeat:`emails`,outputFields:[],exec:{steps:{run:{action:`email_holding.insert({address: address, type: type})`}}},name:'repeat_emails',output:true}},{repeat:{repeat:`phones`,outputFields:[],exec:{steps:{run:{action:`phone_holding.insert({phone: phone, type: type})`}}},name:'repeat_phones',output:true}}]},name:'clearDatastores'}})"><i class="bi-pencil me-2"></i>Edit</button>
+                                                    <a id="btn_editGuardian" class="lh-lg" dmx-on:click="run({'bootbox.confirm':{message:'Are you sure you want to edit this guardian? Any email or phone data above will be deleted and replaced.',buttons:{cancel:{className:'btn-danger'}},title:'Warning...',then:{steps:[{run:{action:`email_holding.clear();phone_holding.clear();modal_createFamily.form_addGuardian.inp_guard_firstname.setValue(firstname);modal_createFamily.form_addGuardian.inp_guard_lastname.setValue(lastname);modal_createFamily.form_addGuardian.sel_relationship.setValue(relationship);modal_createFamily.var_isupdate.setValue(true);modal_createFamily.form_addGuardian.var_datastoreid.setValue($id)`}},{repeat:{repeat:`emails`,outputFields:[],exec:{steps:{run:{action:`email_holding.insert({address: address, type: type})`}}},name:'repeat_emails',output:true}},{repeat:{repeat:`phones`,outputFields:[],exec:{steps:{run:{action:`phone_holding.insert({phone: phone, type: type})`}}},name:'repeat_phones',output:true}}]}}})" href="#"><i class="bi-pencil me-2"></i>Edit</a>
                                                 </td>
-                                                <td dmx-text="firstname+' '+lastname">Jane Doe</td>
-                                                <td dmx-text="appSettings.relationships[relationship].name">Mother</td>
+                                                <td dmx-text="firstname+' '+lastname" class="lh-lg">Jane Doe</td>
+                                                <td dmx-text="appSettings.relationships[relationship].name" class="lh-lg">Mother</td>
                                                 <td>
                                                     <div dmx-repeat:phonesrepeat="phones">
                                                         <p class="mb-0 lh-lg" dmx-text="appSettings.contactTypes[type].type+': '+phone">Work: 122534532141</p>
@@ -331,37 +264,64 @@
                                     </table>
                                 </div>
                             </div>
+                            <div class="col" is="dmx-if" id="cr_noguardians" dmx-bind:condition="guard_datastore.data.length < 1">
+                                <div class="d-flex p-3 border rounded-3 align-items-center justify-content-center">
+                                    <p class="text-center mb-0 text-danger">Create some guardians above. You'll see them listed here.</p>
+                                </div>
+                            </div>
                         </div>
-
-
-
-
-
-
                     </div>
+                </div>
+
+                <div class="row">
+                    <form is="dmx-serverconnect-form" id="form_createFamily" method="post" action="/api/families/createFamily" dmx-generator="bootstrap5" dmx-form-type="horizontal" dmx-multi="true" dmx-populate="guard_datastore.data" dmx-on:success="run([{run:{action:`modal_createFamily.hide();getAllFamilies.load()`}},{wait:{delay:500}},{run:{action:`browser1.goto(\'/families/familydetail/\'+modal_createFamily.form_createFamily.data.familyid)`}}])">
+                        <div id="record" is="dmx-repeat" dmx-bind:repeat="guard_datastore.data">
+                            <dmx-value dmx-bind:value="{{$index}}" id="var_gri"></dmx-value>
+                            <input type="hidden" class="form-control" id="inp_firstname" name="firstname" dmx-bind:id="insp_firstname_{{$index}}" dmx-bind:aria-describedby="insp_firstname_{{$index}}_help" dmx-bind:name="record[{{$index}}][firstname]" dmx-bind:value="firstname" aria-describedby="inp_firstname_help" placeholder="Enter Firstname">
+                            <input type="hidden" class="form-control" id="inp_lastname" name="lastname" dmx-bind:id="insp_lastname_{{$index}}" dmx-bind:aria-describedby="insp_lastname_{{$index}}_help" dmx-bind:name="record[{{$index}}][lastname]" dmx-bind:value="lastname" aria-describedby="inp_lastname_help" placeholder="Enter Lastname">
+                            <input type="hidden" class="form-control" id="inp_relationship" name="relationship" dmx-bind:id="insp_relationship_{{$index}}" dmx-bind:aria-describedby="insp_relationship_{{$index}}_help" dmx-bind:name="record[{{$index}}][relationship]" dmx-bind:value="relationship" aria-describedby="inp_relationship_help" placeholder="Enter Relationship">
+                            <div id="emails" dmx-bind:id="emails_{{$index}}" is="dmx-repeat" dmx-bind:repeat="guard_datastore.data[$index].emails">
+                                <input id="inp_email_address" name="address" type="hidden" class="form-control" dmx-bind:name="record[{{var_gri.value}}][emails][{{$index}}][address]" dmx-bind:value="address">
+                                <input id="inp_email_type" name="emailtype" type="hidden" class="form-control" dmx-bind:name="record[{{var_gri.value}}][emails][{{$index}}][type]" dmx-bind:value="type">
+                            </div>
+                            <div id="phones" dmx-bind:id="phones_{{$index}}" is="dmx-repeat" dmx-bind:repeat="guard_datastore.data[$index].phones">
+                                <input id="inp_phone" name="phone" type="hidden" class="form-control" dmx-bind:name="record[{{var_gri.value}}][phones][{{$index}}][phone]" dmx-bind:value="phone">
+                                <input id="inp_phone_type" name="phonetype" type="hidden" class="form-control" dmx-bind:name="record[{{var_gri.value}}][phones][{{$index}}][type]" dmx-bind:value="type">
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" dmx-bind:disabled="guard_datastore.data.length < 1"><i class="bi-save2 me-2"></i>Create Family
-                </button>
+                <div class="row w-100">
+                    <div class="col-auto align-self-end"><button type="button" class="btn btn-outline-danger" dmx-on:click="run({'bootbox.confirm':{title:'Hold up! Are you sure you want to cancel?',message:'Cancelling will delete all information added here.',then:{steps:{run:{action:`modal_createFamily.hide()`}}}}})">Cancel</button></div>
+                    <div class="col align-self-center d-flex flex-column justify-content-end align-items-end">
+                        <p class="bg-info py-1 px-2 rounded-3"><i class="bi-info-circle me-2"></i>You can add students after you create the family.
+                        </p><button type="button" class="btn btn-primary" dmx-bind:disabled="guard_datastore.data.length < 1" dmx-on:click="form_createFamily.submit()"><i class="bi-save2 me-2"></i>Create Family</button>
+                    </div>
+
+                </div>
+
+
+
             </div>
         </div>
     </div>
 </div>
-<div class="modal bg-standard transparent bg-blur" id="addGuardEmail" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" style="" dmx-on:hidden-bs-modal="form_addGuardianEmail.reset()">
-    <div class="modal-dialog" role="document">
+<div class="modal bg-blur" id="addGuardEmail" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" style="" dmx-on:hidden-bs-modal="form_addGuardianEmail.reset()" dmx-on:hide-bs-modal="form_addGuardianEmail.reset();form_addGuardianEmail.var_emailformerror.setValue(false)">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-secondary text-light">
                 <h5 class="modal-title">Add Emails to Guardian</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="form_addGuardianEmail" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/checkEmail" dmx-on:success="email_holding.upsert({address: form_addGuardianEmail.inp_guard_emailaddress.value},{address: form_addGuardianEmail.inp_guard_emailaddress.value, type: form_addGuardianEmail.sel_guard_emailtype.value});form_addGuardianEmail.reset()" dmx-on:error="">
+                <form id="form_addGuardianEmail" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/checkEmail" dmx-on:success="run([{run:{action:`check_newFamilyEmails.run({address: addGuardEmail.form_addGuardianEmail.inp_guard_emailaddress.value})`}},{wait:{delay:200}},{condition:{if:`check_newFamilyEmails.data.var_error`,then:{steps:{'bootbox.alert':{message:'You\'ve already added this email to a guardian in this family.',buttons:{ok:{className:'btn-danger'}},title:'Error...'}}},else:{steps:[{run:{action:`email_holding.upsert({address: form_addGuardianEmail.inp_guard_emailaddress.value},{address: form_addGuardianEmail.inp_guard_emailaddress.value, type: form_addGuardianEmail.sel_guard_emailtype.value})`}},{run:{action:`form_addGuardianEmail.reset()`}}]}}}])" dmx-on:error="var_emailformerror.setValue(true)">
+                    <dmx-value id="var_emailformerror" dmx-bind:value="false"></dmx-value>
                     <div class="row">
                         <div class="col">
 
-                            <div class="row g-xl-4 g-2 row-cols-1 row-cols-xl-3 align-items-stretch">
+                            <div class="row g-xl-4 g-2 row-cols-1 row-cols-lg-3 align-items-stretch">
                                 <div class="col d-flex flex-column flex-grow-1">
                                     <label for="inp_guard_emailaddress" class="form-label col-form-label">Email</label>
                                     <input type="text" class="form-control" id="inp_guard_emailaddress" name="emailaddress" aria-describedby="input1_help" placeholder="example@puddle.io" required="" data-rule-email="">
@@ -372,8 +332,9 @@
                                     <select id="sel_guard_emailtype" class="form-select" dmx-bind:options="appSettings.contactTypes.emailContactTypes" optiontext="type" optionvalue="id" name="contacttype" required="">
                                         <option selected="" disabled="" hidden="" value="">Please select...</option>
                                     </select>
+
                                 </div>
-                                <div class="col-xl-auto align-self-end">
+                                <div class="col-lg-auto align-self-end d-flex justify-content-end">
                                     <button id="btn_addemail" class="btn btn-outline-primary" type="submit">
                                         <i class="bi-save2 me-2"></i> Add
                                     </button>
@@ -381,7 +342,7 @@
 
                             </div>
 
-                            <div class="row g-0" is="dmx-if" id="cr_emailerror" dmx-bind:condition="form_addGuardianEmail.lastError.status !== 0">
+                            <div class="row g-0" is="dmx-if" id="cr_emailerror" dmx-bind:condition="var_emailformerror.value === true">
                                 <div class="my-2 bg-danger rounded-3 col">
                                     <p class="mb-0 p-2 text-white" dmx-html="'<i class=&quot;bi-exclamation-diamond me-2&quot;></i>Error: '+form_addGuardianEmail.lastError.status+' - '+form_addGuardianEmail.lastError.response"><i class="bi-exclamation-diamond me-2"></i>Error: 409 - This email address already exists.</p>
                                 </div>
@@ -391,11 +352,11 @@
 
                     <div class="row mt-2" is="dmx-if" id="cr_noguardemails" dmx-bind:condition="email_holding.data.length > 0">
                         <div class="col">
-                            <div class="table-responsive small">
+                            <div class="table-responsive small p-3 border rounded-3">
                                 <table class="table table-sm align-middle">
-                                    <thead class="fw-bold text-uppercase">
+                                    <thead class="fw-bold text-uppercase border-bottom">
                                         <tr>
-                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                            <th style="" class="collapse-cell"></th>
                                             <th>Address</th>
                                             <th>Type</th>
                                             <th></th>
@@ -403,20 +364,32 @@
                                     </thead>
                                     <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="email_holding.data" id="tableRepeat1" key="$id" class="position-relative">
                                         <tr>
-                                            <td>
-                                                <a id="btn_editEmail" class="btn btn-sm btn-link" dmx-on:click="inp_guard_emailaddress.setValue(address)" wappler-command="editContent" style="white-space: nowrap;" href="#"><i class="bi-pencil me-2"></i>Edit
+                                            <td class="collapse-cell">
+                                                <dmx-value id="var_editingRow"></dmx-value>
+                                                <a id="btn_editEmail" class="btn btn-sm btn-link" dmx-on:click="var_editingRow.setValue(true)" style="white-space: nowrap;" href="#" dmx-hide="var_editingRow.value === true"><i class="bi-pencil me-2"></i>Edit
                                                 </a>
+                                                <a id="btn_updateEmail" class="btn btn-sm btn-link" dmx-on:click="email_holding.update({$id: $id},{address: inp_editemail.value, type: sel_guard_editemailtype.value});var_editingRow.setValue(false)" style="white-space: nowrap;" href="#" dmx-hide="var_editingRow.value !== true"><i class="bi-save2 me-2"></i>Save</a>
                                             </td>
 
-                                            <td dmx-text="address">example@puddle.io</td>
-                                            <td dmx-text="appSettings.contactTypes[type].type">Home</td>
                                             <td>
-                                                <button id="btn_deleteEmail" class="btn btn-link btn-sm text-danger" dmx-on:click="email_holding.delete({$id: $id})">Delete</button>
+                                                <p class="mb-0" dmx-hide="var_editingRow.value === true" dmx-text="address">example@puddle.io</p>
+
+                                                <input id="inp_editemail" name="edit_email" type="text" class="form-control form-control-sm" dmx-hide="var_editingRow.value !== true" dmx-bind:value="address">
+                                            </td>
+                                            <td>
+                                                <p class="mb-0" dmx-hide="var_editingRow.value === true" dmx-text="appSettings.contactTypes[type].type">Home</p><select id="sel_guard_editemailtype" class="form-select form-select-sm" dmx-bind:options="appSettings.contactTypes.emailContactTypes" optiontext="type" optionvalue="id" name="contacttype2" required="" dmx-hide="var_editingRow.value !== true" dmx-bind:value="type">
+                                                    <option selected="" disabled="" hidden="" value="">Please select...</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button id="btn_deleteEmail" class="btn btn-link btn-sm text-danger" dmx-on:click="email_holding.delete({$id: $id})" dmx-hide="var_editingRow.value === true">Delete</button>
+                                                <button id="btn_deleteEmail2" class="btn btn-link btn-sm text-danger" dmx-on:click="var_editingRow.setValue(false);inp_editemail.setValue(address);sel_guard_editemailtype.setValue(type)" dmx-hide="var_editingRow.value !== true">Cancel</button>
 
                                             </td>
 
                                         </tr>
                                     </tbody>
+
                                 </table>
                             </div>
 
@@ -426,15 +399,16 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-check-circle me-2"></i>Finished
+                </button>
             </div>
         </div>
     </div>
 </div>
-<div class="modal bg-standard transparent bg-blur" id="addGuardPhone" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" style="" dmx-on:hidden-bs-modal="form_addGuardianPhone.reset()">
-    <div class="modal-dialog" role="document">
+<div class="modal bg-blur" id="addGuardPhone" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" style="" dmx-on:hidden-bs-modal="form_addGuardianPhone.reset()">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header text-light bg-secondary">
                 <h5 class="modal-title">Add Phones to Guardian</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -465,28 +439,41 @@
                     </div>
                     <div class="row mt-2" is="dmx-if" id="cr_noguardphones" dmx-bind:condition="phone_holding.data.length > 0">
                         <div class="col">
-                            <div class="table-responsive small">
+                            <div class="table-responsive small  p-3 border rounded-3">
                                 <table class="table table-sm align-middle">
-                                    <thead class="text-uppercase fw-bold">
+                                    <thead class="text-uppercase fw-bold border-bottom">
                                         <tr>
-                                            <th scope="row"></th>
+                                            <th scope="row" class="collapse-cell"></th>
                                             <th>Phone</th>
                                             <th>Type</th>
                                             <th scope="row"></th>
                                         </tr>
                                     </thead>
-                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="phone_holding.data" id="tableRepeat3">
+                                    <tbody is="dmx-repeat" dmx-generator="bs5table" id="phoneRepeat" class="position-relative" dmx-bind:repeat="phone_holding.data">
                                         <tr>
                                             <td>
-                                                <a id="btn_editPhone" class="btn btn-sm btn-link" dmx-on:click="inp_guard_phone.setValue(phone)" wappler-command="editContent" style="white-space: nowrap;" href="#"><i class="bi-pencil me-2"></i>Edit
+                                                <dmx-value id="var_editingRowPhones"></dmx-value>
+                                                <a id="btn_editPhone" class="btn btn-sm btn-link" dmx-on:click="var_editingRowPhones.setValue(true)" style="white-space: nowrap;" href="#" dmx-hide="var_editingRowPhones.value === true"><i class="bi-pencil me-2"></i>Edit
                                                 </a>
+                                                <a id="btn_updatePhone" class="btn btn-sm btn-link" dmx-on:click="phone_holding.update({$id: $id},{phone: inp_editphone.value, type: sel_guard_editphonetype.value});var_editingRowPhones.setValue(false)" style="white-space: nowrap;" href="#" dmx-hide="var_editingRowPhones.value !== true"><i class="bi-save2 me-2"></i>Save</a>
                                             </td>
-                                            <td dmx-text="phone">0400123456</td>
-                                            <td dmx-text="appSettings.contactTypes[type].type">Work</td>
+
                                             <td>
-                                                <button id="btn_deletePhone" class="btn btn-link btn-sm text-danger" dmx-on:click="phone_holding.delete({$id: $id})">Delete</button>
+                                                <p class="mb-0" dmx-hide="var_editingRowPhones.value === true" dmx-text="phone">0400123456</p>
+
+                                                <input id="inp_editphone" name="edit_phone" type="text" class="form-control form-control-sm" dmx-hide="var_editingRowPhones.value !== true" dmx-bind:value="phone">
+                                            </td>
+                                            <td>
+                                                <p class="mb-0" dmx-hide="var_editingRowPhones.value === true" dmx-text="appSettings.contactTypes[type].type">Home</p><select id="sel_guard_editphonetype" class="form-select form-select-sm" dmx-bind:options="appSettings.contactTypes.phoneContactTypes" optiontext="type" optionvalue="id" name="contacttype3" required="" dmx-hide="var_editingRowPhones.value !== true" dmx-bind:value="type">
+                                                    <option selected="" disabled="" hidden="" value="">Please select...</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button id="btn_deletePhone" class="btn btn-link btn-sm text-danger" dmx-on:click="phone_holding.delete({$id: $id})" dmx-hide="var_editingRowPhones.value === true">Delete</button>
+                                                <button id="btn_cancelPhoneEdit" class="btn btn-link btn-sm text-danger" dmx-on:click="var_editingRowPhones.setValue(false);inp_editphone.setValue(phone);sel_guard_editphonetype.setValue(type)" dmx-hide="var_editingRowPhones.value !== true">Cancel</button>
 
                                             </td>
+
                                         </tr>
                                     </tbody>
                                 </table>
@@ -497,16 +484,12 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-check-circle me-2"></i>Finished</button>
             </div>
         </div>
     </div>
 </div>
-<dmx-serverconnect id="createFamily" url="api/createFamilyWithGuardians" noload=""></dmx-serverconnect>
 
-<dmx-serverconnect id="getAllFamilies" url="api/getFamilies_paged" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch">
-</dmx-serverconnect>
-<dmx-serverconnect id="getRelationships" url="api/getRelationships"></dmx-serverconnect>
 <main class="d-flex flex-grow-1 flex-column p-4">
     <div class="container-fluid p-0 mb-3">
         <div class="row">
@@ -573,11 +556,10 @@
 
 
                                             </td>
-                                            <td dmx-text="guardian" class="align-middle fw-bold"></td>
+                                            <td dmx-html="<a href=&quot;/families/familydetail/{{id}}&quot; class=&quot;text-body&quot;>{{guardian}}</a>" class="align-middle fw-bold"></td>
                                             <td dmx-text="phoneNumbers" class="align-middle d-none d-md-table-cell"></td>
                                             <td dmx-text="emails" class="align-middle d-none d-lg-table-cell"></td>
                                             <td dmx-text="students" class="align-middle"></td>
-
                                         </tr>
                                     </tbody>
                                 </table>

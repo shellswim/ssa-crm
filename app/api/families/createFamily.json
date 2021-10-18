@@ -1,0 +1,586 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "array",
+        "name": "record",
+        "sub": [
+          {
+            "type": "text",
+            "name": "firstname"
+          },
+          {
+            "type": "text",
+            "name": "lastname"
+          },
+          {
+            "type": "text",
+            "name": "relationship"
+          },
+          {
+            "type": "array",
+            "name": "emails",
+            "sub": [
+              {
+                "type": "text",
+                "name": "address"
+              },
+              {
+                "type": "text",
+                "name": "type"
+              }
+            ]
+          },
+          {
+            "type": "array",
+            "name": "phones",
+            "sub": [
+              {
+                "type": "text",
+                "name": "phone"
+              },
+              {
+                "type": "text",
+                "name": "type"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "insert_basefamily",
+        "module": "dbupdater",
+        "action": "insert",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "insert",
+            "values": [],
+            "table": "families",
+            "returning": "id",
+            "query": "INSERT INTO families\n() VALUES ()",
+            "params": []
+          }
+        },
+        "meta": [
+          {
+            "name": "identity",
+            "type": "text"
+          },
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ],
+        "output": true
+      },
+      {
+        "name": "failedemails",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "failedemails",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "guardianrepeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{$_POST.record}}",
+          "outputFields": [],
+          "exec": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
+              "options": {
+                "try": {
+                  "steps": [
+                    {
+                      "name": "insert_guardian",
+                      "module": "dbupdater",
+                      "action": "insert",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "insert",
+                          "values": [
+                            {
+                              "table": "guardians",
+                              "column": "firstName",
+                              "type": "text",
+                              "value": "{{firstname}}"
+                            },
+                            {
+                              "table": "guardians",
+                              "column": "lastName",
+                              "type": "text",
+                              "value": "{{lastname}}"
+                            },
+                            {
+                              "table": "guardians",
+                              "column": "family",
+                              "type": "number",
+                              "value": "{{insert_basefamily.identity}}"
+                            },
+                            {
+                              "table": "guardians",
+                              "column": "relationship",
+                              "type": "number",
+                              "value": "{{relationship}}"
+                            }
+                          ],
+                          "table": "guardians",
+                          "returning": "id",
+                          "query": "INSERT INTO guardians\n(firstName, lastName, family, relationship) VALUES (:P1 /* {{firstname}} */, :P2 /* {{lastname}} */, :P3 /* {{insert_basefamily.identity}} */, :P4 /* {{relationship}} */)",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{firstname}}"
+                            },
+                            {
+                              "name": ":P2",
+                              "type": "expression",
+                              "value": "{{lastname}}"
+                            },
+                            {
+                              "name": ":P3",
+                              "type": "expression",
+                              "value": "{{insert_basefamily.identity}}"
+                            },
+                            {
+                              "name": ":P4",
+                              "type": "expression",
+                              "value": "{{relationship}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "identity",
+                          "type": "text"
+                        },
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "emailrepeat",
+                      "module": "core",
+                      "action": "repeat",
+                      "options": {
+                        "repeat": "{{emails}}",
+                        "outputFields": [],
+                        "exec": {
+                          "steps": {
+                            "name": "insert_email",
+                            "module": "dbupdater",
+                            "action": "insert",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "insert",
+                                "values": [
+                                  {
+                                    "table": "emails",
+                                    "column": "address",
+                                    "type": "text",
+                                    "value": "{{address}}"
+                                  },
+                                  {
+                                    "table": "emails",
+                                    "column": "guardianId",
+                                    "type": "number",
+                                    "value": "{{insert_guardian.identity}}"
+                                  },
+                                  {
+                                    "table": "emails",
+                                    "column": "type",
+                                    "type": "number",
+                                    "value": "{{type}}"
+                                  }
+                                ],
+                                "table": "emails",
+                                "returning": "id",
+                                "query": "INSERT INTO emails\n(address, guardianId, type) VALUES (:P1 /* {{address}} */, :P2 /* {{insert_guardian.identity}} */, :P3 /* {{type}} */)",
+                                "params": [
+                                  {
+                                    "name": ":P1",
+                                    "type": "expression",
+                                    "value": "{{address}}"
+                                  },
+                                  {
+                                    "name": ":P2",
+                                    "type": "expression",
+                                    "value": "{{insert_guardian.identity}}"
+                                  },
+                                  {
+                                    "name": ":P3",
+                                    "type": "expression",
+                                    "value": "{{type}}"
+                                  }
+                                ]
+                              }
+                            },
+                            "meta": [
+                              {
+                                "name": "identity",
+                                "type": "text"
+                              },
+                              {
+                                "name": "affected",
+                                "type": "number"
+                              }
+                            ],
+                            "output": false
+                          }
+                        }
+                      },
+                      "output": false,
+                      "meta": [
+                        {
+                          "name": "$index",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$number",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$name",
+                          "type": "text"
+                        },
+                        {
+                          "name": "$value",
+                          "type": "object"
+                        },
+                        {
+                          "name": "failedemails",
+                          "type": "text",
+                          "sub": []
+                        }
+                      ],
+                      "outputType": "array"
+                    },
+                    {
+                      "name": "phonerepeat",
+                      "module": "core",
+                      "action": "repeat",
+                      "options": {
+                        "repeat": "{{phones}}",
+                        "outputFields": [],
+                        "exec": {
+                          "steps": {
+                            "name": "insert_phones",
+                            "module": "dbupdater",
+                            "action": "insert",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "insert",
+                                "values": [
+                                  {
+                                    "table": "phoneNumbers",
+                                    "column": "phone",
+                                    "type": "text",
+                                    "value": "{{phone}}"
+                                  },
+                                  {
+                                    "table": "phoneNumbers",
+                                    "column": "guardianId",
+                                    "type": "number",
+                                    "value": "{{insert_guardian.identity}}"
+                                  },
+                                  {
+                                    "table": "phoneNumbers",
+                                    "column": "type",
+                                    "type": "number",
+                                    "value": "{{type}}"
+                                  }
+                                ],
+                                "table": "phoneNumbers",
+                                "returning": "id",
+                                "query": "INSERT INTO phoneNumbers\n(phone, guardianId, type) VALUES (:P1 /* {{phone}} */, :P2 /* {{insert_guardian.identity}} */, :P3 /* {{type}} */)",
+                                "params": [
+                                  {
+                                    "name": ":P1",
+                                    "type": "expression",
+                                    "value": "{{phone}}"
+                                  },
+                                  {
+                                    "name": ":P2",
+                                    "type": "expression",
+                                    "value": "{{insert_guardian.identity}}"
+                                  },
+                                  {
+                                    "name": ":P3",
+                                    "type": "expression",
+                                    "value": "{{type}}"
+                                  }
+                                ]
+                              }
+                            },
+                            "meta": [
+                              {
+                                "name": "identity",
+                                "type": "text"
+                              },
+                              {
+                                "name": "affected",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "output": true,
+                      "meta": [
+                        {
+                          "name": "$index",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$number",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$name",
+                          "type": "text"
+                        },
+                        {
+                          "name": "$value",
+                          "type": "object"
+                        }
+                      ],
+                      "outputType": "array"
+                    },
+                    {
+                      "name": "",
+                      "module": "core",
+                      "action": "condition",
+                      "options": {
+                        "if": "{{$index === 0}}",
+                        "then": {
+                          "steps": {
+                            "name": "update",
+                            "module": "dbupdater",
+                            "action": "update",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "update",
+                                "values": [
+                                  {
+                                    "table": "families",
+                                    "column": "primaryGuardian",
+                                    "type": "number",
+                                    "value": "{{insert_guardian.identity}}"
+                                  }
+                                ],
+                                "table": "families",
+                                "wheres": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "id": "id",
+                                      "field": "id",
+                                      "type": "double",
+                                      "operator": "equal",
+                                      "value": "{{insert_basefamily.identity}}",
+                                      "data": {
+                                        "column": "id"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ],
+                                  "conditional": null,
+                                  "valid": true
+                                },
+                                "query": "UPDATE families\nSET primaryGuardian = :P1 /* {{insert_guardian.identity}} */\nWHERE id = :P2 /* {{insert_basefamily.identity}} */",
+                                "params": [
+                                  {
+                                    "name": ":P1",
+                                    "type": "expression",
+                                    "value": "{{insert_guardian.identity}}"
+                                  },
+                                  {
+                                    "operator": "equal",
+                                    "type": "expression",
+                                    "name": ":P2",
+                                    "value": "{{insert_basefamily.identity}}"
+                                  }
+                                ]
+                              }
+                            },
+                            "meta": [
+                              {
+                                "name": "affected",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "outputType": "boolean"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "firstname",
+            "type": "text"
+          },
+          {
+            "name": "lastname",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "text"
+          },
+          {
+            "name": "emails",
+            "type": "array",
+            "sub": [
+              {
+                "name": "address",
+                "type": "text"
+              },
+              {
+                "name": "type",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "phones",
+            "type": "array",
+            "sub": [
+              {
+                "name": "phone",
+                "type": "text"
+              },
+              {
+                "name": "type",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "insert_basefamily",
+            "type": "number"
+          },
+          {
+            "name": "address",
+            "type": "text"
+          },
+          {
+            "name": "insert_guardian",
+            "type": "number"
+          },
+          {
+            "name": "type",
+            "type": "number"
+          },
+          {
+            "name": "phone",
+            "type": "text"
+          },
+          {
+            "name": "phonerepeat",
+            "type": "array",
+            "sub": []
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "failedemails",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "failedemails",
+          "value": "{{failedemails}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{failedemails}}",
+          "then": {
+            "steps": {
+              "name": "failed_email_response",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 299,
+                "data": "Some emails failed to commit to database. They may already be attached to another family: {{failedemails.split(',')}}"
+              }
+            }
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
+        "name": "familyid",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "familyid",
+          "value": "{{insert_basefamily.identity}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      }
+    ]
+  }
+}
