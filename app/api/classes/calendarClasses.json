@@ -1,0 +1,1075 @@
+{
+  "settings": {
+    "options": {
+      "ttl": 120
+    }
+  },
+  "meta": {
+    "$_GET": [
+      {
+        "type": "date",
+        "name": "datefrom"
+      },
+      {
+        "type": "date",
+        "name": "dateto"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "array",
+        "name": "filter_days"
+      },
+      {
+        "type": "array",
+        "name": "filter_instructors"
+      },
+      {
+        "type": "array",
+        "name": "filter_times"
+      },
+      {
+        "type": "array",
+        "name": "filter_levels"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
+      },
+      {
+        "name": "datearr",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "datearr",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "curdate",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "curdate",
+          "value": "{{$_GET.datefrom.formatDate('yyyy-MM-dd')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      },
+      {
+        "name": "curday",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "curday",
+          "value": "{{curdate.formatDate('dddd')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "while",
+        "options": {
+          "while": "{{curdate <= $_GET.dateto}}",
+          "exec": {
+            "steps": [
+              {
+                "name": "datearr",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "datearr",
+                  "value": "{{datearr === null ? curdate.formatDate('yyyy-MM-dd') : datearr +','+curdate.formatDate('yyyy-MM-dd')}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              },
+              {
+                "name": "curdate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "curdate",
+                  "value": "{{curdate.dateAdd('days', 1).formatDate('yyyy-MM-dd')}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": false
+              }
+            ]
+          }
+        },
+        "output": false
+      },
+      {
+        "name": "minmax_classtimes",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT (\n  SELECT s.value\n  FROM settings s\n  WHERE name = 'class_min_time') AS mintime, (\n  SELECT s.value\n  FROM settings s\n  WHERE name = 'class_max_time') AS maxtime;",
+            "params": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "mintime",
+            "type": "text"
+          },
+          {
+            "name": "maxtime",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "calendarintervals",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "settings",
+                "column": "value"
+              }
+            ],
+            "table": {
+              "name": "settings"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "settings.name",
+                  "field": "settings.name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "calendar_intervals",
+                  "data": {
+                    "table": "settings",
+                    "column": "name",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT value\nFROM settings\nWHERE name = 'calendar_intervals'",
+            "params": []
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "value"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "classtimes",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "classtimes",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "timecounter",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "timecounter",
+          "value": "{{minmax_classtimes[0].mintime.toNumber()}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "while",
+        "options": {
+          "while": "{{timecounter <= minmax_classtimes[0].maxtime.toNumber()}}",
+          "exec": {
+            "steps": [
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{classtimes === null}}",
+                  "then": {
+                    "steps": {
+                      "name": "classtimes",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "value": "{{timecounter}}",
+                        "key": "classtimes"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    }
+                  },
+                  "else": {
+                    "steps": {
+                      "name": "classtimes",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "value": "{{classtimes +','+timecounter.toString()}}",
+                        "key": "classtimes"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    }
+                  }
+                },
+                "outputType": "boolean"
+              },
+              {
+                "name": "timecounter",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "timecounter",
+                  "value": "{{timecounter.toNumber() +calendarintervals.value.toNumber()}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "datearr",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "datearr",
+          "value": "{{datearr.split(',')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "classtimes",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "classtimes",
+          "value": "{{classtimes.split(',')}}",
+          "schema": []
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "class_dump",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "allClasses_detail",
+              "alias": "acd"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM allClasses_detail AS acd\nWHERE (day_int IN ({{$_GET.filter_days.split(',')}})) AND (classLevel IN ({{$_GET.filter_levels.split(',')}})) AND (instructorid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day_int ASC, startTimeDecimal ASC",
+            "params": [],
+            "orders": [
+              {
+                "table": "acd",
+                "column": "day_int",
+                "direction": "ASC",
+                "recid": 1
+              },
+              {
+                "table": "acd",
+                "column": "startTimeDecimal",
+                "direction": "ASC",
+                "recid": 2
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "acd.day_int",
+                      "field": "acd.day_int",
+                      "type": "double",
+                      "operator": "in",
+                      "value": "{{$_GET.filter_days.split(',')}}",
+                      "data": {
+                        "table": "acd",
+                        "column": "day_int",
+                        "type": "number"
+                      },
+                      "operation": "IN"
+                    }
+                  ],
+                  "conditional": "{{$_GET.filter_days}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "acd.classLevel",
+                      "field": "acd.classLevel",
+                      "type": "double",
+                      "operator": "in",
+                      "value": "{{$_GET.filter_levels.split(',')}}",
+                      "data": {
+                        "table": "acd",
+                        "column": "classLevel",
+                        "type": "number"
+                      },
+                      "operation": "IN"
+                    }
+                  ],
+                  "conditional": "{{$_GET.filter_levels}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "acd.instructorid",
+                      "field": "acd.instructorid",
+                      "type": "double",
+                      "operator": "in",
+                      "value": "{{$_GET.filter_instructors.split(',')}}",
+                      "data": {
+                        "table": "acd",
+                        "column": "instructorid",
+                        "type": "number"
+                      },
+                      "operation": "IN"
+                    }
+                  ],
+                  "conditional": "{{$_GET.filter_instructors}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "acd.startTimeDecimal",
+                      "field": "acd.startTimeDecimal",
+                      "type": "double",
+                      "operator": "in",
+                      "value": "{{$_GET.filter_times.split(',')}}",
+                      "data": {
+                        "table": "acd",
+                        "column": "startTimeDecimal",
+                        "type": "number"
+                      },
+                      "operation": "IN"
+                    }
+                  ],
+                  "conditional": "{{$_GET.filter_times}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "classLevel"
+          },
+          {
+            "type": "text",
+            "name": "day_name"
+          },
+          {
+            "type": "number",
+            "name": "day_int"
+          },
+          {
+            "type": "date",
+            "name": "startdate"
+          },
+          {
+            "type": "date",
+            "name": "enddate"
+          },
+          {
+            "type": "number",
+            "name": "classType"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "number",
+            "name": "startTimeDecimal"
+          },
+          {
+            "type": "text",
+            "name": "endTimeDisplay"
+          },
+          {
+            "type": "number",
+            "name": "endTimeDecimal"
+          },
+          {
+            "type": "number",
+            "name": "max"
+          },
+          {
+            "type": "text",
+            "name": "instructor_firstname"
+          },
+          {
+            "type": "text",
+            "name": "instructor_lastname"
+          },
+          {
+            "type": "number",
+            "name": "instructorid"
+          },
+          {
+            "type": "number",
+            "name": "enrolcount"
+          },
+          {
+            "type": "number",
+            "name": "enrol_active"
+          },
+          {
+            "type": "number",
+            "name": "enrol_makeup"
+          },
+          {
+            "type": "number",
+            "name": "enrol_trial"
+          },
+          {
+            "type": "number",
+            "name": "enrol_waitlist"
+          },
+          {
+            "type": "number",
+            "name": "enrol_casual"
+          },
+          {
+            "type": "number",
+            "name": "slots_avail"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "calData",
+        "module": "classCalendarJSON",
+        "action": "classCalendarJSON",
+        "options": {
+          "data": "{{class_dump}}",
+          "classtimes": "{{classtimes}}",
+          "day_filter": "{{$_GET.filter_days}}",
+          "instructor_filter": "{{$_GET.filter_instructors}}",
+          "time_filter": "{{$_GET.filter_times}}",
+          "level_filter": "{{$_GET.filter_levels}}"
+        },
+        "meta": [
+          {
+            "name": "calData",
+            "type": "array"
+          }
+        ],
+        "output": true
+      },
+      {
+        "name": "day_scheduledClasses",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{datearr}}",
+          "outputFields": [],
+          "exec": {
+            "steps": [
+              {
+                "name": "date",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{$value}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              },
+              {
+                "name": "dayofweek",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT dayofweek(:P1) as dow;",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{$value}}",
+                        "test": "2021-10-28"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "dow",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "rp_classtimes",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{classtimes}}",
+                  "outputFields": [],
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "time",
+                        "module": "core",
+                        "action": "setvalue",
+                        "options": {
+                          "value": "{{$value}}"
+                        },
+                        "meta": [],
+                        "outputType": "text",
+                        "output": true
+                      },
+                      {
+                        "name": "classList",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [],
+                            "table": {
+                              "name": "allClasses_detail",
+                              "alias": "acd"
+                            },
+                            "joins": [],
+                            "query": "SELECT *\nFROM allClasses_detail AS acd\nWHERE startdate <= :P1 /* {{date}} */ AND (enddate IS NULL OR enddate >= :P2 /* {{date}} */) AND day_int = :P3 /* {{dayofweek[0].dow}} */ AND startTimeDecimal = :P4 /* {{$value}} */",
+                            "params": [
+                              {
+                                "operator": "less_or_equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{date}}"
+                              },
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{date}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P3",
+                                "value": "{{dayofweek[0].dow}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P4",
+                                "value": "{{$value}}"
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "acd.startdate",
+                                  "field": "acd.startdate",
+                                  "type": "date",
+                                  "operator": "less_or_equal",
+                                  "value": "{{date}}",
+                                  "data": {
+                                    "table": "acd",
+                                    "column": "startdate",
+                                    "type": "date"
+                                  },
+                                  "operation": "<="
+                                },
+                                {
+                                  "condition": "OR",
+                                  "rules": [
+                                    {
+                                      "id": "acd.enddate",
+                                      "field": "acd.enddate",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "acd",
+                                        "column": "enddate",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    },
+                                    {
+                                      "id": "acd.enddate",
+                                      "field": "acd.enddate",
+                                      "type": "date",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{date}}",
+                                      "data": {
+                                        "table": "acd",
+                                        "column": "enddate",
+                                        "type": "date"
+                                      },
+                                      "operation": ">="
+                                    }
+                                  ],
+                                  "conditional": null
+                                },
+                                {
+                                  "id": "acd.day_int",
+                                  "field": "acd.day_int",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{dayofweek[0].dow}}",
+                                  "data": {
+                                    "table": "acd",
+                                    "column": "day_int",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "acd.startTimeDecimal",
+                                  "field": "acd.startTimeDecimal",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{$value}}",
+                                  "data": {
+                                    "table": "acd",
+                                    "column": "startTimeDecimal",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "sort": "{{$_GET.sort}} "
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classLevel"
+                          },
+                          {
+                            "type": "text",
+                            "name": "day_name"
+                          },
+                          {
+                            "type": "number",
+                            "name": "day_int"
+                          },
+                          {
+                            "type": "date",
+                            "name": "startdate"
+                          },
+                          {
+                            "type": "date",
+                            "name": "enddate"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classType"
+                          },
+                          {
+                            "type": "text",
+                            "name": "startTimeDisplay"
+                          },
+                          {
+                            "type": "number",
+                            "name": "startTimeDecimal"
+                          },
+                          {
+                            "type": "text",
+                            "name": "endTimeDisplay"
+                          },
+                          {
+                            "type": "number",
+                            "name": "endTimeDecimal"
+                          },
+                          {
+                            "type": "number",
+                            "name": "max"
+                          },
+                          {
+                            "type": "text",
+                            "name": "instructor_firstname"
+                          },
+                          {
+                            "type": "text",
+                            "name": "instructor_lastname"
+                          },
+                          {
+                            "type": "number",
+                            "name": "instructorid"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrolcount"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrol_active"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrol_makeup"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrol_trial"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrol_waitlist"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrol_casual"
+                          },
+                          {
+                            "type": "number",
+                            "name": "slots_avail"
+                          }
+                        ],
+                        "outputType": "array"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "time",
+                    "type": "text",
+                    "sub": []
+                  },
+                  {
+                    "name": "classList",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classLevel"
+                      },
+                      {
+                        "type": "text",
+                        "name": "day_name"
+                      },
+                      {
+                        "type": "number",
+                        "name": "day_int"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startdate"
+                      },
+                      {
+                        "type": "date",
+                        "name": "enddate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classType"
+                      },
+                      {
+                        "type": "text",
+                        "name": "startTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "startTimeDecimal"
+                      },
+                      {
+                        "type": "text",
+                        "name": "endTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "endTimeDecimal"
+                      },
+                      {
+                        "type": "number",
+                        "name": "max"
+                      },
+                      {
+                        "type": "text",
+                        "name": "instructor_firstname"
+                      },
+                      {
+                        "type": "text",
+                        "name": "instructor_lastname"
+                      },
+                      {
+                        "type": "number",
+                        "name": "instructorid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolcount"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_active"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_makeup"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_trial"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_waitlist"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_casual"
+                      },
+                      {
+                        "type": "number",
+                        "name": "slots_avail"
+                      }
+                    ]
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "date",
+            "type": "text",
+            "sub": []
+          },
+          {
+            "name": "rp_classtimes",
+            "type": "array",
+            "sub": [
+              {
+                "name": "time",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "classList",
+                "type": "array",
+                "sub": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classLevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "day_name"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day_int"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startdate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "enddate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classType"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "max"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_firstname"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_lastname"
+                  },
+                  {
+                    "type": "number",
+                    "name": "instructorid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolcount"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_active"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_makeup"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_trial"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_waitlist"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_casual"
+                  },
+                  {
+                    "type": "number",
+                    "name": "slots_avail"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      }
+    ]
+  }
+}

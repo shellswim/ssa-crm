@@ -1,0 +1,210 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "date",
+        "name": "date_closed"
+      },
+      {
+        "type": "number",
+        "name": "staff_closed"
+      },
+      {
+        "type": "number",
+        "name": "id"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "date",
+        "name": "date_closed"
+      },
+      {
+        "type": "number",
+        "name": "staff_closed"
+      },
+      {
+        "type": "number",
+        "name": "id"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "identity",
+        "module": "auth",
+        "action": "identify",
+        "options": {
+          "provider": "security"
+        },
+        "output": true,
+        "meta": []
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_GET.dir === 'open'}}",
+          "then": {
+            "steps": {
+              "name": "update_open",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "studentNotes",
+                      "column": "status",
+                      "type": "text",
+                      "value": "open"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "date_closed",
+                      "type": "date",
+                      "value": "{{null}}"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "staff_closed",
+                      "type": "number",
+                      "value": "{{null}}"
+                    }
+                  ],
+                  "table": "studentNotes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "id",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{$_POST.id}}",
+                        "data": {
+                          "column": "id"
+                        },
+                        "operation": "="
+                      }
+                    ]
+                  },
+                  "query": "UPDATE studentNotes\nSET status = 'open', date_closed = :P1 /* {{null}} */, staff_closed = :P2 /* {{null}} */\nWHERE id = :P3 /* {{$_POST.id}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{null}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{null}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P3",
+                      "value": "{{$_POST.id}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "else": {
+            "steps": {
+              "name": "update_close",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "studentNotes",
+                      "column": "date_closed",
+                      "type": "date",
+                      "value": "{{$_GET.date_closed}}"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "staff_closed",
+                      "type": "number",
+                      "value": "{{$_GET.staff_closed}}"
+                    },
+                    {
+                      "table": "studentNotes",
+                      "column": "status",
+                      "type": "text",
+                      "value": "closed"
+                    }
+                  ],
+                  "table": "studentNotes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "id",
+                        "field": "id",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{$_GET.id}}",
+                        "data": {
+                          "column": "id"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "UPDATE studentNotes\nSET date_closed = :P1 /* {{$_GET.date_closed}} */, staff_closed = :P2 /* {{$_GET.staff_closed}} */, status = 'closed'\nWHERE id = :P3 /* {{$_GET.id}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_GET.date_closed}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{$_GET.staff_closed}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P3",
+                      "value": "{{$_GET.id}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

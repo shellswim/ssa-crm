@@ -1,0 +1,285 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "street1"
+      },
+      {
+        "type": "text",
+        "name": "street2"
+      },
+      {
+        "type": "text",
+        "name": "unit"
+      },
+      {
+        "type": "text",
+        "name": "suburb"
+      },
+      {
+        "type": "text",
+        "name": "postcode"
+      },
+      {
+        "type": "number",
+        "name": "country"
+      },
+      {
+        "type": "number",
+        "name": "state"
+      },
+      {
+        "type": "number",
+        "name": "family"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "insert",
+        "module": "dbupdater",
+        "action": "insert",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "insert",
+            "values": [
+              {
+                "table": "addresses",
+                "column": "street1",
+                "type": "text",
+                "value": "{{$_POST.street1}}"
+              },
+              {
+                "table": "addresses",
+                "column": "street2",
+                "type": "text",
+                "value": "{{$_POST.street2}}"
+              },
+              {
+                "table": "addresses",
+                "column": "unit",
+                "type": "text",
+                "value": "{{$_POST.unit}}"
+              },
+              {
+                "table": "addresses",
+                "column": "suburb",
+                "type": "text",
+                "value": "{{$_POST.suburb}}"
+              },
+              {
+                "table": "addresses",
+                "column": "postcode",
+                "type": "text",
+                "value": "{{$_POST.postcode}}"
+              },
+              {
+                "table": "addresses",
+                "column": "country",
+                "type": "number",
+                "value": "{{$_POST.country}}"
+              },
+              {
+                "table": "addresses",
+                "column": "state",
+                "type": "number",
+                "value": "{{$_POST.state}}"
+              },
+              {
+                "table": "addresses",
+                "column": "family",
+                "type": "number",
+                "value": "{{$_POST.family}}"
+              }
+            ],
+            "table": "addresses",
+            "returning": "id",
+            "query": "INSERT INTO addresses\n(street1, street2, unit, suburb, postcode, country, state, family) VALUES (:P1 /* {{$_POST.street1}} */, :P2 /* {{$_POST.street2}} */, :P3 /* {{$_POST.unit}} */, :P4 /* {{$_POST.suburb}} */, :P5 /* {{$_POST.postcode}} */, :P6 /* {{$_POST.country}} */, :P7 /* {{$_POST.state}} */, :P8 /* {{$_POST.family}} */)",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{$_POST.street1}}"
+              },
+              {
+                "name": ":P2",
+                "type": "expression",
+                "value": "{{$_POST.street2}}"
+              },
+              {
+                "name": ":P3",
+                "type": "expression",
+                "value": "{{$_POST.unit}}"
+              },
+              {
+                "name": ":P4",
+                "type": "expression",
+                "value": "{{$_POST.suburb}}"
+              },
+              {
+                "name": ":P5",
+                "type": "expression",
+                "value": "{{$_POST.postcode}}"
+              },
+              {
+                "name": ":P6",
+                "type": "expression",
+                "value": "{{$_POST.country}}"
+              },
+              {
+                "name": ":P7",
+                "type": "expression",
+                "value": "{{$_POST.state}}"
+              },
+              {
+                "name": ":P8",
+                "type": "expression",
+                "value": "{{$_POST.family}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "identity",
+            "type": "text"
+          },
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "familyRecord",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "families",
+                "column": "address"
+              }
+            ],
+            "table": {
+              "name": "families"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "families.id",
+                  "field": "families.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.family}}",
+                  "data": {
+                    "table": "families",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT address\nFROM families\nWHERE id = :P1 /* {{$_POST.family}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.family}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "address"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{!familyRecord.address || familyRecord.address == ''}}",
+          "then": {
+            "steps": {
+              "name": "setDefaultAddress",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "families",
+                      "column": "address",
+                      "type": "number",
+                      "value": "{{insert.identity}}"
+                    }
+                  ],
+                  "table": "families",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "id",
+                        "field": "id",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{$_POST.family}}",
+                        "data": {
+                          "column": "id"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "UPDATE families\nSET address = :P1 /* {{insert.identity}} */\nWHERE id = :P2 /* {{$_POST.family}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{insert.identity}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P2",
+                      "value": "{{$_POST.family}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

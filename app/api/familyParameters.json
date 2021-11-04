@@ -156,18 +156,89 @@
           "connection": "db",
           "sql": {
             "type": "SELECT",
-            "columns": [],
+            "columns": [
+              {
+                "table": "addresses",
+                "column": "street1"
+              },
+              {
+                "table": "addresses",
+                "column": "street2"
+              },
+              {
+                "table": "addresses",
+                "column": "unit"
+              },
+              {
+                "table": "addresses",
+                "column": "suburb"
+              },
+              {
+                "table": "addresses",
+                "column": "postcode"
+              },
+              {
+                "table": "addresses",
+                "column": "state"
+              },
+              {
+                "table": "countries",
+                "column": "name",
+                "alias": "country_name"
+              },
+              {
+                "table": "states",
+                "column": "name",
+                "alias": "state_name"
+              },
+              {
+                "table": "addresses",
+                "column": "id"
+              }
+            ],
             "table": {
               "name": "addresses"
             },
-            "joins": [],
-            "query": "SELECT *\nFROM addresses\nWHERE family = :P1 /* {{$_GET.familyid}} */",
-            "params": [
+            "joins": [
               {
-                "operator": "equal",
-                "type": "expression",
-                "name": ":P1",
-                "value": "{{$_GET.familyid}}"
+                "table": "countries",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "countries",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "addresses",
+                        "column": "country"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "states",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "states",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "addresses",
+                        "column": "state"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
               }
             ],
             "wheres": {
@@ -189,15 +260,20 @@
               ],
               "conditional": null,
               "valid": true
-            }
+            },
+            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name, addresses.id\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.family = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ]
           }
         },
         "output": true,
         "meta": [
-          {
-            "type": "number",
-            "name": "id"
-          },
           {
             "type": "text",
             "name": "street1"
@@ -220,18 +296,180 @@
           },
           {
             "type": "number",
-            "name": "country"
+            "name": "state"
+          },
+          {
+            "type": "text",
+            "name": "country_name"
+          },
+          {
+            "type": "text",
+            "name": "state_name"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          }
+        ],
+        "outputType": "array",
+        "type": "dbconnector_select"
+      },
+      {
+        "name": "default_address",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "addresses",
+                "column": "street1"
+              },
+              {
+                "table": "addresses",
+                "column": "street2"
+              },
+              {
+                "table": "addresses",
+                "column": "unit"
+              },
+              {
+                "table": "addresses",
+                "column": "suburb"
+              },
+              {
+                "table": "addresses",
+                "column": "postcode"
+              },
+              {
+                "table": "addresses",
+                "column": "state"
+              },
+              {
+                "table": "countries",
+                "column": "name",
+                "alias": "country_name"
+              },
+              {
+                "table": "states",
+                "column": "name",
+                "alias": "state_name"
+              }
+            ],
+            "table": {
+              "name": "addresses"
+            },
+            "joins": [
+              {
+                "table": "countries",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "countries",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "addresses",
+                        "column": "country"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "states",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "states",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "addresses",
+                        "column": "state"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "addresses.id",
+                  "field": "addresses.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{familyDetails.address}}",
+                  "data": {
+                    "table": "addresses",
+                    "column": "id",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.id = :P1 /* {{familyDetails.address}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{familyDetails.address}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "street1"
+          },
+          {
+            "type": "text",
+            "name": "street2"
+          },
+          {
+            "type": "text",
+            "name": "unit"
+          },
+          {
+            "type": "text",
+            "name": "suburb"
+          },
+          {
+            "type": "text",
+            "name": "postcode"
           },
           {
             "type": "number",
             "name": "state"
           },
           {
-            "type": "number",
-            "name": "family"
+            "type": "text",
+            "name": "country_name"
+          },
+          {
+            "type": "text",
+            "name": "state_name"
           }
         ],
-        "outputType": "array"
+        "outputType": "object"
       },
       {
         "name": "getGuardiansWContactsRAW",
@@ -240,7 +478,7 @@
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT\n       f.id,\n       f.primaryGuardian,\n       g.id,\n       g.firstName,\n       g.lastName,\n       g.relationship,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.abbr, p.phone) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM phoneNumbers p LEFT JOIN contactTypes cT on p.type = cT.id\n            WHERE guardianId = g.id\n        ) AS phoneNumbers,\n        (\n          SELECT e.address FROM emails e WHERE guardianId = g.id LIMIT 1\n        ) as email,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.abbr, e.address) SEPARATOR ',\\n ') AS emails\n            FROM emails e LEFT JOIN contactTypes cT on e.type = cT.id\n            WHERE guardianId = g.id\n            LIMIT 1\n        ) AS emailAddresses\nFROM\n     families f\n         LEFT JOIN guardians g on f.id = g.family\nWHERE\n    f.id = :P1\nGROUP BY\n        f.id,\n        g.id,\n        g.firstName,\n        g.lastName;",
+            "query": "SELECT\n       f.id,\n       f.primaryGuardian,\n       g.id,\n       g.firstName,\n       g.lastName,\n       g.relationship,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.abbr, p.phone) SEPARATOR ',\\n ') AS phoneNumbers\n            FROM phoneNumbers p LEFT JOIN contactTypes cT on p.type = cT.id\n            WHERE guardianId = g.id\n        ) AS phoneNumbers,\n        (\n          SELECT e.address FROM emails e WHERE guardianId = g.id LIMIT 1\n        ) as email,\n        (\n            SELECT GROUP_CONCAT(CONCAT_WS(': ', cT.abbr, e.address) SEPARATOR ',\\n ') AS emails\n            FROM emails e LEFT JOIN contactTypes cT on e.type = cT.id\n            WHERE guardianId = g.id\n            LIMIT 1\n        ) AS emailAddresses,\n       IF(g.id = f.primaryGuardian, 1, 0) AS is_pg\nFROM\n     families f\n         LEFT JOIN guardians g on f.id = g.family\nWHERE\n    f.id = :P1\nGROUP BY\n        f.id,\n        g.id,\n        g.firstName,\n        g.lastName\nORDER BY is_pg DESC;",
             "params": [
               {
                 "name": ":P1",
@@ -282,6 +520,10 @@
           {
             "name": "emailAddresses",
             "type": "text"
+          },
+          {
+            "name": "is_pg",
+            "type": "number"
           }
         ],
         "outputType": "array"
@@ -488,6 +730,10 @@
           {
             "name": "emailAddresses",
             "type": "text"
+          },
+          {
+            "name": "is_pg",
+            "type": "number"
           },
           {
             "name": "phoneNumbersArray",

@@ -2,24 +2,25 @@
 // Find Key in Array of Objects
 
 function appSettingsObject() {
-    var l = dmx.parse('appSettings.data.getSettings'), 
-    cl = dmx.parse('getLevels.data.query'), 
-    rl = dmx.parse('getRelationships.data.query'), 
-    ct = dmx.parse('getContactTypes.data.contactTypes'), 
-    s = {}, 
-    mn, 
-    mx, 
-    r = false, 
-    ta = [], 
-    da = [], 
-    cla = {}, 
-    claid = {}, 
-    ra = {},
-    ra2 = [],
-    cta = {},
-    ct_arr = [],
-    ect = [],
-    pct = [];
+    var l = dmx.parse('appSettings.data.getSettings'),
+        cl = dmx.parse('getLevels.data.query'),
+        rl = dmx.parse('getRelationships.data.query'),
+        ct = dmx.parse('getContactTypes.data.contactTypes'),
+        s = {},
+        mn,
+        mx,
+        r = false,
+        ta = [],
+        to = {},
+        da = [],
+        cla = {},
+        claid = {},
+        ra = {},
+        ra2 = [],
+        cta = {},
+        ct_arr = [],
+        ect = [],
+        pct = [];
 
     for (i = 0; i < l.length; i++) {
         var n = l[i].name, v = l[i].value;
@@ -33,8 +34,10 @@ function appSettingsObject() {
             for (st = mn; st <= mx; st = st + 0.25) {
                 var dt = decimalToTime(st);
                 ta.push({ "display": dt, "decimal": st });
+                to[st] = { "display": dt, "decimal": st };
             }
             s["ct_array"] = ta;
+            s["ct_obj"] = to;
         }
         // Durations Generator
         if (n === "class_durations") {
@@ -51,38 +54,37 @@ function appSettingsObject() {
     // Levels By Name
     for (let i = 0; i < cl.length; i++) {
         let l = cl[i];
-        let n = l.name, c = l.colour, id = l.id, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName;
-        cla[n] = { "name": n, "colour": c, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
+        let n = l.name, c = l.colour, id = l.id, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName, tc = l.textcolour;
+        cla[n] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevels"] = cla;
 
     // Levels by ID
     for (let i = 0; i < cl.length; i++) {
         let l = cl[i];
-        let n = l.name, c = l.colour, id = l.id, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName;
-        claid[id] = { "name": n, "colour": c, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
+        let n = l.name, c = l.colour, id = l.id, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName, tc = l.textcolour;
+        claid[id] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
-
     // Get Relationships by ID
-    for(let i = 0; i < rl.length; i++) {
+    for (let i = 0; i < rl.length; i++) {
         let r = rl[i];
-        ra[r.id] = {"id": r.id, "name": r.type};
-        ra2.push({"id": r.id, "name": r.type});
+        ra[r.id] = { "id": r.id, "name": r.type };
+        ra2.push({ "id": r.id, "name": r.type });
     }
     s["relationships"] = ra;
     s["relationships"]['relationshipArray'] = ra2;
 
     // Get contact types by ID
-    for(let i = 0; i < ct.length; i++) {
+    for (let i = 0; i < ct.length; i++) {
         let c = ct[i];
-        cta[c.id] = {"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr};
-        ct_arr.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
-        if(c.typesmatch === 'email' || c.typesmatch === 'all') {
-            ect.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
-        } 
-        if(c.typesmatch === 'phone' || c.typesmatch === 'all') {
-            pct.push({"id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr});
+        cta[c.id] = { "id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr };
+        ct_arr.push({ "id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr });
+        if (c.typesmatch === 'email' || c.typesmatch === 'all') {
+            ect.push({ "id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr });
+        }
+        if (c.typesmatch === 'phone' || c.typesmatch === 'all') {
+            pct.push({ "id": c.id, "type": c.type, "typesmatch": c.typesmatch, "abbr": c.abbr });
         }
     }
     s["contactTypes"] = cta;
@@ -90,6 +92,16 @@ function appSettingsObject() {
     s["contactTypes"]["emailContactTypes"] = ect;
     s["contactTypes"]["phoneContactTypes"] = pct;
 
+    // Days array
+    s['days_array'] = {
+        1: 'Sunday',
+        2: 'Monday',
+        3: 'Tuesday',
+        4: 'Wednesday',
+        5: 'Thursday',
+        6: 'Friday',
+        7: 'Saturday'
+    }
     //Set appSettings
     dmx.app.set('appSettings', s);
 }
@@ -252,3 +264,26 @@ function openFile(url) {
     console.log(url);
     window.open(url, '_blank').focus();
 }
+
+// Reset Google Places Autocomplete Input
+function gpReset(p) {
+    let path = dmx.parse('content.' + p);
+    console.log(path);
+    for (const item in path) {
+        if (item.startsWith('__') || item.startsWith('$')) {
+            continue;
+        }
+        switch (typeof path[item]) {
+            case 'object':
+                path[item] = null;
+                continue;
+            case 'boolean':
+                path[item] = false;
+                continue;
+            case 'string':
+                path[item] = '';
+                continue;
+        }
+    }
+}
+

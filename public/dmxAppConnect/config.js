@@ -1514,6 +1514,10 @@ dmx.config({
       {
         "type": "text",
         "name": "payamount"
+      },
+      {
+        "type": "text",
+        "name": "studentid"
       }
     ],
     "tableRepeat1": {
@@ -6601,6 +6605,117 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "var_countryid": {
+      "meta": null,
+      "outputType": "number"
+    },
+    "var_stateid": {
+      "meta": null,
+      "outputType": "number"
+    },
+    "addressrepeat": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "street1"
+        },
+        {
+          "type": "text",
+          "name": "street2"
+        },
+        {
+          "type": "text",
+          "name": "unit"
+        },
+        {
+          "type": "text",
+          "name": "suburb"
+        },
+        {
+          "type": "text",
+          "name": "postcode"
+        },
+        {
+          "type": "number",
+          "name": "country"
+        },
+        {
+          "type": "number",
+          "name": "state"
+        },
+        {
+          "type": "number",
+          "name": "family"
+        }
+      ],
+      "outputType": "array"
+    },
+    "addressRepeat": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "street1"
+        },
+        {
+          "type": "text",
+          "name": "street2"
+        },
+        {
+          "type": "text",
+          "name": "unit"
+        },
+        {
+          "type": "text",
+          "name": "suburb"
+        },
+        {
+          "type": "text",
+          "name": "postcode"
+        },
+        {
+          "type": "number",
+          "name": "country"
+        },
+        {
+          "type": "number",
+          "name": "state"
+        },
+        {
+          "type": "number",
+          "name": "family"
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_phones": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "phone"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "createFamily": {
@@ -8746,5 +8861,174 @@ dmx.config({
         "name": "type"
       }
     ]
+  },
+  "student_details": {
+    "repeat1": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "firstName"
+        },
+        {
+          "type": "text",
+          "name": "lastName"
+        },
+        {
+          "type": "date",
+          "name": "dob"
+        },
+        {
+          "type": "text",
+          "name": "rollSheetComments"
+        },
+        {
+          "type": "text",
+          "name": "rollSheetMedical"
+        },
+        {
+          "type": "text",
+          "name": "additionalMedical"
+        },
+        {
+          "type": "number",
+          "name": "family"
+        },
+        {
+          "type": "text",
+          "name": "gender"
+        },
+        {
+          "type": "number",
+          "name": "level"
+        },
+        {
+          "type": "text",
+          "name": "age"
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_studentNote": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "content"
+        },
+        {
+          "type": "number",
+          "name": "student"
+        },
+        {
+          "type": "number",
+          "name": "priority"
+        },
+        {
+          "type": "text",
+          "name": "subject"
+        },
+        {
+          "type": "text",
+          "name": "status"
+        },
+        {
+          "type": "date",
+          "name": "dated_created"
+        },
+        {
+          "type": "date",
+          "name": "date_closed"
+        },
+        {
+          "type": "number",
+          "name": "staff_created"
+        },
+        {
+          "type": "number",
+          "name": "staff_closed"
+        }
+      ],
+      "outputType": "array"
+    }
+  },
+  "classesCalendar": {
+    "rp_weekDays": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "rp_times": {
+      "outputType": "text"
+    },
+    "rp_classes": {
+      "outputType": "boolean"
+    },
+    "var_timeslot": {
+      "meta": null,
+      "outputType": "object"
+    },
+    "daysrepeat": {
+      "outputType": "text"
+    },
+    "filter_store": [
+      {
+        "type": "array",
+        "name": "filter_days"
+      },
+      {
+        "type": "array",
+        "name": "filter_instructors"
+      },
+      {
+        "type": "array",
+        "name": "filter_times",
+        "sub": [
+          {
+            "type": "text",
+            "name": "display"
+          },
+          {
+            "type": "text",
+            "name": "decimal"
+          }
+        ]
+      },
+      {
+        "type": "array",
+        "name": "filter_levels"
+      }
+    ],
+    "rp_selected_timefilters": {
+      "meta": null,
+      "outputType": "array"
+    },
+    "localStorage": [
+      {
+        "type": "array",
+        "name": "filter_times"
+      },
+      {
+        "type": "array",
+        "name": "filter_days"
+      },
+      {
+        "type": "array",
+        "name": "filter_levels"
+      },
+      {
+        "type": "array",
+        "name": "filter_instructors"
+      }
+    ],
+    "arr_timesfilter": {
+      "meta": null,
+      "outputType": "array"
+    }
   }
 });

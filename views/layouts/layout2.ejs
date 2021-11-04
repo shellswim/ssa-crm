@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/dmxAppConnect/dmxDropzone/dmxDropzone.css" />
     <script src="/dmxAppConnect/dmxDropzone/dmxDropzone.js" defer=""></script>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/calendar.css" />
     <link rel="stylesheet" href="css/backgrounds.css">
     <link rel="stylesheet" href="css/icons.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous" />
@@ -78,6 +79,8 @@
     <link rel="stylesheet" href="/dmxAppConnect/dmxSlideshow/dmxSlideshow.css" />
     <script src="/dmxAppConnect/dmxSlideshow/dmxSlideshow.js" defer=""></script>
     <link rel="stylesheet" href="/dmxAppConnect/dmxSlideshow/themes/default.css" />
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places&amp;key=AIzaSyAkNs8N-GM2qDLFn3m7s5f0MBSJvpu8bdI"></script>
+    <script src="/dmxAppConnect/dmxGooglePlaces/dmxGooglePlaces.js" defer=""></script>
 </head>
 
 <body id="standardHeaderFooter" style="min-height: 100vh;" class="main-section pe-0" is="dmx-app" dmx-on:ready="run({runJS:{function:'payTypesPsel'}})">
@@ -86,7 +89,7 @@
 
     <div is="dmx-bs5-toasts" id="toasts" position="bottom"></div>
 
-    <dmx-notifications id="notifies1" closable="true" position="bottom" opacity="1"></dmx-notifications>
+    <dmx-notifications id="notifies1" closable="true" opacity="1" position="bottom" info-icon="bi-info-circle fs-2" success-icon="bi-check-circle fs-2" warning-icon="bi-exclamation-triangle fs-2" danger-icon="bi-exclamation-octagon fs-2" close-icon="bi-x-circle" timeout="5000"></dmx-notifications>
     <dmx-serverconnect id="localization" url="/api/baseActions/localization" dmx-param:localizationid="appSettings.localization"></dmx-serverconnect>
     <dmx-serverconnect id="getLevels" url="/api/getLevels" dmx-on:done="appSettings.load({})"></dmx-serverconnect>
 
@@ -94,7 +97,8 @@
     <dmx-serverconnect id="appSettings" url="/api/baseActions/getAppSettings" dmx-on:done="run({runJS:{function:'appSettingsObject',name:'setSettingsObject'}})" noload>
     </dmx-serverconnect>
     <dmx-serverconnect id="paymentTypes" url="/api/baseActions/paymentTypes"></dmx-serverconnect>
-    <dmx-serverconnect id="getCountries" url="/api/baseActions/getCountries"></dmx-serverconnect>
+
+
     <dmx-serverconnect id="getAllStaff" url="/api/staff/getAllStaff" dmx-on:done="run([{runJS:{function:'baseValues',args:[`getAllStaff.data.instructors.getInstructors`,'instructors']}},{runJS:{function:'baseValues',args:[`getAllStaff.data.allStaff`,'allStaff']}}])"></dmx-serverconnect>
     <dmx-serverconnect id="logout" noload url="/api/loginSecurity/logout" dmx-on:success="browser1.goto('/public')"></dmx-serverconnect>
     <dmx-query-manager id="queryManager"></dmx-query-manager>
@@ -199,6 +203,7 @@
 
 
     <main class="d-flex align-items-stretch min-vh-100" style="background-color: #f2f5f7;">
+
         <div class="d-flex p-0 bg-white flex-column border-end" style="z-index: 1009;" dmx-class:sidebar-collapse="navbarToggle.checked">
             <div class="d-flex flex-column position-sticky top-0">
                 <div class="d-flex px-4 flex-column justify-content-center topbar border-bottom position-relative overflow-hidden" dmx-hide="browser1.location.pathparts.contains('payment')" style="background-color: #5758c2;">
@@ -213,7 +218,7 @@
                                     <div class="col position-relative" id="navtoggle_wrapper">
                                         <h6 class="text-uppercase fw-bold text-black-50 nav-subheader">NAVIGATION</h6>
                                         <button id="navtoggle" class="btn btn-link" dmx-on:click="navbarToggle.toggle()">
-                                            <i class="bi-chevron-double-left fs-5"></i>
+                                            <i class="bi-arrow-bar-left"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -234,7 +239,7 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="/students" class="nav-link" dmx-class:disabled="active === true"><i class="bi-person-bounding-box ms-1 me-2" dmx-bs-tooltip="'Students'" data-bs-trigger="hover" data-bs-placement="right" dmx-class:pe-none="cookies.data.navbarToggle == 'false'"></i>
+                                        <a href="/students_list" class="nav-link" dmx-class:disabled="active === true"><i class="bi-person-bounding-box ms-1 me-2" dmx-bs-tooltip="'Students'" data-bs-trigger="hover" data-bs-placement="right" dmx-class:pe-none="cookies.data.navbarToggle == 'false'"></i>
                                             <div class="link-name">
                                                 Students
                                             </div>
@@ -246,6 +251,15 @@
                                             <i class="bi-diagram-3 ms-1 me-2" dmx-bs-tooltip="'Classes'" data-bs-trigger="hover" data-bs-placement="right" dmx-class:pe-none="cookies.data.navbarToggle == 'false'"></i>
                                             <div class="link-name">
                                                 Classes
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+
+                                        <a class="nav-link" href="/classes/classesCalendar">
+                                            <i class="bi-calendar-week ms-1 me-2" dmx-bs-tooltip="'Calendar'" data-bs-trigger="hover" data-bs-placement="right" dmx-class:pe-none="cookies.data.navbarToggle == 'false'"></i>
+                                            <div class="link-name">
+                                                Calendar
                                             </div>
                                         </a>
                                     </li>
@@ -283,24 +297,29 @@
 
         </div>
         <div class="d-flex flex-column position-relative flex-grow-1">
+
+
             <dmx-preloader id="preloaderStandard" spinner="foldingCube" color="#ffffff" bgcolor="#5758c2">
             </dmx-preloader>
             <div class="row g-0 topbar border-bottom position-relative justify-content-start" dmx-hide="browser1.location.pathparts.contains('payment')" style="background-color: #5758c2;">
 
                 <div class="d-flex flex-row justify-content-end col align-items-stretch">
 
-                    <div class="dropdown align-self-stretch d-flex border-start">
+                    <div class="dropdown align-self-stretch d-flex border-start" style="border-left-color: rgba(255,255,255,0.2) !important;">
                         <button id="dd_quickCreate" class="btn text-light change-chevron align-self-stretch focus-white-10 hover-white-10 rounded-0 text-start border-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-left-color: rgba(255,255,255,0.2) !important;"><i class="bi-plus-circle-dotted me-2"></i>Create</button>
-                        <div class="dropdown-menu" aria-labelledby="dropdown1">
+                        <div class="dropdown-menu">
                             <a class="dropdown-item" href="#"><i class="bi-people me-2"></i>Create Family</a>
                             <a class="dropdown-item" href="#"><i class="bi-person-bounding-box me-2"></i>Create Student</a>
                             <a class="dropdown-item" href="#"><i class="bi-cart-plus me-2"></i>Make Payment</a>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-center align-items-center text-dark flex-row-reverse p-4 border-start clickable hover-white-10" style="border-left-color: rgba(255,255,255,0.2) !important;" dmx-on:click="logout.load()" id="logoutBtnHeader">
 
-
-                        <p class="my-0 text-light" dmx-html="'<i class=&quot;bi-person-badge me-2&quot;></i>'+userDetails.data.loggedInUser.firstName+' '+userDetails.data.loggedInUser.lastName.trunc(1, true, '.')"><i class="bi-person-badge me-2"></i>User N.</p>
+                    <div class="dropdown align-self-stretch d-flex border-start" style="border-left-color: rgba(255,255,255,0.2) !important;" id="logoutBtnHeader">
+                        <button id="dd_logoutBtn" class="btn text-light change-chevron align-self-stretch focus-white-10 hover-white-10 rounded-0 text-start border-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" dmx-html="'<i class=&quot;bi-person-badge me-2&quot;></i>'+userDetails.data.loggedInUser.firstName+' '+userDetails.data.loggedInUser.lastName.trunc(1, true, '.')"><i class="bi-person-badge me-2"></i>User N.</button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#"><i class="bi-gear me-2"></i>Preferences</a>
+                            <a class="dropdown-item" href="#" dmx-on:click="logout.load()"><i class="bi-door-open me-2"></i>Logout</a>
+                        </div>
                     </div>
 
 
@@ -322,7 +341,7 @@
 
     <script src="/js/custom.js" defer="true"></script>
     <script src="/bootstrap/5/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 
 </html>
