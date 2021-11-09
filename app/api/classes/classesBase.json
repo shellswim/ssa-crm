@@ -42,6 +42,1172 @@
   "exec": {
     "steps": [
       {
+        "name": "classdump",
+        "module": "dbconnector",
+        "action": "paged",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "allClasses_detail"
+            },
+            "joins": [],
+            "query": "SELECT *\nFROM allClasses_detail\nORDER BY day_int ASC, startTimeDecimal ASC, instructor_firstname ASC",
+            "params": [],
+            "orders": [
+              {
+                "table": "allClasses_detail",
+                "column": "day_int",
+                "direction": "ASC"
+              },
+              {
+                "table": "allClasses_detail",
+                "column": "startTimeDecimal",
+                "direction": "ASC"
+              },
+              {
+                "table": "allClasses_detail",
+                "column": "instructor_firstname",
+                "direction": "ASC"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "offset",
+            "type": "number"
+          },
+          {
+            "name": "limit",
+            "type": "number"
+          },
+          {
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "name": "page",
+            "type": "object",
+            "sub": [
+              {
+                "name": "offset",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "first",
+                    "type": "number"
+                  },
+                  {
+                    "name": "prev",
+                    "type": "number"
+                  },
+                  {
+                    "name": "next",
+                    "type": "number"
+                  },
+                  {
+                    "name": "last",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "current",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "data",
+            "type": "array",
+            "sub": [
+              {
+                "type": "number",
+                "name": "id"
+              },
+              {
+                "type": "number",
+                "name": "classLevel"
+              },
+              {
+                "type": "text",
+                "name": "day_name"
+              },
+              {
+                "type": "number",
+                "name": "day_int"
+              },
+              {
+                "type": "date",
+                "name": "startdate"
+              },
+              {
+                "type": "date",
+                "name": "enddate"
+              },
+              {
+                "type": "number",
+                "name": "classType"
+              },
+              {
+                "type": "text",
+                "name": "startTimeDisplay"
+              },
+              {
+                "type": "number",
+                "name": "startTimeDecimal"
+              },
+              {
+                "type": "text",
+                "name": "endTimeDisplay"
+              },
+              {
+                "type": "number",
+                "name": "endTimeDecimal"
+              },
+              {
+                "type": "number",
+                "name": "max"
+              },
+              {
+                "type": "text",
+                "name": "instructor_firstname"
+              },
+              {
+                "type": "text",
+                "name": "instructor_lastname"
+              },
+              {
+                "type": "number",
+                "name": "instructorid"
+              },
+              {
+                "type": "number",
+                "name": "enrolcount"
+              },
+              {
+                "type": "number",
+                "name": "enrol_active"
+              },
+              {
+                "type": "number",
+                "name": "enrol_makeup"
+              },
+              {
+                "type": "number",
+                "name": "enrol_trial"
+              },
+              {
+                "type": "number",
+                "name": "enrol_waitlist"
+              },
+              {
+                "type": "number",
+                "name": "enrol_casual"
+              },
+              {
+                "type": "number",
+                "name": "slots_avail"
+              }
+            ]
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_paged_select"
+      },
+      {
+        "name": "rp_enrols",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{classdump.data}}",
+          "outputFields": [
+            "id",
+            "day_name",
+            "day_int",
+            "classLevel",
+            "startdate",
+            "enddate",
+            "classType",
+            "startTimeDisplay",
+            "startTimeDecimal",
+            "endTimeDisplay",
+            "endTimeDecimal",
+            "max",
+            "instructor_firstname",
+            "instructor_lastname",
+            "instructorid",
+            "enrolcount",
+            "enrol_active",
+            "enrol_makeup",
+            "enrol_trial",
+            "enrol_waitlist",
+            "enrol_casual",
+            "slots_avail"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "active_enrols",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "enrolments",
+                        "column": "*"
+                      },
+                      {
+                        "table": "students",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "dob"
+                      }
+                    ],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "students",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.classId",
+                          "field": "enrolments.classId",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "classId",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.enrolmentType",
+                          "field": "enrolments.enrolmentType",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": 1,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "enrolmentType",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 1",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolmentType"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isValid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "trial_enrols",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "enrolments",
+                        "column": "*"
+                      },
+                      {
+                        "table": "students",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "dob"
+                      }
+                    ],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "students",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.classId",
+                          "field": "enrolments.classId",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "classId",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.enrolmentType",
+                          "field": "enrolments.enrolmentType",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": 3,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "enrolmentType",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 3",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolmentType"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isValid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "makeup_enrols",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "enrolments",
+                        "column": "*"
+                      },
+                      {
+                        "table": "students",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "dob"
+                      }
+                    ],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "students",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.classId",
+                          "field": "enrolments.classId",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "classId",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.enrolmentType",
+                          "field": "enrolments.enrolmentType",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": 2,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "enrolmentType",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 2",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolmentType"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isValid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "wait_enrols",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "enrolments",
+                        "column": "*"
+                      },
+                      {
+                        "table": "students",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "dob"
+                      }
+                    ],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "students",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.classId",
+                          "field": "enrolments.classId",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "classId",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.enrolmentType",
+                          "field": "enrolments.enrolmentType",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": 4,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "enrolmentType",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 4",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolmentType"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isValid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "casual_enrols",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "enrolments",
+                        "column": "*"
+                      },
+                      {
+                        "table": "students",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "lastName"
+                      },
+                      {
+                        "table": "students",
+                        "column": "dob"
+                      }
+                    ],
+                    "table": {
+                      "name": "enrolments"
+                    },
+                    "joins": [
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "type": "INNER",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "students",
+                              "column": "id",
+                              "operator": "equal",
+                              "value": {
+                                "table": "enrolments",
+                                "column": "student"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "enrolments.isValid",
+                          "field": "enrolments.isValid",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "isValid",
+                            "type": "boolean"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.classId",
+                          "field": "enrolments.classId",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{id}}",
+                          "data": {
+                            "table": "enrolments",
+                            "column": "classId",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "enrolments.enrolmentType",
+                          "field": "enrolments.enrolmentType",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": 5,
+                          "data": {
+                            "table": "enrolments",
+                            "column": "enrolmentType",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 5",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{id}}"
+                      }
+                    ],
+                    "orders": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolmentType"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isValid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "classLevel",
+            "type": "number"
+          },
+          {
+            "name": "day_name",
+            "type": "text"
+          },
+          {
+            "name": "day_int",
+            "type": "number"
+          },
+          {
+            "name": "startdate",
+            "type": "date"
+          },
+          {
+            "name": "enddate",
+            "type": "date"
+          },
+          {
+            "name": "classType",
+            "type": "number"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "startTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "endTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "endTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "max",
+            "type": "number"
+          },
+          {
+            "name": "instructor_firstname",
+            "type": "text"
+          },
+          {
+            "name": "instructor_lastname",
+            "type": "text"
+          },
+          {
+            "name": "instructorid",
+            "type": "number"
+          },
+          {
+            "name": "enrolcount",
+            "type": "number"
+          },
+          {
+            "name": "enrol_active",
+            "type": "number"
+          },
+          {
+            "name": "enrol_makeup",
+            "type": "number"
+          },
+          {
+            "name": "enrol_trial",
+            "type": "number"
+          },
+          {
+            "name": "enrol_waitlist",
+            "type": "number"
+          },
+          {
+            "name": "enrol_casual",
+            "type": "number"
+          },
+          {
+            "name": "slots_avail",
+            "type": "number"
+          },
+          {
+            "name": "active_enrols",
+            "type": "array",
+            "sub": [
+              {
+                "type": "number",
+                "name": "id"
+              },
+              {
+                "type": "number",
+                "name": "enrolmentType"
+              },
+              {
+                "type": "date",
+                "name": "dropDate"
+              },
+              {
+                "type": "boolean",
+                "name": "isValid"
+              },
+              {
+                "type": "number",
+                "name": "student"
+              },
+              {
+                "type": "date",
+                "name": "startDate"
+              },
+              {
+                "type": "number",
+                "name": "classId"
+              },
+              {
+                "type": "text",
+                "name": "dropReason"
+              },
+              {
+                "type": "text",
+                "name": "firstName"
+              },
+              {
+                "type": "text",
+                "name": "lastName"
+              },
+              {
+                "type": "date",
+                "name": "dob"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      },
+      {
         "name": "allClasses",
         "module": "dbconnector",
         "action": "paged",
@@ -220,91 +1386,11 @@
           {
             "name": "data",
             "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "text",
-                "name": "day"
-              },
-              {
-                "type": "number",
-                "name": "dayId"
-              },
-              {
-                "type": "text",
-                "name": "start"
-              },
-              {
-                "type": "text",
-                "name": "end"
-              },
-              {
-                "type": "number",
-                "name": "startDec"
-              },
-              {
-                "type": "number",
-                "name": "endDec"
-              },
-              {
-                "type": "text",
-                "name": "level"
-              },
-              {
-                "type": "number",
-                "name": "levelId"
-              },
-              {
-                "type": "text",
-                "name": "instructor"
-              },
-              {
-                "type": "number",
-                "name": "instructorId"
-              },
-              {
-                "type": "number",
-                "name": "maxEnrolments"
-              },
-              {
-                "type": "number",
-                "name": "enrolCount"
-              },
-              {
-                "type": "number",
-                "name": "activeEnrolments"
-              },
-              {
-                "type": "number",
-                "name": "makeupEnrolments"
-              },
-              {
-                "type": "number",
-                "name": "trialEnrolments"
-              },
-              {
-                "type": "number",
-                "name": "waitlisted"
-              },
-              {
-                "type": "number",
-                "name": "classTypeId"
-              },
-              {
-                "type": "text",
-                "name": "classTypeShort"
-              },
-              {
-                "type": "text",
-                "name": "classTypeLong"
-              }
-            ]
+            "sub": []
           }
         ],
-        "outputType": "object"
+        "outputType": "object",
+        "disabled": true
       },
       {
         "name": "enrolmentTypes",
@@ -443,32 +1529,36 @@
                 },
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "startDate",
-                    "type": "date"
+                    "type": "number",
+                    "name": "enrolmentType"
                   },
                   {
-                    "name": "dropDate",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dropDate"
                   },
                   {
-                    "name": "isValid",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "name": "isValid"
                   },
                   {
-                    "name": "student",
-                    "type": "text"
+                    "type": "number",
+                    "name": "student"
                   },
                   {
-                    "name": "enrolmentType",
-                    "type": "number"
+                    "type": "date",
+                    "name": "startDate"
                   },
                   {
-                    "name": "classId",
-                    "type": "number"
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
                   }
                 ],
                 "outputType": "array",
@@ -537,48 +1627,48 @@
                       "output": true,
                       "meta": [
                         {
-                          "name": "id",
-                          "type": "text"
+                          "type": "number",
+                          "name": "id"
                         },
                         {
-                          "name": "firstName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "firstName"
                         },
                         {
-                          "name": "lastName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "lastName"
                         },
                         {
-                          "name": "dob",
-                          "type": "date"
+                          "type": "date",
+                          "name": "dob"
                         },
                         {
-                          "name": "rollSheetComments",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetComments"
                         },
                         {
-                          "name": "rollSheetMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetMedical"
                         },
                         {
-                          "name": "additionalMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "additionalMedical"
                         },
                         {
-                          "name": "family",
-                          "type": "text"
+                          "type": "number",
+                          "name": "family"
                         },
                         {
-                          "name": "gender",
-                          "type": "text"
+                          "type": "text",
+                          "name": "gender"
                         },
                         {
-                          "name": "level",
-                          "type": "text"
+                          "type": "number",
+                          "name": "level"
                         },
                         {
-                          "name": "age",
-                          "type": "text"
+                          "type": "text",
+                          "name": "age"
                         }
                       ],
                       "outputType": "object",
@@ -606,11 +1696,11 @@
                   },
                   {
                     "name": "id",
-                    "type": "text"
+                    "type": "number"
                   },
                   {
-                    "name": "startDate",
-                    "type": "date"
+                    "name": "enrolmentType",
+                    "type": "number"
                   },
                   {
                     "name": "dropDate",
@@ -622,109 +1712,113 @@
                   },
                   {
                     "name": "student",
-                    "type": "text",
+                    "type": "number",
                     "sub": [
                       {
-                        "name": "id",
-                        "type": "text"
+                        "type": "number",
+                        "name": "id"
                       },
                       {
-                        "name": "firstName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "firstName"
                       },
                       {
-                        "name": "lastName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "lastName"
                       },
                       {
-                        "name": "dob",
-                        "type": "date"
+                        "type": "date",
+                        "name": "dob"
                       },
                       {
-                        "name": "rollSheetComments",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetComments"
                       },
                       {
-                        "name": "rollSheetMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetMedical"
                       },
                       {
-                        "name": "additionalMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "additionalMedical"
                       },
                       {
-                        "name": "family",
-                        "type": "text"
+                        "type": "number",
+                        "name": "family"
                       },
                       {
-                        "name": "gender",
-                        "type": "text"
+                        "type": "text",
+                        "name": "gender"
                       },
                       {
-                        "name": "level",
-                        "type": "text"
+                        "type": "number",
+                        "name": "level"
                       },
                       {
-                        "name": "age",
-                        "type": "text"
+                        "type": "text",
+                        "name": "age"
                       }
                     ]
                   },
                   {
-                    "name": "enrolmentType",
-                    "type": "number"
+                    "name": "startDate",
+                    "type": "date"
                   },
                   {
                     "name": "classId",
                     "type": "number"
                   },
                   {
+                    "name": "dropReason",
+                    "type": "text"
+                  },
+                  {
                     "name": "student",
                     "type": "object",
                     "sub": [
                       {
-                        "name": "id",
-                        "type": "text"
+                        "type": "number",
+                        "name": "id"
                       },
                       {
-                        "name": "firstName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "firstName"
                       },
                       {
-                        "name": "lastName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "lastName"
                       },
                       {
-                        "name": "dob",
-                        "type": "date"
+                        "type": "date",
+                        "name": "dob"
                       },
                       {
-                        "name": "rollSheetComments",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetComments"
                       },
                       {
-                        "name": "rollSheetMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetMedical"
                       },
                       {
-                        "name": "additionalMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "additionalMedical"
                       },
                       {
-                        "name": "family",
-                        "type": "text"
+                        "type": "number",
+                        "name": "family"
                       },
                       {
-                        "name": "gender",
-                        "type": "text"
+                        "type": "text",
+                        "name": "gender"
                       },
                       {
-                        "name": "level",
-                        "type": "text"
+                        "type": "number",
+                        "name": "level"
                       },
                       {
-                        "name": "age",
-                        "type": "text"
+                        "type": "text",
+                        "name": "age"
                       }
                     ]
                   }
@@ -808,32 +1902,36 @@
                 },
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "startDate",
-                    "type": "date"
+                    "type": "number",
+                    "name": "enrolmentType"
                   },
                   {
-                    "name": "dropDate",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dropDate"
                   },
                   {
-                    "name": "isValid",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "name": "isValid"
                   },
                   {
-                    "name": "student",
-                    "type": "text"
+                    "type": "number",
+                    "name": "student"
                   },
                   {
-                    "name": "enrolmentType",
-                    "type": "number"
+                    "type": "date",
+                    "name": "startDate"
                   },
                   {
-                    "name": "classId",
-                    "type": "number"
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
                   }
                 ],
                 "outputType": "array",
@@ -902,48 +2000,48 @@
                       "output": true,
                       "meta": [
                         {
-                          "name": "id",
-                          "type": "text"
+                          "type": "number",
+                          "name": "id"
                         },
                         {
-                          "name": "firstName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "firstName"
                         },
                         {
-                          "name": "lastName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "lastName"
                         },
                         {
-                          "name": "dob",
-                          "type": "date"
+                          "type": "date",
+                          "name": "dob"
                         },
                         {
-                          "name": "rollSheetComments",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetComments"
                         },
                         {
-                          "name": "rollSheetMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetMedical"
                         },
                         {
-                          "name": "additionalMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "additionalMedical"
                         },
                         {
-                          "name": "family",
-                          "type": "text"
+                          "type": "number",
+                          "name": "family"
                         },
                         {
-                          "name": "gender",
-                          "type": "text"
+                          "type": "text",
+                          "name": "gender"
                         },
                         {
-                          "name": "level",
-                          "type": "text"
+                          "type": "number",
+                          "name": "level"
                         },
                         {
-                          "name": "age",
-                          "type": "text"
+                          "type": "text",
+                          "name": "age"
                         }
                       ],
                       "outputType": "object",
@@ -970,126 +2068,52 @@
                     "type": "object"
                   },
                   {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "startDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "dropDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "isValid",
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "student",
-                    "type": "text",
-                    "sub": [
-                      {
-                        "name": "id",
-                        "type": "text"
-                      },
-                      {
-                        "name": "firstName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "lastName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "dob",
-                        "type": "date"
-                      },
-                      {
-                        "name": "rollSheetComments",
-                        "type": "text"
-                      },
-                      {
-                        "name": "rollSheetMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "additionalMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "family",
-                        "type": "text"
-                      },
-                      {
-                        "name": "gender",
-                        "type": "text"
-                      },
-                      {
-                        "name": "level",
-                        "type": "text"
-                      },
-                      {
-                        "name": "age",
-                        "type": "text"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "enrolmentType",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classId",
-                    "type": "number"
-                  },
-                  {
                     "name": "student",
                     "type": "object",
                     "sub": [
                       {
-                        "name": "id",
-                        "type": "text"
+                        "type": "number",
+                        "name": "id"
                       },
                       {
-                        "name": "firstName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "firstName"
                       },
                       {
-                        "name": "lastName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "lastName"
                       },
                       {
-                        "name": "dob",
-                        "type": "date"
+                        "type": "date",
+                        "name": "dob"
                       },
                       {
-                        "name": "rollSheetComments",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetComments"
                       },
                       {
-                        "name": "rollSheetMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetMedical"
                       },
                       {
-                        "name": "additionalMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "additionalMedical"
                       },
                       {
-                        "name": "family",
-                        "type": "text"
+                        "type": "number",
+                        "name": "family"
                       },
                       {
-                        "name": "gender",
-                        "type": "text"
+                        "type": "text",
+                        "name": "gender"
                       },
                       {
-                        "name": "level",
-                        "type": "text"
+                        "type": "number",
+                        "name": "level"
                       },
                       {
-                        "name": "age",
-                        "type": "text"
+                        "type": "text",
+                        "name": "age"
                       }
                     ]
                   }
@@ -1173,32 +2197,36 @@
                 },
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "startDate",
-                    "type": "date"
+                    "type": "number",
+                    "name": "enrolmentType"
                   },
                   {
-                    "name": "dropDate",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dropDate"
                   },
                   {
-                    "name": "isValid",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "name": "isValid"
                   },
                   {
-                    "name": "student",
-                    "type": "text"
+                    "type": "number",
+                    "name": "student"
                   },
                   {
-                    "name": "enrolmentType",
-                    "type": "number"
+                    "type": "date",
+                    "name": "startDate"
                   },
                   {
-                    "name": "classId",
-                    "type": "number"
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
                   }
                 ],
                 "outputType": "array",
@@ -1267,48 +2295,48 @@
                       "output": true,
                       "meta": [
                         {
-                          "name": "id",
-                          "type": "text"
+                          "type": "number",
+                          "name": "id"
                         },
                         {
-                          "name": "firstName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "firstName"
                         },
                         {
-                          "name": "lastName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "lastName"
                         },
                         {
-                          "name": "dob",
-                          "type": "date"
+                          "type": "date",
+                          "name": "dob"
                         },
                         {
-                          "name": "rollSheetComments",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetComments"
                         },
                         {
-                          "name": "rollSheetMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetMedical"
                         },
                         {
-                          "name": "additionalMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "additionalMedical"
                         },
                         {
-                          "name": "family",
-                          "type": "text"
+                          "type": "number",
+                          "name": "family"
                         },
                         {
-                          "name": "gender",
-                          "type": "text"
+                          "type": "text",
+                          "name": "gender"
                         },
                         {
-                          "name": "level",
-                          "type": "text"
+                          "type": "number",
+                          "name": "level"
                         },
                         {
-                          "name": "age",
-                          "type": "text"
+                          "type": "text",
+                          "name": "age"
                         }
                       ],
                       "outputType": "object",
@@ -1335,126 +2363,52 @@
                     "type": "object"
                   },
                   {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "startDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "dropDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "isValid",
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "student",
-                    "type": "text",
-                    "sub": [
-                      {
-                        "name": "id",
-                        "type": "text"
-                      },
-                      {
-                        "name": "firstName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "lastName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "dob",
-                        "type": "date"
-                      },
-                      {
-                        "name": "rollSheetComments",
-                        "type": "text"
-                      },
-                      {
-                        "name": "rollSheetMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "additionalMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "family",
-                        "type": "text"
-                      },
-                      {
-                        "name": "gender",
-                        "type": "text"
-                      },
-                      {
-                        "name": "level",
-                        "type": "text"
-                      },
-                      {
-                        "name": "age",
-                        "type": "text"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "enrolmentType",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classId",
-                    "type": "number"
-                  },
-                  {
                     "name": "student",
                     "type": "object",
                     "sub": [
                       {
-                        "name": "id",
-                        "type": "text"
+                        "type": "number",
+                        "name": "id"
                       },
                       {
-                        "name": "firstName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "firstName"
                       },
                       {
-                        "name": "lastName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "lastName"
                       },
                       {
-                        "name": "dob",
-                        "type": "date"
+                        "type": "date",
+                        "name": "dob"
                       },
                       {
-                        "name": "rollSheetComments",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetComments"
                       },
                       {
-                        "name": "rollSheetMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetMedical"
                       },
                       {
-                        "name": "additionalMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "additionalMedical"
                       },
                       {
-                        "name": "family",
-                        "type": "text"
+                        "type": "number",
+                        "name": "family"
                       },
                       {
-                        "name": "gender",
-                        "type": "text"
+                        "type": "text",
+                        "name": "gender"
                       },
                       {
-                        "name": "level",
-                        "type": "text"
+                        "type": "number",
+                        "name": "level"
                       },
                       {
-                        "name": "age",
-                        "type": "text"
+                        "type": "text",
+                        "name": "age"
                       }
                     ]
                   }
@@ -1538,32 +2492,36 @@
                 },
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "startDate",
-                    "type": "date"
+                    "type": "number",
+                    "name": "enrolmentType"
                   },
                   {
-                    "name": "dropDate",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dropDate"
                   },
                   {
-                    "name": "isValid",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "name": "isValid"
                   },
                   {
-                    "name": "student",
-                    "type": "text"
+                    "type": "number",
+                    "name": "student"
                   },
                   {
-                    "name": "enrolmentType",
-                    "type": "number"
+                    "type": "date",
+                    "name": "startDate"
                   },
                   {
-                    "name": "classId",
-                    "type": "number"
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dropReason"
                   }
                 ],
                 "outputType": "array",
@@ -1632,48 +2590,48 @@
                       "output": true,
                       "meta": [
                         {
-                          "name": "id",
-                          "type": "text"
+                          "type": "number",
+                          "name": "id"
                         },
                         {
-                          "name": "firstName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "firstName"
                         },
                         {
-                          "name": "lastName",
-                          "type": "text"
+                          "type": "text",
+                          "name": "lastName"
                         },
                         {
-                          "name": "dob",
-                          "type": "date"
+                          "type": "date",
+                          "name": "dob"
                         },
                         {
-                          "name": "rollSheetComments",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetComments"
                         },
                         {
-                          "name": "rollSheetMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "rollSheetMedical"
                         },
                         {
-                          "name": "additionalMedical",
-                          "type": "text"
+                          "type": "text",
+                          "name": "additionalMedical"
                         },
                         {
-                          "name": "family",
-                          "type": "text"
+                          "type": "number",
+                          "name": "family"
                         },
                         {
-                          "name": "gender",
-                          "type": "text"
+                          "type": "text",
+                          "name": "gender"
                         },
                         {
-                          "name": "level",
-                          "type": "text"
+                          "type": "number",
+                          "name": "level"
                         },
                         {
-                          "name": "age",
-                          "type": "text"
+                          "type": "text",
+                          "name": "age"
                         }
                       ],
                       "outputType": "object",
@@ -1700,126 +2658,52 @@
                     "type": "object"
                   },
                   {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "startDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "dropDate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "isValid",
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "student",
-                    "type": "text",
-                    "sub": [
-                      {
-                        "name": "id",
-                        "type": "text"
-                      },
-                      {
-                        "name": "firstName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "lastName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "dob",
-                        "type": "date"
-                      },
-                      {
-                        "name": "rollSheetComments",
-                        "type": "text"
-                      },
-                      {
-                        "name": "rollSheetMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "additionalMedical",
-                        "type": "text"
-                      },
-                      {
-                        "name": "family",
-                        "type": "text"
-                      },
-                      {
-                        "name": "gender",
-                        "type": "text"
-                      },
-                      {
-                        "name": "level",
-                        "type": "text"
-                      },
-                      {
-                        "name": "age",
-                        "type": "text"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "enrolmentType",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classId",
-                    "type": "number"
-                  },
-                  {
                     "name": "student",
                     "type": "object",
                     "sub": [
                       {
-                        "name": "id",
-                        "type": "text"
+                        "type": "number",
+                        "name": "id"
                       },
                       {
-                        "name": "firstName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "firstName"
                       },
                       {
-                        "name": "lastName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "lastName"
                       },
                       {
-                        "name": "dob",
-                        "type": "date"
+                        "type": "date",
+                        "name": "dob"
                       },
                       {
-                        "name": "rollSheetComments",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetComments"
                       },
                       {
-                        "name": "rollSheetMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "rollSheetMedical"
                       },
                       {
-                        "name": "additionalMedical",
-                        "type": "text"
+                        "type": "text",
+                        "name": "additionalMedical"
                       },
                       {
-                        "name": "family",
-                        "type": "text"
+                        "type": "number",
+                        "name": "family"
                       },
                       {
-                        "name": "gender",
-                        "type": "text"
+                        "type": "text",
+                        "name": "gender"
                       },
                       {
-                        "name": "level",
-                        "type": "text"
+                        "type": "number",
+                        "name": "level"
                       },
                       {
-                        "name": "age",
-                        "type": "text"
+                        "type": "text",
+                        "name": "age"
                       }
                     ]
                   }
@@ -1848,96 +2732,16 @@
             "type": "object"
           },
           {
-            "name": "id",
-            "type": "number"
-          },
-          {
-            "name": "day",
-            "type": "text"
-          },
-          {
-            "name": "dayId",
-            "type": "number"
-          },
-          {
-            "name": "start",
-            "type": "text"
-          },
-          {
-            "name": "end",
-            "type": "text"
-          },
-          {
-            "name": "startDec",
-            "type": "number"
-          },
-          {
-            "name": "endDec",
-            "type": "number"
-          },
-          {
-            "name": "level",
-            "type": "text"
-          },
-          {
-            "name": "levelId",
-            "type": "number"
-          },
-          {
-            "name": "instructor",
-            "type": "text"
-          },
-          {
-            "name": "instructorId",
-            "type": "number"
-          },
-          {
-            "name": "maxEnrolments",
-            "type": "number"
-          },
-          {
-            "name": "enrolCount",
-            "type": "number"
-          },
-          {
-            "name": "activeEnrolments",
-            "type": "number"
-          },
-          {
-            "name": "makeupEnrolments",
-            "type": "number"
-          },
-          {
-            "name": "trialEnrolments",
-            "type": "number"
-          },
-          {
-            "name": "waitlisted",
-            "type": "number"
-          },
-          {
-            "name": "classTypeId",
-            "type": "number"
-          },
-          {
-            "name": "classTypeShort",
-            "type": "text"
-          },
-          {
-            "name": "classTypeLong",
-            "type": "text"
-          },
-          {
             "name": "activeEnrolments",
             "type": "array",
             "sub": [
               {
                 "name": "id",
-                "type": "text"
+                "type": "number"
               },
               {
-                "name": "startDate",
-                "type": "date"
+                "name": "enrolmentType",
+                "type": "number"
               },
               {
                 "name": "dropDate",
@@ -1949,109 +2753,113 @@
               },
               {
                 "name": "student",
-                "type": "text",
+                "type": "number",
                 "sub": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ]
               },
               {
-                "name": "enrolmentType",
-                "type": "number"
+                "name": "startDate",
+                "type": "date"
               },
               {
                 "name": "classId",
                 "type": "number"
               },
               {
+                "name": "dropReason",
+                "type": "text"
+              },
+              {
                 "name": "student",
                 "type": "object",
                 "sub": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ]
               }
@@ -2062,126 +2870,52 @@
             "type": "array",
             "sub": [
               {
-                "name": "id",
-                "type": "text"
-              },
-              {
-                "name": "startDate",
-                "type": "date"
-              },
-              {
-                "name": "dropDate",
-                "type": "date"
-              },
-              {
-                "name": "isValid",
-                "type": "boolean"
-              },
-              {
-                "name": "student",
-                "type": "text",
-                "sub": [
-                  {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "firstName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "lastName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dob",
-                    "type": "date"
-                  },
-                  {
-                    "name": "rollSheetComments",
-                    "type": "text"
-                  },
-                  {
-                    "name": "rollSheetMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "additionalMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
-                    "type": "text"
-                  },
-                  {
-                    "name": "gender",
-                    "type": "text"
-                  },
-                  {
-                    "name": "level",
-                    "type": "text"
-                  },
-                  {
-                    "name": "age",
-                    "type": "text"
-                  }
-                ]
-              },
-              {
-                "name": "enrolmentType",
-                "type": "number"
-              },
-              {
-                "name": "classId",
-                "type": "number"
-              },
-              {
                 "name": "student",
                 "type": "object",
                 "sub": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ]
               }
@@ -2192,126 +2926,52 @@
             "type": "array",
             "sub": [
               {
-                "name": "id",
-                "type": "text"
-              },
-              {
-                "name": "startDate",
-                "type": "date"
-              },
-              {
-                "name": "dropDate",
-                "type": "date"
-              },
-              {
-                "name": "isValid",
-                "type": "boolean"
-              },
-              {
-                "name": "student",
-                "type": "text",
-                "sub": [
-                  {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "firstName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "lastName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dob",
-                    "type": "date"
-                  },
-                  {
-                    "name": "rollSheetComments",
-                    "type": "text"
-                  },
-                  {
-                    "name": "rollSheetMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "additionalMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
-                    "type": "text"
-                  },
-                  {
-                    "name": "gender",
-                    "type": "text"
-                  },
-                  {
-                    "name": "level",
-                    "type": "text"
-                  },
-                  {
-                    "name": "age",
-                    "type": "text"
-                  }
-                ]
-              },
-              {
-                "name": "enrolmentType",
-                "type": "number"
-              },
-              {
-                "name": "classId",
-                "type": "number"
-              },
-              {
                 "name": "student",
                 "type": "object",
                 "sub": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ]
               }
@@ -2322,133 +2982,60 @@
             "type": "array",
             "sub": [
               {
-                "name": "id",
-                "type": "text"
-              },
-              {
-                "name": "startDate",
-                "type": "date"
-              },
-              {
-                "name": "dropDate",
-                "type": "date"
-              },
-              {
-                "name": "isValid",
-                "type": "boolean"
-              },
-              {
-                "name": "student",
-                "type": "text",
-                "sub": [
-                  {
-                    "name": "id",
-                    "type": "text"
-                  },
-                  {
-                    "name": "firstName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "lastName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dob",
-                    "type": "date"
-                  },
-                  {
-                    "name": "rollSheetComments",
-                    "type": "text"
-                  },
-                  {
-                    "name": "rollSheetMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "additionalMedical",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
-                    "type": "text"
-                  },
-                  {
-                    "name": "gender",
-                    "type": "text"
-                  },
-                  {
-                    "name": "level",
-                    "type": "text"
-                  },
-                  {
-                    "name": "age",
-                    "type": "text"
-                  }
-                ]
-              },
-              {
-                "name": "enrolmentType",
-                "type": "number"
-              },
-              {
-                "name": "classId",
-                "type": "number"
-              },
-              {
                 "name": "student",
                 "type": "object",
                 "sub": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ]
               }
             ]
           }
         ],
-        "outputType": "array"
+        "outputType": "array",
+        "disabled": true
       }
     ]
   }

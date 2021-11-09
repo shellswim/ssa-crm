@@ -7305,32 +7305,36 @@ dmx.config({
     "activeEnrolmentsTableRepeat": {
       "meta": [
         {
-          "name": "id",
-          "type": "text"
+          "type": "number",
+          "name": "id"
         },
         {
-          "name": "startDate",
-          "type": "date"
+          "type": "number",
+          "name": "enrolmentType"
         },
         {
-          "name": "dropDate",
-          "type": "date"
+          "type": "date",
+          "name": "dropDate"
         },
         {
-          "name": "isValid",
-          "type": "boolean"
+          "type": "boolean",
+          "name": "isValid"
         },
         {
-          "name": "student",
-          "type": "text"
+          "type": "number",
+          "name": "student"
         },
         {
-          "name": "enrolmentType",
-          "type": "number"
+          "type": "date",
+          "name": "startDate"
         },
         {
-          "name": "classId",
-          "type": "number"
+          "type": "number",
+          "name": "classId"
+        },
+        {
+          "type": "text",
+          "name": "dropReason"
         }
       ],
       "outputType": "array"
@@ -7441,334 +7445,124 @@ dmx.config({
           "type": "number"
         },
         {
-          "name": "day",
+          "name": "classLevel",
+          "type": "number"
+        },
+        {
+          "name": "day_name",
           "type": "text"
         },
         {
-          "name": "dayId",
+          "name": "day_int",
           "type": "number"
         },
         {
-          "name": "start",
+          "name": "startdate",
+          "type": "date"
+        },
+        {
+          "name": "enddate",
+          "type": "date"
+        },
+        {
+          "name": "classType",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
           "type": "text"
         },
         {
-          "name": "end",
+          "name": "startTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDisplay",
           "type": "text"
         },
         {
-          "name": "startDec",
+          "name": "endTimeDecimal",
           "type": "number"
         },
         {
-          "name": "endDec",
+          "name": "max",
           "type": "number"
         },
         {
-          "name": "level",
+          "name": "instructor_firstname",
           "type": "text"
         },
         {
-          "name": "levelId",
-          "type": "number"
-        },
-        {
-          "name": "instructor",
+          "name": "instructor_lastname",
           "type": "text"
         },
         {
-          "name": "instructorId",
+          "name": "instructorid",
           "type": "number"
         },
         {
-          "name": "maxEnrolments",
+          "name": "enrolcount",
           "type": "number"
         },
         {
-          "name": "enrolCount",
+          "name": "enrol_active",
           "type": "number"
         },
         {
-          "name": "activeEnrolments",
-          "type": "number",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "makeupEnrolments",
-          "type": "number",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "trialEnrolments",
-          "type": "number",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "waitlisted",
-          "type": "number",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "classTypeId",
+          "name": "enrol_makeup",
           "type": "number"
         },
         {
-          "name": "classTypeShort",
-          "type": "text"
+          "name": "enrol_trial",
+          "type": "number"
         },
         {
-          "name": "classTypeLong",
-          "type": "text"
+          "name": "enrol_waitlist",
+          "type": "number"
         },
         {
-          "name": "activeEnrolments",
+          "name": "enrol_casual",
+          "type": "number"
+        },
+        {
+          "name": "slots_avail",
+          "type": "number"
+        },
+        {
+          "name": "enrolments",
           "type": "array",
           "sub": [
             {
-              "name": "id",
-              "type": "text"
+              "type": "number",
+              "name": "id"
             },
             {
-              "name": "startDate",
-              "type": "date"
+              "type": "number",
+              "name": "enrolmentType"
             },
             {
-              "name": "dropDate",
-              "type": "date"
+              "type": "date",
+              "name": "dropDate"
             },
             {
-              "name": "isValid",
-              "type": "boolean"
+              "type": "boolean",
+              "name": "isValid"
             },
             {
-              "name": "student",
-              "type": "text"
+              "type": "number",
+              "name": "student"
             },
             {
-              "name": "enrolmentType",
-              "type": "number"
+              "type": "date",
+              "name": "startDate"
             },
             {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "makeupEnrolments",
-          "type": "array",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
+              "type": "number",
+              "name": "classId"
             },
             {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "trialEnrolments",
-          "type": "array",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "waitlisted",
-          "type": "array",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "classId",
-              "type": "number"
+              "type": "text",
+              "name": "dropReason"
             }
           ]
         }
@@ -7881,7 +7675,303 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "dd_editClass": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "classLevel",
+          "type": "number"
+        },
+        {
+          "name": "day_name",
+          "type": "text"
+        },
+        {
+          "name": "day_int",
+          "type": "number"
+        },
+        {
+          "name": "startdate",
+          "type": "date"
+        },
+        {
+          "name": "enddate",
+          "type": "date"
+        },
+        {
+          "name": "classType",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "startTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "endTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "max",
+          "type": "number"
+        },
+        {
+          "name": "instructor_firstname",
+          "type": "text"
+        },
+        {
+          "name": "instructor_lastname",
+          "type": "text"
+        },
+        {
+          "name": "instructorid",
+          "type": "number"
+        },
+        {
+          "name": "enrolcount",
+          "type": "number"
+        },
+        {
+          "name": "enrol_active",
+          "type": "number"
+        },
+        {
+          "name": "enrol_makeup",
+          "type": "number"
+        },
+        {
+          "name": "enrol_trial",
+          "type": "number"
+        },
+        {
+          "name": "enrol_waitlist",
+          "type": "number"
+        },
+        {
+          "name": "enrol_casual",
+          "type": "number"
+        },
+        {
+          "name": "slots_avail",
+          "type": "number"
+        },
+        {
+          "name": "active_enrols",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "enrolmentType"
+            },
+            {
+              "type": "date",
+              "name": "dropDate"
+            },
+            {
+              "type": "boolean",
+              "name": "isValid"
+            },
+            {
+              "type": "number",
+              "name": "student"
+            },
+            {
+              "type": "date",
+              "name": "startDate"
+            },
+            {
+              "type": "number",
+              "name": "classId"
+            },
+            {
+              "type": "text",
+              "name": "dropReason"
+            },
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            },
+            {
+              "type": "date",
+              "name": "dob"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_classdetails_searchenrol": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "classLevel",
+          "type": "number"
+        },
+        {
+          "name": "day_name",
+          "type": "text"
+        },
+        {
+          "name": "day_int",
+          "type": "number"
+        },
+        {
+          "name": "startdate",
+          "type": "date"
+        },
+        {
+          "name": "enddate",
+          "type": "date"
+        },
+        {
+          "name": "classType",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "startTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "endTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "max",
+          "type": "number"
+        },
+        {
+          "name": "instructor_firstname",
+          "type": "text"
+        },
+        {
+          "name": "instructor_lastname",
+          "type": "text"
+        },
+        {
+          "name": "instructorid",
+          "type": "number"
+        },
+        {
+          "name": "enrolcount",
+          "type": "number"
+        },
+        {
+          "name": "enrol_active",
+          "type": "number"
+        },
+        {
+          "name": "enrol_makeup",
+          "type": "number"
+        },
+        {
+          "name": "enrol_trial",
+          "type": "number"
+        },
+        {
+          "name": "enrol_waitlist",
+          "type": "number"
+        },
+        {
+          "name": "enrol_casual",
+          "type": "number"
+        },
+        {
+          "name": "slots_avail",
+          "type": "number"
+        },
+        {
+          "name": "active_enrols",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "enrolmentType"
+            },
+            {
+              "type": "date",
+              "name": "dropDate"
+            },
+            {
+              "type": "boolean",
+              "name": "isValid"
+            },
+            {
+              "type": "number",
+              "name": "student"
+            },
+            {
+              "type": "date",
+              "name": "startDate"
+            },
+            {
+              "type": "number",
+              "name": "classId"
+            },
+            {
+              "type": "text",
+              "name": "dropReason"
+            },
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            },
+            {
+              "type": "date",
+              "name": "dob"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "localStorage": [
+      {
+        "type": "object",
+        "name": "class"
+      },
+      {
+        "type": "object",
+        "name": "student"
+      }
+    ]
   },
   "_classFilterSidebar": {
     "rp_selectedTimes2": {
@@ -8964,6 +9054,24 @@ dmx.config({
       "outputType": "text"
     },
     "rp_times": {
+      "meta": [
+        {
+          "name": "$index",
+          "type": "number"
+        },
+        {
+          "name": "$key",
+          "type": "text"
+        },
+        {
+          "name": "$value",
+          "type": "object"
+        },
+        {
+          "name": "calData",
+          "type": "array"
+        }
+      ],
       "outputType": "text"
     },
     "rp_classes": {
@@ -9029,6 +9137,15 @@ dmx.config({
     "arr_timesfilter": {
       "meta": null,
       "outputType": "array"
+    },
+    "rp_daysheader": {
+      "meta": [
+        {
+          "name": "calData",
+          "type": "array"
+        }
+      ],
+      "outputType": "text"
     }
   }
 });

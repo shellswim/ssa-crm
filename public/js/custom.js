@@ -6,6 +6,7 @@ function appSettingsObject() {
         cl = dmx.parse('getLevels.data.query'),
         rl = dmx.parse('getRelationships.data.query'),
         ct = dmx.parse('getContactTypes.data.contactTypes'),
+        ins = dmx.parse('getAllStaff.data.instructors.getInstructors'),
         s = {},
         mn,
         mx,
@@ -15,6 +16,7 @@ function appSettingsObject() {
         da = [],
         cla = {},
         claid = {},
+        instructors = {},
         ra = {},
         ra2 = [],
         cta = {},
@@ -66,6 +68,13 @@ function appSettingsObject() {
         claid[id] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
+    // Instructors by ID
+    for (let i = 0; i < ins.length; i++) {
+        let x = ins[i];
+        let id = x.id, truncn = x.firstName + ' ' + x.lastName.slice(0, 1) + '.', first = x.firstName, last = x.lastName;
+        instructors[id] = { "trunc_name": truncn, "firstName": first, "lastName": last, "id": id };
+    }
+    s["instructorsById"] = instructors;
     // Get Relationships by ID
     for (let i = 0; i < rl.length; i++) {
         let r = rl[i];
