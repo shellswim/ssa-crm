@@ -4,6 +4,7 @@
 function appSettingsObject() {
     var l = dmx.parse('appSettings.data.getSettings'),
         cl = dmx.parse('getLevels.data.query'),
+        et = dmx.parse('enrolmentTypes.data.query'),
         rl = dmx.parse('getRelationships.data.query'),
         ct = dmx.parse('getContactTypes.data.contactTypes'),
         ins = dmx.parse('getAllStaff.data.instructors.getInstructors'),
@@ -17,11 +18,14 @@ function appSettingsObject() {
         cla = {},
         claid = {},
         instructors = {},
+        instructors_array = [],
         ra = {},
         ra2 = [],
         cta = {},
         ct_arr = [],
         ect = [],
+        etarr = [],
+        etid = {},
         pct = [];
 
     for (i = 0; i < l.length; i++) {
@@ -68,13 +72,24 @@ function appSettingsObject() {
         claid[id] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
-    // Instructors by ID
+    // Enrolment Types by Id and Array
+    for(let i=0;i<et.length;i++) {
+        let e = et[i];
+        etarr.push(e);
+        etid[e.id] = {"name": e.type};
+    }
+    s["enrolTypesById"] = etid;
+    s["enrolTypesArray"] = etarr;
+
+    // Instructors by ID & Array
     for (let i = 0; i < ins.length; i++) {
         let x = ins[i];
         let id = x.id, truncn = x.firstName + ' ' + x.lastName.slice(0, 1) + '.', first = x.firstName, last = x.lastName;
         instructors[id] = { "trunc_name": truncn, "firstName": first, "lastName": last, "id": id };
+        instructors_array.push({ "trunc_name": truncn, "firstName": first, "lastName": last, "id": id });
     }
     s["instructorsById"] = instructors;
+    s["instructors"] = instructors_array;
     // Get Relationships by ID
     for (let i = 0; i < rl.length; i++) {
         let r = rl[i];
@@ -101,7 +116,7 @@ function appSettingsObject() {
     s["contactTypes"]["emailContactTypes"] = ect;
     s["contactTypes"]["phoneContactTypes"] = pct;
 
-    // Days array
+    // Days array & Object
     s['days_array'] = {
         1: 'Sunday',
         2: 'Monday',
@@ -111,6 +126,15 @@ function appSettingsObject() {
         6: 'Friday',
         7: 'Saturday'
     }
+    s['days_obj'] = [
+        {'dayint':1, 'dayname': 'Sunday'},
+        {'dayint':2, 'dayname': 'Monday'},
+        {'dayint':3, 'dayname': 'Tuesday'},
+        {'dayint':4, 'dayname': 'Wednesday'},
+        {'dayint':5, 'dayname': 'Thursday'},
+        {'dayint':6, 'dayname': 'Friday'},
+        {'dayint':7, 'dayname': 'Saturday'}
+    ]
     //Set appSettings
     dmx.app.set('appSettings', s);
 }
@@ -296,3 +320,18 @@ function gpReset(p) {
     }
 }
 
+// Override DMX Date Validator
+dmx.rules.max.validity = function(element, param) {
+    if (element.type == 'date') {
+      return element.value <= param;
+    }
+  
+    return +element.value <= +param;
+  }
+dmx.rules.min.validity = function(element, param) {
+    if (element.type == 'date') {
+      return element.value <= param;
+    }
+  
+    return +element.value <= +param;
+  }

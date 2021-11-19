@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "number",
+        "name": "studentid"
+      },
+      {
+        "type": "date",
+        "name": "startDate"
+      },
+      {
+        "type": "number",
+        "name": "classid"
+      },
+      {
+        "type": "date",
+        "name": "fulfil_date"
+      },
+      {
+        "type": "number",
+        "name": "id"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "insertactive",
+        "module": "dbupdater",
+        "action": "insert",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "insert",
+            "values": [
+              {
+                "table": "enrolments",
+                "column": "enrolmentType",
+                "type": "number",
+                "value": "1"
+              },
+              {
+                "table": "enrolments",
+                "column": "isValid",
+                "type": "boolean",
+                "value": "1"
+              },
+              {
+                "table": "enrolments",
+                "column": "student",
+                "type": "number",
+                "value": "{{$_POST.studentid}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "startDate",
+                "type": "date",
+                "value": "{{$_POST.startDate}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "classId",
+                "type": "number",
+                "value": "{{$_POST.classid}}"
+              }
+            ],
+            "table": "enrolments",
+            "returning": "id",
+            "query": "INSERT INTO enrolments\n(enrolmentType, isValid, student, startDate, classId) VALUES ('1', '1', :P1 /* {{$_POST.studentid}} */, :P2 /* {{$_POST.startDate}} */, :P3 /* {{$_POST.classid}} */)",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{$_POST.studentid}}"
+              },
+              {
+                "name": ":P2",
+                "type": "expression",
+                "value": "{{$_POST.startDate}}"
+              },
+              {
+                "name": ":P3",
+                "type": "expression",
+                "value": "{{$_POST.classid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "identity",
+            "type": "text"
+          },
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "updatewaitlist",
+        "module": "dbupdater",
+        "action": "update",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "update",
+            "values": [
+              {
+                "table": "waitlists",
+                "column": "fulfil_date",
+                "type": "date",
+                "value": "{{$_POST.fulfil_date}}"
+              }
+            ],
+            "table": "waitlists",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.id}}",
+                  "data": {
+                    "column": "id"
+                  },
+                  "operation": "="
+                }
+              ]
+            },
+            "query": "UPDATE waitlists\nSET fulfil_date = :P1 /* {{$_POST.fulfil_date}} */\nWHERE id = :P2 /* {{$_POST.id}} */",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{$_POST.fulfil_date}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_POST.id}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      }
+    ]
+  }
+}

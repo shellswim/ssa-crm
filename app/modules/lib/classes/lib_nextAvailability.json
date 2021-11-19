@@ -1,0 +1,469 @@
+{
+    "meta": {
+        "$_GET": [
+            {
+                "type": "text",
+                "name": "classid"
+            },
+            {
+                "type": "date",
+                "name": "startdate"
+            },
+            {
+                "type": "date",
+                "name": "enddate"
+            },
+            {
+                "type": "text",
+                "name": "sort"
+            },
+            {
+                "type": "text",
+                "name": "dir"
+            },
+            {
+                "type": "date",
+                "name": "weekdate"
+            },
+            {
+                "type": "number",
+                "name": "checkavail_max"
+            }
+        ]
+    },
+    "exec": {
+        "steps": [
+            {
+                "name": "classmax",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                    "sql": {
+                        "type": "SELECT",
+                        "columns": [
+                            {
+                                "table": "classes",
+                                "column": "max"
+                            }
+                        ],
+                        "table": {
+                            "name": "classes"
+                        },
+                        "joins": [],
+                        "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                                {
+                                    "id": "classes.id",
+                                    "field": "classes.id",
+                                    "type": "double",
+                                    "operator": "equal",
+                                    "value": "{{$_GET.classid}}",
+                                    "data": {
+                                        "table": "classes",
+                                        "column": "id",
+                                        "type": "number"
+                                    },
+                                    "operation": "="
+                                }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                        },
+                        "query": "SELECT max\nFROM classes\nWHERE id = :P1 /* {{$_GET.classid}} */",
+                        "params": [
+                            {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{$_GET.classid}}"
+                            }
+                        ]
+                    },
+                    "connection": "db"
+                },
+                "output": false,
+                "meta": [
+                    {
+                        "type": "number",
+                        "name": "max"
+                    }
+                ],
+                "type": "dbconnector_single",
+                "outputType": "object"
+            },
+            {
+                "name": "stop",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "stop",
+                    "value": 0
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "max",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "value": "{{classmax.max.toString()}}",
+                    "key": "max"
+                },
+                "meta": [],
+                "outputType": "number",
+                "output": false
+            },
+            {
+                "name": "counter",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "counter",
+                    "value": 1
+                },
+                "meta": [],
+                "outputType": "number",
+                "output": false
+            },
+            {
+                "name": "dateavailable",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "dateavailable",
+                    "value": "{{null}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "startdate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "startdate",
+                    "value": "{{$_GET.startdate}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "total_array",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "total_array",
+                    "value": "{{null}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "dates_array",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "dates_array",
+                    "value": "{{null}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "enddate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "enddate",
+                    "value": "{{$_GET.enddate}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "weekdate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "weekdate",
+                    "value": "{{$_GET.weekdate}}"
+                },
+                "meta": [],
+                "outputType": "text"
+            },
+            {
+                "name": "",
+                "module": "core",
+                "action": "while",
+                "options": {
+                    "while": "{{counter <= $_GET.checkavail_max}}",
+                    "exec": {
+                        "steps": [
+                            {
+                                "name": "enrolments",
+                                "module": "dbconnector",
+                                "action": "single",
+                                "options": {
+                                    "sql": {
+                                        "type": "SELECT",
+                                        "columns": [
+                                            {
+                                                "table": "enrolments",
+                                                "column": "id",
+                                                "alias": "total",
+                                                "aggregate": "COUNT"
+                                            }
+                                        ],
+                                        "table": {
+                                            "name": "enrolments"
+                                        },
+                                        "joins": [],
+                                        "wheres": {
+                                            "condition": "AND",
+                                            "rules": [
+                                                {
+                                                    "id": "enrolments.classId",
+                                                    "field": "enrolments.classId",
+                                                    "type": "double",
+                                                    "operator": "equal",
+                                                    "value": "{{$_GET.classid}}",
+                                                    "data": {
+                                                        "table": "enrolments",
+                                                        "column": "classId",
+                                                        "type": "number"
+                                                    },
+                                                    "operation": "="
+                                                },
+                                                {
+                                                    "condition": "OR",
+                                                    "rules": [
+                                                        {
+                                                            "id": "enrolments.dropDate",
+                                                            "field": "enrolments.dropDate",
+                                                            "type": "date",
+                                                            "operator": "greater_or_equal",
+                                                            "value": "{{startdate}}",
+                                                            "data": {
+                                                                "table": "enrolments",
+                                                                "column": "dropDate",
+                                                                "type": "date"
+                                                            },
+                                                            "operation": ">="
+                                                        },
+                                                        {
+                                                            "id": "enrolments.dropDate",
+                                                            "field": "enrolments.dropDate",
+                                                            "type": "date",
+                                                            "operator": "is_null",
+                                                            "value": null,
+                                                            "data": {
+                                                                "table": "enrolments",
+                                                                "column": "dropDate",
+                                                                "type": "date"
+                                                            },
+                                                            "operation": "IS NULL"
+                                                        }
+                                                    ],
+                                                    "conditional": null
+                                                },
+                                                {
+                                                    "id": "enrolments.isValid",
+                                                    "field": "enrolments.isValid",
+                                                    "type": "boolean",
+                                                    "operator": "equal",
+                                                    "value": true,
+                                                    "data": {
+                                                        "table": "enrolments",
+                                                        "column": "isValid",
+                                                        "type": "boolean"
+                                                    },
+                                                    "operation": "="
+                                                },
+                                                {
+                                                    "id": "enrolments.startDate",
+                                                    "field": "enrolments.startDate",
+                                                    "type": "date",
+                                                    "operator": "less_or_equal",
+                                                    "value": "{{enddate}}",
+                                                    "data": {
+                                                        "table": "enrolments",
+                                                        "column": "startDate",
+                                                        "type": "date"
+                                                    },
+                                                    "operation": "<="
+                                                }
+                                            ],
+                                            "conditional": null,
+                                            "valid": true
+                                        },
+                                        "query": "SELECT COUNT(id) AS total\nFROM enrolments\nWHERE classId = :P1 /* {{$_GET.classid}} */ AND (dropDate >= :P2 /* {{startdate}} */ OR dropDate IS NULL) AND isValid = true AND startDate <= :P3 /* {{enddate}} */",
+                                        "params": [
+                                            {
+                                                "operator": "equal",
+                                                "type": "expression",
+                                                "name": ":P1",
+                                                "value": "{{$_GET.classid}}"
+                                            },
+                                            {
+                                                "operator": "greater_or_equal",
+                                                "type": "expression",
+                                                "name": ":P2",
+                                                "value": "{{startdate}}"
+                                            },
+                                            {
+                                                "operator": "less_or_equal",
+                                                "type": "expression",
+                                                "name": ":P3",
+                                                "value": "{{enddate}}"
+                                            }
+                                        ],
+                                        "groupBy": []
+                                    },
+                                    "connection": "db"
+                                },
+                                "meta": [
+                                    {
+                                        "type": "number",
+                                        "name": "total"
+                                    }
+                                ],
+                                "outputType": "object",
+                                "output": false,
+                                "type": "dbconnector_single"
+                            },
+                            {
+                                "name": "total_array",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "key": "total_array",
+                                    "value": "{{total_array+(counter == $_GET.checkavail_max ? enrolments.total : enrolments.total+',')}}"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "dates_array",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "key": "dates_array",
+                                    "value": "{{dates_array+(counter == $_GET.checkavail_max ? weekdate : weekdate+',')}}"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "startdate",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "value": "{{startdate.dateAdd('days', 7)}}",
+                                    "key": "startdate"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "weekdate",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "value": "{{weekdate.dateAdd('days', 7)}}",
+                                    "key": "weekdate"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "enddate",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "value": "{{enddate.dateAdd('days', 7)}}",
+                                    "key": "enddate"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "counter",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "key": "counter",
+                                    "value": "{{counter + 1}}"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            }
+                        ]
+                    }
+                },
+                "output": false
+            },
+            {
+                "name": "weekdate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "weekdate",
+                    "value": "{{weekdate}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": false
+            },
+            {
+                "name": "dates_array",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "dates_array",
+                    "value": "{{dates_array.split(',')}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": false
+            },
+            {
+                "name": "total_array",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "total_array",
+                    "value": "{{total_array.split(',')}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": false
+            },
+            {
+                "name": "getindex",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "getindex",
+                    "value": "{{total_array.lastIndex(max)}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": false
+            },
+            {
+                "name": "dateavailable",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                    "key": "dateavailable",
+                    "value": "{{dates_array[total_array.lastIndex(max) + 1]}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+            }
+        ]
+    }
+}
