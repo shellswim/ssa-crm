@@ -52,7 +52,7 @@ exports.classAvail = async function (options) {
         }
     }
     // Set makeup response if no makeups available.
-    mu_unavail_response = mu_avail.length == 0 && originalDates.startDate > mumax ? {"code": 102, "response": 'Too far into future.'} : mu_avail.length == 0 && originalDates.startDate < mumax ? {"code": 101, "response": 'No availabilities'} : {"code": 100, "response": "Availabilities found."};
+    mu_unavail_response = moment(weekday_arr[0]).isAfter(mumax) ? mu_unavail_response = {"code": 102, "response": 'Too far into future.'} : mu_avail.length == 0 && originalDates.startDate < mumax ? {"code": 101, "response": 'No availabilities'} : {"code": 100, "response": "Availabilities found."};
 
     function dbClient(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
@@ -72,10 +72,10 @@ exports.classAvail = async function (options) {
         'makeup': mu_avail,
         'makeup_response': mu_unavail_response,
         'total': Math.max(...enr_total),
+        'weekday': weekday_arr[0],
         'arrays' : {
             'ernolTotal': enr_total,
             'mu_array_indexes': mu_array_indexes,
-            'weekday_array': weekday_arr,
             'makeupmax': mumax
         }
     };

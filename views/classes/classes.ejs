@@ -974,7 +974,7 @@
 
                                     <div class="col-sm-10 align-self-center ps-0">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="ec_checkboxIsActive" dmx-bind:checked="getClassDetails.data.getClassDetails.isactive" dmx-bind:value="checked ? true : false" required="" value="true">
+                                            <input class="form-check-input" type="checkbox" id="ec_checkboxIsActive" dmx-bind:checked="editClassModal.dd_editClass.data.isactive" dmx-bind:value="checked ? true : false" required="" value="true">
                                             <label class="form-check-label clickable fw-bold" for="ec_checkboxIsActive" dmx-text="ec_checkboxIsActive.checked ? &quot;Active&quot; : &quot;Inactive&quot;" dmx-class:text-primary="ec_checkboxIsActive.checked">Active</label>
                                         </div><small id="bs4-form-group-help1" class="form-text text-muted mt-2">You can deactivate this class by setting the toggle to the "off" position.</small>
 
@@ -1048,7 +1048,7 @@
             <div class="modal-footer border-top d-flex justify-content-between">
                 <dmx-value id="var_editclass_dirtyform" dmx-bind:value="browser1"></dmx-value>
                 <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn text-light btn-primary" dmx-on:click="run([{run:{action:`checkClassTimeslot.load({instructor: var_classDetails.value.instructorid, day: var_classDetails.value.day_int, starttimedecimal: var_classDetails.value.startTimeDecimal, endtimedecimal: var_classDetails.value.endTimeDecimal, classid: var_classDetails.value.id, isactive: var_classDetails.value.isactive})`}},{condition:{if:`checkClassTimeslot.data.classTSAvailability.length > 0`}}])" dmx-bind:disabled="pd_dirtyFormCheck.editClassForm.dirty === false">Edit
+                <button class="btn text-light btn-primary" dmx-on:click="run([{run:{action:`checkClassTimeslot.load({instructor: var_classDetails.value.instructorid, day: var_classDetails.value.day_int, starttimedecimal: var_classDetails.value.startTimeDecimal, endtimedecimal: var_classDetails.value.endTimeDecimal, classid: var_classDetails.value.id, isactive: var_classDetails.value.isactive})`}},{condition:{if:`checkClassTimeslot.data.classTSAvailability.length > 0`,else:{steps:{run:{action:`editClassModal.dd_editClass.editClassForm.submit()`}}}}}])" dmx-bind:disabled="pd_dirtyFormCheck.editClassForm.dirty === false">Edit
                     Class</button>
             </div>
         </div>
@@ -1436,31 +1436,32 @@
                         <div class="col class-card border rounded-3 bg-white postition-relative mb-2 py-2 px-3" dmx-style:border-left-color.important="'#'+appSettings.classLevelsByID[classLevel].colour">
                             <div class="row row-cols-8 clickable g-0" dmx-on:click="enrolmentsCollapse.toggle()">
 
-                                <div class="align-self-center col-2 class-info">
+                                <div class="align-self-center col class-info d-flex flex-column justify-content-start align-items-start">
                                     <p class="mb-0 small fw-bold" dmx-html="appSettings.classLevelsByID[classLevel].name"><strong>Duckling </strong></p>
                                     <p class="mb-0 small" dmx-html="day_name">Monday</p>
-                                    <p class="mb-0 small" dmx-html="startTimeDisplay.replace(' AM', '').replace(' PM', '')+' - '+endTimeDisplay" style="white-space: nowrap;">9:00 - 9:30am</p>
+                                    <p class="mb-1 pb-1 border-bottom small" dmx-html="startTimeDisplay.replace(' AM', '').replace(' PM', '')+' - '+endTimeDisplay" style="white-space: nowrap;">9:00 - 9:30am</p>
+                                    <p class="mb-0 small" dmx-text="nextavail.weekday.formatDate('dd MMM yyyy')">Week Date</p>
                                 </div>
-                                <div class="align-self-center col-2">
+                                <div class="align-self-center col">
                                     <p class="mb-0 small text-start" dmx-text="instructorid === null ? '&lt;&lt;NO INSTRUCTOR FOUND&gt;&gt;' : appSettings.instructorsById[instructorid].trunc_name">Instructor</p>
                                 </div>
 
                                 <div class="col align-self-center">
-                                    <div class="row row-cols-2 w-100" dmx-hide="total_enrols - max === 0 && (active_enrols.length == 0 || trial_enrols.length == 0 || makeup_enrols.length == 0 || casual_enrols.length == 0 || waitlist_enrols.length == 0)">
-                                        <div class="col-auto align-self-center d-flex justify-content-start" dmx-hide="active_enrols.length === 0">
-                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-check-circle me-2 text-success&quot;></i>'+active_enrols.length+' Active'">0 Active</p>
+                                    <div class="row row-cols-3 w-100" dmx-hide="total_enrols - max === 0 && (active_enrols.length == 0 || trial_enrols.length == 0 || makeup_enrols.length == 0 || casual_enrols.length == 0 || waitlist_enrols.length == 0)" style="white-space: nowrap;">
+                                        <div class="col align-self-center d-flex justify-content-start" dmx-hide="active_enrols.length === 0">
+                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-check-circle me-2 text-success&quot;></i>'+active_enrols.length+' Act.'">0 Act.</p>
                                         </div>
-                                        <div class="col-auto align-self-center" id="cr_enrolCountMakeup" dmx-hide="makeup_enrols.length == 0">
-                                            <p class="mb-0 small" dmx-html="'\'<i class=&quot;bi-arrow-up-square me-2&quot; style=&quot;color:#319bfa&quot;></i>\'+makeup_enrols.length+\' M/Ups\''">0 M/Ups</p>
+                                        <div class="col align-self-center" id="cr_enrolCountMakeup" dmx-hide="makeup_enrols.length == 0">
+                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-arrow-up-square me-2&quot; style=&quot;color:#319bfa&quot;></i>'+makeup_enrols.length+' M/Up'">0 M/Ups</p>
                                         </div>
-                                        <div class="col-auto align-self-center" id="cr_enrolCountTrial" dmx-hide="trial_enrols.length == 0">
-                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-question-circle me-2&quot; style=&quot;color:#f90&quot;></i>'+trial_enrols.length+' Trials'">0 Trials</p>
+                                        <div class="col align-self-center" id="cr_enrolCountTrial" dmx-hide="trial_enrols.length == 0">
+                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-question-circle me-2&quot; style=&quot;color:#f90&quot;></i>'+trial_enrols.length+' Trial'">0 Trials</p>
                                         </div>
-                                        <div class="col-auto align-self-center" id="cr_waitlistCount" dmx-hide="wait_enrols == 0">
-                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-clock-history me-2&quot;></i>'+wait_enrols.length+' Waiting'">0 Waitlisted</p>
+                                        <div class="col align-self-center" id="cr_waitlistCount" dmx-hide="wait_enrols == 0">
+                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-clock-history me-2&quot;></i>'+wait_enrols.length+' Wait'">0 Wait</p>
                                         </div>
-                                        <div class="col-auto align-self-center" id="cr_casualCount" dmx-hide="casual_enrols.length == 0">
-                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-hexagon-half me-2 text-primary&quot;></i>'+casual_enrols.length+' Casual'">0 Casual</p>
+                                        <div class="col align-self-center" id="cr_casualCount" dmx-hide="casual_enrols.length == 0">
+                                            <p class="mb-0 small" dmx-html="'<i class=&quot;bi-hexagon-half me-2 text-primary&quot;></i>'+casual_enrols.length+' Cas.'">0 Cas.</p>
                                         </div>
                                     </div>
                                     <div class="row" dmx-show="total_enrols - max === 0 && (active_enrols.length == 0 || trial_enrols.length == 0 || makeup_enrols.length == 0 || casual_enrols.length == 0 || waitlist_enrols.length == 0)">
@@ -1469,17 +1470,17 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col align-self-center">
+                                <div class="col align-self-center d-flex flex-column justify-content-center align-items-end">
                                     <p class="text-center mb-1 small text-muted">Makeup/Casual
-                                        <i class="bi-question-circle-fill ms-1" dmx-bs-popover="'<p>Makeup/casual availabilities are automatically calculated by Puddle. The calculations are based off your Makeup Book Ahead settings.</p><p>Your current settings are set to allow Makeup/Casual enrolments to be booked <strong>'+appSettings.enrol_makeup_book_ahead_days+' days ahead.</strong></p><p class=&quot;mb-0&quot;>Casual enrolment availabilities are calculated the same as Makeup enrolments due to the temporary nature of both enrolment types.</p>'" dmx-bind:popover-title="'Makeup/Casual Availabilities'" data-bs-html="true" data-bs-trigger="hover"></i>
+                                        <i onclick="return false;" class="bi-question-circle-fill ms-1" dmx-bs-popover="'<p>Makeup/casual availabilities are automatically calculated by Puddle. The calculations are based off your Makeup Book Ahead settings.</p><p>Your current settings are set to allow Makeup/Casual enrolments to be booked <strong>'+appSettings.enrol_makeup_book_ahead_days+' days ahead.</strong></p><p class=&quot;mb-0&quot;>Casual enrolment availabilities are calculated the same as Makeup enrolments due to the temporary nature of both enrolment types.</p>'" dmx-bind:popover-title="'Makeup/Casual Availabilities'" data-bs-html="true" data-bs-trigger="hover"></i>
                                     </p>
-                                    <p class="small text-center mb-0" dmx-repeat:rp_makeupavail_disp="nextavail.makeup" dmx-hide="nextavail.makeup_response.code !== 100" dmx-html="'<strong>'+availabilities+'</strong> spots - '+date.formatDate('dd MMM yyyy')"><b>4</b> spots - 21/11/2021</p>
+                                    <p class="small text-center mb-0" dmx-repeat:rp_makeupavail_disp="nextavail.makeup" dmx-hide="nextavail.makeup_response.code !== 100" dmx-html="'<strong>'+availabilities+'</strong> spots - '+date.formatDate('dd MMM')"><b>4</b> spots - 21 Nov</p>
                                     <p class="text-center mb-0 fst-italic small" dmx-show="nextavail.makeup_response.code !== 100" dmx-text="nextavail.makeup_response.response">Too far in future.</p>
 
 
                                 </div>
 
-                                <div class="col-2 align-self-center">
+                                <div class="col align-self-center">
                                     <p class="text-end mb-0 small text-muted">Availability</p>
                                     <p class="text-end mb-0" dmx-show="nextavail.total != max" dmx-html="'<strong>'+(max - nextavail.total)+'</strong> / '+max+' max.'">4/4</p>
                                     <p class="text-end mb-0 fw-bold text-danger" dmx-show="nextavail.total == max">FULL</p>
@@ -1493,7 +1494,7 @@
                                     <div class="row g-0 d-flex flex-column pb-4  pt-2 mt-2 border-top">
                                         <div class="col">
 
-                                            <div class="row row-cols-2 gx-2 my-2">
+                                            <div class="row row-cols-2 gx-2 my-2 pb-3 border-bottom">
                                                 <div class="col-12">
                                                     <div class="row">
                                                         <div class="col-auto">
@@ -1509,6 +1510,7 @@
                                                                 <div class="col mt-2 fw-500">
                                                                     <p class="fst-italic small text-muted mb-0" dmx-show="nextavail.makeup_response.code === 101">New Makeup and New Casual enrolment buttons have been disabled to prevent overbooking.</p>
                                                                     <p class="fst-italic small text-muted mb-0" dmx-show="nextavail.makeup_response.code === 102">New Makeup and New Casual enrolment buttons have been disabled because your dates are too far into the future.</p>
+
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1960,9 +1962,9 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row row-cols-1 gy-2" is="dmx-if" id="cr_noEnrolments" dmx-bind:condition="(activeEnrolments.length + makeupEnrolments.length + trialEnrolments.length) == 0">
+                                            <div class="row row-cols-1 gy-2" dmx-show="nextavail.total == 0 &amp;&amp; wait_enrols.length == 0">
                                                 <div class="col py-5">
-                                                    <h5 class="text-center fw-light m-0 text-body">
+                                                    <h5 class="text-center fw-300 m-0 text-body">
                                                         This class has no enrolments or waitlists.</h5>
                                                     <p class="text-center mb-0">Add an enrolment above.</p>
                                                 </div>
