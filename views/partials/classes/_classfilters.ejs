@@ -1,0 +1,168 @@
+<!-- Wappler include head-page="classes/allclasses" appConnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" components="{dmxStateManagement:{},dmxValidator:{}}" -->
+<dmx-local-manager id="class_filter_store_local"></dmx-local-manager>
+<dmx-session-manager id="class_filter_store"></dmx-session-manager>
+<dmx-value id="var_availabilities" dmx-bind:value="inp_avail_amount.value && sel_availtype.value ? {'amount':inp_avail_amount.value, 'type':sel_availtype.value} : null" dmx-on:updated="var_availabilities.value === null ? class_filter_store.remove('availabilities') : class_filter_store.set('availabilities', var_availabilities.value)" dmx-bind:value="class_filter_store.data.availabilities"></dmx-value>
+<dmx-array id="arr_timesfilter" dmx-on:updated="run([{runJS:{function:'sortdecimals',args:[`arr_timesfilter.items`]}},{run:{action:`class_filter_store.set(\'filter_times\',items);calendarClasses.load({},true)`}}])" dmx-bind:items="class_filter_store.data.filter_times"></dmx-array>
+<dmx-array id="arr_daysfilter" dmx-on:updated="run([{runJS:{function:'sortdecimals',args:[`arr_daysfilter.items`]}},{run:{action:`class_filter_store.set(\'filter_days\',arr_daysfilter.items);calendarClasses.load({},true)`}}])" dmx-bind:items="class_filter_store.data.filter_days"></dmx-array>
+<dmx-array id="arr_levelsfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'filter_levels\',arr_levelsfilter.items);calendarClasses.load({},true)`}})" dmx-bind:items="class_filter_store.data.filter_levels"></dmx-array>
+<dmx-array id="arr_instructorsfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'filter_instructors\',arr_instructorsfilter.items);calendarClasses.load({},true)`}})" dmx-bind:items="class_filter_store.data.filter_instructors"></dmx-array>
+<section>
+    <div class="row mt-2 g-0">
+        <div class="col p-3 d-flex flex-column mb-3 border rounded-1 bg-white text-muted">
+            <div class="row">
+                <div class="col-auto d-flex flex-column justify-content-between">
+                    <h6>
+                        Filter Calendar - <small class="text-muted fst-italic">Press escape to clear filters.</small></h6>
+                    <div class="row">
+                        <div class="col-auto">
+                            <div class="dropdown">
+                                <button id="dd_dayfilter" class="btn btn-secondary dropdown-toggle no-caret btn-sm" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Days
+                                    <i class="bi-chevron-down ms-2"></i></button>
+                                <div class="dropdown-menu overpl pt-0" aria-labelledby="dd_timefilter" style="max-height: 400px; overflow-y: scroll !important;">
+                                    <a class="dropdown-item small" href="#" dmx-text="$value" dmx-on:click="arr_daysfilter.addUniq($key)" dmx-hide="arr_daysfilter.items.contains($key)" dmx-repeat:rp_daysfilter="appSettings.days_array">Action</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="dropdown">
+                                <button id="dd_timefilter" class="btn btn-secondary dropdown-toggle no-caret btn-sm" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Times
+                                    <i class="bi-chevron-down ms-2"></i></button>
+                                <div class="dropdown-menu overpl pt-0" aria-labelledby="dd_timefilter" style="max-height: 400px; overflow-y: scroll !important;">
+                                    <a class="dropdown-item small" href="#" dmx-text="display" dmx-on:click="arr_timesfilter.addUniq(decimal)" dmx-hide="arr_timesfilter.items.contains(decimal)" dmx-repeat:rp_timesfilter="appSettings.ct_array">Action</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button id="dd_levelfilter" class="btn btn-secondary dropdown-toggle no-caret btn-sm" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                Class Levels
+                                <i class="bi-chevron-down ms-2"></i>
+                            </button>
+                            <div class="dropdown-menu overpl pt-0" aria-labelledby="dd_levelfilter" style="max-height: 400px; overflow-y: scroll !important;">
+                                <a class="dropdown-item small" href="#" dmx-text="name" dmx-on:click="arr_levelsfilter.addUniq($key)" dmx-hide="arr_levelsfilter.items.contains($key)" dmx-repeat:rp_levelsfilter="appSettings.classLevelsByID">Action</a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button id="dd_instructorfilter" class="btn btn-secondary dropdown-toggle no-caret btn-sm" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                Instructors
+                                <i class="bi-chevron-down ms-2"></i>
+                            </button>
+                            <div class="dropdown-menu overpl pt-0" aria-labelledby="dd_instructorfilter" style="max-height: 400px; overflow-y: scroll !important;">
+                                <a class="dropdown-item small" href="#" dmx-text="firstName +' '+lastName.trunc(1,true,'.')" dmx-on:click="arr_instructorsfilter.addUniq(id)" dmx-hide="arr_instructorsfilter.items.contains(id)" dmx-repeat:rp_instructorsfilter="getAllStaff.data.instructors.getInstructors">Action</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col d-flex flex-column justify-content-center align-items-end">
+                    <div class="row">
+                        <div class="col-auto d-flex justify-content-start flex-column">
+                            <label for="inp_avail_amount"># of</label>
+                            <input id="inp_avail_amount" size="3" name="text1" class="form-control clickable" dmx-bind:value="class_filter_store.data.availabilities.amount || ''">
+
+                        </div>
+                        <div class="col">
+                            <label for="inp_avail_amount" class="text-center">Availability Type</label>
+                            <select id="sel_availtype" class="form-select form-control w-auto" width="150" dmx-bind:value="class_filter_store.data.availabilities.type || ''">
+                                <option class="text-muted" value="" selected>Select Type</option>
+                                <option value="permanent">Active/Trial Avail.</option>
+                                <option value="temporary">Makeup/Temporary Avail.</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="row g-0" dmx-hide="arr_timesfilter.count === 0 &amp;&amp; arr_daysfilter.count === 0 &amp;&amp; arr_levelsfilter.count === 0 &amp;&amp; arr_instructorsfilter.count === 0 &amp;&amp; !class_filter_store.data.availabilities">
+        <div class="col p-3 d-flex flex-column mb-4 border rounded-1 bg-white">
+            <div class="row gy-2 row-cols-1">
+                <div class="col">
+                    <div class="row">
+                        <div class="col-auto" dmx-hide="arr_timesfilter.count === 0">
+                            <div class="row align-items-center" id="row_timefilter">
+                                <div class="align-self-center col-auto">
+                                    <p class="mb-0 small fw-bold">Times:</p>
+                                </div>
+                                <div class="col" id="disp_timefilters">
+                                    <div id="rp_selected_timefilters" is="dmx-repeat" dmx-bind:repeat="class_filter_store.data.filter_times">
+                                        <button id="tag_timefilter" class="btn text-body bg-info btn-sm" dmx-html="appSettings.ct_obj[$value].display+'<i class=&quot;bi-x ms-2&quot;></i>'" dmx-on:click="arr_timesfilter.removeAt($index)">TimeTag</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-auto" dmx-hide="arr_daysfilter.count === 0">
+                            <div class="row align-items-center" id="row_dayfilter">
+                                <div class="align-self-center col-auto">
+                                    <p class="mb-0 small fw-bold">Days:</p>
+                                </div>
+                                <div class="col" id="disp_dayfilters">
+                                    <div id="rp_selected_dayfilters" is="dmx-repeat" dmx-bind:repeat="class_filter_store.data.filter_days">
+                                        <button id="tag_dayfilter" class="btn text-body bg-info btn-sm" dmx-html="appSettings.days_array[$value]+'<i class=&quot;bi-x ms-2&quot;></i>'" dmx-on:click="arr_daysfilter.removeAt($index)">DayTag</button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                        <div class="col-auto" dmx-hide="arr_levelsfilter.count === 0">
+                            <div class="row align-items-center" id="row_levelfilter">
+                                <div class="align-self-center col-auto">
+                                    <p class="mb-0 small fw-bold">Levels:</p>
+                                </div>
+                                <div class="col" id="displevelfilters">
+                                    <div id="rp_selectedlevelfilters" is="dmx-repeat" dmx-bind:repeat="class_filter_store.data.filter_levels">
+                                        <button id="taglevelfilter" class="btn text-body bg-info btn-sm" dmx-html="appSettings.classLevelsByID[$value].name+'<i class=&quot;bi-x ms-2&quot;></i>'" dmx-on:click="arr_levelsfilter.removeAt($index)">LevelTag</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-auto" dmx-hide="arr_instructorsfilter.count === 0">
+                            <div class="row align-items-center" id="row_instructorfilter">
+                                <div class="align-self-center col-auto">
+                                    <p class="mb-0 small fw-bold">Instructors:</p>
+                                </div>
+                                <div class="col" id="dispinstructorsfilters">
+                                    <div id="rp_selectedinstructorfilters" is="dmx-repeat" dmx-bind:repeat="class_filter_store.data.filter_instructors">
+                                        <button id="taginstructorfilter" class="btn text-body bg-info btn-sm" dmx-html="appSettings.instructorsById[$value].trunc_name +' <i class=&quot;bi-x ms-2&quot;></i>'" dmx-on:click="arr_instructorsfilter.removeAt($index)">InstructorTag</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col d-flex flex-row justify-content-end align-items-end">
+                            <button class="btn btn-outline-dark btn-sm" dmx-on:click="arr_instructorsfilter.empty();arr_levelsfilter.empty();arr_daysfilter.empty();arr_timesfilter.empty();var_availabilities.setValue(null)" dmx-hide="arr_timesfilter.count === 0 && arr_daysfilter.count === 0 && arr_levelsfilter.count === 0 && arr_instructorsfilter.count === 0"><i class="bi-x-circle me-2"></i> Clear All Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="col-auto" dmx-hide="!class_filter_store.data.availabilities">
+                    <div class="row" id="row_availabilities">
+                        <div class="align-self-center col-auto">
+                            <p class="mb-0 small fw-bold">Availabilities:</p>
+                        </div>
+                        <div class="col" id="dispavailabilities">
+                            <button id="tag_mu_availability_filter" class="btn btn-makeup-outline btn-sm" dmx-html="'At least '+class_filter_store.data.availabilities.amount+'x '+(class_filter_store.data.availabilities.type == 'permanent' ? 'Active/Trial' : 'Makeup/Casual')+' Availabilities'" dmx-on:click="arr_instructorsfilter.removeAt($index)">At least: 2 x Makeup/Casual Availabilities</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    // sort arrays as numbers
+    function sortdecimals(arr) {
+        arr.sort(function(a,b) {return a-b});
+    }
+    document.addEventListener('keyup', function(e) {
+        let keyname = e.key;
+        if(keyname === 'Escape') {
+            dmx.parse('content.arr_timesfilter.empty();content.arr_daysfilter.empty();content.arr_levelsfilter.empty();content.arr_instructorsfilter.empty(); content.inp_avail_amount.setValue(\'\'); content.sel_availtype.setValue(\'\');')
+        }
+    });
+</script>

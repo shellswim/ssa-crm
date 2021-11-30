@@ -23,19 +23,19 @@
       },
       {
         "type": "array",
-        "name": "days"
+        "name": "filter_days"
       },
       {
         "type": "array",
-        "name": "times"
+        "name": "filter_times"
       },
       {
         "type": "array",
-        "name": "levels"
+        "name": "filter_levels"
       },
       {
         "type": "array",
-        "name": "instructors"
+        "name": "filter_instructors"
       },
       {
         "type": "date",
@@ -56,1173 +56,71 @@
       {
         "type": "number",
         "name": "makeup_max_book_days"
+      },
+      {
+        "type": "text",
+        "name": "viewtype"
+      },
+      {
+        "type": "text",
+        "name": "avails_type"
+      },
+      {
+        "type": "text",
+        "name": "avails_amount"
       }
     ]
   },
   "exec": {
     "steps": [
       {
-        "name": "classdump",
-        "module": "dbconnector",
-        "action": "paged",
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
         "options": {
-          "connection": "db",
-          "sql": {
-            "type": "SELECT",
-            "columns": [],
-            "table": {
-              "name": "allClasses_detail"
-            },
-            "joins": [],
-            "query": "SELECT *\nFROM allClasses_detail\nORDER BY day_int ASC, startTimeDecimal ASC",
-            "params": [],
-            "orders": [
-              {
-                "table": "allClasses_detail",
-                "column": "day_int",
-                "direction": "ASC"
-              },
-              {
-                "table": "allClasses_detail",
-                "column": "startTimeDecimal",
-                "direction": "ASC"
-              }
-            ]
-          }
-        },
-        "output": false,
-        "meta": [
-          {
-            "name": "offset",
-            "type": "number"
-          },
-          {
-            "name": "limit",
-            "type": "number"
-          },
-          {
-            "name": "total",
-            "type": "number"
-          },
-          {
-            "name": "page",
-            "type": "object",
-            "sub": [
-              {
-                "name": "offset",
-                "type": "object",
-                "sub": [
-                  {
-                    "name": "first",
-                    "type": "number"
-                  },
-                  {
-                    "name": "prev",
-                    "type": "number"
-                  },
-                  {
-                    "name": "next",
-                    "type": "number"
-                  },
-                  {
-                    "name": "last",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "name": "current",
-                "type": "number"
-              },
-              {
-                "name": "total",
-                "type": "number"
-              }
-            ]
-          },
-          {
-            "name": "data",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "classLevel"
-              },
-              {
-                "type": "text",
-                "name": "day_name"
-              },
-              {
-                "type": "number",
-                "name": "day_int"
-              },
-              {
-                "type": "date",
-                "name": "startdate"
-              },
-              {
-                "type": "date",
-                "name": "enddate"
-              },
-              {
-                "type": "number",
-                "name": "classType"
-              },
-              {
-                "type": "text",
-                "name": "startTimeDisplay"
-              },
-              {
-                "type": "number",
-                "name": "startTimeDecimal"
-              },
-              {
-                "type": "text",
-                "name": "endTimeDisplay"
-              },
-              {
-                "type": "number",
-                "name": "endTimeDecimal"
-              },
-              {
-                "type": "boolean",
-                "name": "isactive"
-              },
-              {
-                "type": "number",
-                "name": "max"
-              },
-              {
-                "type": "number",
-                "name": "instructorid"
-              },
-              {
-                "type": "number",
-                "name": "enrolcount"
-              },
-              {
-                "type": "number",
-                "name": "enrol_active"
-              },
-              {
-                "type": "number",
-                "name": "enrol_makeup"
-              },
-              {
-                "type": "number",
-                "name": "enrol_trial"
-              },
-              {
-                "type": "number",
-                "name": "enrol_waitlist"
-              },
-              {
-                "type": "number",
-                "name": "enrol_casual"
-              },
-              {
-                "type": "number",
-                "name": "slots_avail"
-              }
-            ]
-          }
-        ],
-        "outputType": "object",
-        "type": "dbconnector_paged_select"
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
       },
       {
-        "name": "page",
+        "name": "",
         "module": "core",
-        "action": "setvalue",
+        "action": "condition",
         "options": {
-          "value": {
-            "limit": "{{classdump.limit}}",
-            "total": "{{classdump.total}}",
-            "offset": "{{classdump.offset}}",
-            "page": "{{classdump.page}}"
-          }
-        },
-        "meta": [],
-        "outputType": "text",
-        "output": true
-      },
-      {
-        "name": "rp_enrols",
-        "module": "core",
-        "action": "repeat",
-        "options": {
-          "repeat": "{{classdump.data}}",
-          "outputFields": [
-            "id",
-            "day_name",
-            "day_int",
-            "classLevel",
-            "startdate",
-            "enddate",
-            "classType",
-            "startTimeDisplay",
-            "startTimeDecimal",
-            "endTimeDisplay",
-            "endTimeDecimal",
-            "max",
-            "instructor_firstname",
-            "instructor_lastname",
-            "instructorid",
-            "enrolcount",
-            "enrol_active",
-            "enrol_makeup",
-            "enrol_trial",
-            "enrol_waitlist",
-            "enrol_casual",
-            "slots_avail"
-          ],
-          "exec": {
+          "if": "{{$_GET.viewtype === 'list'}}",
+          "then": {
             "steps": [
               {
-                "name": "active_enrols",
+                "name": "classdump",
                 "module": "dbconnector",
-                "action": "select",
+                "action": "paged",
                 "options": {
                   "connection": "db",
                   "sql": {
                     "type": "SELECT",
-                    "columns": [
-                      {
-                        "table": "enrolments",
-                        "column": "*"
-                      },
-                      {
-                        "table": "students",
-                        "column": "firstName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "lastName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "dob"
-                      },
-                      {
-                        "table": "students",
-                        "column": "family"
-                      },
-                      {
-                        "table": "students",
-                        "column": "age"
-                      }
-                    ],
+                    "columns": [],
                     "table": {
-                      "name": "enrolments"
+                      "name": "allClasses_detail",
+                      "alias": "acd"
                     },
-                    "joins": [
+                    "joins": [],
+                    "query": "SELECT *\nFROM allClasses_detail AS acd\nWHERE (day_int IN ({{$_GET.filter_days.split(',')}})) AND (classLevel IN ({{$_GET.filter_levels.split(',')}})) AND (instructorid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day_int ASC, startTimeDecimal ASC",
+                    "params": [],
+                    "orders": [
                       {
-                        "table": "students",
-                        "column": "*",
-                        "type": "INNER",
-                        "clauses": {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "table": "students",
-                              "column": "id",
-                              "operator": "equal",
-                              "value": {
-                                "table": "enrolments",
-                                "column": "student"
-                              },
-                              "operation": "="
-                            }
-                          ]
-                        }
+                        "table": "acd",
+                        "column": "day_int",
+                        "direction": "ASC",
+                        "recid": 1
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startTimeDecimal",
+                        "direction": "ASC",
+                        "recid": 2
                       }
                     ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "enrolments.classId",
-                          "field": "enrolments.classId",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": "{{id}}",
-                          "data": {
-                            "table": "enrolments",
-                            "column": "classId",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.enrolmentType",
-                          "field": "enrolments.enrolmentType",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": 1,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "enrolmentType",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "condition": "OR",
-                          "rules": [
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "greater_or_equal",
-                              "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": ">="
-                            },
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "is_null",
-                              "value": null,
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": "IS NULL"
-                            }
-                          ],
-                          "conditional": null
-                        },
-                        {
-                          "id": "enrolments.isValid",
-                          "field": "enrolments.isValid",
-                          "type": "boolean",
-                          "operator": "equal",
-                          "value": true,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "isValid",
-                            "type": "boolean"
-                          },
-                          "operation": "="
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 1 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL) AND enrolments.isValid = true",
-                    "params": [
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{id}}"
-                      },
-                      {
-                        "operator": "greater_or_equal",
-                        "type": "expression",
-                        "name": ":P2",
-                        "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
-                      }
-                    ],
-                    "orders": []
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolmentType"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dropDate"
-                  },
-                  {
-                    "type": "boolean",
-                    "name": "isValid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "student"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startDate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classId"
-                  },
-                  {
-                    "type": "text",
-                    "name": "dropReason"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
-                  }
-                ],
-                "outputType": "array"
-              },
-              {
-                "name": "trial_enrols",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [
-                      {
-                        "table": "enrolments",
-                        "column": "*"
-                      },
-                      {
-                        "table": "students",
-                        "column": "firstName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "lastName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "dob"
-                      },
-                      {
-                        "table": "students",
-                        "column": "family"
-                      },
-                      {
-                        "table": "students",
-                        "column": "age"
-                      }
-                    ],
-                    "table": {
-                      "name": "enrolments"
-                    },
-                    "joins": [
-                      {
-                        "table": "students",
-                        "column": "*",
-                        "type": "INNER",
-                        "clauses": {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "table": "students",
-                              "column": "id",
-                              "operator": "equal",
-                              "value": {
-                                "table": "enrolments",
-                                "column": "student"
-                              },
-                              "operation": "="
-                            }
-                          ]
-                        }
-                      }
-                    ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "enrolments.isValid",
-                          "field": "enrolments.isValid",
-                          "type": "boolean",
-                          "operator": "equal",
-                          "value": true,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "isValid",
-                            "type": "boolean"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.classId",
-                          "field": "enrolments.classId",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": "{{id}}",
-                          "data": {
-                            "table": "enrolments",
-                            "column": "classId",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.enrolmentType",
-                          "field": "enrolments.enrolmentType",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": 3,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "enrolmentType",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "condition": "OR",
-                          "rules": [
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "greater_or_equal",
-                              "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": ">="
-                            },
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "is_null",
-                              "value": null,
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": "IS NULL"
-                            }
-                          ],
-                          "conditional": null
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 3 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
-                    "params": [
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{id}}"
-                      },
-                      {
-                        "operator": "greater_or_equal",
-                        "type": "expression",
-                        "name": ":P2",
-                        "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
-                      }
-                    ],
-                    "orders": []
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolmentType"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dropDate"
-                  },
-                  {
-                    "type": "boolean",
-                    "name": "isValid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "student"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startDate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classId"
-                  },
-                  {
-                    "type": "text",
-                    "name": "dropReason"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
-                  }
-                ],
-                "outputType": "array"
-              },
-              {
-                "name": "makeup_enrols",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [
-                      {
-                        "table": "enrolments",
-                        "column": "*"
-                      },
-                      {
-                        "table": "students",
-                        "column": "firstName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "lastName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "dob"
-                      },
-                      {
-                        "table": "students",
-                        "column": "family"
-                      },
-                      {
-                        "table": "students",
-                        "column": "age"
-                      }
-                    ],
-                    "table": {
-                      "name": "enrolments"
-                    },
-                    "joins": [
-                      {
-                        "table": "students",
-                        "column": "*",
-                        "type": "INNER",
-                        "clauses": {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "table": "students",
-                              "column": "id",
-                              "operator": "equal",
-                              "value": {
-                                "table": "enrolments",
-                                "column": "student"
-                              },
-                              "operation": "="
-                            }
-                          ]
-                        }
-                      }
-                    ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "enrolments.isValid",
-                          "field": "enrolments.isValid",
-                          "type": "boolean",
-                          "operator": "equal",
-                          "value": true,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "isValid",
-                            "type": "boolean"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.classId",
-                          "field": "enrolments.classId",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": "{{id}}",
-                          "data": {
-                            "table": "enrolments",
-                            "column": "classId",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.enrolmentType",
-                          "field": "enrolments.enrolmentType",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": 2,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "enrolmentType",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "condition": "OR",
-                          "rules": [
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "greater_or_equal",
-                              "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": ">="
-                            },
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "is_null",
-                              "value": null,
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": "IS NULL"
-                            }
-                          ],
-                          "conditional": null
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 2 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
-                    "params": [
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{id}}"
-                      },
-                      {
-                        "operator": "greater_or_equal",
-                        "type": "expression",
-                        "name": ":P2",
-                        "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
-                      }
-                    ],
-                    "orders": []
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolmentType"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dropDate"
-                  },
-                  {
-                    "type": "boolean",
-                    "name": "isValid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "student"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startDate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classId"
-                  },
-                  {
-                    "type": "text",
-                    "name": "dropReason"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
-                  }
-                ],
-                "outputType": "array"
-              },
-              {
-                "name": "casual_enrols",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [
-                      {
-                        "table": "enrolments",
-                        "column": "*"
-                      },
-                      {
-                        "table": "students",
-                        "column": "firstName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "lastName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "dob"
-                      },
-                      {
-                        "table": "students",
-                        "column": "family"
-                      },
-                      {
-                        "table": "students",
-                        "column": "age"
-                      }
-                    ],
-                    "table": {
-                      "name": "enrolments"
-                    },
-                    "joins": [
-                      {
-                        "table": "students",
-                        "column": "*",
-                        "type": "INNER",
-                        "clauses": {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "table": "students",
-                              "column": "id",
-                              "operator": "equal",
-                              "value": {
-                                "table": "enrolments",
-                                "column": "student"
-                              },
-                              "operation": "="
-                            }
-                          ]
-                        }
-                      }
-                    ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "enrolments.isValid",
-                          "field": "enrolments.isValid",
-                          "type": "boolean",
-                          "operator": "equal",
-                          "value": true,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "isValid",
-                            "type": "boolean"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.classId",
-                          "field": "enrolments.classId",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": "{{id}}",
-                          "data": {
-                            "table": "enrolments",
-                            "column": "classId",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "id": "enrolments.enrolmentType",
-                          "field": "enrolments.enrolmentType",
-                          "type": "double",
-                          "operator": "equal",
-                          "value": 5,
-                          "data": {
-                            "table": "enrolments",
-                            "column": "enrolmentType",
-                            "type": "number"
-                          },
-                          "operation": "="
-                        },
-                        {
-                          "condition": "OR",
-                          "rules": [
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "greater_or_equal",
-                              "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": ">="
-                            },
-                            {
-                              "id": "enrolments.dropDate",
-                              "field": "enrolments.dropDate",
-                              "type": "date",
-                              "operator": "is_null",
-                              "value": null,
-                              "data": {
-                                "table": "enrolments",
-                                "column": "dropDate",
-                                "type": "date"
-                              },
-                              "operation": "IS NULL"
-                            }
-                          ],
-                          "conditional": null
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 5 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
-                    "params": [
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{id}}"
-                      },
-                      {
-                        "operator": "greater_or_equal",
-                        "type": "expression",
-                        "name": ":P2",
-                        "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
-                      }
-                    ],
-                    "orders": []
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolmentType"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dropDate"
-                  },
-                  {
-                    "type": "boolean",
-                    "name": "isValid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "student"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startDate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classId"
-                  },
-                  {
-                    "type": "text",
-                    "name": "dropReason"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
-                  }
-                ],
-                "outputType": "array"
-              },
-              {
-                "name": "wait_enrols",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [
-                      {
-                        "table": "waitlists",
-                        "column": "*"
-                      },
-                      {
-                        "table": "students",
-                        "column": "firstName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "lastName"
-                      },
-                      {
-                        "table": "students",
-                        "column": "dob"
-                      },
-                      {
-                        "table": "students",
-                        "column": "family"
-                      },
-                      {
-                        "table": "students",
-                        "column": "age"
-                      }
-                    ],
-                    "table": {
-                      "name": "waitlists"
-                    },
-                    "joins": [
-                      {
-                        "table": "students",
-                        "column": "*",
-                        "type": "INNER",
-                        "clauses": {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "table": "students",
-                              "column": "id",
-                              "operator": "equal",
-                              "value": {
-                                "table": "waitlists",
-                                "column": "studentid"
-                              },
-                              "operation": "="
-                            }
-                          ]
-                        }
-                      }
-                    ],
-                    "query": "SELECT waitlists.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM waitlists\nINNER JOIN students ON (students.id = waitlists.studentid)\nWHERE (waitlists.endtimedec >= :P1 /* {{endTimeDecimal}} */ AND waitlists.starttimedec <= :P2 /* {{startTimeDecimal}} */ AND waitlists.dayint = :P3 /* {{day_int}} */ AND (waitlists.instructor = :P4 /* {{instructorid}} */ OR waitlists.instructor IS NULL) AND waitlists.fulfil_date IS NULL AND (waitlists.classlevel = :P5 /* {{classLevel}} */ OR waitlists.classlevel IS NULL))",
-                    "params": [
-                      {
-                        "operator": "greater_or_equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{endTimeDecimal}}"
-                      },
-                      {
-                        "operator": "less_or_equal",
-                        "type": "expression",
-                        "name": ":P2",
-                        "value": "{{startTimeDecimal}}"
-                      },
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P3",
-                        "value": "{{day_int}}"
-                      },
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P4",
-                        "value": "{{instructorid}}"
-                      },
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P5",
-                        "value": "{{classLevel}}"
-                      }
-                    ],
-                    "orders": [],
                     "wheres": {
                       "condition": "AND",
                       "rules": [
@@ -1230,123 +128,77 @@
                           "condition": "AND",
                           "rules": [
                             {
-                              "id": "waitlists.endtimedec",
-                              "field": "waitlists.endtimedec",
+                              "id": "acd.day_int",
+                              "field": "acd.day_int",
                               "type": "double",
-                              "operator": "greater_or_equal",
-                              "value": "{{endTimeDecimal}}",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_days.split(',')}}",
                               "data": {
-                                "table": "waitlists",
-                                "column": "endtimedec",
+                                "table": "acd",
+                                "column": "day_int",
                                 "type": "number"
                               },
-                              "operation": ">="
-                            },
-                            {
-                              "id": "waitlists.starttimedec",
-                              "field": "waitlists.starttimedec",
-                              "type": "double",
-                              "operator": "less_or_equal",
-                              "value": "{{startTimeDecimal}}",
-                              "data": {
-                                "table": "waitlists",
-                                "column": "starttimedec",
-                                "type": "number"
-                              },
-                              "operation": "<="
-                            },
-                            {
-                              "id": "waitlists.dayint",
-                              "field": "waitlists.dayint",
-                              "type": "double",
-                              "operator": "equal",
-                              "value": "{{day_int}}",
-                              "data": {
-                                "table": "waitlists",
-                                "column": "dayint",
-                                "type": "number"
-                              },
-                              "operation": "="
-                            },
-                            {
-                              "condition": "OR",
-                              "rules": [
-                                {
-                                  "id": "waitlists.instructor",
-                                  "field": "waitlists.instructor",
-                                  "type": "double",
-                                  "operator": "equal",
-                                  "value": "{{instructorid}}",
-                                  "data": {
-                                    "table": "waitlists",
-                                    "column": "instructor",
-                                    "type": "number"
-                                  },
-                                  "operation": "="
-                                },
-                                {
-                                  "id": "waitlists.instructor",
-                                  "field": "waitlists.instructor",
-                                  "type": "double",
-                                  "operator": "is_null",
-                                  "value": null,
-                                  "data": {
-                                    "table": "waitlists",
-                                    "column": "instructor",
-                                    "type": "number"
-                                  },
-                                  "operation": "IS NULL"
-                                }
-                              ],
-                              "conditional": null
-                            },
-                            {
-                              "id": "waitlists.fulfil_date",
-                              "field": "waitlists.fulfil_date",
-                              "type": "date",
-                              "operator": "is_null",
-                              "value": null,
-                              "data": {
-                                "table": "waitlists",
-                                "column": "fulfil_date",
-                                "type": "date"
-                              },
-                              "operation": "IS NULL"
-                            },
-                            {
-                              "condition": "OR",
-                              "rules": [
-                                {
-                                  "id": "waitlists.classlevel",
-                                  "field": "waitlists.classlevel",
-                                  "type": "double",
-                                  "operator": "equal",
-                                  "value": "{{classLevel}}",
-                                  "data": {
-                                    "table": "waitlists",
-                                    "column": "classlevel",
-                                    "type": "number"
-                                  },
-                                  "operation": "="
-                                },
-                                {
-                                  "id": "waitlists.classlevel",
-                                  "field": "waitlists.classlevel",
-                                  "type": "double",
-                                  "operator": "is_null",
-                                  "value": null,
-                                  "data": {
-                                    "table": "waitlists",
-                                    "column": "classlevel",
-                                    "type": "number"
-                                  },
-                                  "operation": "IS NULL"
-                                }
-                              ],
-                              "conditional": null
+                              "operation": "IN"
                             }
                           ],
-                          "conditional": null
+                          "conditional": "{{$_GET.filter_days}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.classLevel",
+                              "field": "acd.classLevel",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_levels.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "classLevel",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_levels}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.instructorid",
+                              "field": "acd.instructorid",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_instructors.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "instructorid",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_instructors}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.startTimeDecimal",
+                              "field": "acd.startTimeDecimal",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_times.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "startTimeDecimal",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_times}}"
                         }
                       ],
                       "conditional": null,
@@ -1357,103 +209,2034 @@
                 "output": true,
                 "meta": [
                   {
-                    "type": "number",
-                    "name": "id"
+                    "name": "offset",
+                    "type": "number"
                   },
                   {
-                    "type": "number",
-                    "name": "studentid"
+                    "name": "limit",
+                    "type": "number"
                   },
                   {
-                    "type": "date",
-                    "name": "request_date"
+                    "name": "total",
+                    "type": "number"
                   },
                   {
-                    "type": "date",
-                    "name": "fulfil_date"
+                    "name": "page",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "offset",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "first",
+                            "type": "number"
+                          },
+                          {
+                            "name": "prev",
+                            "type": "number"
+                          },
+                          {
+                            "name": "next",
+                            "type": "number"
+                          },
+                          {
+                            "name": "last",
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "current",
+                        "type": "number"
+                      },
+                      {
+                        "name": "total",
+                        "type": "number"
+                      }
+                    ]
                   },
                   {
-                    "type": "number",
-                    "name": "classlevel"
-                  },
-                  {
-                    "type": "number",
-                    "name": "starttimedec"
-                  },
-                  {
-                    "type": "number",
-                    "name": "endtimedec"
-                  },
-                  {
-                    "type": "number",
-                    "name": "dayint"
-                  },
-                  {
-                    "type": "number",
-                    "name": "instructor"
-                  },
-                  {
-                    "type": "text",
-                    "name": "notes"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
+                    "name": "data",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classLevel"
+                      },
+                      {
+                        "type": "text",
+                        "name": "day_name"
+                      },
+                      {
+                        "type": "number",
+                        "name": "day_int"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startdate"
+                      },
+                      {
+                        "type": "date",
+                        "name": "enddate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classType"
+                      },
+                      {
+                        "type": "text",
+                        "name": "startTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "startTimeDecimal"
+                      },
+                      {
+                        "type": "text",
+                        "name": "endTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "endTimeDecimal"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isactive"
+                      },
+                      {
+                        "type": "number",
+                        "name": "max"
+                      },
+                      {
+                        "type": "number",
+                        "name": "instructorid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolcount"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_active"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_makeup"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_trial"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_waitlist"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_casual"
+                      },
+                      {
+                        "type": "number",
+                        "name": "slots_avail"
+                      }
+                    ]
                   }
                 ],
-                "outputType": "array"
+                "outputType": "object",
+                "type": "dbconnector_paged_select"
               },
               {
-                "name": "startdate",
+                "name": "classdump_copy",
+                "module": "dbconnector",
+                "action": "paged",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "allClasses_detail",
+                      "alias": "acd"
+                    },
+                    "joins": [],
+                    "query": "SELECT *\nFROM allClasses_detail AS acd\nWHERE (day_int IN ({{$_GET.filter_days.split(',')}})) AND (classLevel IN ({{$_GET.filter_levels.split(',')}})) AND (instructorid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day_int ASC, startTimeDecimal ASC",
+                    "params": [],
+                    "orders": [
+                      {
+                        "table": "acd",
+                        "column": "day_int",
+                        "direction": "ASC",
+                        "recid": 1
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startTimeDecimal",
+                        "direction": "ASC",
+                        "recid": 2
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.day_int",
+                              "field": "acd.day_int",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_days.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "day_int",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_days}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.classLevel",
+                              "field": "acd.classLevel",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_levels.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "classLevel",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_levels}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.instructorid",
+                              "field": "acd.instructorid",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_instructors.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "instructorid",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_instructors}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.startTimeDecimal",
+                              "field": "acd.startTimeDecimal",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_times.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "startTimeDecimal",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_times}}"
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    }
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "offset",
+                    "type": "number"
+                  },
+                  {
+                    "name": "limit",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  },
+                  {
+                    "name": "page",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "offset",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "first",
+                            "type": "number"
+                          },
+                          {
+                            "name": "prev",
+                            "type": "number"
+                          },
+                          {
+                            "name": "next",
+                            "type": "number"
+                          },
+                          {
+                            "name": "last",
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "current",
+                        "type": "number"
+                      },
+                      {
+                        "name": "total",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "data",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classLevel"
+                      },
+                      {
+                        "type": "text",
+                        "name": "day_name"
+                      },
+                      {
+                        "type": "number",
+                        "name": "day_int"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startdate"
+                      },
+                      {
+                        "type": "date",
+                        "name": "enddate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classType"
+                      },
+                      {
+                        "type": "text",
+                        "name": "startTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "startTimeDecimal"
+                      },
+                      {
+                        "type": "text",
+                        "name": "endTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "endTimeDecimal"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isactive"
+                      },
+                      {
+                        "type": "number",
+                        "name": "max"
+                      },
+                      {
+                        "type": "number",
+                        "name": "instructorid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolcount"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_active"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_makeup"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_trial"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_waitlist"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrol_casual"
+                      },
+                      {
+                        "type": "number",
+                        "name": "slots_avail"
+                      }
+                    ]
+                  }
+                ],
+                "outputType": "object",
+                "type": "dbconnector_paged_select",
+                "disabled": true
+              },
+              {
+                "name": "page",
                 "module": "core",
                 "action": "setvalue",
                 "options": {
-                  "key": "startdate",
-                  "value": "{{$_GET.startdate}}"
+                  "value": {
+                    "limit": "{{classdump.limit}}",
+                    "total": "{{classdump.total}}",
+                    "offset": "{{classdump.offset}}",
+                    "page": "{{classdump.page}}"
+                  }
                 },
                 "meta": [],
-                "outputType": "text"
+                "outputType": "text",
+                "output": true
               },
               {
-                "name": "enddate",
+                "name": "rp_enrols",
                 "module": "core",
-                "action": "setvalue",
+                "action": "repeat",
                 "options": {
-                  "key": "enddate",
-                  "value": "{{$_GET.enddate}}"
+                  "repeat": "{{classdump.data}}",
+                  "outputFields": [
+                    "id",
+                    "day_name",
+                    "day_int",
+                    "classLevel",
+                    "startdate",
+                    "enddate",
+                    "classType",
+                    "startTimeDisplay",
+                    "startTimeDecimal",
+                    "endTimeDisplay",
+                    "endTimeDecimal",
+                    "max",
+                    "instructor_firstname",
+                    "instructor_lastname",
+                    "instructorid",
+                    "enrolcount",
+                    "enrol_active",
+                    "enrol_makeup",
+                    "enrol_trial",
+                    "enrol_waitlist",
+                    "enrol_casual",
+                    "slots_avail"
+                  ],
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "active_enrols",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "enrolments",
+                                "column": "*"
+                              },
+                              {
+                                "table": "students",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "dob"
+                              },
+                              {
+                                "table": "students",
+                                "column": "family"
+                              },
+                              {
+                                "table": "students",
+                                "column": "age"
+                              }
+                            ],
+                            "table": {
+                              "name": "enrolments"
+                            },
+                            "joins": [
+                              {
+                                "table": "students",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "students",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "enrolments",
+                                        "column": "student"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "enrolments.classId",
+                                  "field": "enrolments.classId",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{id}}",
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "classId",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.enrolmentType",
+                                  "field": "enrolments.enrolmentType",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": 1,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "enrolmentType",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "condition": "OR",
+                                  "rules": [
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": ">="
+                                    },
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    }
+                                  ],
+                                  "conditional": null
+                                },
+                                {
+                                  "id": "enrolments.isValid",
+                                  "field": "enrolments.isValid",
+                                  "type": "boolean",
+                                  "operator": "equal",
+                                  "value": true,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "isValid",
+                                    "type": "boolean"
+                                  },
+                                  "operation": "="
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 1 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL) AND enrolments.isValid = true",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{id}}"
+                              },
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
+                              }
+                            ],
+                            "orders": []
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrolmentType"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dropDate"
+                          },
+                          {
+                            "type": "boolean",
+                            "name": "isValid"
+                          },
+                          {
+                            "type": "number",
+                            "name": "student"
+                          },
+                          {
+                            "type": "date",
+                            "name": "startDate"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classId"
+                          },
+                          {
+                            "type": "text",
+                            "name": "dropReason"
+                          },
+                          {
+                            "type": "text",
+                            "name": "firstName"
+                          },
+                          {
+                            "type": "text",
+                            "name": "lastName"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dob"
+                          },
+                          {
+                            "type": "number",
+                            "name": "family"
+                          },
+                          {
+                            "type": "text",
+                            "name": "age"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "trial_enrols",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "enrolments",
+                                "column": "*"
+                              },
+                              {
+                                "table": "students",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "dob"
+                              },
+                              {
+                                "table": "students",
+                                "column": "family"
+                              },
+                              {
+                                "table": "students",
+                                "column": "age"
+                              }
+                            ],
+                            "table": {
+                              "name": "enrolments"
+                            },
+                            "joins": [
+                              {
+                                "table": "students",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "students",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "enrolments",
+                                        "column": "student"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "enrolments.isValid",
+                                  "field": "enrolments.isValid",
+                                  "type": "boolean",
+                                  "operator": "equal",
+                                  "value": true,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "isValid",
+                                    "type": "boolean"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.classId",
+                                  "field": "enrolments.classId",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{id}}",
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "classId",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.enrolmentType",
+                                  "field": "enrolments.enrolmentType",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": 3,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "enrolmentType",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "condition": "OR",
+                                  "rules": [
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": ">="
+                                    },
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    }
+                                  ],
+                                  "conditional": null
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 3 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{id}}"
+                              },
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
+                              }
+                            ],
+                            "orders": []
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrolmentType"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dropDate"
+                          },
+                          {
+                            "type": "boolean",
+                            "name": "isValid"
+                          },
+                          {
+                            "type": "number",
+                            "name": "student"
+                          },
+                          {
+                            "type": "date",
+                            "name": "startDate"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classId"
+                          },
+                          {
+                            "type": "text",
+                            "name": "dropReason"
+                          },
+                          {
+                            "type": "text",
+                            "name": "firstName"
+                          },
+                          {
+                            "type": "text",
+                            "name": "lastName"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dob"
+                          },
+                          {
+                            "type": "number",
+                            "name": "family"
+                          },
+                          {
+                            "type": "text",
+                            "name": "age"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "makeup_enrols",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "enrolments",
+                                "column": "*"
+                              },
+                              {
+                                "table": "students",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "dob"
+                              },
+                              {
+                                "table": "students",
+                                "column": "family"
+                              },
+                              {
+                                "table": "students",
+                                "column": "age"
+                              }
+                            ],
+                            "table": {
+                              "name": "enrolments"
+                            },
+                            "joins": [
+                              {
+                                "table": "students",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "students",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "enrolments",
+                                        "column": "student"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "enrolments.isValid",
+                                  "field": "enrolments.isValid",
+                                  "type": "boolean",
+                                  "operator": "equal",
+                                  "value": true,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "isValid",
+                                    "type": "boolean"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.classId",
+                                  "field": "enrolments.classId",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{id}}",
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "classId",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.enrolmentType",
+                                  "field": "enrolments.enrolmentType",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": 2,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "enrolmentType",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "condition": "OR",
+                                  "rules": [
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": ">="
+                                    },
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    }
+                                  ],
+                                  "conditional": null
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 2 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{id}}"
+                              },
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
+                              }
+                            ],
+                            "orders": []
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrolmentType"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dropDate"
+                          },
+                          {
+                            "type": "boolean",
+                            "name": "isValid"
+                          },
+                          {
+                            "type": "number",
+                            "name": "student"
+                          },
+                          {
+                            "type": "date",
+                            "name": "startDate"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classId"
+                          },
+                          {
+                            "type": "text",
+                            "name": "dropReason"
+                          },
+                          {
+                            "type": "text",
+                            "name": "firstName"
+                          },
+                          {
+                            "type": "text",
+                            "name": "lastName"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dob"
+                          },
+                          {
+                            "type": "number",
+                            "name": "family"
+                          },
+                          {
+                            "type": "text",
+                            "name": "age"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "casual_enrols",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "enrolments",
+                                "column": "*"
+                              },
+                              {
+                                "table": "students",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "dob"
+                              },
+                              {
+                                "table": "students",
+                                "column": "family"
+                              },
+                              {
+                                "table": "students",
+                                "column": "age"
+                              }
+                            ],
+                            "table": {
+                              "name": "enrolments"
+                            },
+                            "joins": [
+                              {
+                                "table": "students",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "students",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "enrolments",
+                                        "column": "student"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "id": "enrolments.isValid",
+                                  "field": "enrolments.isValid",
+                                  "type": "boolean",
+                                  "operator": "equal",
+                                  "value": true,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "isValid",
+                                    "type": "boolean"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.classId",
+                                  "field": "enrolments.classId",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": "{{id}}",
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "classId",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "id": "enrolments.enrolmentType",
+                                  "field": "enrolments.enrolmentType",
+                                  "type": "double",
+                                  "operator": "equal",
+                                  "value": 5,
+                                  "data": {
+                                    "table": "enrolments",
+                                    "column": "enrolmentType",
+                                    "type": "number"
+                                  },
+                                  "operation": "="
+                                },
+                                {
+                                  "condition": "OR",
+                                  "rules": [
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": ">="
+                                    },
+                                    {
+                                      "id": "enrolments.dropDate",
+                                      "field": "enrolments.dropDate",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "enrolments",
+                                        "column": "dropDate",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    }
+                                  ],
+                                  "conditional": null
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            },
+                            "query": "SELECT enrolments.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM enrolments\nINNER JOIN students ON (students.id = enrolments.student)\nWHERE enrolments.isValid = true AND enrolments.classId = :P1 /* {{id}} */ AND enrolments.enrolmentType = 5 AND (enrolments.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR enrolments.dropDate IS NULL)",
+                            "params": [
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{id}}"
+                              },
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
+                              }
+                            ],
+                            "orders": []
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "enrolmentType"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dropDate"
+                          },
+                          {
+                            "type": "boolean",
+                            "name": "isValid"
+                          },
+                          {
+                            "type": "number",
+                            "name": "student"
+                          },
+                          {
+                            "type": "date",
+                            "name": "startDate"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classId"
+                          },
+                          {
+                            "type": "text",
+                            "name": "dropReason"
+                          },
+                          {
+                            "type": "text",
+                            "name": "firstName"
+                          },
+                          {
+                            "type": "text",
+                            "name": "lastName"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dob"
+                          },
+                          {
+                            "type": "number",
+                            "name": "family"
+                          },
+                          {
+                            "type": "text",
+                            "name": "age"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "wait_enrols",
+                        "module": "dbconnector",
+                        "action": "select",
+                        "options": {
+                          "connection": "db",
+                          "sql": {
+                            "type": "SELECT",
+                            "columns": [
+                              {
+                                "table": "waitlists",
+                                "column": "*"
+                              },
+                              {
+                                "table": "students",
+                                "column": "firstName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "lastName"
+                              },
+                              {
+                                "table": "students",
+                                "column": "dob"
+                              },
+                              {
+                                "table": "students",
+                                "column": "family"
+                              },
+                              {
+                                "table": "students",
+                                "column": "age"
+                              }
+                            ],
+                            "table": {
+                              "name": "waitlists"
+                            },
+                            "joins": [
+                              {
+                                "table": "students",
+                                "column": "*",
+                                "type": "INNER",
+                                "clauses": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "table": "students",
+                                      "column": "id",
+                                      "operator": "equal",
+                                      "value": {
+                                        "table": "waitlists",
+                                        "column": "studentid"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "query": "SELECT waitlists.*, students.firstName, students.lastName, students.dob, students.family, students.age\nFROM waitlists\nINNER JOIN students ON (students.id = waitlists.studentid)\nWHERE (waitlists.endtimedec >= :P1 /* {{endTimeDecimal}} */ AND waitlists.starttimedec <= :P2 /* {{startTimeDecimal}} */ AND waitlists.dayint = :P3 /* {{day_int}} */ AND (waitlists.instructor = :P4 /* {{instructorid}} */ OR waitlists.instructor IS NULL) AND waitlists.fulfil_date IS NULL AND (waitlists.classlevel = :P5 /* {{classLevel}} */ OR waitlists.classlevel IS NULL))",
+                            "params": [
+                              {
+                                "operator": "greater_or_equal",
+                                "type": "expression",
+                                "name": ":P1",
+                                "value": "{{endTimeDecimal}}"
+                              },
+                              {
+                                "operator": "less_or_equal",
+                                "type": "expression",
+                                "name": ":P2",
+                                "value": "{{startTimeDecimal}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P3",
+                                "value": "{{day_int}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P4",
+                                "value": "{{instructorid}}"
+                              },
+                              {
+                                "operator": "equal",
+                                "type": "expression",
+                                "name": ":P5",
+                                "value": "{{classLevel}}"
+                              }
+                            ],
+                            "orders": [],
+                            "wheres": {
+                              "condition": "AND",
+                              "rules": [
+                                {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "id": "waitlists.endtimedec",
+                                      "field": "waitlists.endtimedec",
+                                      "type": "double",
+                                      "operator": "greater_or_equal",
+                                      "value": "{{endTimeDecimal}}",
+                                      "data": {
+                                        "table": "waitlists",
+                                        "column": "endtimedec",
+                                        "type": "number"
+                                      },
+                                      "operation": ">="
+                                    },
+                                    {
+                                      "id": "waitlists.starttimedec",
+                                      "field": "waitlists.starttimedec",
+                                      "type": "double",
+                                      "operator": "less_or_equal",
+                                      "value": "{{startTimeDecimal}}",
+                                      "data": {
+                                        "table": "waitlists",
+                                        "column": "starttimedec",
+                                        "type": "number"
+                                      },
+                                      "operation": "<="
+                                    },
+                                    {
+                                      "id": "waitlists.dayint",
+                                      "field": "waitlists.dayint",
+                                      "type": "double",
+                                      "operator": "equal",
+                                      "value": "{{day_int}}",
+                                      "data": {
+                                        "table": "waitlists",
+                                        "column": "dayint",
+                                        "type": "number"
+                                      },
+                                      "operation": "="
+                                    },
+                                    {
+                                      "condition": "OR",
+                                      "rules": [
+                                        {
+                                          "id": "waitlists.instructor",
+                                          "field": "waitlists.instructor",
+                                          "type": "double",
+                                          "operator": "equal",
+                                          "value": "{{instructorid}}",
+                                          "data": {
+                                            "table": "waitlists",
+                                            "column": "instructor",
+                                            "type": "number"
+                                          },
+                                          "operation": "="
+                                        },
+                                        {
+                                          "id": "waitlists.instructor",
+                                          "field": "waitlists.instructor",
+                                          "type": "double",
+                                          "operator": "is_null",
+                                          "value": null,
+                                          "data": {
+                                            "table": "waitlists",
+                                            "column": "instructor",
+                                            "type": "number"
+                                          },
+                                          "operation": "IS NULL"
+                                        }
+                                      ],
+                                      "conditional": null
+                                    },
+                                    {
+                                      "id": "waitlists.fulfil_date",
+                                      "field": "waitlists.fulfil_date",
+                                      "type": "date",
+                                      "operator": "is_null",
+                                      "value": null,
+                                      "data": {
+                                        "table": "waitlists",
+                                        "column": "fulfil_date",
+                                        "type": "date"
+                                      },
+                                      "operation": "IS NULL"
+                                    },
+                                    {
+                                      "condition": "OR",
+                                      "rules": [
+                                        {
+                                          "id": "waitlists.classlevel",
+                                          "field": "waitlists.classlevel",
+                                          "type": "double",
+                                          "operator": "equal",
+                                          "value": "{{classLevel}}",
+                                          "data": {
+                                            "table": "waitlists",
+                                            "column": "classlevel",
+                                            "type": "number"
+                                          },
+                                          "operation": "="
+                                        },
+                                        {
+                                          "id": "waitlists.classlevel",
+                                          "field": "waitlists.classlevel",
+                                          "type": "double",
+                                          "operator": "is_null",
+                                          "value": null,
+                                          "data": {
+                                            "table": "waitlists",
+                                            "column": "classlevel",
+                                            "type": "number"
+                                          },
+                                          "operation": "IS NULL"
+                                        }
+                                      ],
+                                      "conditional": null
+                                    }
+                                  ],
+                                  "conditional": null
+                                }
+                              ],
+                              "conditional": null,
+                              "valid": true
+                            }
+                          }
+                        },
+                        "output": true,
+                        "meta": [
+                          {
+                            "type": "number",
+                            "name": "id"
+                          },
+                          {
+                            "type": "number",
+                            "name": "studentid"
+                          },
+                          {
+                            "type": "date",
+                            "name": "request_date"
+                          },
+                          {
+                            "type": "date",
+                            "name": "fulfil_date"
+                          },
+                          {
+                            "type": "number",
+                            "name": "classlevel"
+                          },
+                          {
+                            "type": "number",
+                            "name": "starttimedec"
+                          },
+                          {
+                            "type": "number",
+                            "name": "endtimedec"
+                          },
+                          {
+                            "type": "number",
+                            "name": "dayint"
+                          },
+                          {
+                            "type": "number",
+                            "name": "instructor"
+                          },
+                          {
+                            "type": "text",
+                            "name": "notes"
+                          },
+                          {
+                            "type": "text",
+                            "name": "firstName"
+                          },
+                          {
+                            "type": "text",
+                            "name": "lastName"
+                          },
+                          {
+                            "type": "date",
+                            "name": "dob"
+                          },
+                          {
+                            "type": "number",
+                            "name": "family"
+                          },
+                          {
+                            "type": "text",
+                            "name": "age"
+                          }
+                        ],
+                        "outputType": "array"
+                      },
+                      {
+                        "name": "startdate",
+                        "module": "core",
+                        "action": "setvalue",
+                        "options": {
+                          "key": "startdate",
+                          "value": "{{$_GET.startdate}}"
+                        },
+                        "meta": [],
+                        "outputType": "text"
+                      },
+                      {
+                        "name": "enddate",
+                        "module": "core",
+                        "action": "setvalue",
+                        "options": {
+                          "key": "enddate",
+                          "value": "{{$_GET.enddate}}"
+                        },
+                        "meta": [],
+                        "outputType": "text"
+                      },
+                      {
+                        "name": "weekdate",
+                        "module": "core",
+                        "action": "setvalue",
+                        "options": {
+                          "key": "weekdate",
+                          "value": "{{$_GET.startdate.dateAdd('days', day_int - 1).formatDate('yyyy-MM-dd')}}"
+                        },
+                        "meta": [],
+                        "outputType": "text"
+                      }
+                    ]
+                  }
                 },
-                "meta": [],
-                "outputType": "text"
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classLevel",
+                    "type": "number"
+                  },
+                  {
+                    "name": "day_name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "day_int",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startdate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "enddate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "isactive",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "max",
+                    "type": "number"
+                  },
+                  {
+                    "name": "instructorid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolcount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrol_active",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrol_makeup",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrol_trial",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrol_waitlist",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrol_casual",
+                    "type": "number"
+                  },
+                  {
+                    "name": "slots_avail",
+                    "type": "number"
+                  },
+                  {
+                    "name": "active_enrols",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolmentType"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dropDate"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isValid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "student"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startDate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classId"
+                      },
+                      {
+                        "type": "text",
+                        "name": "dropReason"
+                      },
+                      {
+                        "type": "text",
+                        "name": "firstName"
+                      },
+                      {
+                        "type": "text",
+                        "name": "lastName"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dob"
+                      },
+                      {
+                        "type": "number",
+                        "name": "family"
+                      },
+                      {
+                        "type": "text",
+                        "name": "age"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "trial_enrols",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolmentType"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dropDate"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isValid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "student"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startDate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classId"
+                      },
+                      {
+                        "type": "text",
+                        "name": "dropReason"
+                      },
+                      {
+                        "type": "text",
+                        "name": "firstName"
+                      },
+                      {
+                        "type": "text",
+                        "name": "lastName"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dob"
+                      },
+                      {
+                        "type": "number",
+                        "name": "family"
+                      },
+                      {
+                        "type": "text",
+                        "name": "age"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "makeup_enrols",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolmentType"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dropDate"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isValid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "student"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startDate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classId"
+                      },
+                      {
+                        "type": "text",
+                        "name": "dropReason"
+                      },
+                      {
+                        "type": "text",
+                        "name": "firstName"
+                      },
+                      {
+                        "type": "text",
+                        "name": "lastName"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dob"
+                      },
+                      {
+                        "type": "number",
+                        "name": "family"
+                      },
+                      {
+                        "type": "text",
+                        "name": "age"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "casual_enrols",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolmentType"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dropDate"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isValid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "student"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startDate"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classId"
+                      },
+                      {
+                        "type": "text",
+                        "name": "dropReason"
+                      },
+                      {
+                        "type": "text",
+                        "name": "firstName"
+                      },
+                      {
+                        "type": "text",
+                        "name": "lastName"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dob"
+                      },
+                      {
+                        "type": "number",
+                        "name": "family"
+                      },
+                      {
+                        "type": "text",
+                        "name": "age"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "wait_enrols",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "studentid"
+                      },
+                      {
+                        "type": "date",
+                        "name": "request_date"
+                      },
+                      {
+                        "type": "date",
+                        "name": "fulfil_date"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classlevel"
+                      },
+                      {
+                        "type": "number",
+                        "name": "starttimedec"
+                      },
+                      {
+                        "type": "number",
+                        "name": "endtimedec"
+                      },
+                      {
+                        "type": "number",
+                        "name": "dayint"
+                      },
+                      {
+                        "type": "number",
+                        "name": "instructor"
+                      },
+                      {
+                        "type": "text",
+                        "name": "notes"
+                      },
+                      {
+                        "type": "text",
+                        "name": "firstName"
+                      },
+                      {
+                        "type": "text",
+                        "name": "lastName"
+                      },
+                      {
+                        "type": "date",
+                        "name": "dob"
+                      },
+                      {
+                        "type": "number",
+                        "name": "family"
+                      },
+                      {
+                        "type": "text",
+                        "name": "age"
+                      }
+                    ]
+                  }
+                ],
+                "outputType": "array",
+                "disabled": true
               },
               {
-                "name": "weekdate",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "key": "weekdate",
-                  "value": "{{$_GET.startdate.dateAdd('days', day_int - 1)}}"
-                },
-                "meta": [],
-                "outputType": "text"
-              },
-              {
-                "name": "nextavail",
+                "name": "processedclasses",
                 "module": "classAvail",
                 "action": "classAvail",
                 "options": {
@@ -1461,8 +2244,13 @@
                   "startdate": "{{$_GET.startdate}}",
                   "enddate": "{{$_GET.enddate}}",
                   "maxweeks": "{{$_GET.checkavail_max}}",
-                  "classid": "{{id}}",
-                  "makeup_max_days": "{{$_GET.makeup_max_book_days}}"
+                  "classid": "",
+                  "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
+                  "datatype": "list",
+                  "data_type": "calendar",
+                  "avail_type": "{{$_GET.avails_type}}",
+                  "avail_amount": "{{$_GET.avails_amount}}",
+                  "classdump": "{{classdump.data}}"
                 },
                 "meta": [
                   {
@@ -1471,452 +2259,404 @@
                   }
                 ],
                 "output": true
+              },
+              {
+                "name": "nextavail_copy",
+                "module": "classAvail",
+                "action": "classAvail",
+                "options": {
+                  "weekdate": "{{weekdate}}",
+                  "startdate": "{{$_GET.startdate}}",
+                  "enddate": "{{$_GET.enddate}}",
+                  "maxweeks": "{{$_GET.checkavail_max}}",
+                  "classid": "{{id}}",
+                  "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
+                  "datatype": "list",
+                  "data_type": "calendar",
+                  "avail_type": "{{$_GET.avails_type}}",
+                  "avail_amount": "{{$_GET.avails_amount}}",
+                  "classdump": "{{rp_enrols}}"
+                },
+                "meta": [
+                  {
+                    "name": "dates",
+                    "type": "array"
+                  }
+                ],
+                "output": true,
+                "disabled": true
+              },
+              {
+                "name": "enrolmentTypes",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "enrolmentTypes"
+                    },
+                    "joins": [],
+                    "query": "SELECT *\nFROM enrolmentTypes",
+                    "params": []
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "text",
+                    "name": "type"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          },
+          "else": {
+            "steps": [
+              {
+                "name": "classdump",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "acd",
+                        "column": "id"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "classLevel"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "day_name"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "day_int"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startdate"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enddate"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "classType"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startTimeDisplay"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startTimeDecimal"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "endTimeDisplay"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "endTimeDecimal"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "isactive"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "max"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "instructorid"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrolcount"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrol_active"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrol_makeup"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrol_trial"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrol_waitlist"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "enrol_casual"
+                      },
+                      {
+                        "table": "acd",
+                        "column": "slots_avail"
+                      }
+                    ],
+                    "table": {
+                      "name": "allClasses_detail",
+                      "alias": "acd"
+                    },
+                    "joins": [],
+                    "query": "SELECT id, classLevel, day_name, day_int, startdate, enddate, classType, startTimeDisplay, startTimeDecimal, endTimeDisplay, endTimeDecimal, isactive, max, instructorid, enrolcount, enrol_active, enrol_makeup, enrol_trial, enrol_waitlist, enrol_casual, slots_avail\nFROM allClasses_detail AS acd\nWHERE (day_int IN ({{$_GET.filter_days.split(',')}})) AND (classLevel IN ({{$_GET.filter_levels.split(',')}})) AND (instructorid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day_int ASC, startTimeDecimal ASC",
+                    "params": [],
+                    "orders": [
+                      {
+                        "table": "acd",
+                        "column": "day_int",
+                        "direction": "ASC",
+                        "recid": 1
+                      },
+                      {
+                        "table": "acd",
+                        "column": "startTimeDecimal",
+                        "direction": "ASC",
+                        "recid": 2
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.day_int",
+                              "field": "acd.day_int",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_days.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "day_int",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_days}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.classLevel",
+                              "field": "acd.classLevel",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_levels.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "classLevel",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_levels}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.instructorid",
+                              "field": "acd.instructorid",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_instructors.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "instructorid",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_instructors}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "acd.startTimeDecimal",
+                              "field": "acd.startTimeDecimal",
+                              "type": "double",
+                              "operator": "in",
+                              "value": "{{$_GET.filter_times.split(',')}}",
+                              "data": {
+                                "table": "acd",
+                                "column": "startTimeDecimal",
+                                "type": "number"
+                              },
+                              "operation": "IN"
+                            }
+                          ],
+                          "conditional": "{{$_GET.filter_times}}"
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    }
+                  }
+                },
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classLevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "day_name"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day_int"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startdate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "enddate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classType"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isactive"
+                  },
+                  {
+                    "type": "number",
+                    "name": "max"
+                  },
+                  {
+                    "type": "number",
+                    "name": "instructorid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolcount"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_active"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_makeup"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_trial"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_waitlist"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrol_casual"
+                  },
+                  {
+                    "type": "number",
+                    "name": "slots_avail"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "nextavail",
+                "module": "classAvail",
+                "action": "classAvail",
+                "options": {
+                  "weekdate": "{{$_GET.startdate}}",
+                  "startdate": "{{$_GET.startdate}}",
+                  "enddate": "{{$_GET.enddate}}",
+                  "maxweeks": "{{$_GET.checkavail_max}}",
+                  "classid": "{{id}}",
+                  "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
+                  "datatype": "calendar",
+                  "classdump": "{{classdump}}",
+                  "data_type": "calendar",
+                  "avail_type": "{{$_GET.avails_type}}",
+                  "avail_amount": "{{$_GET.avails_amount}}"
+                },
+                "meta": [
+                  {
+                    "name": "dates",
+                    "type": "array"
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "calData",
+                "module": "classCalendarJSON",
+                "action": "classCalendarJSON",
+                "options": {
+                  "data": "{{nextavail.classes}}",
+                  "classtimes": "{{nextavail.timesarray}}",
+                  "day_filter": "{{$_GET.filter_days}}",
+                  "instructor_filter": "{{$_GET.filter_instructors}}",
+                  "time_filter": "{{$_GET.filter_times}}",
+                  "level_filter": "{{$_GET.filter_levels}}"
+                },
+                "meta": [
+                  {
+                    "name": "calData",
+                    "type": "array"
+                  }
+                ],
+                "output": true
               }
             ]
           }
         },
-        "output": true,
-        "meta": [
-          {
-            "name": "$index",
-            "type": "number"
-          },
-          {
-            "name": "$number",
-            "type": "number"
-          },
-          {
-            "name": "$name",
-            "type": "text"
-          },
-          {
-            "name": "$value",
-            "type": "object"
-          },
-          {
-            "name": "id",
-            "type": "number"
-          },
-          {
-            "name": "classLevel",
-            "type": "number"
-          },
-          {
-            "name": "day_name",
-            "type": "text"
-          },
-          {
-            "name": "day_int",
-            "type": "number"
-          },
-          {
-            "name": "startdate",
-            "type": "date"
-          },
-          {
-            "name": "enddate",
-            "type": "date"
-          },
-          {
-            "name": "classType",
-            "type": "number"
-          },
-          {
-            "name": "startTimeDisplay",
-            "type": "text"
-          },
-          {
-            "name": "startTimeDecimal",
-            "type": "number"
-          },
-          {
-            "name": "endTimeDisplay",
-            "type": "text"
-          },
-          {
-            "name": "endTimeDecimal",
-            "type": "number"
-          },
-          {
-            "name": "isactive",
-            "type": "boolean"
-          },
-          {
-            "name": "max",
-            "type": "number"
-          },
-          {
-            "name": "instructorid",
-            "type": "number"
-          },
-          {
-            "name": "enrolcount",
-            "type": "number"
-          },
-          {
-            "name": "enrol_active",
-            "type": "number"
-          },
-          {
-            "name": "enrol_makeup",
-            "type": "number"
-          },
-          {
-            "name": "enrol_trial",
-            "type": "number"
-          },
-          {
-            "name": "enrol_waitlist",
-            "type": "number"
-          },
-          {
-            "name": "enrol_casual",
-            "type": "number"
-          },
-          {
-            "name": "slots_avail",
-            "type": "number"
-          },
-          {
-            "name": "active_enrols",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "enrolmentType"
-              },
-              {
-                "type": "date",
-                "name": "dropDate"
-              },
-              {
-                "type": "boolean",
-                "name": "isValid"
-              },
-              {
-                "type": "number",
-                "name": "student"
-              },
-              {
-                "type": "date",
-                "name": "startDate"
-              },
-              {
-                "type": "number",
-                "name": "classId"
-              },
-              {
-                "type": "text",
-                "name": "dropReason"
-              },
-              {
-                "type": "text",
-                "name": "firstName"
-              },
-              {
-                "type": "text",
-                "name": "lastName"
-              },
-              {
-                "type": "date",
-                "name": "dob"
-              },
-              {
-                "type": "number",
-                "name": "family"
-              },
-              {
-                "type": "text",
-                "name": "age"
-              }
-            ]
-          },
-          {
-            "name": "trial_enrols",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "enrolmentType"
-              },
-              {
-                "type": "date",
-                "name": "dropDate"
-              },
-              {
-                "type": "boolean",
-                "name": "isValid"
-              },
-              {
-                "type": "number",
-                "name": "student"
-              },
-              {
-                "type": "date",
-                "name": "startDate"
-              },
-              {
-                "type": "number",
-                "name": "classId"
-              },
-              {
-                "type": "text",
-                "name": "dropReason"
-              },
-              {
-                "type": "text",
-                "name": "firstName"
-              },
-              {
-                "type": "text",
-                "name": "lastName"
-              },
-              {
-                "type": "date",
-                "name": "dob"
-              },
-              {
-                "type": "number",
-                "name": "family"
-              },
-              {
-                "type": "text",
-                "name": "age"
-              }
-            ]
-          },
-          {
-            "name": "makeup_enrols",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "enrolmentType"
-              },
-              {
-                "type": "date",
-                "name": "dropDate"
-              },
-              {
-                "type": "boolean",
-                "name": "isValid"
-              },
-              {
-                "type": "number",
-                "name": "student"
-              },
-              {
-                "type": "date",
-                "name": "startDate"
-              },
-              {
-                "type": "number",
-                "name": "classId"
-              },
-              {
-                "type": "text",
-                "name": "dropReason"
-              },
-              {
-                "type": "text",
-                "name": "firstName"
-              },
-              {
-                "type": "text",
-                "name": "lastName"
-              },
-              {
-                "type": "date",
-                "name": "dob"
-              },
-              {
-                "type": "number",
-                "name": "family"
-              },
-              {
-                "type": "text",
-                "name": "age"
-              }
-            ]
-          },
-          {
-            "name": "casual_enrols",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "enrolmentType"
-              },
-              {
-                "type": "date",
-                "name": "dropDate"
-              },
-              {
-                "type": "boolean",
-                "name": "isValid"
-              },
-              {
-                "type": "number",
-                "name": "student"
-              },
-              {
-                "type": "date",
-                "name": "startDate"
-              },
-              {
-                "type": "number",
-                "name": "classId"
-              },
-              {
-                "type": "text",
-                "name": "dropReason"
-              },
-              {
-                "type": "text",
-                "name": "firstName"
-              },
-              {
-                "type": "text",
-                "name": "lastName"
-              },
-              {
-                "type": "date",
-                "name": "dob"
-              },
-              {
-                "type": "number",
-                "name": "family"
-              },
-              {
-                "type": "text",
-                "name": "age"
-              }
-            ]
-          },
-          {
-            "name": "wait_enrols",
-            "type": "array",
-            "sub": [
-              {
-                "type": "number",
-                "name": "id"
-              },
-              {
-                "type": "number",
-                "name": "studentid"
-              },
-              {
-                "type": "date",
-                "name": "request_date"
-              },
-              {
-                "type": "date",
-                "name": "fulfil_date"
-              },
-              {
-                "type": "number",
-                "name": "classlevel"
-              },
-              {
-                "type": "number",
-                "name": "starttimedec"
-              },
-              {
-                "type": "number",
-                "name": "endtimedec"
-              },
-              {
-                "type": "number",
-                "name": "dayint"
-              },
-              {
-                "type": "number",
-                "name": "instructor"
-              },
-              {
-                "type": "text",
-                "name": "notes"
-              },
-              {
-                "type": "text",
-                "name": "firstName"
-              },
-              {
-                "type": "text",
-                "name": "lastName"
-              },
-              {
-                "type": "date",
-                "name": "dob"
-              },
-              {
-                "type": "number",
-                "name": "family"
-              },
-              {
-                "type": "text",
-                "name": "age"
-              }
-            ]
-          },
-          {
-            "name": "nextavail",
-            "type": "text",
-            "sub": [
-              {
-                "name": "dates",
-                "type": "array"
-              }
-            ]
-          }
-        ],
-        "outputType": "array"
-      },
-      {
-        "name": "enrolmentTypes",
-        "module": "dbconnector",
-        "action": "select",
-        "options": {
-          "connection": "db",
-          "sql": {
-            "type": "SELECT",
-            "columns": [],
-            "table": {
-              "name": "enrolmentTypes"
-            },
-            "joins": [],
-            "query": "SELECT *\nFROM enrolmentTypes",
-            "params": []
-          }
-        },
-        "output": true,
-        "meta": [
-          {
-            "type": "number",
-            "name": "id"
-          },
-          {
-            "type": "text",
-            "name": "type"
-          }
-        ],
-        "outputType": "array"
+        "outputType": "boolean"
       }
     ]
   }
