@@ -1,9 +1,14 @@
-const moment = require('moment');
+//const  = require('moment');
+const moment = require('moment-timezone');
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
-const { raw } = require('mysql');
+const { evaluate, sum, chain: mathchain, round } = require('mathjs');
+const {
+    raw
+} = require('mysql');
+const e = require('express');
 
-exports.tuitioncalc = async function(options) {
+exports.tuitioncalc = async function (options) {
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -12,31 +17,57 @@ exports.tuitioncalc = async function(options) {
     // throw error if connection not found
     if (!db) throw new Error(`Connection "${connection}" doesn't exist.`);
     //////////// End database connection //////////
+    //////////// Utilities ////////////
+    function isObjectEmpty(value) {
+        return (
+            Object.prototype.toString.call(value) === '[object Object]' &&
+            JSON.stringify(value) === '{}'
+        );
+    }
+    const arrayToObj = (array, keyfield) =>
+        array.reduce((obj, item) => {
+            obj[item[keyfield]] = item;
+            return obj;
+        }, {});
+
+    function moneyround(x, d) {
+        return Number(parseFloat(x).toFixed(d));
+    }
+    /////////// End utilities ///////////
 
     options = this.parse(options);
+    // Get timezone from DB
+    let tz = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'timezone'`));
     let fid = options.familyid;
-    let mtp = options.monthtoprocess;
+    let mtp = moment.utc(options.monthtoprocess).tz(tz.value);
+    let mtp_show = mtp.clone().format('YYYY-MM-DD ha z')
     let stp = options.sessiontoprocess;
     let bc = dbClientFlat(await db.raw(`SELECT bc.* FROM billingCycles bc JOIN (SELECT * FROM settings WHERE name = 'billing_cycle') AS setting ON bc.id = setting.value`)).id;
     let bc_type = bc == 2 || bc == 3 ? 'month' : 'session';
-    let mtp_dr = {"start": moment(mtp).startOf('month'), "end": moment(mtp).endOf('month')};
-    let mtp_n = moment(mtp).month();
+    let mtp_dr = {
+        "start": mtp.clone().startOf('month'),
+        "end": mtp.clone().endOf('month')
+    };
+    let mtp_next = moment(mtp).month();
 
     /////Enrolment Discount Types - Bulk means classes will be discounted from the settings at the total weekly enrolments. Perenrol works down the discount settings and attached discounts depending on the class number for that week.
     let enr_disc_enable = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'endiscount_enable'`)).value == 1 ? true : false;
-    if(enr_disc_enable) {
+    if (enr_disc_enable) {
         let enr_disc_type = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'endiscount_bulk'`)).value == 1 ? 'bulk' : 'perenrol';
     }
-    
+
     ///// Date Range Setup
     let charge_ahead = Boolean(Number(dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'billing_charge_ahead'`)).value));
     let dr_current, dr_next;
-    if(bc_type === 'session') { ///// If sessions enabled, process dates. Charge ahead not currently available for sessions/terms.
+    if (bc_type === 'session') { ///// If sessions enabled, process dates. Charge ahead not currently available for sessions/terms.
         dateRange(stp, false, bc_type);
     } else {
         dr_current = await dateRange(mtp_dr, 'month');
-        if(charge_ahead) {
-            dr_next = await dateRange({"start": mtp_dr.start.add(1,'month'), "end": mtp_dr.end.add(1,'month').endOf('month')}, 'month');
+        if (charge_ahead) {
+            dr_next = await dateRange({
+                "start": mtp_dr.start.add(1, 'month'),
+                "end": mtp_dr.end.add(1, 'month').endOf('month')
+            }, 'month');
         }
     }
 
@@ -49,42 +80,240 @@ exports.tuitioncalc = async function(options) {
         'familydiscounts': {
             'enabled': dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='fdiscount_enable'`)).value,
             'type': dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='fdiscount_type'`)).value,
-            'lowestfirst': dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='fdiscount_lowest_total_fees_first'`)).value
+            'lowestfirst': dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='fdiscount_lowest_total_fees_first'`)).value,
+            'discountmatrix': arrayToObj(dbClient(await db.raw(`SELECT * FROM perFamilyDiscounts`)), "studentCount")
         }
     }
 
+    ///// Student and family processing
+    let studentsprocessed = await studentsProcess(fid);
+    let familyprocessed = await familyProcess(studentsprocessed);
+
+
+    /*/*/
+    /*/*/
+    /*/*/ // FUNCTIONS START
+
     ///// Students Process
-    let students = await getStudents(fid);
-    async function getStudents(fid) {
-        let arr = {};
-        let s = dbClient(await db.raw(`SELECT * FROM students WHERE family = ${fid}`));
-        for(let i=0;i<s.length;i++) {
-            arr[s[i].id] = s[i];
+    async function studentsProcess(fid) {
+        let students = await getStudents(fid);
+        async function getStudents(fid) {
+            let arr = {};
+            let s = dbClient(await db.raw(`SELECT * FROM students WHERE family = ${fid}`));
+            for (let i = 0; i < s.length; i++) {
+                arr[s[i].id] = s[i];
+            }
+            return arr;
         }
-        return arr;
+        /// Get Enrolments with Enrolment Discounts if applicable
+        for (let student in students) {
+            let s = students[student];
+            s.enrolments = await getEnrols(student);
+            let enrolments = s.enrolments;
+            let netcharge = [],
+                grosscharge = [],
+                discounttotal = [];
+            for (let week in enrolments) {
+                if (isObjectEmpty(enrolments[week])) {
+                    delete enrolments[week];
+                } else {
+                    let weeknet = [],
+                        weekgross = [],
+                        weekdiscount = [];
+                    let enrols = enrolments[week];
+                    for (let enrol in enrols) {
+                        weeknet.push(enrols[enrol].pricing.enNetRate);
+                        weekgross.push(enrols[enrol].pricing.baseRate);
+                        weekdiscount.push(enrols[enrol].pricing.endisc);
+                    }
+                    netcharge.push(round(sum(weeknet),2));
+                    grosscharge.push(round(sum(weekgross),2));
+                    discounttotal.push(round(sum(weekdiscount),2));
+                }
+            }
+            students[student].tuition = {
+                'netenrolcharge': round(sum(netcharge),2),
+                'grossenrolcharge': round(sum(grosscharge),2),
+                'totaldiscounts': round(sum(discounttotal),2)
+            };
+        };
+        return students;
     }
-    /// Get Enrolments
-    // let skeys = Object.keys(students);
-    for(let student in students) {
-        students[student].enrolments = await getEnrols(student);
-        let enrolments = students[student].enrolments;
-        let rawcharge = 0;
-        for(let dates in enrolments) {
-            rawcharge += enrolments[dates].rawcharge || 0;
+
+    // Process students into weeks of date range. This will enable family discount totalling.
+    async function familyProcess(students) {
+        let enrolarray = {};
+        let enrolfinal = {};
+        let finalcharges;
+        let remaining = removeInactiveStudents();
+        let familytotal = [];
+        let matrix = discSettings.familydiscounts.discountmatrix;
+
+        function removeInactiveStudents() {
+            for (let student in students) {
+                let s = students[student];
+                if (isObjectEmpty(s.enrolments)) {
+                    delete students[student];
+                }
+            }
+            return students;
         }
-        students[student].rawcharge = rawcharge;
-    };
-    // for(let i=0;i<students.length;i++) {
-    //     let st = students[i];
-    //     st['enrolments'] = await getEnrols(st.id);
-    // }
+        // Per student family discounts
+        if (discSettings.familydiscounts.type == 'perstudent') {
+            let dates = dr_current.weekarr;
+            // Create Enrolarray
+            for (let i = 0; i < dates.length; i++) {
+                enrolarray[dates[i].startofweek] = [];
+                for (let student in remaining) {
+                    let s = remaining[student];
+                    if (s.enrolments.hasOwnProperty(dates[i].startofweek)) {
+                        let enrols = s.enrolments[dates[i].startofweek];
+                        let grossweekprice = [];
+                        for (single in enrols) {
+                            grossweekprice.push(enrols[single].pricing.enNetRate);
+                        }
+                        enrolarray[dates[i].startofweek].push({
+                            'student': s.id,
+                            'enrolments': s.enrolments[dates[i].startofweek],
+                            'grossweekprice': round(sum(grossweekprice),2)
+                        });
+                        // enrolfinal[s.id] = remaining[student];
+                    }
+                }
+            }
+            for (let date in enrolarray) {
+                let week = enrolarray[date];
+                if (week.length === 0) {
+                    delete enrolarray[date];
+                    continue;
+                }
+                week = _.sortBy(week, function (o) {
+                    return discSettings.familydiscounts.lowestfirst == 1 ? -o.grossweekprice : o.grossweekprice;
+                });
+                for (let i = 0; i < week.length; i++) {
+                    let order = i + 1;
+                    let w = week[i];
+                    w.order = order; // Student discount order
+                    w.netweekprice = round(sum(w.grossweekprice - (w.grossweekprice * (matrix[order].discountAmount / 100))),2); // Total price for week after discount
+
+                    // Family discounts
+                    for(enrol in w.enrolments) {
+                        let e = w.enrolments[enrol].pricing;
+                        e.familydiscounttotal = round(sum(e.baseRate * (matrix[order].discountAmount / 100)),4);
+                        e.familydiscountrate = matrix[order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`;
+                        e.enrolGrandTotal = round(sum(e.enNetRate - e.familydiscounttotal),2);
+                    }
+                    w.familydiscounttotal = round(sum(w.grossweekprice * (matrix[order].discountAmount / 100)),4); // Total discount applied.
+                    w.familydiscountrate = matrix[w.order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`; // Discount rate applied.
+                    familytotal.push(w.netweekprice);
+                }
+            }
+            finalcharges = formatFinalCharges(enrolarray);
+
+            // Bulk family discounts  
+        } else {
+
+        }
+
+        function formatFinalCharges(arr) {
+            var final = {
+                [dr_current.descriptor]: {
+                    'weeks': {
+
+                    },
+                    'totals': {
+                        'baseRate': [],
+                        'enrolsnet': [],
+                        'enrolsdisctotal': [],
+                        'familydisctotal': [],
+                        'familygrandtotal': []
+                    }
+                }
+            };
+
+            let t = final[dr_current.descriptor].totals; // Tap into totals branch of final.
+
+            for(let weeks in arr) {
+                let week = arr[weeks]; // Current week looped e.g. 2021-12-05.
+                let w = final[dr_current.descriptor].weeks; // Tap into weeks branch of final.
+                // let s = final[dr_current.descriptor].students; // Tap into students branch of final.
+                w[weeks] = {}; // Create week/date key.
+                let fweek = w[weeks];
+                fweek.students = {};
+                for(let i=0;i<week.length;i++) {
+                    let st = week[i];
+                    let weektotals = {
+                        'baseRate': [],
+                        'enNetRate': [],
+                        'en_disc_total': 0,
+                        'familydisctotal': []
+                    }
+                    for(enrols in st.enrolments) {
+                        let en = st.enrolments[enrols];
+                        weektotals.baseRate.push(en.pricing.baseRate);
+                        weektotals.enNetRate.push(en.pricing.enNetRate);
+                        weektotals.familydisctotal.push(en.pricing.familydiscounttotal);
+                    }
+                    weektotals.baseRate = mathchain(weektotals.baseRate).sum().round(2).done();
+                    weektotals.enNetRate = mathchain(weektotals.enNetRate).sum().round(2).done();
+                    weektotals.familydisctotal = mathchain(weektotals.familydisctotal).sum().round(2).done();
+                    weektotals.en_disc_total = mathchain(weektotals.baseRate - weektotals.enNetRate).sum().round(2).done();
+
+                    // Start adding totals to period totals array
+                    t.baseRate.push(weektotals.baseRate);
+                    t.enrolsnet.push(weektotals.enNetRate);
+                    t.enrolsdisctotal.push(weektotals.en_disc_total);
+                    t.familydisctotal.push(weektotals.familydisctotal);
+                    
+                    
+                    fweek.students[st.student] = {
+                        'enrolments': st.enrolments,
+                        'weektotals': weektotals
+                    };
+                }
+                
+                
+                // Student total breakdowns
+            }
+            
+            // Process period totals array
+            t.baseRate = mathchain(t.baseRate).sum().round(2).done();
+            t.enrolsnet = mathchain(t.enrolsnet).sum().round(2).done();
+            t.enrolsdisctotal = round(sum(t.baseRate - t.enrolsnet),2);
+            t.familydisctotal = mathchain(t.familydisctotal).sum().round(2).done();
+            t.familygrandtotal = mathchain(t.enrolsnet - t.familydisctotal).sum().round(2).done();
+
+            return final;
+
+        }
+
+
+
+
+
+
+
+
+        let processed = {
+            // 'enrolarray': enrolarray,
+            // 'enrolsfinal': enrolfinal,
+            'finalcharges': finalcharges,
+            // 'chargefor': dr_current.descriptor,
+            // 'familychargetotal': familytotal,
+            // 'remaining': remaining,
+            // 'familychargetotalreduced': round(sum(familytotal),2)
+        }
+
+        return finalcharges;
+    }
+
     async function getEnrols(sid) {
         let enrols = {};
-        for(let i=0; i<dr_current.weekarr.length;i++) {
+        for (let i = 0; i < dr_current.weekarr.length; i++) {
             let cd = dr_current.weekarr[i];
             enrols[cd.startofweek] = {};
             let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day, c.classType AS classType, ct.baseRate, ct.shortName, '${cd.startofweek}' AS sow, '${cd.endofweek}' AS eow, '${sid}' AS sid
+            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName
             FROM enrolments e 
                 INNER JOIN classes c ON e.classID = c.id 
                 INNER JOIN classTypes ct ON c.classType = ct.id
@@ -96,54 +325,64 @@ exports.tuitioncalc = async function(options) {
                     OR e.dropDate BETWEEN '${cd.startofweek}' AND '${cd.endofweek}') 
                 AND (e.startDate <= '${cd.endofweek}' OR e.startDate BETWEEN '${cd.startofweek}' AND '${cd.endofweek}')
                 AND c.day IN(${cd.dayint})
+                ORDER BY c.day ASC, c.startTimeDecimal ASC
                 `)) || null;
 
-            // Get pricing - Raw & Discounted
-            if(enrolments.length > 0) {
-                let rawprice = await pricingCalc(enrolments);
-                // for(let i=0;i<enrolments.length;i++) {
-                //     pricecalc = await pricingCalc(enrolments[i],enrolments.length);
-                //     rawprice = rawprice += pricecalc.enrolprice;
-                // }
-                enrols[cd.startofweek]['rawcharge'] = rawprice;
-                enrols[cd.startofweek]['pricecalc'] = pricecalc;
-            }
-            for(let i=0;i<enrolments.length;i++) {
-                let id = enrolments[i].id;
-                enrols[cd.startofweek][id] = enrolments[i];
+            // Get pricing - Raw & Discounted - Add class meeting date.
+            if (enrolments.length > 0) {
+                // let rawprice = await pricingCalc(enrolments);
+                // let rawprice = 0;
+                for (let i = 0; i < enrolments.length; i++) {
+                    pricecalc = await pricingCalc(enrolments[i], (i + 1), enrolments.length);
+                    // rawprice = rawprice += pricecalc.netamt;
+                    enrolments[i]['pricing'] = {
+                        'enNetRate': pricecalc.netamt,
+                        'endisc': pricecalc.disc_total,
+                        'endiscrate': pricecalc.disc_rate,
+                        'endiscdescription': pricecalc.disc_desc,
+                        'baseRate': enrolments[i].baseRate,
+                        'enrolmentOrder': i + 1
+                    }
+                    enrolments[i].classdate = moment(cd.startofweek).add((Number(enrolments[i].classday) - 1), 'd');
+                    delete enrolments[i].baseRate;
+                }
+                // Enrolments from Array to Object
+                for (let i = 0; i < enrolments.length; i++) {
+                    let id = enrolments[i].id;
+                    enrols[cd.startofweek][id] = enrolments[i];
+                }
+            } else if (isObjectEmpty(enrols[cd.startofweek])) {
+                delete enrols[cd.startofweek];
             }
         }
         return enrols;
     }
 
     ///// Billing Calculations
-    /* e = enrolment, ec = enrolment count */
-    async function pricingCalc(e) {
+    /* e = enrolment, e = loop count, ec = enrolment count */
+    async function pricingCalc(e, c, ec) {
         // return e.classType;
         let price = rawPriceCalc(e);
-        if(discSettings.enroldiscounts.enabled == 1) {
-            let discAmt;
-            let p = 0;
-            if(discSettings.enroldiscounts.type == 'bulk') {
-                discAmt = dbClientFlat(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = '${e.classType}' AND enrolmentCount = '${e.length}' LIMIT 1`,[]));
+        let p = 0, discAmt;
+        if (discSettings.enroldiscounts.enabled == 1) {
+            if (discSettings.enroldiscounts.type == 'bulk') {
+                discAmt = dbClientFlat(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = '${e.classType}' AND enrolmentCount = '${ec}' LIMIT 1`));
             } else {
-                discAmt = dbClient(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = '${e.classType}'`,[]));
+                discAmt = dbClientFlat(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = '${e.classType}' AND enrolmentCount = '${c}' LIMIT 1`));
             }
-            if(discAmt.discountType === 1) { // Discount type 1 == Percentage
-                if(discSettings.enroldiscounts.type == 'bulk') {
-                    for(let i=0;i<e.length;i++) {
-                        p += price.enrolprice - (price.enrolprice * (discAmt.discountAmount / 100));
-                    }
-                } else {
-                    for(let i=0;i<e.length;i++) {
-                        p += price.enrolprice - (price.enrolprice * (discAmt[i].discountAmount / 100))
-                    }
-                }
+            if (discAmt.discountType === 1) { // Discount type 1 == Percentage
+                price['netamt'] = evaluate(price.enrolprice - (price.enrolprice * (discAmt.discountAmount / 100)));
+                price['disc_total'] = sum(price.enrolprice - price.netamt);
+                price['disc_rate'] = discAmt.discountAmount + '%';
+                price['disc_desc'] = discAmt.description;
             } else {
-
+                price['netamt'] = evaluate(price.enrolprice - discAmt.discountAmount);
+                price['disc_total'] = sum(price.enrolprice - price.netamt);
+                price['disc_rate'] = discAmt.discountAmount;
+                price['disc_desc'] = discAmt.description;
             }
         }
-        return p;
+        return price;
     }
     // Raw pricing
     function rawPriceCalc(e) {
@@ -152,8 +391,8 @@ exports.tuitioncalc = async function(options) {
             'priceoverride': false,
             'priceoverridetype': null
         }
-        if(e.priceOverride === 1) {
-            if(e.priceOverrideType === 'flat') {
+        if (e.priceOverride === 1) {
+            if (e.priceOverrideType === 'flat') {
                 calcreturn.priceoverridetype = 'flat'
             } else {
                 calcreturn.priceoverridetype = 'perclass'
@@ -167,29 +406,37 @@ exports.tuitioncalc = async function(options) {
     }
 
     ///// Create Date Ranges - Billing breaks down enrolments per week.
-    async function dateRange(dr,type) {
-        if(type === 'month') {
+    async function dateRange(dr, type) {
+        if (type === 'month') {
             let start = moment(dr.start).startOf('week');
             let end = moment(dr.start).endOf('week');
             let curr = moment(dr.start);
             let range = {
-                'arr': [0,0,0,0,0,0,0],
-                'weekarr': []
+                'arr': [0, 0, 0, 0, 0, 0, 0],
+                'weekarr': [],
+                'descriptor': moment(dr.start).format('MMM YYYY'),
+                'start': dr.start,
+                'end': dr.end
             }
             // Create Month Ranges
-            while(curr.isSameOrBefore(moment(dr.end))) {
+            while (curr.isSameOrBefore(moment(dr.end))) {
                 range.arr[curr.day()] += 1;
                 curr.add(1, 'd');
             }
-            while(start.isSameOrBefore(moment(dr.end))) {
+            while (start.isSameOrBefore(moment(dr.end))) {
                 let sow = start.month() != moment(dr.start).month() ? moment(dr.start).format('YYYY-MM-DD') : start.format('YYYY-MM-DD');
                 let eow = end.month() != moment(dr.end).month() ? moment(dr.end).format('YYYY-MM-DD') : end.format('YYYY-MM-DD');
-                let a = moment(sow).clone(), dayint = [];
-                while(a.isSameOrBefore(eow)) {
+                let a = moment(sow).clone(),
+                    dayint = [];
+                while (a.isSameOrBefore(eow)) {
                     dayint.push(a.day() + 1);
-                    a.add(1,'d');
+                    a.add(1, 'd');
                 }
-                range.weekarr.push({'startofweek': sow, 'endofweek': eow, 'dayint': dayint});
+                range.weekarr.push({
+                    'startofweek': sow,
+                    'endofweek': eow,
+                    'dayint': dayint
+                });
                 end.add(1, 'w');
                 start.add(1, 'w');
             }
@@ -236,6 +483,7 @@ exports.tuitioncalc = async function(options) {
             return v = v.rows;
         }
     }
+
     function dbClient(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
             return v[0];
@@ -243,15 +491,20 @@ exports.tuitioncalc = async function(options) {
             return v = v.rows;
         }
     }
-
+    let discArray = dbClient(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = 1`));
+    let discObj = arrayToObj(discArray, "enrolmentCount");
+    // enrols[cd.startofweek]['discAmt'] = discObj;
     let feesobject = {
-        "students": students,
+        //"students": studentsprocessed,
+        "charges": familyprocessed,
         "familyid": fid,
-        "dates": {
-            "current": dr_current,
-            "next": dr_next
-        },
-        'discount_settings': discSettings
+        //"dates": {
+        //    "current": dr_current,
+        //    "next": dr_next
+        //},
+        //'discount_settings': discSettings,
+        //'discAmt': discObj,
+        //'wapplerNOW': mtp_show
     }
 
     return feesobject;
