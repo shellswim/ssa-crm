@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "date",
+        "name": "startdate"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "counter",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "counter",
+          "value": 0
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "startdate",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "startdate",
+          "value": "{{$_GET.startdate}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "datesarray",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "datesarray",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "while",
+        "options": {
+          "while": "{{counter < 11}}",
+          "exec": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "condition",
+              "options": {
+                "if": "{{!startdate}}",
+                "then": {
+                  "steps": [
+                    {
+                      "name": "startdate",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "startdate",
+                        "value": "{{NOW_UTC.toLocalTime().formatDate('yyyy-MM-dd')}}"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    },
+                    {
+                      "name": "datesarray",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "datesarray",
+                        "value": "{{startdate}},"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    }
+                  ]
+                },
+                "else": {
+                  "steps": [
+                    {
+                      "name": "startdate",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "startdate",
+                        "value": "{{counter === 0 ? startdate.formatDate('yyyy-MM-dd') : startdate.dateAdd('months', 1).formatDate('yyyy-MM-dd')}}"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    },
+                    {
+                      "name": "counter_add",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "counter",
+                        "value": "{{counter + 1}}"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    },
+                    {
+                      "name": "datesarray_push",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "datesarray",
+                        "value": "{{datesarray+startdate}},"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    }
+                  ]
+                }
+              },
+              "outputType": "boolean"
+            }
+          }
+        }
+      },
+      {
+        "name": "dates",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{datesarray.replace(',', ' ').trim().split(' ')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      }
+    ]
+  }
+}

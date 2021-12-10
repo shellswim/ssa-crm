@@ -1,0 +1,1636 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "object",
+        "name": "monthlychargeexists",
+        "sub": [
+          {
+            "type": "number",
+            "name": "status"
+          },
+          {
+            "type": "boolean",
+            "name": "exists"
+          },
+          {
+            "type": "text",
+            "name": "chargeid"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "name": "userid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "number",
+        "name": "total"
+      },
+      {
+        "type": "number",
+        "name": "family"
+      },
+      {
+        "type": "text",
+        "name": "description"
+      },
+      {
+        "type": "text",
+        "name": "reference"
+      },
+      {
+        "type": "text",
+        "name": "title"
+      },
+      {
+        "type": "date",
+        "name": "chargeFor_monthly"
+      },
+      {
+        "type": "date",
+        "name": "dueDate"
+      },
+      {
+        "type": "text",
+        "name": "chargeType"
+      },
+      {
+        "type": "number",
+        "name": "chargeFor_session"
+      },
+      {
+        "type": "number",
+        "name": "basetotal"
+      },
+      {
+        "type": "number",
+        "name": "discountotal"
+      },
+      {
+        "type": "number",
+        "name": "chargeDate"
+      },
+      {
+        "type": "array",
+        "name": "record",
+        "sub": [
+          {
+            "type": "date",
+            "name": "startofweek"
+          },
+          {
+            "type": "number",
+            "name": "classId"
+          },
+          {
+            "type": "number",
+            "name": "student"
+          },
+          {
+            "type": "number",
+            "name": "classType"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "date",
+            "name": "classDate"
+          },
+          {
+            "type": "number",
+            "name": "baseRate"
+          },
+          {
+            "type": "number",
+            "name": "endisc"
+          },
+          {
+            "type": "text",
+            "name": "enNetRate"
+          },
+          {
+            "type": "text",
+            "name": "endiscdescription"
+          },
+          {
+            "type": "text",
+            "name": "endiscrate"
+          },
+          {
+            "type": "text",
+            "name": "familydiscountrate"
+          },
+          {
+            "type": "number",
+            "name": "familydiscounttotal"
+          },
+          {
+            "type": "number",
+            "name": "enrolGrandTotal"
+          },
+          {
+            "type": "text",
+            "name": "familydiscountdesc"
+          },
+          {
+            "type": "date",
+            "name": "classdate"
+          },
+          {
+            "type": "number",
+            "name": "pricing"
+          },
+          {
+            "type": "number",
+            "name": "insert_mainCharge"
+          }
+        ]
+      }
+    ],
+    "$_PARAM": [
+      {
+        "type": "object",
+        "name": "charge"
+      },
+      {
+        "type": "number",
+        "name": "userid"
+      },
+      {
+        "type": "number",
+        "name": "familyid"
+      },
+      {
+        "type": "date",
+        "name": "dueDate"
+      },
+      {
+        "type": "number",
+        "name": "chargeDate"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "mce",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_PARAM.charge.monthlychargeexists}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "totals",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_PARAM.charge.totals}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "enrols",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_PARAM.charge.enrolments}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{mce.exists == true || mce.exists == 'true'}}",
+          "then": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "condition",
+              "options": {
+                "if": "{{mce.status == 409}}",
+                "then": {
+                  "steps": {
+                    "name": "multipleChargesExist",
+                    "module": "core",
+                    "action": "response",
+                    "options": {
+                      "status": 409,
+                      "data": "{{$_GET.monthlychargeexists.chargeid}}"
+                    },
+                    "output": true
+                  }
+                },
+                "else": {
+                  "steps": [
+                    {
+                      "name": "update_charge",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "charges_family",
+                              "column": "total",
+                              "type": "number",
+                              "value": "{{totals.familygrandtotal}}"
+                            },
+                            {
+                              "table": "charges_family",
+                              "column": "basetotal",
+                              "type": "number",
+                              "value": "{{totals.basetotal}}"
+                            },
+                            {
+                              "table": "charges_family",
+                              "column": "discountotal",
+                              "type": "number",
+                              "value": "{{totals.discountotal}}"
+                            },
+                            {
+                              "table": "charges_family",
+                              "column": "chargeDate",
+                              "type": "number",
+                              "value": "{{totals.chargeDate}}"
+                            },
+                            {
+                              "table": "charges_family",
+                              "column": "updated",
+                              "type": "date",
+                              "value": "{{NOW_UTC.toLocalTime().formatDate('yyyy-mm-dd')}}"
+                            },
+                            {
+                              "table": "charges_family",
+                              "column": "updatedby",
+                              "type": "number",
+                              "value": "{{$_PARAM.userid}}"
+                            }
+                          ],
+                          "table": "charges_family",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "id",
+                                "field": "id",
+                                "type": "double",
+                                "operator": "equal",
+                                "value": "{{$_GET.monthlychargeexists.chargeid}}",
+                                "data": {
+                                  "column": "id"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "query": "UPDATE charges_family\nSET total = :P1 /* {{totals.familygrandtotal}} */, basetotal = :P2 /* {{totals.basetotal}} */, discountotal = :P3 /* {{totals.discountotal}} */, chargeDate = :P4 /* {{totals.chargeDate}} */, updated = :P5 /* {{NOW_UTC.toLocalTime().formatDate('yyyy-mm-dd')}} */, updatedby = :P6 /* {{$_PARAM.userid}} */\nWHERE id = :P7 /* {{$_GET.monthlychargeexists.chargeid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{totals.familygrandtotal}}"
+                            },
+                            {
+                              "name": ":P2",
+                              "type": "expression",
+                              "value": "{{totals.basetotal}}"
+                            },
+                            {
+                              "name": ":P3",
+                              "type": "expression",
+                              "value": "{{totals.discountotal}}"
+                            },
+                            {
+                              "name": ":P4",
+                              "type": "expression",
+                              "value": "{{totals.chargeDate}}"
+                            },
+                            {
+                              "name": ":P5",
+                              "type": "expression",
+                              "value": "{{NOW_UTC.toLocalTime().formatDate('yyyy-mm-dd')}}"
+                            },
+                            {
+                              "name": ":P6",
+                              "type": "expression",
+                              "value": "{{$_PARAM.userid}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P7",
+                              "value": "{{$_GET.monthlychargeexists.chargeid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ],
+                      "output": false
+                    },
+                    {
+                      "name": "query_enrolcharges",
+                      "module": "dbconnector",
+                      "action": "select",
+                      "options": {
+                        "sql": {
+                          "type": "SELECT",
+                          "columns": [],
+                          "table": {
+                            "name": "charges_enrolments"
+                          },
+                          "joins": [],
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "charges_enrolments.chargeId",
+                                "field": "charges_enrolments.chargeId",
+                                "type": "double",
+                                "operator": "equal",
+                                "value": "{{mce.monthlychargeexists.chargeid}}",
+                                "data": {
+                                  "table": "charges_enrolments",
+                                  "column": "chargeId",
+                                  "type": "number"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "query": "SELECT *\nFROM charges_enrolments\nWHERE chargeId = :P1 /* {{mce.monthlychargeexists.chargeid}} */",
+                          "params": [
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P1",
+                              "value": "{{mce.monthlychargeexists.chargeid}}"
+                            }
+                          ]
+                        },
+                        "connection": "db"
+                      },
+                      "output": false,
+                      "meta": [
+                        {
+                          "type": "number",
+                          "name": "id"
+                        },
+                        {
+                          "type": "date",
+                          "name": "startofweek"
+                        },
+                        {
+                          "type": "number",
+                          "name": "classId"
+                        },
+                        {
+                          "type": "number",
+                          "name": "studentid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "classTypeId"
+                        },
+                        {
+                          "type": "number",
+                          "name": "enrolid"
+                        },
+                        {
+                          "type": "date",
+                          "name": "classDate"
+                        },
+                        {
+                          "type": "number",
+                          "name": "baseRate"
+                        },
+                        {
+                          "type": "number",
+                          "name": "endisc"
+                        },
+                        {
+                          "type": "text",
+                          "name": "ennetrate"
+                        },
+                        {
+                          "type": "text",
+                          "name": "endiscdescription"
+                        },
+                        {
+                          "type": "text",
+                          "name": "endiscrate"
+                        },
+                        {
+                          "type": "text",
+                          "name": "familydiscountdesc"
+                        },
+                        {
+                          "type": "text",
+                          "name": "familydiscountrate"
+                        },
+                        {
+                          "type": "number",
+                          "name": "familydiscounttotal"
+                        },
+                        {
+                          "type": "number",
+                          "name": "enrolGrandTotal"
+                        },
+                        {
+                          "type": "number",
+                          "name": "chargeId"
+                        },
+                        {
+                          "type": "text",
+                          "name": "lineInvNumber"
+                        },
+                        {
+                          "type": "number",
+                          "name": "isvalid"
+                        },
+                        {
+                          "type": "text",
+                          "name": "debuggerstatus"
+                        }
+                      ],
+                      "outputType": "array"
+                    },
+                    {
+                      "name": "",
+                      "options": {
+                        "comment": "Check here whether or not lineInvNumber's match up. If so, update, else, remove and insert new"
+                      }
+                    },
+                    {
+                      "name": "",
+                      "options": {
+                        "comment": "lineInvNumbers are: {{id.toString() +student.toString() +classDate.toTimestamp()}}"
+                      }
+                    },
+                    {
+                      "name": "lineInvNumber",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "key": "lineInvNumber",
+                        "value": "{{null}}"
+                      },
+                      "meta": [],
+                      "outputType": "text"
+                    },
+                    {
+                      "name": "rp_generateNewLineInvNumbers",
+                      "module": "core",
+                      "action": "repeat",
+                      "options": {
+                        "repeat": "{{enrols}}",
+                        "outputFields": [],
+                        "exec": {
+                          "steps": {
+                            "name": "lineInvNumber",
+                            "module": "core",
+                            "action": "setvalue",
+                            "options": {
+                              "value": "{{(lineInvNumber + (id.toString() +student.toString() +classDate.toTimestamp()))}},",
+                              "key": "lineInvNumber"
+                            },
+                            "meta": [],
+                            "outputType": "text"
+                          }
+                        }
+                      },
+                      "output": true,
+                      "meta": [
+                        {
+                          "name": "$index",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$number",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$name",
+                          "type": "text"
+                        },
+                        {
+                          "name": "$value",
+                          "type": "object"
+                        }
+                      ],
+                      "outputType": "array"
+                    },
+                    {
+                      "name": "lineInvNumber_final",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "value": "{{lineInvNumber.replace(',', ' ').trim().split(' ')}}"
+                      },
+                      "meta": [],
+                      "outputType": "text",
+                      "output": true
+                    },
+                    {
+                      "name": "delete_missingLineInv",
+                      "module": "dbupdater",
+                      "action": "custom",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "query": "DELETE FROM charges_enrolments ce\nWHERE ce.lineInvNumber NOT IN(:P1)",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "value": "{{lineInvNumber_final}}"
+                            }
+                          ]
+                        }
+                      },
+                      "output": false,
+                      "meta": [],
+                      "outputType": "array"
+                    },
+                    {
+                      "name": "rp_insertNewEnrolCharges",
+                      "module": "core",
+                      "action": "repeat",
+                      "options": {
+                        "repeat": "{{enrols}}",
+                        "outputFields": [],
+                        "exec": {
+                          "steps": [
+                            {
+                              "name": "lineInvNumber_forInsert",
+                              "module": "core",
+                              "action": "setvalue",
+                              "options": {
+                                "value": "{{id.toString() +student.toString() +classDate.toTimestamp()}}"
+                              },
+                              "meta": [],
+                              "outputType": "text"
+                            },
+                            {
+                              "name": "query_findEnrolCharge",
+                              "module": "dbconnector",
+                              "action": "single",
+                              "options": {
+                                "connection": "db",
+                                "sql": {
+                                  "type": "SELECT",
+                                  "columns": [
+                                    {
+                                      "table": "charges_enrolments",
+                                      "column": "*",
+                                      "aggregate": "COUNT",
+                                      "alias": "total"
+                                    }
+                                  ],
+                                  "table": {
+                                    "name": "charges_enrolments"
+                                  },
+                                  "joins": [],
+                                  "groupBy": [],
+                                  "wheres": {
+                                    "condition": "AND",
+                                    "rules": [
+                                      {
+                                        "id": "charges_enrolments.lineInvNumber",
+                                        "field": "charges_enrolments.lineInvNumber",
+                                        "type": "string",
+                                        "operator": "equal",
+                                        "value": "{{lineInvNumber_forInsert}}",
+                                        "data": {
+                                          "table": "charges_enrolments",
+                                          "column": "lineInvNumber",
+                                          "type": "text"
+                                        },
+                                        "operation": "="
+                                      }
+                                    ],
+                                    "conditional": null,
+                                    "valid": true
+                                  },
+                                  "query": "SELECT COUNT(*) AS total\nFROM charges_enrolments\nWHERE lineInvNumber = :P1 /* {{lineInvNumber_forInsert}} */",
+                                  "params": [
+                                    {
+                                      "operator": "equal",
+                                      "type": "expression",
+                                      "name": ":P1",
+                                      "value": "{{lineInvNumber_forInsert}}"
+                                    }
+                                  ]
+                                }
+                              },
+                              "output": false,
+                              "meta": [
+                                {
+                                  "type": "number",
+                                  "name": "id"
+                                },
+                                {
+                                  "type": "date",
+                                  "name": "startofweek"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "classId"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "studentid"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "classTypeId"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "enrolid"
+                                },
+                                {
+                                  "type": "date",
+                                  "name": "classDate"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "baseRate"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "endisc"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "ennetrate"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "endiscdescription"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "endiscrate"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "familydiscountdesc"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "familydiscountrate"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "familydiscounttotal"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "enrolGrandTotal"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "chargeId"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "lineInvNumber"
+                                },
+                                {
+                                  "type": "number",
+                                  "name": "isvalid"
+                                },
+                                {
+                                  "type": "text",
+                                  "name": "debuggerstatus"
+                                }
+                              ],
+                              "outputType": "object"
+                            },
+                            {
+                              "name": "",
+                              "module": "core",
+                              "action": "condition",
+                              "options": {
+                                "if": "{{query_findEnrolCharge.total > 0}}",
+                                "then": {
+                                  "steps": {
+                                    "name": "update",
+                                    "module": "dbupdater",
+                                    "action": "update",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "update",
+                                        "values": [
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "startofweek",
+                                            "type": "date",
+                                            "value": "{{startofweek}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classId",
+                                            "type": "number",
+                                            "value": "{{classId}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "studentid",
+                                            "type": "number",
+                                            "value": "{{student}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classTypeId",
+                                            "type": "number",
+                                            "value": "{{classType}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "enrolid",
+                                            "type": "number",
+                                            "value": "{{id}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classDate",
+                                            "type": "date",
+                                            "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "baseRate",
+                                            "type": "number",
+                                            "value": "{{baseRate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endisc",
+                                            "type": "number",
+                                            "value": "{{endisc}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "ennetrate",
+                                            "type": "text",
+                                            "value": "{{enNetRate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endiscdescription",
+                                            "type": "text",
+                                            "value": "{{endiscdescription}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endiscrate",
+                                            "type": "text",
+                                            "value": "{{endiscrate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscountdesc",
+                                            "type": "text",
+                                            "value": "{{familydiscountdesc}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscountrate",
+                                            "type": "text",
+                                            "value": "{{familydiscountrate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscounttotal",
+                                            "type": "number",
+                                            "value": "{{familydiscounttotal}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "enrolGrandTotal",
+                                            "type": "number",
+                                            "value": "{{enrolGrandTotal}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "debuggerstatus",
+                                            "type": "text",
+                                            "value": "Updated Charge"
+                                          }
+                                        ],
+                                        "table": "charges_enrolments",
+                                        "wheres": {
+                                          "condition": "AND",
+                                          "rules": [
+                                            {
+                                              "id": "lineInvNumber",
+                                              "field": "lineInvNumber",
+                                              "type": "string",
+                                              "operator": "equal",
+                                              "value": "{{lineInvNumber_forInsert}}",
+                                              "data": {
+                                                "column": "lineInvNumber"
+                                              },
+                                              "operation": "="
+                                            }
+                                          ],
+                                          "conditional": null,
+                                          "valid": true
+                                        },
+                                        "query": "UPDATE charges_enrolments\nSET startofweek = :P1 /* {{startofweek}} */, classId = :P2 /* {{classId}} */, studentid = :P3 /* {{student}} */, classTypeId = :P4 /* {{classType}} */, enrolid = :P5 /* {{id}} */, classDate = :P6 /* {{classdate.formatDate('yyyy-MM-dd')}} */, baseRate = :P7 /* {{baseRate}} */, endisc = :P8 /* {{endisc}} */, ennetrate = :P9 /* {{enNetRate}} */, endiscdescription = :P10 /* {{endiscdescription}} */, endiscrate = :P11 /* {{endiscrate}} */, familydiscountdesc = :P12 /* {{familydiscountdesc}} */, familydiscountrate = :P13 /* {{familydiscountrate}} */, familydiscounttotal = :P14 /* {{familydiscounttotal}} */, enrolGrandTotal = :P15 /* {{enrolGrandTotal}} */, debuggerstatus = 'Updated Charge'\nWHERE lineInvNumber = :P16 /* {{lineInvNumber_forInsert}} */",
+                                        "params": [
+                                          {
+                                            "name": ":P1",
+                                            "type": "expression",
+                                            "value": "{{startofweek}}"
+                                          },
+                                          {
+                                            "name": ":P2",
+                                            "type": "expression",
+                                            "value": "{{classId}}"
+                                          },
+                                          {
+                                            "name": ":P3",
+                                            "type": "expression",
+                                            "value": "{{student}}"
+                                          },
+                                          {
+                                            "name": ":P4",
+                                            "type": "expression",
+                                            "value": "{{classType}}"
+                                          },
+                                          {
+                                            "name": ":P5",
+                                            "type": "expression",
+                                            "value": "{{id}}"
+                                          },
+                                          {
+                                            "name": ":P6",
+                                            "type": "expression",
+                                            "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                                          },
+                                          {
+                                            "name": ":P7",
+                                            "type": "expression",
+                                            "value": "{{baseRate}}"
+                                          },
+                                          {
+                                            "name": ":P8",
+                                            "type": "expression",
+                                            "value": "{{endisc}}"
+                                          },
+                                          {
+                                            "name": ":P9",
+                                            "type": "expression",
+                                            "value": "{{enNetRate}}"
+                                          },
+                                          {
+                                            "name": ":P10",
+                                            "type": "expression",
+                                            "value": "{{endiscdescription}}"
+                                          },
+                                          {
+                                            "name": ":P11",
+                                            "type": "expression",
+                                            "value": "{{endiscrate}}"
+                                          },
+                                          {
+                                            "name": ":P12",
+                                            "type": "expression",
+                                            "value": "{{familydiscountdesc}}"
+                                          },
+                                          {
+                                            "name": ":P13",
+                                            "type": "expression",
+                                            "value": "{{familydiscountrate}}"
+                                          },
+                                          {
+                                            "name": ":P14",
+                                            "type": "expression",
+                                            "value": "{{familydiscounttotal}}"
+                                          },
+                                          {
+                                            "name": ":P15",
+                                            "type": "expression",
+                                            "value": "{{enrolGrandTotal}}"
+                                          },
+                                          {
+                                            "operator": "equal",
+                                            "type": "expression",
+                                            "name": ":P16",
+                                            "value": "{{lineInvNumber_forInsert}}"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "meta": [
+                                      {
+                                        "name": "affected",
+                                        "type": "number"
+                                      }
+                                    ],
+                                    "output": false
+                                  }
+                                },
+                                "else": {
+                                  "steps": {
+                                    "name": "insert_enrolCharge",
+                                    "module": "dbupdater",
+                                    "action": "insert",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "insert",
+                                        "values": [
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "startofweek",
+                                            "type": "date",
+                                            "value": "{{startofweek}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classId",
+                                            "type": "number",
+                                            "value": "{{classId}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "studentid",
+                                            "type": "number",
+                                            "value": "{{student}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classTypeId",
+                                            "type": "number",
+                                            "value": "{{classType}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "enrolid",
+                                            "type": "number",
+                                            "value": "{{id}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "classDate",
+                                            "type": "date",
+                                            "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "baseRate",
+                                            "type": "number",
+                                            "value": "{{baseRate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endisc",
+                                            "type": "number",
+                                            "value": "{{endisc}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "ennetrate",
+                                            "type": "text",
+                                            "value": "{{enNetRate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endiscdescription",
+                                            "type": "text",
+                                            "value": "{{endiscdescription}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "endiscrate",
+                                            "type": "text",
+                                            "value": "{{endiscrate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscountrate",
+                                            "type": "text",
+                                            "value": "{{familydiscountrate}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscounttotal",
+                                            "type": "number",
+                                            "value": "{{familydiscounttotal}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "enrolGrandTotal",
+                                            "type": "number",
+                                            "value": "{{enrolGrandTotal}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "chargeId",
+                                            "type": "number",
+                                            "value": "{{mce.monthlychargeexists.chargeid}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "lineInvNumber",
+                                            "type": "text",
+                                            "value": "{{id.toString() +student.toString() +classdate.toTimestamp()}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "isvalid",
+                                            "type": "number",
+                                            "value": "1"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "familydiscountdesc",
+                                            "type": "text",
+                                            "value": "{{familydiscountdesc}}"
+                                          },
+                                          {
+                                            "table": "charges_enrolments",
+                                            "column": "debuggerstatus",
+                                            "type": "text",
+                                            "value": "Inserted Charge"
+                                          }
+                                        ],
+                                        "table": "charges_enrolments",
+                                        "returning": "id",
+                                        "query": "INSERT INTO charges_enrolments\n(startofweek, classId, studentid, classTypeId, enrolid, classDate, baseRate, endisc, ennetrate, endiscdescription, endiscrate, familydiscountrate, familydiscounttotal, enrolGrandTotal, chargeId, lineInvNumber, isvalid, familydiscountdesc, debuggerstatus) VALUES (:P1 /* {{startofweek}} */, :P2 /* {{classId}} */, :P3 /* {{student}} */, :P4 /* {{classType}} */, :P5 /* {{id}} */, :P6 /* {{classdate.formatDate('yyyy-MM-dd')}} */, :P7 /* {{baseRate}} */, :P8 /* {{endisc}} */, :P9 /* {{enNetRate}} */, :P10 /* {{endiscdescription}} */, :P11 /* {{endiscrate}} */, :P12 /* {{familydiscountrate}} */, :P13 /* {{familydiscounttotal}} */, :P14 /* {{enrolGrandTotal}} */, :P15 /* {{mce.monthlychargeexists.chargeid}} */, :P16 /* {{id.toString() +student.toString() +classdate.toTimestamp()}} */, '1', :P17 /* {{familydiscountdesc}} */, 'Inserted Charge')",
+                                        "params": [
+                                          {
+                                            "name": ":P1",
+                                            "type": "expression",
+                                            "value": "{{startofweek}}"
+                                          },
+                                          {
+                                            "name": ":P2",
+                                            "type": "expression",
+                                            "value": "{{classId}}"
+                                          },
+                                          {
+                                            "name": ":P3",
+                                            "type": "expression",
+                                            "value": "{{student}}"
+                                          },
+                                          {
+                                            "name": ":P4",
+                                            "type": "expression",
+                                            "value": "{{classType}}"
+                                          },
+                                          {
+                                            "name": ":P5",
+                                            "type": "expression",
+                                            "value": "{{id}}"
+                                          },
+                                          {
+                                            "name": ":P6",
+                                            "type": "expression",
+                                            "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                                          },
+                                          {
+                                            "name": ":P7",
+                                            "type": "expression",
+                                            "value": "{{baseRate}}"
+                                          },
+                                          {
+                                            "name": ":P8",
+                                            "type": "expression",
+                                            "value": "{{endisc}}"
+                                          },
+                                          {
+                                            "name": ":P9",
+                                            "type": "expression",
+                                            "value": "{{enNetRate}}"
+                                          },
+                                          {
+                                            "name": ":P10",
+                                            "type": "expression",
+                                            "value": "{{endiscdescription}}"
+                                          },
+                                          {
+                                            "name": ":P11",
+                                            "type": "expression",
+                                            "value": "{{endiscrate}}"
+                                          },
+                                          {
+                                            "name": ":P12",
+                                            "type": "expression",
+                                            "value": "{{familydiscountrate}}"
+                                          },
+                                          {
+                                            "name": ":P13",
+                                            "type": "expression",
+                                            "value": "{{familydiscounttotal}}"
+                                          },
+                                          {
+                                            "name": ":P14",
+                                            "type": "expression",
+                                            "value": "{{enrolGrandTotal}}"
+                                          },
+                                          {
+                                            "name": ":P15",
+                                            "type": "expression",
+                                            "value": "{{mce.monthlychargeexists.chargeid}}"
+                                          },
+                                          {
+                                            "name": ":P16",
+                                            "type": "expression",
+                                            "value": "{{id.toString() +student.toString() +classdate.toTimestamp()}}"
+                                          },
+                                          {
+                                            "name": ":P17",
+                                            "type": "expression",
+                                            "value": "{{familydiscountdesc}}"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "meta": [
+                                      {
+                                        "name": "identity",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "affected",
+                                        "type": "number"
+                                      }
+                                    ],
+                                    "output": false
+                                  }
+                                }
+                              },
+                              "outputType": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      "output": false,
+                      "meta": [
+                        {
+                          "name": "$index",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$number",
+                          "type": "number"
+                        },
+                        {
+                          "name": "$name",
+                          "type": "text"
+                        },
+                        {
+                          "name": "$value",
+                          "type": "object"
+                        }
+                      ],
+                      "outputType": "array"
+                    }
+                  ]
+                }
+              },
+              "outputType": "boolean"
+            }
+          },
+          "else": {
+            "steps": [
+              {
+                "name": "insert_mainCharge",
+                "module": "dbupdater",
+                "action": "insert",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "insert",
+                    "values": [
+                      {
+                        "table": "charges_family",
+                        "column": "total",
+                        "type": "number",
+                        "value": "{{totals.familygrandtotal}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "family",
+                        "type": "number",
+                        "value": "{{$_PARAM.familyid}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "title",
+                        "type": "text",
+                        "value": "{{'Family Tuition Charge: ' + charge.chargefor}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "chargeFor_monthly",
+                        "type": "date",
+                        "value": "{{charge.monthlycharge || null}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "dueDate",
+                        "type": "date",
+                        "value": "{{$_PARAM.dueDate.formatDate('yyyy-MM-dd')}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "chargeType",
+                        "type": "text",
+                        "value": "tuition"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "basetotal",
+                        "type": "number",
+                        "value": "{{totals.baseRate}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "discountotal",
+                        "type": "number",
+                        "value": "{{totals.disctotal}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "chargeDate",
+                        "type": "number",
+                        "value": "{{$_PARAM.chargeDate}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "created",
+                        "type": "date",
+                        "value": "{{NOW_UTC.toLocalTime()}}"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "createdby",
+                        "type": "number",
+                        "value": "{{$_PARAM.userid}}"
+                      }
+                    ],
+                    "table": "charges_family",
+                    "returning": "id",
+                    "query": "INSERT INTO charges_family\n(total, family, title, chargeFor_monthly, dueDate, chargeType, basetotal, discountotal, chargeDate, created, createdby) VALUES (:P1 /* {{totals.familygrandtotal}} */, :P2 /* {{$_PARAM.familyid}} */, :P3 /* {{'Family Tuition Charge: ' + charge.chargefor}} */, :P4 /* {{charge.monthlycharge || null}} */, :P5 /* {{$_PARAM.dueDate.formatDate('yyyy-MM-dd')}} */, 'tuition', :P6 /* {{totals.baseRate}} */, :P7 /* {{totals.disctotal}} */, :P8 /* {{$_PARAM.chargeDate}} */, :P9 /* {{NOW_UTC.toLocalTime()}} */, :P10 /* {{$_PARAM.userid}} */)",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{totals.familygrandtotal}}"
+                      },
+                      {
+                        "name": ":P2",
+                        "type": "expression",
+                        "value": "{{$_PARAM.familyid}}"
+                      },
+                      {
+                        "name": ":P3",
+                        "type": "expression",
+                        "value": "{{'Family Tuition Charge: ' + charge.chargefor}}"
+                      },
+                      {
+                        "name": ":P4",
+                        "type": "expression",
+                        "value": "{{charge.monthlycharge || null}}"
+                      },
+                      {
+                        "name": ":P5",
+                        "type": "expression",
+                        "value": "{{$_PARAM.dueDate.formatDate('yyyy-MM-dd')}}"
+                      },
+                      {
+                        "name": ":P6",
+                        "type": "expression",
+                        "value": "{{totals.baseRate}}"
+                      },
+                      {
+                        "name": ":P7",
+                        "type": "expression",
+                        "value": "{{totals.disctotal}}"
+                      },
+                      {
+                        "name": ":P8",
+                        "type": "expression",
+                        "value": "{{$_PARAM.chargeDate}}"
+                      },
+                      {
+                        "name": ":P9",
+                        "type": "expression",
+                        "value": "{{NOW_UTC.toLocalTime()}}"
+                      },
+                      {
+                        "name": ":P10",
+                        "type": "expression",
+                        "value": "{{$_PARAM.userid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "identity",
+                    "type": "text"
+                  },
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ],
+                "output": false
+              },
+              {
+                "name": "record_repeat",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{enrols}}",
+                  "outputFields": [],
+                  "exec": {
+                    "steps": {
+                      "name": "insert_enrolCharge",
+                      "module": "dbupdater",
+                      "action": "insert",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "insert",
+                          "values": [
+                            {
+                              "table": "charges_enrolments",
+                              "column": "startofweek",
+                              "type": "date",
+                              "value": "{{startofweek}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "classId",
+                              "type": "number",
+                              "value": "{{classId}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "studentid",
+                              "type": "number",
+                              "value": "{{student}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "classTypeId",
+                              "type": "number",
+                              "value": "{{classType}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "enrolid",
+                              "type": "number",
+                              "value": "{{id}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "classDate",
+                              "type": "date",
+                              "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "baseRate",
+                              "type": "number",
+                              "value": "{{pricing.baseRate}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "endisc",
+                              "type": "number",
+                              "value": "{{pricing.endisc}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "ennetrate",
+                              "type": "text",
+                              "value": "{{pricing.enNetRate}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "endiscdescription",
+                              "type": "text",
+                              "value": "{{pricing.endiscdescription}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "endiscrate",
+                              "type": "text",
+                              "value": "{{pricing.endiscrate}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "familydiscountrate",
+                              "type": "text",
+                              "value": "{{pricing.familydiscountrate}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "familydiscounttotal",
+                              "type": "number",
+                              "value": "{{pricing.familydiscounttotal}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "enrolGrandTotal",
+                              "type": "number",
+                              "value": "{{pricing.enrolGrandTotal}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "chargeId",
+                              "type": "number",
+                              "value": "{{insert_mainCharge.identity}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "lineInvNumber",
+                              "type": "text",
+                              "value": "{{id.toString() +student.toString() +classdate.toTimestamp()}}"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "isvalid",
+                              "type": "number",
+                              "value": "1"
+                            },
+                            {
+                              "table": "charges_enrolments",
+                              "column": "familydiscountdesc",
+                              "type": "text",
+                              "value": "{{pricing.familydiscountdesc}}"
+                            }
+                          ],
+                          "table": "charges_enrolments",
+                          "returning": "id",
+                          "query": "INSERT INTO charges_enrolments\n(startofweek, classId, studentid, classTypeId, enrolid, classDate, baseRate, endisc, ennetrate, endiscdescription, endiscrate, familydiscountrate, familydiscounttotal, enrolGrandTotal, chargeId, lineInvNumber, isvalid, familydiscountdesc) VALUES (:P1 /* {{startofweek}} */, :P2 /* {{classId}} */, :P3 /* {{student}} */, :P4 /* {{classType}} */, :P5 /* {{id}} */, :P6 /* {{classdate.formatDate('yyyy-MM-dd')}} */, :P7 /* {{pricing.baseRate}} */, :P8 /* {{pricing.endisc}} */, :P9 /* {{pricing.enNetRate}} */, :P10 /* {{pricing.endiscdescription}} */, :P11 /* {{pricing.endiscrate}} */, :P12 /* {{pricing.familydiscountrate}} */, :P13 /* {{pricing.familydiscounttotal}} */, :P14 /* {{pricing.enrolGrandTotal}} */, :P15 /* {{insert_mainCharge.identity}} */, :P16 /* {{id.toString() +student.toString() +classdate.toTimestamp()}} */, '1', :P17 /* {{pricing.familydiscountdesc}} */)",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{startofweek}}"
+                            },
+                            {
+                              "name": ":P2",
+                              "type": "expression",
+                              "value": "{{classId}}"
+                            },
+                            {
+                              "name": ":P3",
+                              "type": "expression",
+                              "value": "{{student}}"
+                            },
+                            {
+                              "name": ":P4",
+                              "type": "expression",
+                              "value": "{{classType}}"
+                            },
+                            {
+                              "name": ":P5",
+                              "type": "expression",
+                              "value": "{{id}}"
+                            },
+                            {
+                              "name": ":P6",
+                              "type": "expression",
+                              "value": "{{classdate.formatDate('yyyy-MM-dd')}}"
+                            },
+                            {
+                              "name": ":P7",
+                              "type": "expression",
+                              "value": "{{pricing.baseRate}}"
+                            },
+                            {
+                              "name": ":P8",
+                              "type": "expression",
+                              "value": "{{pricing.endisc}}"
+                            },
+                            {
+                              "name": ":P9",
+                              "type": "expression",
+                              "value": "{{pricing.enNetRate}}"
+                            },
+                            {
+                              "name": ":P10",
+                              "type": "expression",
+                              "value": "{{pricing.endiscdescription}}"
+                            },
+                            {
+                              "name": ":P11",
+                              "type": "expression",
+                              "value": "{{pricing.endiscrate}}"
+                            },
+                            {
+                              "name": ":P12",
+                              "type": "expression",
+                              "value": "{{pricing.familydiscountrate}}"
+                            },
+                            {
+                              "name": ":P13",
+                              "type": "expression",
+                              "value": "{{pricing.familydiscounttotal}}"
+                            },
+                            {
+                              "name": ":P14",
+                              "type": "expression",
+                              "value": "{{pricing.enrolGrandTotal}}"
+                            },
+                            {
+                              "name": ":P15",
+                              "type": "expression",
+                              "value": "{{insert_mainCharge.identity}}"
+                            },
+                            {
+                              "name": ":P16",
+                              "type": "expression",
+                              "value": "{{id.toString() +student.toString() +classdate.toTimestamp()}}"
+                            },
+                            {
+                              "name": ":P17",
+                              "type": "expression",
+                              "value": "{{pricing.familydiscountdesc}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "identity",
+                          "type": "text"
+                        },
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ],
+                      "output": false,
+                      "disabled": true
+                    }
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

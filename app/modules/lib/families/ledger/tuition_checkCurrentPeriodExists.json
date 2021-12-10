@@ -1,0 +1,255 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "startdate"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "duedate"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_checkforperiod",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "charges_family",
+                "column": "*",
+                "alias": "chargecount",
+                "aggregate": "COUNT"
+              }
+            ],
+            "table": {
+              "name": "charges_family"
+            },
+            "joins": [],
+            "groupBy": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "charges_family.family",
+                  "field": "charges_family.family",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "charges_family",
+                    "column": "family",
+                    "type": "number"
+                  },
+                  "operation": "="
+                },
+                {
+                  "id": "charges_family.chargeFor_monthly",
+                  "field": "charges_family.chargeFor_monthly",
+                  "type": "date",
+                  "operator": "equal",
+                  "value": "{{$_GET.startdate.startMonth().formatDate('yyyy-MM-dd')}}",
+                  "data": {
+                    "table": "charges_family",
+                    "column": "chargeFor_monthly",
+                    "type": "date"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT COUNT(*) AS chargecount\nFROM charges_family\nWHERE family = :P1 /* {{$_GET.familyid}} */ AND chargeFor_monthly = :P2 /* {{$_GET.startdate.startMonth().formatDate('yyyy-MM-dd')}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.startdate.startMonth().formatDate('yyyy-MM-dd')}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "total"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "description"
+          },
+          {
+            "type": "text",
+            "name": "title"
+          },
+          {
+            "type": "text",
+            "name": "reference"
+          },
+          {
+            "type": "date",
+            "name": "chargeFor_monthly"
+          },
+          {
+            "type": "date",
+            "name": "dueDate"
+          },
+          {
+            "type": "text",
+            "name": "chargeType"
+          },
+          {
+            "type": "number",
+            "name": "chargeFor_session"
+          },
+          {
+            "type": "number",
+            "name": "basetotal"
+          },
+          {
+            "type": "number",
+            "name": "discountotal"
+          },
+          {
+            "type": "date",
+            "name": "chargeDate"
+          },
+          {
+            "type": "date",
+            "name": "created"
+          },
+          {
+            "type": "date",
+            "name": "updated"
+          },
+          {
+            "type": "number",
+            "name": "createdby"
+          },
+          {
+            "type": "number",
+            "name": "updatedby"
+          }
+        ],
+        "type": "dbconnector_single",
+        "outputType": "object"
+      },
+      {
+        "name": "exists",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{query_checkforperiod.chargecount > 0 ? true : false}}"
+        },
+        "meta": [
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor_monthly",
+            "type": "date"
+          },
+          {
+            "name": "dueDate",
+            "type": "date"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor_session",
+            "type": "number"
+          },
+          {
+            "name": "basetotal",
+            "type": "number"
+          },
+          {
+            "name": "discountotal",
+            "type": "number"
+          },
+          {
+            "name": "chargeDate",
+            "type": "date"
+          },
+          {
+            "name": "created",
+            "type": "date"
+          },
+          {
+            "name": "updated",
+            "type": "date"
+          },
+          {
+            "name": "createdby",
+            "type": "number"
+          },
+          {
+            "name": "updatedby",
+            "type": "number"
+          }
+        ],
+        "outputType": "object",
+        "output": false
+      }
+    ]
+  }
+}

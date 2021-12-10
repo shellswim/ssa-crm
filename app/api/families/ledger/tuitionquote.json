@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "array",
+        "name": "periods"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "chargearray",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "chargearray",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "periodCharges_repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{$_GET.periods}}",
+          "outputFields": [],
+          "exec": {
+            "steps": [
+              {
+                "name": "familycharges",
+                "module": "tuitioncalc",
+                "action": "tuitioncalc",
+                "options": {
+                  "familyid": "{{$_GET.familyid}}",
+                  "monthtoprocess": "{{$value}}"
+                },
+                "meta": [
+                  {
+                    "name": "dates",
+                    "type": "array"
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "chargearray_add",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "chargearray",
+                  "value": "{{(chargearray+familycharges)}},"
+                },
+                "meta": [],
+                "outputType": "text"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "chargearray_final",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{chargearray.replace(',', ' ').trim().split(' ')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      }
+    ]
+  }
+}

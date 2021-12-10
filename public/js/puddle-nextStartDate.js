@@ -1,4 +1,5 @@
 function nextStartDate(now, classinfo) {
+    debugger;
     let cd = classinfo.day_int - 1;
     let n = moment(now);
     let dow = n.day();

@@ -3360,346 +3360,7 @@ dmx.config({
       "outputType": "array"
     },
     "repeat1": {
-      "meta": [
-        {
-          "name": "id",
-          "type": "text"
-        },
-        {
-          "name": "startofweek",
-          "type": "date"
-        },
-        {
-          "name": "classId",
-          "type": "number"
-        },
-        {
-          "name": "studentid",
-          "type": "number"
-        },
-        {
-          "name": "classTypeId",
-          "type": "number"
-        },
-        {
-          "name": "enrolid",
-          "type": "number"
-        },
-        {
-          "name": "classDate",
-          "type": "date"
-        },
-        {
-          "name": "enrolCount",
-          "type": "text"
-        },
-        {
-          "name": "baseRate",
-          "type": "number"
-        },
-        {
-          "name": "discAmt",
-          "type": "number"
-        },
-        {
-          "name": "netAmt",
-          "type": "number"
-        },
-        {
-          "name": "enrolNumber",
-          "type": "number"
-        },
-        {
-          "name": "discType",
-          "type": "text"
-        },
-        {
-          "name": "discVal",
-          "type": "number"
-        },
-        {
-          "name": "_procedure",
-          "type": "text"
-        },
-        {
-          "name": "fd_sum_before",
-          "type": "number"
-        },
-        {
-          "name": "fd_type",
-          "type": "text"
-        },
-        {
-          "name": "fd_value",
-          "type": "number"
-        },
-        {
-          "name": "fd_amt",
-          "type": "number"
-        },
-        {
-          "name": "fd_procedure",
-          "type": "text"
-        },
-        {
-          "name": "netAmt_total",
-          "type": "number"
-        },
-        {
-          "name": "enr_grandTotal",
-          "type": "number"
-        },
-        {
-          "name": "net_grandTotal",
-          "type": "number"
-        },
-        {
-          "name": "discDir",
-          "type": "text"
-        },
-        {
-          "name": "chargeId",
-          "type": "text"
-        },
-        {
-          "name": "lineInvNumber",
-          "type": "text"
-        },
-        {
-          "name": "status",
-          "type": "text"
-        },
-        {
-          "name": "classInformation",
-          "type": "object",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "startTimeDecimal",
-              "type": "number"
-            },
-            {
-              "name": "endTimeDecimal",
-              "type": "number"
-            },
-            {
-              "name": "isactive",
-              "type": "boolean"
-            },
-            {
-              "name": "instructor",
-              "type": "text"
-            },
-            {
-              "name": "classLevel",
-              "type": "text"
-            },
-            {
-              "name": "day",
-              "type": "text"
-            },
-            {
-              "name": "startTimeDisplay",
-              "type": "text"
-            },
-            {
-              "name": "endTimeDisplay",
-              "type": "text"
-            },
-            {
-              "name": "max",
-              "type": "number"
-            },
-            {
-              "name": "classType",
-              "type": "number"
-            },
-            {
-              "name": "enrolCount",
-              "type": "number"
-            },
-            {
-              "name": "actEnr",
-              "type": "number"
-            },
-            {
-              "name": "muEnr",
-              "type": "number"
-            },
-            {
-              "name": "trEnr",
-              "type": "number"
-            },
-            {
-              "name": "waEnr",
-              "type": "number"
-            },
-            {
-              "name": "dayname",
-              "type": "text"
-            },
-            {
-              "name": "instructorFirst",
-              "type": "text"
-            },
-            {
-              "name": "instructorLast",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "name": "instructorInformation",
-          "type": "object",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "firstName",
-              "type": "text"
-            },
-            {
-              "name": "lastName",
-              "type": "text"
-            },
-            {
-              "name": "phone",
-              "type": "text"
-            },
-            {
-              "name": "email",
-              "type": "text"
-            },
-            {
-              "name": "staffTypes",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "name": "classLevel",
-          "type": "object",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "name",
-              "type": "text"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "colour",
-              "type": "text"
-            },
-            {
-              "name": "order",
-              "type": "number"
-            },
-            {
-              "name": "classType",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "name": "studentInformation",
-          "type": "object",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "firstName",
-              "type": "text"
-            },
-            {
-              "name": "lastName",
-              "type": "text"
-            },
-            {
-              "name": "dob",
-              "type": "date"
-            },
-            {
-              "name": "rollSheetComments",
-              "type": "text"
-            },
-            {
-              "name": "rollSheetMedical",
-              "type": "text"
-            },
-            {
-              "name": "additionalMedical",
-              "type": "text"
-            },
-            {
-              "name": "family",
-              "type": "text"
-            },
-            {
-              "name": "gender",
-              "type": "text"
-            },
-            {
-              "name": "level",
-              "type": "text"
-            },
-            {
-              "name": "age",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "name": "enrolmentInformation",
-          "type": "object",
-          "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "enrolmentType",
-              "type": "number"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "isValid",
-              "type": "boolean"
-            },
-            {
-              "name": "student",
-              "type": "text"
-            },
-            {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "classId",
-              "type": "number"
-            },
-            {
-              "name": "dropReason",
-              "type": "text"
-            }
-          ]
-        }
-      ],
+      "meta": null,
       "outputType": "array"
     },
     "familyChargesRepeat": {
@@ -6716,6 +6377,25 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "rp_chargeperiod": {
+      "meta": [],
+      "outputType": "text"
+    },
+    "rp_periodcharges_output": {
+      "meta": [
+        {
+          "name": "familycharges",
+          "type": "text",
+          "sub": [
+            {
+              "name": "dates",
+              "type": "array"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
     }
   },
   "createFamily": {
@@ -7700,145 +7380,11 @@ dmx.config({
     "dd_classdetails_searchenrol": {
       "meta": [
         {
-          "name": "id",
-          "type": "number"
-        },
-        {
-          "name": "classLevel",
-          "type": "number"
-        },
-        {
-          "name": "day_name",
-          "type": "text"
-        },
-        {
-          "name": "day_int",
-          "type": "number"
-        },
-        {
-          "name": "startdate",
-          "type": "date"
-        },
-        {
-          "name": "enddate",
-          "type": "date"
-        },
-        {
-          "name": "classType",
-          "type": "number"
-        },
-        {
-          "name": "startTimeDisplay",
-          "type": "text"
-        },
-        {
-          "name": "startTimeDecimal",
-          "type": "number"
-        },
-        {
-          "name": "endTimeDisplay",
-          "type": "text"
-        },
-        {
-          "name": "endTimeDecimal",
-          "type": "number"
-        },
-        {
-          "name": "max",
-          "type": "number"
-        },
-        {
-          "name": "instructor_firstname",
-          "type": "text"
-        },
-        {
-          "name": "instructor_lastname",
-          "type": "text"
-        },
-        {
-          "name": "instructorid",
-          "type": "number"
-        },
-        {
-          "name": "enrolcount",
-          "type": "number"
-        },
-        {
-          "name": "enrol_active",
-          "type": "number"
-        },
-        {
-          "name": "enrol_makeup",
-          "type": "number"
-        },
-        {
-          "name": "enrol_trial",
-          "type": "number"
-        },
-        {
-          "name": "enrol_waitlist",
-          "type": "number"
-        },
-        {
-          "name": "enrol_casual",
-          "type": "number"
-        },
-        {
-          "name": "slots_avail",
-          "type": "number"
-        },
-        {
-          "name": "active_enrols",
-          "type": "array",
-          "sub": [
-            {
-              "type": "number",
-              "name": "id"
-            },
-            {
-              "type": "number",
-              "name": "enrolmentType"
-            },
-            {
-              "type": "date",
-              "name": "dropDate"
-            },
-            {
-              "type": "boolean",
-              "name": "isValid"
-            },
-            {
-              "type": "number",
-              "name": "student"
-            },
-            {
-              "type": "date",
-              "name": "startDate"
-            },
-            {
-              "type": "number",
-              "name": "classId"
-            },
-            {
-              "type": "text",
-              "name": "dropReason"
-            },
-            {
-              "type": "text",
-              "name": "firstName"
-            },
-            {
-              "type": "text",
-              "name": "lastName"
-            },
-            {
-              "type": "date",
-              "name": "dob"
-            }
-          ]
+          "name": "dates",
+          "type": "array"
         }
       ],
-      "outputType": "array"
+      "outputType": "text"
     },
     "localStorage": [
       {
@@ -8299,7 +7845,146 @@ dmx.config({
         }
       ],
       "outputType": "text"
-    }
+    },
+    "tuitioncharge_existsChargeAhead": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "date",
+            "name": "startdate"
+          },
+          {
+            "type": "object",
+            "name": "class"
+          },
+          {
+            "type": "number",
+            "name": "familyid"
+          },
+          {
+            "type": "date",
+            "name": "timenow"
+          },
+          {
+            "type": "object",
+            "name": "student"
+          },
+          {
+            "type": "number",
+            "name": "enroltype"
+          }
+        ]
+      },
+      {
+        "name": "checkTuitionCharges",
+        "type": "object",
+        "sub": [
+          {
+            "name": "data",
+            "type": "object",
+            "sub": [
+              {
+                "name": "chargeahead",
+                "type": "text",
+                "sub": [
+                  {
+                    "name": "dates",
+                    "type": "array"
+                  }
+                ]
+              },
+              {
+                "name": "chargeDetails",
+                "type": "text",
+                "sub": []
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "type": "object",
+            "sub": [
+              {
+                "name": "executing",
+                "type": "boolean"
+              },
+              {
+                "name": "uploading",
+                "type": "boolean"
+              },
+              {
+                "name": "processing",
+                "type": "boolean"
+              },
+              {
+                "name": "downloading",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "uploadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "downloadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "lastError",
+            "type": "object",
+            "sub": [
+              {
+                "name": "status",
+                "type": "number"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "response",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "number"
+          }
+        ]
+      }
+    ]
   },
   "_classFilterSidebar": {
     "rp_selectedTimes2": {

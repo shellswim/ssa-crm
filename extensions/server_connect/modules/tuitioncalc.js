@@ -40,6 +40,9 @@ exports.tuitioncalc = async function (options) {
     let tz = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'timezone'`));
     let fid = options.familyid;
     let mtp = moment.utc(options.monthtoprocess).tz(tz.value);
+    let som = mtp.clone().startOf('month').format('YYYY-MM-DD');
+    let findexistingcharge = dbClient(await db.raw(`SELECT * FROM charges_family WHERE family = ${fid} AND chargeFor_monthly = '${som}'`)); 
+    let hascharge_monthly = findexistingcharge.length > 0 ? true : false;
     let mtp_show = mtp.clone().format('YYYY-MM-DD ha z')
     let stp = options.sessiontoprocess;
     let bc = dbClientFlat(await db.raw(`SELECT bc.* FROM billingCycles bc JOIN (SELECT * FROM settings WHERE name = 'billing_cycle') AS setting ON bc.id = setting.value`)).id;
@@ -174,6 +177,7 @@ exports.tuitioncalc = async function (options) {
                         }
                         enrolarray[dates[i].startofweek].push({
                             'student': s.id,
+                            'studentname': s.firstName + ' ' + s.lastName,
                             'enrolments': s.enrolments[dates[i].startofweek],
                             'grossweekprice': round(sum(grossweekprice),2)
                         });
@@ -199,8 +203,9 @@ exports.tuitioncalc = async function (options) {
                     // Family discounts
                     for(enrol in w.enrolments) {
                         let e = w.enrolments[enrol].pricing;
-                        e.familydiscounttotal = round(sum(e.baseRate * (matrix[order].discountAmount / 100)),4);
+                        e.familydiscounttotal = round(sum(e.enNetRate * (matrix[order].discountAmount / 100)),4);
                         e.familydiscountrate = matrix[order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`;
+                        e.familydiscountdesc = matrix[order].description || '-';
                         e.enrolGrandTotal = round(sum(e.enNetRate - e.familydiscounttotal),2);
                     }
                     w.familydiscounttotal = round(sum(w.grossweekprice * (matrix[order].discountAmount / 100)),4); // Total discount applied.
@@ -217,29 +222,36 @@ exports.tuitioncalc = async function (options) {
 
         function formatFinalCharges(arr) {
             var final = {
-                [dr_current.descriptor]: {
+                    'chargefor': dr_current.descriptor,
+                    'monthtocharge': mtp.format('YYYY-MM-DD'),
+                    'monthlychargeexists': {
+                        'exists': hascharge_monthly,
+                        'chargeid': findexistingcharge.length >= 2 ? 'Error: Multiple charges for this period exist. Error must be corrected before proceeding.' : hascharge_monthly ? findexistingcharge[0].id : null,
+                        'status': findexistingcharge.length > 1 ? 409 : 200,
+                        'created': findexistingcharge[0] ? findexistingcharge[0].created : null 
+                    },
+                    'monthlycharge': som,
                     'weeks': {
 
                     },
+                    'enrolments': [],
                     'totals': {
                         'baseRate': [],
                         'enrolsnet': [],
                         'enrolsdisctotal': [],
                         'familydisctotal': [],
+                        'disctotal': [],
                         'familygrandtotal': []
                     }
-                }
             };
 
-            let t = final[dr_current.descriptor].totals; // Tap into totals branch of final.
+            let t = final.totals; // Tap into totals branch of final.
 
             for(let weeks in arr) {
                 let week = arr[weeks]; // Current week looped e.g. 2021-12-05.
-                let w = final[dr_current.descriptor].weeks; // Tap into weeks branch of final.
-                // let s = final[dr_current.descriptor].students; // Tap into students branch of final.
+                let w = final.weeks; // Tap into weeks branch of final.
                 w[weeks] = {}; // Create week/date key.
                 let fweek = w[weeks];
-                fweek.students = {};
                 for(let i=0;i<week.length;i++) {
                     let st = week[i];
                     let weektotals = {
@@ -253,6 +265,7 @@ exports.tuitioncalc = async function (options) {
                         weektotals.baseRate.push(en.pricing.baseRate);
                         weektotals.enNetRate.push(en.pricing.enNetRate);
                         weektotals.familydisctotal.push(en.pricing.familydiscounttotal);
+                        final.enrolments.push(en);
                     }
                     weektotals.baseRate = mathchain(weektotals.baseRate).sum().round(2).done();
                     weektotals.enNetRate = mathchain(weektotals.enNetRate).sum().round(2).done();
@@ -266,9 +279,11 @@ exports.tuitioncalc = async function (options) {
                     t.familydisctotal.push(weektotals.familydisctotal);
                     
                     
-                    fweek.students[st.student] = {
+                    fweek[st.student] = {
                         'enrolments': st.enrolments,
-                        'weektotals': weektotals
+                        'weektotals': weektotals,
+                        'studentname': st.studentname,
+                        'startofweek': weeks
                     };
                 }
                 
@@ -281,18 +296,12 @@ exports.tuitioncalc = async function (options) {
             t.enrolsnet = mathchain(t.enrolsnet).sum().round(2).done();
             t.enrolsdisctotal = round(sum(t.baseRate - t.enrolsnet),2);
             t.familydisctotal = mathchain(t.familydisctotal).sum().round(2).done();
+            t.disctotal = round(sum(t.familydisctotal + t.enrolsdisctotal),2);
             t.familygrandtotal = mathchain(t.enrolsnet - t.familydisctotal).sum().round(2).done();
 
             return final;
 
         }
-
-
-
-
-
-
-
 
         let processed = {
             // 'enrolarray': enrolarray,
@@ -309,16 +318,17 @@ exports.tuitioncalc = async function (options) {
 
     async function getEnrols(sid) {
         let enrols = {};
+        let enrolcount = {};
         for (let i = 0; i < dr_current.weekarr.length; i++) {
             let cd = dr_current.weekarr[i];
             enrols[cd.startofweek] = {};
             let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName
+            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor, c.classLevel
             FROM enrolments e 
+                INNER JOIN students s ON e.student = s.id
                 INNER JOIN classes c ON e.classID = c.id 
                 INNER JOIN classTypes ct ON c.classType = ct.id
-                WHERE e.student = ${sid}
-                AND e.isValid = 1 AND 
+                WHERE e.student = ${sid} AND
                 e.enrolmentType = 1 
                 AND (e.dropDate IS NULL 
                     OR e.dropDate >= '${cd.startofweek}'
@@ -330,20 +340,30 @@ exports.tuitioncalc = async function (options) {
 
             // Get pricing - Raw & Discounted - Add class meeting date.
             if (enrolments.length > 0) {
-                // let rawprice = await pricingCalc(enrolments);
-                // let rawprice = 0;
+                
                 for (let i = 0; i < enrolments.length; i++) {
+                    let eid = enrolments[i].id;
+                    // Count occurances of each enrolment per month & discount on "Force 4 Week Month"
+                    if(bc == 3) {
+                        if(enrolcount.hasOwnProperty(eid)) {
+                            enrolcount[eid] += 1
+                        } else {
+                            enrolcount[eid] = 1
+                        }
+                    }
+    
                     pricecalc = await pricingCalc(enrolments[i], (i + 1), enrolments.length);
                     // rawprice = rawprice += pricecalc.netamt;
                     enrolments[i]['pricing'] = {
-                        'enNetRate': pricecalc.netamt,
-                        'endisc': pricecalc.disc_total,
-                        'endiscrate': pricecalc.disc_rate,
-                        'endiscdescription': pricecalc.disc_desc,
+                        'enNetRate': enrolcount[eid] >=5 ? 0 : pricecalc.netamt,
+                        'endisc': enrolcount[eid] >=5 ? pricecalc.enrolprice : pricecalc.disc_total,
+                        'endiscrate': enrolcount[eid] >=5 ? '100%' : pricecalc.disc_rate,
+                        'endiscdescription': enrolcount[eid] >=5 ? '5th Week of Enrolment Free' : pricecalc.disc_desc,
                         'baseRate': enrolments[i].baseRate,
                         'enrolmentOrder': i + 1
                     }
                     enrolments[i].classdate = moment(cd.startofweek).add((Number(enrolments[i].classday) - 1), 'd');
+                    enrolments[i].startofweek = moment(cd.startofweek).format('YYYY-MM-DD');
                     delete enrolments[i].baseRate;
                 }
                 // Enrolments from Array to Object
@@ -371,13 +391,13 @@ exports.tuitioncalc = async function (options) {
                 discAmt = dbClientFlat(await db.raw(`SELECT * FROM perStudentDiscounts WHERE classType = '${e.classType}' AND enrolmentCount = '${c}' LIMIT 1`));
             }
             if (discAmt.discountType === 1) { // Discount type 1 == Percentage
-                price['netamt'] = evaluate(price.enrolprice - (price.enrolprice * (discAmt.discountAmount / 100)));
-                price['disc_total'] = sum(price.enrolprice - price.netamt);
+                price['netamt'] = round(sum(price.enrolprice - (price.enrolprice * (discAmt.discountAmount / 100))),2);
+                price['disc_total'] = round(sum(price.enrolprice - price.netamt),2);
                 price['disc_rate'] = discAmt.discountAmount + '%';
                 price['disc_desc'] = discAmt.description;
             } else {
-                price['netamt'] = evaluate(price.enrolprice - discAmt.discountAmount);
-                price['disc_total'] = sum(price.enrolprice - price.netamt);
+                price['netamt'] = round(sum(price.enrolprice - discAmt.discountAmount),2);
+                price['disc_total'] = round(sum(price.enrolprice - price.netamt),2);
                 price['disc_rate'] = discAmt.discountAmount;
                 price['disc_desc'] = discAmt.description;
             }
@@ -414,7 +434,7 @@ exports.tuitioncalc = async function (options) {
             let range = {
                 'arr': [0, 0, 0, 0, 0, 0, 0],
                 'weekarr': [],
-                'descriptor': moment(dr.start).format('MMM YYYY'),
+                'descriptor': moment(dr.start).format('MMMM - YYYY'),
                 'start': dr.start,
                 'end': dr.end
             }
@@ -503,9 +523,8 @@ exports.tuitioncalc = async function (options) {
         //    "next": dr_next
         //},
         //'discount_settings': discSettings,
-        //'discAmt': discObj,
-        //'wapplerNOW': mtp_show
+        //'discAmt': discObj
     }
 
-    return feesobject;
+    return familyprocessed;
 }

@@ -1,0 +1,364 @@
+{
+  "meta": {
+    "$_PARAM": [
+      {
+        "type": "text",
+        "name": "startdate"
+      },
+      {
+        "type": "text",
+        "name": "userid"
+      },
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_findFutureCharges",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "charges_family"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "charges_family.chargeFor_monthly",
+                  "field": "charges_family.chargeFor_monthly",
+                  "type": "date",
+                  "operator": "greater_or_equal",
+                  "value": "{{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}}",
+                  "data": {
+                    "table": "charges_family",
+                    "column": "chargeFor_monthly",
+                    "type": "date"
+                  },
+                  "operation": ">="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM charges_family\nWHERE chargeFor_monthly >= :P1 /* {{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}} */",
+            "params": [
+              {
+                "operator": "greater_or_equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}}"
+              }
+            ],
+            "orders": []
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "total"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "description"
+          },
+          {
+            "type": "text",
+            "name": "title"
+          },
+          {
+            "type": "text",
+            "name": "reference"
+          },
+          {
+            "type": "date",
+            "name": "chargeFor_monthly"
+          },
+          {
+            "type": "date",
+            "name": "dueDate"
+          },
+          {
+            "type": "text",
+            "name": "chargeType"
+          },
+          {
+            "type": "number",
+            "name": "chargeFor_session"
+          },
+          {
+            "type": "number",
+            "name": "basetotal"
+          },
+          {
+            "type": "number",
+            "name": "discountotal"
+          },
+          {
+            "type": "date",
+            "name": "chargeDate"
+          },
+          {
+            "type": "date",
+            "name": "created"
+          },
+          {
+            "type": "date",
+            "name": "updated"
+          },
+          {
+            "type": "number",
+            "name": "createdby"
+          },
+          {
+            "type": "number",
+            "name": "updatedby"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_findFutureCharges.length > 0}}",
+          "then": {
+            "steps": {
+              "name": "repeat",
+              "module": "core",
+              "action": "repeat",
+              "options": {
+                "repeat": "{{query_findFutureCharges}}",
+                "outputFields": [],
+                "exec": {
+                  "steps": [
+                    {
+                      "name": "recalcFutureCharges",
+                      "module": "tuitioncalc",
+                      "action": "tuitioncalc",
+                      "options": {
+                        "familyid": "{{family}}",
+                        "monthtoprocess": "{{chargeFor_monthly}}"
+                      },
+                      "meta": [
+                        {
+                          "name": "dates",
+                          "type": "array"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "exec",
+                      "module": "core",
+                      "action": "exec",
+                      "options": {
+                        "exec": "families/ledger/tuitioncharge",
+                        "params": {
+                          "new": "{{recalcFutureCharges}}",
+                          "familyid": "{{$_PARAM.familyid}}",
+                          "charge": "{{recalcFutureCharges}}",
+                          "userid": "{{$_PARAM.userid}}"
+                        }
+                      },
+                      "output": true
+                    }
+                  ]
+                }
+              },
+              "output": true,
+              "meta": [
+                {
+                  "name": "$index",
+                  "type": "number"
+                },
+                {
+                  "name": "$number",
+                  "type": "number"
+                },
+                {
+                  "name": "$name",
+                  "type": "text"
+                },
+                {
+                  "name": "$value",
+                  "type": "object"
+                },
+                {
+                  "name": "id",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                },
+                {
+                  "name": "family",
+                  "type": "number"
+                },
+                {
+                  "name": "description",
+                  "type": "text"
+                },
+                {
+                  "name": "title",
+                  "type": "text"
+                },
+                {
+                  "name": "reference",
+                  "type": "text"
+                },
+                {
+                  "name": "chargeFor_monthly",
+                  "type": "date"
+                },
+                {
+                  "name": "dueDate",
+                  "type": "date"
+                },
+                {
+                  "name": "chargeType",
+                  "type": "text"
+                },
+                {
+                  "name": "chargeFor_session",
+                  "type": "number"
+                },
+                {
+                  "name": "basetotal",
+                  "type": "number"
+                },
+                {
+                  "name": "discountotal",
+                  "type": "number"
+                },
+                {
+                  "name": "chargeDate",
+                  "type": "date"
+                },
+                {
+                  "name": "created",
+                  "type": "date"
+                },
+                {
+                  "name": "updated",
+                  "type": "date"
+                },
+                {
+                  "name": "createdby",
+                  "type": "number"
+                },
+                {
+                  "name": "updatedby",
+                  "type": "number"
+                },
+                {
+                  "name": "exec",
+                  "type": "text",
+                  "sub": []
+                }
+              ],
+              "outputType": "array"
+            }
+          },
+          "else": {
+            "steps": [
+              {
+                "name": "dates",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')+','+$_PARAM.startdate.dateAdd('months', 1).startMonth().formatDate('yyyy-MM-dd')}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              },
+              {
+                "name": "rp_dates",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{dates.split(',')}}",
+                  "outputFields": [],
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "tuitionSingleCalc",
+                        "module": "tuitioncalc",
+                        "action": "tuitioncalc",
+                        "options": {
+                          "familyid": "{{family}}",
+                          "monthtoprocess": "{{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}}"
+                        },
+                        "meta": [
+                          {
+                            "name": "dates",
+                            "type": "array"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "exec_copy",
+                        "module": "core",
+                        "action": "exec",
+                        "options": {
+                          "exec": "families/ledger/tuitioncharge",
+                          "params": {
+                            "new": "{{recalcFutureCharges}}",
+                            "familyid": "{{$_PARAM.familyid}}",
+                            "charge": "{{tuitionSingleCalc}}",
+                            "userid": "{{$_PARAM.userid}}"
+                          }
+                        },
+                        "output": true
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

@@ -1,4 +1,38 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="classes" appconnect="local" fontawesome_5="cdn" components="{dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootbox:{},dmxDataTraversal:{},dmxBootstrap4PagingGenerator:{},dmxBootstrap4Alert:{},dmxBootstrap4TableGenerator:{},dmxBootstrap4Collapse:{},dmxStateManagement:{},dmxPreloader:{},dmxDatePicker:{},dmxBootstrap4Navigation:{},dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5TableGenerator:{},dmxSockets:{},dmxBootstrap5Popovers:{},dmxBootstrap5Tooltips:{}}" jquery_35="cdn" moment_2="local with locales" bootstrap5="local" bootstrap_icons="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="classes" appconnect="local" fontawesome_5="cdn" components="{dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootbox:{},dmxDataTraversal:{},dmxBootstrap4PagingGenerator:{},dmxBootstrap4Alert:{},dmxBootstrap4TableGenerator:{},dmxBootstrap4Collapse:{},dmxStateManagement:{},dmxPreloader:{},dmxDatePicker:{},dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5TableGenerator:{},dmxSockets:{},dmxBootstrap5Popovers:{},dmxBootstrap5Tooltips:{}}" jquery_35="cdn" moment_2="local with locales" bootstrap5="local" bootstrap_icons="cdn" -->
+<script is="dmx-flow" id="tuitioncharge_existsChargeAhead" type="text/dmx-flow">{
+  meta: {
+    $param: [
+      {type: "date", name: "startdate"},
+      {type: "object", name: "class"},
+      {type: "number", name: "familyid"},
+      {type: "date", name: "timenow"},
+      {type: "object", name: "student"},
+      {type: "number", name: "enroltype"}
+    ]
+  },
+  exec: {
+    steps: [
+      {
+        serverConnect: {
+          url: "/api/families/ledger/tuition_checkCurrentPeriodExists",
+          site: "SSA-CRM",
+          params: {
+            startdate: "{{$param.startdate}}",
+            chargeahead: "{{appSettings.billing_cycle_charge_ahead}}",
+            familyid: "{{$param.familyid}}"
+          },
+          name: "checkTuitionCharges",
+          output: true
+        }
+      },
+      {
+        run: {
+          action: "{{newEnrolmentModal.var_chargeObject.setValue(checkTuitionCharges.data.chargeDetails);newEnrolmentModal.var_ne_enrolType.setValue($_PARAM.enroltype);newEnrolmentModal.var_classDetailsObject.setValue($_PARAM.class);newEnrolmentModal.var_studentDetailsObject.setValue($_PARAM.student)}}"
+        }
+      }
+    ]
+  }
+}</script>
 <link rel="wappler-include" type="content-page" href="classes/classesCalendar.ejs" path="/classes/calview">
 
 <dmx-query-manager id="classesQuery"></dmx-query-manager>
@@ -26,7 +60,7 @@
                 </h5>
             </div>
             <div class="modal-body">
-                <dmx-data-detail id="dd_classdetails_searchenrol" dmx-bind:data="classesBase.data.rp_enrols" key="id">
+                <dmx-data-detail id="dd_classdetails_searchenrol" dmx-bind:data="classesBase.data.processedclasses.classes" key="id">
                     <dmx-value id="var_enroltype" dmx-bind:value="enrolmentSearchModal.active_enroltype_toggle.checked ? 'active' : enrolmentSearchModal.waitlist_enroltype_toggle.checked ? 'waitlist' : enrolmentSearchModal.trial_enroltype_toggle.checked ? 'trial' : enrolmentSearchModal.makeup_enroltype_toggle.checked ? 'makeup' : 'casual'"></dmx-value>
                 </dmx-data-detail>
                 <p class="d-flex align-items-center mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i> Class: '+dd_classdetails_searchenrol.data.day_name+' - '+dd_classdetails_searchenrol.data.startTimeDisplay+' '+appSettings.classLevelsByID[dd_classdetails_searchenrol.data.classLevel].name+' - '+appSettings.instructorsById[dd_classdetails_searchenrol.data.instructorid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class
@@ -96,7 +130,7 @@
                                                 <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="students" id="tb_es_repeatStudents">
                                                     <tr>
                                                         <td class="collapse-cell">
-                                                            <button id="addActive" class="btn btn-sm btn-active-outline" dmx-on:click="run([{runJS:{function:'nextStartDate',args:[`dateAndTime_days.datetime`,`enrolmentSearchModal.dd_classdetails_searchenrol.data`],name:'nextstartdate'}},{condition:{if:`enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active.formatDate(\'yyyy-MM-dd\') > nextstartdate.formatDate(\'yyyy-MM-dd\')`,then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active);newEnrolmentModal.var_overbookingPotential.setValue(true)`}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(nextstartdate)`}}}}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(1)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="bi-person-plus-fill fs-6"></i>
+                                                            <button id="addActive" class="btn btn-sm btn-active-outline" dmx-on:click="tuitioncharge_existsChargeAhead.run({class: enrolmentSearchModal.dd_classdetails_searchenrol.data, startdate: dd_classdetails_searchenrol.data.details.active, familyid: family, student: id, enroltype: 1})" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="bi-person-plus-fill fs-6"></i>
                                                             </button>
                                                             <button id="addTrial" class="btn btn-sm btn-trial-outline" dmx-on:click="run([{runJS:{function:'nextStartDate',args:[`dateAndTime_days.datetime`,`enrolmentSearchModal.dd_classdetails_searchenrol.data`],name:'nextstartdate'}},{condition:{if:`enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active.formatDate(\'yyyy-MM-dd\') > nextstartdate.formatDate(\'yyyy-MM-dd\')`,then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active);newEnrolmentModal.var_overbookingPotential.setValue(true)`}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(nextstartdate)`}}}}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(3)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'trial'"><i class="bi-question-circle fs-6"></i>
                                                             </button><button id="addMakeup" class="btn btn-sm btn-makeup-outline" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(2)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'makeup'"><i class="bi-arrow-up-square fs-6"></i>
@@ -138,6 +172,7 @@
     <dmx-value id="var_classDetailsObject"></dmx-value>
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
+            <dmx-value id="var_chargeObject"></dmx-value>
             <dmx-value id="var_ne_enrolType"></dmx-value>
             <dmx-value id="var_overbookingPotential"></dmx-value>
 
@@ -149,18 +184,17 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p class="d-flex align-items-center mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i> Class: '+var_classDetailsObject.value.day_name+' - '+var_classDetailsObject.value.startTimeDisplay+' '+appSettings.classLevelsByID[var_classDetailsObject.value.classLevel].name+' - '+appSettings.instructorsById[var_classDetailsObject.value.instructorid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class Details
+                <p class="d-flex align-items-center mb-4" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i> Class: '+var_classDetailsObject.value.day_name+' - '+var_classDetailsObject.value.startTimeDisplay+' '+appSettings.classLevelsByID[var_classDetailsObject.value.classLevel].name+' - '+appSettings.instructorsById[var_classDetailsObject.value.instructorid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class Details
                 </p>
-                <form is="dmx-serverconnect-form" id="createEnrolmentForm" method="post" action="/api/classes/createEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-param:isvalid="1" dmx-on:success="run([{run:{action:`notifies1.success(var_studentDetailsObject.value.getValueOrKey(\'fullName\')+\' enroled successfully to - \'+classHumanDetailsGlobal.data.classHumanDetails.day+\' \'+classHumanDetailsGlobal.data.classHumanDetails.level+\' - with \'+classHumanDetailsGlobal.data.classHumanDetails.instructor)`}},{run:{action:`createEnrolmentForm.reset()`}},{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`classesBase.load({days: classesQuery.data.days, times: classesQuery.data.times},true)`}},{run:{action:`enrolmentSearchModal.inp_searchModal.setValue(null);queryManager.remove(\'searchtextfilter\')`}}])">
+                <form is="dmx-serverconnect-form" id="createEnrolmentForm" method="post" action="/api/classes/createEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-param:isvalid="1" dmx-param:chargeahead="appSettings.billing_charge_ahead" dmx-param:familyid="var_studentDetailsObject.value.family" dmx-on:success="run([{run:{action:`notifies1.success(var_studentDetailsObject.value.getValueOrKey(\'fullName\')+\' enroled successfully to - \'+classHumanDetailsGlobal.data.classHumanDetails.day+\' \'+classHumanDetailsGlobal.data.classHumanDetails.level+\' - with \'+classHumanDetailsGlobal.data.classHumanDetails.instructor)`}},{run:{action:`createEnrolmentForm.reset()`}},{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`classesBase.load({days: classesQuery.data.days, times: classesQuery.data.times},true)`}},{run:{action:`enrolmentSearchModal.inp_searchModal.setValue(null);queryManager.remove(\'searchtextfilter\')`}}])" dmx-on:error="run({condition:{if:`newEnrolmentModal.createEnrolmentForm.lastError.status == 901`,then:{steps:{run:{action:`newEnrolEnterDueDate.var_chargeDates.setValue(inp_ne_startDate.value);newEnrolEnterDueDate.show()`}}}}})">
                     <input type="hidden" class="form-control" id="inp_classId" name="classId" aria-describedby="inp_classId_help" placeholder="Enter Class" dmx-bind:value="newEnrolmentModal.var_classDetailsObject.value.id">
                     <input type="hidden" class="form-control" id="inp_student" name="student" aria-describedby="inp_student_help" placeholder="Enter Student" dmx-bind:value="newEnrolmentModal.var_studentDetailsObject.value.id">
-                    <div class="row row-cols-3 gy-2">
+                    <div class="row row-cols-3 gy-2 mb-2 pb-3 border-bottom border-top">
                         <div class="col">
                             <label for="inp_enrolmentType" class="col-form-label form-label">Enrolment type</label>
                             <select id="sel_enrolmentType" class="form-select" name="enrolmentType-sel" dmx-bind:options="classesBase.data.enrolmentTypes.where('id', [1,2,3,5], 'inArray')" optiontext="type" optionvalue="id" dmx-bind:value="newEnrolmentModal.var_ne_enrolType.value" dmx-on:changed="run({condition:{if:`sel_enrolmentType.value == 5 || sel_enrolmentType.value == 2`,then:{steps:{run:{action:`inp_ne_dropDate.setValue(inp_ne_startDate.value)`}}},else:{steps:{run:{action:`inp_ne_dropDate.setValue(null)`}}}}})" readonly="true" disabled="true"></select>
                             <input id="inp_hd_enrolType" name="enrolmentType" type="hidden" class="form-control" dmx-bind:value="sel_enrolmentType.value">
                         </div>
-                        <div class="col-break w-100"></div>
                         <div class="col">
 
                             <label for="inp_ne_startDate" class="col-form-label form-label">Start date:</label>
@@ -179,14 +213,14 @@
                         <div class="col" dmx-show="newEnrolmentModal.var_overbookingPotential.value === true">
                             <p class="fs-5 fw-600 mb-0 text-danger"><i class="bi-exclamation-octagon-fill me-2"></i>WARNING: OVERBOOKING POTENTIAL</p>
 
-                            <p class="mb-2 small">Please confirm start date with customer. Puddle has defaulted the start date to the next available date for permanent enrolments (active/trial).&nbsp;<br>The next available date for a <b>permanent</b> enrolment is <b>{{newEnrolmentModal.var_classDetailsObject.value.details.active.formatDate('dd MMMM yyyy')}}&nbsp;.</b></p>
+                            <p class="mb-2">Please confirm start date with customer. Puddle has defaulted the start date to the next available date for permanent enrolments (active/trial).&nbsp;The next available date for a <b>permanent</b> enrolment is <b>{{newEnrolmentModal.var_classDetailsObject.value.details.active.formatDate('dd MMMM yyyy')}}&nbsp;.</b></p>
                         </div>
                         <div class="col my-2 border-top pt-2" dmx-show="dateAndTime_days.datetime.getDay() == (newEnrolmentModal.var_classDetailsObject.value.day_int - 1)">
                             <div class="row g-0">
                                 <div class="col">
                                     <p class="fs-5 fw-600 mb-0 text-danger"><i class="bi-exclamation-octagon-fill me-2"></i>WARNING: CONFIRM START DATE</p>
 
-                                    <p class="small mb-0">By default, Puddle automatically sets the start date to the next day (including today) that the class is available.&nbsp;Time is not currently factored into start dates, and there is potential to enrol a student to start today when the class time has already passed.</p>
+                                    <p class="mb-0">By default, Puddle automatically sets the start date to the next day (including today) that the class is available.&nbsp;Time is not currently factored into start dates, and there is potential to enrol a student to start today when the class time has already passed.</p>
                                 </div>
                             </div>
 
@@ -194,11 +228,59 @@
                         </div>
                     </div>
 
+
                 </form>
+            </div>
+            <div class="modal-body border-top">
+                <div class="row" id="chargedetails">
+                    <div class="col">
+                        <h5><i class="bi-lightning-charge-fill me-2 text-danger"></i>Charge Details Required
+                        </h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <p>No charge has been detected for this family for the following periods:</p>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer d-flex justify-content-between border-top">
                 <button type="button" class="btn btn-outline-danger" dmx-on:click="run([{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`enrolmentSearchModal.show()`}}])" data-bs-dismiss="modal">Back</button>
                 <button class="btn btn-primary" dmx-on:click="run({condition:{if:`newEnrolmentModal.var_overbookingPotential.value`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Change enrolment.'}},message:`'<p>The next availability for this class is <strong>'+newEnrolmentModal.var_classDetailsObject.value.details.active.formatDate('dd MMMM yyyy')+'</strong>.</p><p>The start date you have entered is <strong>'+newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.value.formatDate('dd MMMM yyyy')+'</strong>.</p>Would you like to overbook this class or change the enrolment?'`,title:'Overbook Warning',then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}})">Create Enrolment</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="newEnrolEnterDueDate" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary-main">
+                <h5 class="modal-title fw-450"><i class="bi-calendar-week me-2"></i>New Charge Detected</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <dmx-value id="var_chargeDates"></dmx-value>
+
+
+                <div class="row">
+                    <div class="col">
+                        <p>This family doesn't seem to have a charge for <span class="fw-475">{{var_chargeDates.value.formatDate('MMMM yyyy')}}.</span></p>
+                        <p>Please input the due date below.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="mb-3">
+                            <label for="input1" class="form-label col-form-label">Due Date: <b>{{var_chargeDates.value.formatDate('MMMM yyyy')}}</b></label>
+                            <input type="text" class="form-control" id="inp_duedate" name="input1" aria-describedby="input1_help" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="var_chargeDates.value.formatDate('MMMM yyyy')+' - '+appSettings.localization_dateformat" is="dmx-date-picker">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
             </div>
         </div>
     </div>
@@ -1360,7 +1442,7 @@
 
                     <div class="mb-3">
                         <label for="classType" class="col-form-label form-label">Drop Date:</label>
-                        <input id="inp_dropDate" class="form-control clickable" name="dropDate" is="dmx-date-picker" type="date" showweeknumbers="true" required="" opens="center">
+                        <input id="inp_dropDate_dropmodal" class="form-control clickable" name="dropDate" is="dmx-date-picker" required="" opens="center">
                         <small id="bs4-form-group-help3" class="form-text text-muted">Please select the last day of enrolment.<br> This date is inclusive and the enrolment will be inactive from the day after the drop date.</small>
 
                     </div>
@@ -1468,7 +1550,7 @@
                                                             <div class="row">
                                                                 <div class="col-auto">
 
-                                                                    <button id="btn_newEnrolment" dmx-bind:id="btn_newEnrolment_{{$index}}" class="btn btn-active-outline btn-sm" dmx-on:click="run({condition:{if:`details.active == 0`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Cancel'}},message:'There are no availabilities for this class in the future. Would you like to overbook this class?',title:'Overbook Warning',then:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'active\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}}},else:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'active\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}})"><i class="bi-plus-circle me-2"></i>New Active</button>
+                                                                    <button id="btn_newEnrolment" dmx-bind:id="btn_newEnrolment_{{$index}}" class="btn btn-active-outline btn-sm" dmx-on:click="run({condition:{if:`details.active == 0`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Cancel'}},message:'There are no availabilities for this class in the future. Would you like to overbook this class?',title:'Overbook Warning',then:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'active\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}}},else:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'active\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(var_classid.value)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}})"><i class="bi-plus-circle me-2"></i>New Active</button>
                                                                     <button id="btn_trialEnrolment" dmx-bind:id="btn_newEnrolment_{{$index}}" class="btn btn-trial-outline btn-sm" dmx-on:click="run({condition:{if:`details.active == 0`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Cancel'}},message:'There are no availabilities for this class in the future. Would you like to overbook this class?',title:'Overbook Warning',then:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'trial\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}}},else:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'trial\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}})"><i class="bi-question-circle me-2"></i>New Trial</button>
                                                                     <button id="btn_newMakeup" dmx-bind:id="btn_newEnrolment_{{$index}}" class="btn btn-makeup-outline btn-sm" dmx-on:click="run({condition:{if:`details.makeup.length < 1`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Cancel'}},message:'There are no makeup availabilities for this class in the future. Would you like to overbook this class?',title:'Overbook Warning',then:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'makeup\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}}},else:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'makeup\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}})" dmx-bind:disabled="details.makeup_response.code === 101 || details.makeup_response.code === 102"><i class="bi-arrow-up-square me-2"></i>New Makeup</button>
                                                                     <button id="btn_newCasual" dmx-bind:id="btn_newEnrolment_{{$index}}" class="btn btn-casual-outline btn-sm" dmx-on:click="run({condition:{if:`details.makeup.length < 1`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Cancel'}},message:'There are no availabilities for casual enrolments this class. Would you like to overbook this class?',title:'Overbook Warning',then:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'casual\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}}},else:{steps:[{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.setValue(\'casual\')`}},{run:{action:`enrolmentSearchModal.dd_classdetails_searchenrol.select(id)`}},{run:{action:`enrolmentSearchModal.show()`}}]}}})" dmx-bind:disabled="details.makeup_response.code === 101 || details.makeup_response.code === 102"><i class="bi-hexagon-half me-2"></i>New Casual</button>

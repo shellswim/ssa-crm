@@ -1,4 +1,4 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
 <script is="dmx-flow" id="checkEmailArray" type="text/dmx-flow">{
   meta: {
     $param: [
@@ -1455,6 +1455,7 @@
     </div>
 </div>
 
+
 <div class="modal pe-0 fade" id="editEmailModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="editPhoneForm.reset()">
     <dmx-data-detail id="dd_guardianEmailEdit" dmx-bind:data="familyDetails.data.getGuardiansWContacts" key="id"></dmx-data-detail>
     <div class="modal-dialog" role="document">
@@ -1486,8 +1487,295 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="ledger_runCharge" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+    <div class="modal-dialog modal-xl modal-fullscreen-xl-down modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary-main">
+                <h5 class="modal-title fw-300"><i class="bi-lightning-charge-fill me-3 fs-4"></i>Run a Charge.</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-0 d-flex flex-column">
+                <dmx-serverconnect id="tuitionquotesettings" url="/api/families/ledger/tuitionquotesettings" dmx-param:startdate="ledger_runCharge.chargePeriod_startDate.value" dmx-on:done="arr_chargePeriods.empty()">
+
+                </dmx-serverconnect>
+                <dmx-serverconnect id="tuitionquote" url="/api/families/ledger/tuitionquote" noload dmx-param:familyid="query.familyid" dmx-param:periods="ledger_runCharge.arr_chargePeriods.items" dmx-on:done="run([{wait:{delay:750}},{runJS:{function:'initMergeTable',args:['.periodChargeBreakdown','2,3,4,5,6,7,8,9,10'],name:'initMergeTable'}}])">
+                </dmx-serverconnect>
+                <dmx-array id="arr_chargePeriods" dmx-on:updated="run([{run:{action:`arr_chargePeriods.sort()`}},{run:{action:`tuitionquote.reset()`}},{runJS:{function:'removeMergeTable'}}])"></dmx-array>
+                <div class="row border-bottom mb-2 pt-3 pb-3">
+                    <div class="col-auto">
+                        <label for="chargePeriod_startDate" class="col-form-label pt-0 fw-600">Show Charge Periods From:</label>
+                        <i class="bi-question-circle-fill ms-3 clickable user-select-none" dmx-bs-popover="'<strong>Monthly Billing Cycle:</strong><br><p>If you use monthly billing cycle, 12 months of cycles will be shown, including the month chosen here.</p><strong>Sessions/Terms Billing Cycle:</strong><br><p>Session/Terms billing cycles will show all sessions from the date inputted here inclusive of any session/term this date falls in.</p><em><small>NB: Charge periods will only output students where there was an active enrolment within the month or session/term selected.</small></em>'" data-bs-trigger="hover" data-bs-placement="left" data-bs-html="true" dmx-bind:popover-title="'Charge Periods'"></i>
+                        <input id="chargePeriod_startDate" name="chargePeriod_startDate " type="text" class="form-control w-auto" is="dmx-date-picker" format="MMMM - YYYY" size="25" opens="left" dmx-bind:value="dateAndTime_days.datetime.addDays((dateAndTime_days.datetime.getDate() - 1) / -1).formatDate('yyyy-MM-dd')" dmx-on:updated="tuitionquotesettings.load({})">
+
+                    </div>
+                </div>
+                <div class="row row-cols-1 row-cols-lg-2 g-3">
+                    <div class="col-lg-3 border rounded rounded-3 col-xl-2 mb-lg-2 pt-lg-2 pb-lg-2">
+                        <div class="row row-cols-2 gx-2 gy-3 align-items-stretch row-cols-md-3 row-cols-lg-1 pt-2 pb-2 ps-2 pe-2">
+                            <div class="col" dmx-bind:for="switch_chargePeriod_{{$index}}" id="rp_chargePeriod" dmx-repeat:rp_chargeperiod="tuitionquotesettings.data.dates">
+                                <dmx-toggle id="toggle_chargePeriodHidden" dmx-bind:id="toggle_chargePeriodHidden_{{$index}}" dmx-bind:checked="ledger_runCharge.arr_chargePeriods.items.contains($value)"></dmx-toggle>
+
+                                <div class="row g-0 p-2 border rounded-3 clickable" dmx-on:click="toggle_chargePeriodHidden.toggle()">
+                                    <div class="col-auto d-flex align-items-center justify-content-center">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input pe-none" type="checkbox" value="" id="switch_chargePeriod" name="chargeperiod" dmx-bind:name="chargeperiod_{{$index}}" dmx-bind:id="switch_chargePeriod_{{$index}}" dmx-bind:checked="toggle_chargePeriodHidden.checked" dmx-bind:value="$value" dmx-on:updated="run({condition:{if:`switch_chargePeriod.checked`,then:{steps:{run:{action:`ledger_runCharge.arr_chargePeriods.addUniq(switch_chargePeriod.value)`}}},else:{steps:{run:{action:`ledger_runCharge.arr_chargePeriods.remove(switch_chargePeriod.value)`}}}}})">
+                                        </div>
+                                    </div>
+                                    <div class="col align-self-center">
+                                        <h6 class="mb-0 user-select-none lh-1" dmx-text="$value.formatDate('MMMM - yyyy')">2021 - December</h6>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pb-2 col-lg-9 col-xl-10">
+                        <div class="row align-items-start row-cols-1 g-0 gy-xs-2" id="run_selectedCharges">
+                            <div class="d-flex border-end flex-row justify-content-start align-items-start col-12 border rounded-3 mt-2 pt-2 pb-2 ps-2 pe-2 mt-lg-0 mb-lg-2" dmx-show="ledger_runCharge.arr_chargePeriods.count > 0">
+                                <button id="btn_processSelectedCharges" class="btn align-middle btn-secondary" dmx-bind:disabled="arr_chargePeriods.count === 0" dmx-on:click="tuitionquote.load({})" dmx-hide="ledger_runCharge.tuitionquote.data.periodCharges_repeat.hasItems()"><i class="bi-arrow-down-circle me-2"></i>Get Charges
+                                </button>
+                                <button id="btn_resetSelectedCharges" class="btn align-middle btn-outline-danger" dmx-bind:disabled="arr_chargePeriods.count === 0" dmx-on:click="tuitionquote.reset();arr_chargePeriods.empty()" dmx-hide="!ledger_runCharge.tuitionquote.data.periodCharges_repeat.hasItems()"><i class="bi-arrow-counterclockwise me-2"></i>Reset</button>
+                            </div>
+                            <div class="col align-self-center order-first order-lg-1 border rounded-3" dmx-hide="arr_chargePeriods.count == 0" dmx-animate-enter.duration:250="fadeIn">
+                                <div class="row g-2 mt-lg-0 mb-lg-0 mt-0 mb-0 ms-0 me-0 ps-1 pe-1 position-relative" style="overflow: hidden;" is="dmx-repeat" id="rp_selectedcharges" dmx-bind:repeat="ledger_runCharge.arr_chargePeriods.items" key="$value.replace('-', '')">
+                                    <div class="col-auto mb-2" dmx-bind:id="col_selectedCharge_{{$value}}">
+                                        <button id="tag_selectedCharge" class="btn btn-sm align-middle border btn-primary-main" dmx-html="$value.formatDate('MMMM - yyyy')+'<i class=&quot;bi-x ms-2 alignmiddle&quot;></i>'" dmx-on:click="arr_chargePeriods.remove($value)">Button
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                        <div class="row row-cols-1 gx-0 " dmx-show="ledger_runCharge.arr_chargePeriods.count === 0 &amp;&amp; !ledger_runCharge.tuitionquote.state.executing">
+                            <div class="col p-3 rounded-3 mb-2 ledger-placeholder border pe-none user-select-none" style="">
+                                <p class="mb-0 fw-450">Choose time periods from the list, then click "Get Charges" to generate charges for each period.</p>
+                            </div>
+                        </div>
+                        <section id="periodCharges_output" class="pt-2">
+
+                            <div class="row g-0">
+                                <div class="col p-5 d-flex align-items-center justify-content-start" dmx-show="ledger_runCharge.tuitionquote.state.executing">
+                                    <div class="spinner-border text-primary-main me-3" role="status">
+                                    </div>
+                                    <h4 class="mb-0">Loading Selected Charges<span is="dmx-typed" strings="..." loop="" hidecursor="" speed="10"></span></h4>
+
+                                </div>
+                            </div>
+                            <div class="row g-0">
+                                <div class="col">
+
+                                    <table class="table align-middle mt-3 table-xlg" dmx-hide="ledger_runCharge.tuitionquote.state.executing || !ledger_runCharge.tuitionquote.data.periodCharges_repeat.hasItems()">
+                                        <thead class="fw-bold">
+                                            <tr class="border-bottom fw-400 text-muted">
+                                                <th class="collapse-cell"></th>
+                                                <th>Charge Period</th>
+                                                <th>Grand Total</th>
+                                                <th>All Discounts</th>
+
+                                                <th>Base Rate<i class="bi-question-circle-fill ms-2 clickable user-select-none" dmx-bs-popover="'The base rate is the price of all enrolments before enrolment discounts and family discounts have been applied.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'Base Rate'"></i></th>
+                                                <th scope="row"></th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="ledger_runCharge.tuitionquote.data.periodCharges_repeat" id="tb_rp_familyCharge">
+                                            <tr>
+                                                <td class="text-end collapse-cell"><button id="btn_showChargeDetails" class="btn btn-link text-ledger btn-sm" dmx-on:click="dc_chargePeriodDetails.toggle()"><i class="bi-plus-circle me-2" dmx-class:bi-plus-circle="dc_chargePeriodDetails.collapsed" dmx-class:bi-dash-circle="!dc_chargePeriodDetails.collapsed"></i>Show Details
+                                                    </button></td>
+                                                <td dmx-html="'<p class=&quot;fw-450 fs-5 mb-0&quot;>'+familycharges.chargefor+'</p>'+(familycharges.monthlychargeexists.exists == true &amp;&amp; familycharges.monthlychargeexists.status == 200 ? '<small class=&quot;fst-italic lh-1 text-danger fw-400&quot;>Monthly charge already exists. <br> Created: '+familycharges.monthlychargeexists.created.formatDate('yyyy-MM-dd')+'.</small>': familycharges.monthlychargeexists.exists == true &amp;&amp; familycharges.monthlychargeexists.status == 409 ? '<small class=&quot;lh-1 fst-italic text-danger fw-400&quot;><i class=&quot;bi-exclamation-octagon-fill text-danger me-2&quot;></i>'+familycharges.monthlychargeexists.chargeid+'</small>':'')">
+
+
+
+
+                                                </td>
+                                                <td dmx-text="familycharges.totals.familygrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" class="fs-5 fw-600">$77.50</td>
+                                                <td dmx-text="familycharges.totals.disctotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" class="fs-5 fw-500 text-ledger">$22.50<br></td>
+
+                                                <td dmx-text="familycharges.totals.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" class="fs-5 fw-350 text-muted">$100.0</td>
+                                                <td class="collapse-cell">
+                                                    <button id="btn_processCharge" class="btn btn-primary" dmx-hide="familycharges.monthlychargeexists.exists == true && familycharges.monthlychargeexists.status == 409" dmx-on:click="ledger_processCharge.var_chargedetails.setValue($value.familycharges);ledger_processCharge.form_submitCharge.inp_chargeDate.setValue(dateAndTime_days.datetime.formatDate('yyyy-MM-dd'));ledger_runCharge.hide();ledger_processCharge.show()"><i class="bi-lightning-charge-fill me-2"></i>Charge</button>
+                                                </td>
+
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" class="p-0 border-0">
+
+                                                    <div class="collapse" dmx-bind:id="dc_chargePeriodDetails_{{$index}}" id="dc_chargePeriodDetails" is="dmx-bs5-collapse" style="overflow-x: auto;">
+
+                                                        <div class="row g-0">
+                                                            <div class="col">
+                                                                <div class="table-responsive">
+                                                                    <table class="table periodChargeBreakdown align-middle table-hover d-none" id="chargeEnrolBreakdown">
+                                                                        <thead class="align-middle">
+                                                                            <tr class="border-bottom fw-600">
+                                                                                <th scope="col">Week</th>
+                                                                                <th scope="col">Student</th>
+                                                                                <th scope="col">Enrolment</th>
+                                                                                <th scope="col">Base</th>
+                                                                                <th scope="col">E/Disc</th>
+                                                                                <th scope="col">E/Disc Type</th>
+                                                                                <th scope="col">F/Disc</th>
+                                                                                <th scope="col">F/Disc Type</th>
+                                                                                <th scope="col">Net Total</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody is="dmx-repeat" id="rp_chargeWeeks" dmx-bind:repeat="familycharges.enrolments">
+                                                                            <tr>
+                                                                                <td dmx-text="startofweek.formatDate('dd MMM yyyy')" class="border-end">5/12/2021<br></td>
+                                                                                <td dmx-text="firstName +' '+lastName">Tobias Zelvis</td>
+                                                                                <td dmx-text="appSettings.days_array[classday].trunc(3, true,' ') +' '+appSettings.classLevelsByID[classLevel].name +' - '+appSettings.instructorsById[instructor].trunc_name">Sun Duckling - 9:30AM - Melanie M.</td>
+                                                                                <td dmx-text="pricing.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">18.885<br></td>
+                                                                                <td dmx-text="pricing.endisc == 0 ? '-' : pricing.endisc +' - '+pricing.endiscrate">3.78 - 20%</td>
+                                                                                <td dmx-text="pricing.endiscdescription.titlecase()">2x LTS / Week</td>
+                                                                                <td dmx-text="pricing.familydiscounttotal == 0 ? ' - ' : pricing.familydiscounttotal +' - '+pricing.familydiscountrate">-</td>
+                                                                                <td dmx-text="pricing.familydiscountdesc">-</td>
+                                                                                <td class="fw-600" dmx-text="pricing.enrolGrandTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">15.108</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+
+                        </section>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer border-top d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ledger_processCharge" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="form_submitCharge.reset()">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-white bg-primary-main">
+                <h5 class="modal-title fw-300"><i class="bi-lightning-charge-fill me-2 fs-4"></i>Process Charge</h5>
+            </div>
+            <div class="modal-body">
+                <dmx-value id="var_chargedetails"></dmx-value>
+                <h4 class="fw-380 mb-3 pb-3 border-bottom" dmx-html="'<span class=&quot;fw-500&quot;>Charge for: </span>'+var_chargedetails.value.chargefor.replace(' - ',' ')"><span class="fw-500">Charge for: </span> December 2021</h4>
+                <form is="dmx-serverconnect-form" id="form_submitCharge" method="post" action="/api/families/ledger/tuitioncharge" dmx-generator="bootstrap5" dmx-form-type="inline" dmx-on:success="ledger_runCharge.tuitionquote.load({},true);ledger_processCharge.hide();ledger_runCharge.show();notifies1.success('Charge successfully created.')" dmx-param:monthlychargeexists[exists]="var_chargedetails.value.monthlychargeexists.exists" dmx-param:monthlychargeexists[status]="var_chargedetails.value.monthlychargeexists.status" dmx-param:monthlychargeexists[chargeid]="var_chargedetails.value.monthlychargeexists.chargeid" dmx-param:userid="userDetails.data.identity" dmx-on:error="notifies1.danger('Error '+ledger_processCharge.form_submitCharge.lastError.status+': '+ledger_processCharge.form_submitCharge.lastError.message+' - '+ledger_processCharge.form_submitCharge.lastError.response)">
+
+
+                    <div class="row border-bottom">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="inp_chargeDate" class="col-form-label">Charge Date<span class="text-danger">*</span></label>
+                                <input class="form-control" id="inp_chargeDate" name="chargeDate" placeholder="Charge Date (dd/mm/yyyy)" dmx-bind:placeholder="'Charge Date (' + appSettings.localization_dateformat+')'" type="text" is="dmx-date-picker" dmx-bind:value="dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" dmx-bind:readonly="!cb_overrideChargeDate.checked ? true : false" dmx-bind:format="appSettings.localization_dateformat.uppercase()" format="L">
+                                <div class="form-check form-switch mb-0 mt-1 align-middle">
+                                    <input class="form-check-input" type="checkbox" value="" id="cb_overrideChargeDate">
+                                    <label class="form-check-label text-muted small" for="cb_overrideChargeDate">Override</label>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="inp_dueDate" class="col-form-label">Due Date<span class="text-danger">*</span></label>
+                                <input class="form-control" id="inp_dueDate" name="dueDate" placeholder="Due Date (dd/mm/yyyy)" required="" type="text" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat.uppercase()" format="DD/MM/YYYY">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="inp_title" class="col-form-label">Charge Title:</label>
+                                <input class="form-control" id="inp_title" name="title" placeholder="Charge Title" dmx-bind:value="'Family Tuition Charge: ' + var_chargedetails.value.chargefor">
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="ro_inp_chargeAmount" class="col-form-label">Total Charge:</label>
+                                <input class="form-control" id="ro_inp_chargeAmount" dmx-bind:value="form_submitCharge.inp_total.value.toNumber().formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" disabled="true" readonly="true">
+                            </div>
+
+
+
+                        </div>
+                        <div class="col align-self-end d-flex flex-row justify-content-end">
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary"><i class="bi-lightning-charge-fill me-2"></i>Process Charge
+                                </button>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                    <input class="form-control" id="inp_total" name="total" placeholder="total" dmx-bind:value="var_chargedetails.value.totals.familygrandtotal" type="hidden">
+
+                    <input type="hidden" class="form-control" id="inp_family" name="family" placeholder="familyid" dmx-bind:value="query.familyid">
+
+                    <input class="form-control" id="inp_chargeFor_monthly" name="chargeFor_monthly" placeholder="chargeFor_monthly" type="hidden" dmx-bind:value="var_chargedetails.value.monthtocharge">
+
+                    <input type="hidden" class="form-control" id="inp_basetotal" name="basetotal" placeholder="baseTotal" dmx-bind:value="var_chargedetails.value.totals.baseRate">
+
+                    <input type="hidden" class="form-control" id="inp_discountotal" name="discountotal" placeholder="discTotal" dmx-bind:value="var_chargedetails.value.totals.disctotal">
+
+                    <div id="record" is="dmx-repeat" dmx-bind:repeat="var_chargedetails.value.enrolments">
+
+                        <input type="hidden" class="form-control" id="startofweek" name="startofweek" dmx-bind:id="startofweek_{{$index}}" dmx-bind:aria-describedby="startofweek_{{$index}}_help" dmx-bind:name="record[{{$index}}][startofweek]" aria-describedby="startofweek_help" placeholder="startofweek" dmx-bind:value="$value.startofweek">
+
+                        <input type="hidden" class="form-control" id="classId" name="classId" dmx-bind:id="classId_{{$index}}" dmx-bind:aria-describedby="startofweek_{{$index}}_help" dmx-bind:name="record[{{$index}}][classId]" aria-describedby="classid_help" placeholder="classid" dmx-bind:value="$value.classId">
+
+                        <input type="hidden" class="form-control" id="student" name="student" dmx-bind:id="student_{{$index}}" dmx-bind:aria-describedby="student_{{$index}}_help" dmx-bind:name="record[{{$index}}][student]" aria-describedby="student_help" placeholder="student" dmx-bind:value="$value.student">
+
+                        <input type="hidden" class="form-control" id="classType" name="chargeDate1" dmx-bind:id="classType_{{$index}}" dmx-bind:aria-describedby="classType_{{$index}}_help" dmx-bind:name="record[{{$index}}][classType]" aria-describedby="startofweek_help" placeholder="classType" dmx-bind:value="$value.classType">
+
+                        <input type="hidden" class="form-control" id="id" name="id" dmx-bind:id="id_{{$index}}" dmx-bind:aria-describedby="id_{{$index}}_help" dmx-bind:name="record[{{$index}}][id]" aria-describedby="id_help" placeholder="id" dmx-bind:value="$value.id">
+
+                        <input type="hidden" class="form-control" id="classDate" name="classDate" dmx-bind:id="classDate_{{$index}}" dmx-bind:name="record[{{$index}}][classDate]" placeholder="classDate" dmx-bind:value="$value.classdate">
+
+                        <input type="hidden" class="form-control" id="baseRate" name="baseRate" dmx-bind:id="startofweek_{{$index}}" dmx-bind:aria-describedby="baseRate_{{$index}}_help" dmx-bind:name="record[{{$index}}][baseRate]" aria-describedby="baseRate_help" placeholder="baseRate" dmx-bind:value="$value.pricing.baseRate">
+
+                        <input type="hidden" class="form-control" id="endisc" name="endisc" dmx-bind:id="startofweek_{{$index}}" dmx-bind:aria-describedby="endisc_{{$index}}_help" dmx-bind:name="record[{{$index}}][endisc]" aria-describedby="endisc_help" placeholder="endisc" dmx-bind:value="$value.pricing.endisc">
+                        <input type="hidden" class="form-control" id="enNetRate" name="enNetRate" dmx-bind:id="enNetRate_{{$index}}" dmx-bind:aria-describedby="enNetRate_{{$index}}_help" dmx-bind:name="record[{{$index}}][enNetRate]" aria-describedby="enNetRate_help" placeholder="enNetRate" dmx-bind:value="$value.pricing.enNetRate">
+                        <input type="hidden" class="form-control" id="endiscdescription" name="endiscdescription" dmx-bind:id="endiscdescription_{{$index}}" dmx-bind:aria-describedby="endiscdescription_{{$index}}_help" dmx-bind:name="record[{{$index}}][endiscdescription]" aria-describedby="endiscdescription_help" placeholder="endiscdescription" dmx-bind:value="$value.pricing.endiscdescription">
+                        <input type="hidden" class="form-control" id="endiscrate" name="endiscrate" dmx-bind:id="endiscrate_{{$index}}" dmx-bind:aria-describedby="endiscrate_{{$index}}_help" dmx-bind:name="record[{{$index}}][endiscrate]" aria-describedby="endiscrate_help" placeholder="endiscrate" dmx-bind:value="$value.pricing.endiscrate">
+                        <input type="hidden" class="form-control" id="familydiscountdesc" name="familydiscountdesc" dmx-bind:id="familydiscountdesc_{{$index}}" dmx-bind:aria-describedby="familydiscountdesc_{{$index}}_help" dmx-bind:name="record[{{$index}}][familydiscountdesc]" aria-describedby="familydiscountdesc_help" placeholder="familydiscountdesc" dmx-bind:value="$value.pricing.familydiscountdesc">
+                        <input type="hidden" class="form-control" id="familydiscountrate" name="familydiscountrate" dmx-bind:id="familydiscountrate_{{$index}}" dmx-bind:aria-describedby="familydiscountrate_{{$index}}_help" dmx-bind:name="record[{{$index}}][familydiscountrate]" aria-describedby="familydiscountrate_help" placeholder="familydiscountrate" dmx-bind:value="$value.pricing.familydiscountrate">
+                        <input type="hidden" class="form-control" id="familydiscounttotal" name="familydiscounttotal" dmx-bind:id="familydiscountrate_{{$index}}" dmx-bind:name="record[{{$index}}][familydiscounttotal]" placeholder="familydiscounttotal" dmx-bind:value="$value.pricing.familydiscounttotal">
+                        <input type="hidden" class="form-control" id="enrolGrandTotal" name="enrolGrandTotal" dmx-bind:id="enrolGrandTotal_{{$index}}" dmx-bind:aria-describedby="enrolGrandTotal_{{$index}}_help" dmx-bind:name="record[{{$index}}][enrolGrandTotal]" aria-describedby="enrolGrandTotal_help" placeholder="enrolGrandTotal" dmx-bind:value="$value.pricing.enrolGrandTotal">
+
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex border-top justify-content-between">
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" dmx-on:click="var_chargedetails.setValue(null);ledger_processCharge.hide();ledger_runCharge.show()">Cancel Charge</button>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 <dmx-serverconnect id="familyDetails" url="api/familyParameters" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})"></dmx-serverconnect>
+
+
 <dmx-serverconnect id="checkEmail" noload url="/api/families/checkEmail" dmx-on:success="createGuardianModalForm.arr_emailAddresses.addUniq(createGuardianModalForm.hd_emailObj.value)"></dmx-serverconnect>
 
 
@@ -1525,40 +1813,42 @@
 
 <dmx-datetime id="currentDateVariable"></dmx-datetime>
 
-<main class="d-flex flex-grow-1 flex-column p-4">
+<section class="bg-white px-3 pt-2 border-bottom">
     <div class="row">
         <div class="col d-flex flex-column">
             <div class="row row-cols-1 g-0">
+
                 <div class="col d-flex justify-content-between">
-                    <a href="/families" class="btn btn-link text-body"><i class="bi-arrow-left-circle me-1"></i>Families List
-                    </a>
+                    <a href="/families" class="btn text-body px-0 mb-3 ms-4"><i class="bi-arrow-left-circle me-1"></i>Back to Families List</a>
 
 
-                    <h3 class="fw-bolder" dmx-html="'Family:<span style=&quot;font-weight: normal;&quot;> '+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+' </span>'">Family:<span style="font-weight: normal;"> </span></h3>
+
 
                 </div>
-                <div class="col my-3 p-2 bg-white border rounded-3 text-body d-flex justify-content-between">
-                    <ul class="nav align-items-stretch flex-row justify-content-start gx-2" id="navtabs_parent" role="tablist">
+                <div class="col px-4">
+                    <h1 class="fw-500" dmx-html="'Family:<span style=&quot;font-weight: normal;&quot;> '+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+' </span>'">Family:<span style="font-weight: normal;"> </span></h1>
+                </div>
+                <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
+                    <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-1"></i>Family Overview</a>
+                            <a class="nav-link py-3 px-4" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-1"></i>Family Overview</a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-1"></i>Ledger
+                            <a class="nav-link py-3 px-4" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-1"></i>Ledger
 
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-1"></i>Emails
+                            <a class="nav-link py-3 px-4" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-1"></i>Emails
                             </a>
                         </li>
 
                         <li class="nav-item col-auto">
-                            <a class="nav-link" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="bi-stickies me-1"></i>Notes
-                                <i class="bi-exclamation-circle-fill" dmx-class:pri-5-icon="familyDetails.data.familyNotes[0].maxPriority == 5" dmx-class:pri-4-icon="familyDetails.data.familyNotes[0].maxPriority == 4" dmx-class:pri-3-icon="familyDetails.data.familyNotes[0].maxPriority == 3" dmx-class:pri-2-icon="familyDetails.data.familyNotes[0].maxPriority == 2" dmx-class:pri-1-icon="familyDetails.data.familyNotes[0].maxPriority == 1" dmx-hide="familyDetails.data.familyNotes.length === 0"></i></a>
+                            <a class="nav-link py-3 px-4" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="bi-stickies-fill me-1" dmx-class:pri-5-icon="familyDetails.data.familyNotes[0].maxPriority == 5" dmx-class:pri-4-icon="familyDetails.data.familyNotes[0].maxPriority == 4" dmx-class:pri-3-icon="familyDetails.data.familyNotes[0].maxPriority == 3" dmx-class:pri-2-icon="familyDetails.data.familyNotes[0].maxPriority == 2" dmx-class:pri-1-icon="familyDetails.data.familyNotes[0].maxPriority == 1" dmx-hide="familyDetails.data.familyNotes.length === 0"></i>Notes</a>
 
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link" id="navTabs1__tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-1"></i>Logs
+                            <a class="nav-link py-3 px-4" id="navTabs1_5_tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-1"></i>Logs
                             </a>
                         </li>
                     </ul>
@@ -1569,34 +1859,38 @@
 
         </div>
     </div>
+</section>
+<main class="d-flex flex-grow-1 flex-column p-4">
+
     <div class="row d-flex flex-grow-1">
 
         <div class="col">
 
             <!-- <a class="badge rounded-1 text-end clickable" dmx-class:pri-5-solid="familyDetails.data.familyNotes[0].maxPriority === 5" dmx-class:pri-4-solid="familyDetails.data.familyNotes[0].maxPriority === 4" dmx-class:pri-3-solid="familyDetails.data.familyNotes[0].maxPriority === 3" dmx-class:pri-2-solid="familyDetails.data.familyNotes[0].maxPriority === 2" dmx-class:pri-1-solid="familyDetails.data.familyNotes[0].maxPriority === 1" dmx-hide="familyDetails.data.familyNotes.length === 0" data-bs-toggle="tab" data-bs-target="#navTabs1_4" href="#"><i class="bi-sticky-fill me-2"></i>{{topPriorityNotes.value}}</a> -->
             <div class="tab-content" id="navTabs1_content">
-                <div class="tab-pane fade show active" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
+                <div class="tab-pane fade show" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
                     <div class="row gx-2">
                         <div class="col-auto">
                             <div class="d-flex p-3 pt-2 bg-white border rounded-3 text-body d-flex flex-column">
-                                <h6 class="fw-bold text-uppercase small">Create</h6>
+                                <h6 class="fw-500 text-uppercase text-black-50 mt-1">Create</h6>
+
 
                                 <div class="row g-2">
-                                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createGuardianModal"><i class="bi-plus-circle me-2"></i>New Guardian</button></div>
-                                    <div class="col-auto"><button id="createStudentButton" class="btn align-self-end btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createStudentModal"><i class="bi-plus-circle me-2"></i>New Student</button>
+                                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end btn-secondary" data-bs-toggle="modal" data-bs-target="#createGuardianModal"><i class="bi-plus-circle me-2"></i>New Guardian</button></div>
+                                    <div class="col-auto"><button id="createStudentButton" class="btn align-self-end btn-secondary" data-bs-toggle="modal" data-bs-target="#createStudentModal"><i class="bi-plus-circle me-2"></i>New Student</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="d-flex p-3 pt-2 bg-white border rounded-3 text-body d-flex flex-column">
-                                <h6 class="fw-bold text-uppercase small">Modify</h6>
+                                <h6 class="fw-500 text-uppercase text-black-50 mt-1">Modify</h6>
                                 <div class="row g-2">
                                     <div class="col-auto">
-                                        <button id="btn_addresses" class="btn btn-sm btn-outline-secondary" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="bi-map me-2"></i>Add/Edit Address</button>
+                                        <button id="btn_addresses" class="btn btn-secondary" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="bi-map me-2"></i>Add/Edit Address</button>
 
                                     </div>
-                                    <div class="col-auto"><button id="btn_discounts" class="btn btn-sm btn-outline-secondary"><i class="bi-percent me-2"></i>Special Discounts</button></div>
+                                    <div class="col-auto"><button id="btn_discounts" class="btn btn-secondary"><i class="bi-percent me-2"></i>Special Discounts</button></div>
                                 </div>
                             </div>
 
@@ -1607,13 +1901,13 @@
 
                     </div>
                     <div class="row">
-                        <div class="col " is="dmx-if" id="cr_noaddress" dmx-bind:condition="familyDetails.data.addresses.length == 0">
+                        <div class="col " is="dmx-if" id="cr_noaddress" dmx-bind:condition="familyDetails.data.addresses.length == 0" dmx-text="">
                             <p class="border rounded-3 text-light bg-danger text-start mt-3 mb-0 pt-2 pb-2 ps-2 pe-2"><i class="bi-exclamation-diamond me-2"></i>No address for this family found. Addresses are used in receipts and other documents sent to the family.</p>
                         </div>
                     </div>
 
-                    <div class="row mt-3">
-                        <div class="col-7">
+                    <div class="row row-cols-2 mt-3">
+                        <div class="col-6">
                             <div class="row row-cols-1 g-0">
                                 <div class="col p-4 d-flex flex-column mb-4 border rounded-1 bg-white">
                                     <div class="row pb-3">
@@ -1627,7 +1921,7 @@
 
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
-                                                    <thead class="small table-white fw-bold text-uppercase border-bottom">
+                                                    <thead class="table-white fw-500 text-black-50 border-bottom text-capitalize">
                                                         <tr>
                                                             <th scope="row" style="width: 1%; white-space: nowrap;"></th>
                                                             <th style="white-space: nowrap; width: 1%;">name</th>
@@ -1635,7 +1929,7 @@
                                                             <th scope="row">Phones</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.getGuardiansWContacts" id="guardianTableRepeat" class="table-white small">
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.getGuardiansWContacts" id="guardianTableRepeat" class="table-white">
                                                         <tr>
                                                             <td class="text-center align-middle">
                                                                 <div class="pg-badge clickable user-select-none" dmx-hide="primaryGuardian !== id" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover">P</div>
@@ -1656,43 +1950,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col p-4 d-flex flex-column mb-4 py-3 border rounded-1 bg-white">
-                                    <div class="row pb-4 align-items-center">
-                                        <div class="col align-self-center">
-                                            <h5 class="mb-0">Students</h5>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="table-responsive">
-                                                <table class="table align-middle table-hover big-small">
-                                                    <thead class="small table-white fw-bold text-uppercase border-bottom">
-                                                        <tr>
-                                                            <th style="width: 1%; white-space: nowrap;">Id</th>
-                                                            <th style="">Student</th>
-                                                            <th>Age</th>
-                                                            <th>Level</th>
-                                                            <th>NOTES</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.loopThroughStudents" id="studentTableRepeat" class="table-white small">
-                                                        <tr>
-                                                            <td dmx-text="id">15466</td>
-                                                            <td dmx-text="firstname +' '+lastname" class="text-decoration-underline clickable" dmx-on:click="browser1.goto('/families/familydetail/'+query.familyid+'/studentdetail/'+id)">Jeffrey Doe</td>
-                                                            <td dmx-text="age">3y 4m</td>
-                                                            <td dmx-text="appSettings.classLevelsByID[level].name">Duckling</td>
-                                                            <td dmx-text="getStudentNotes.length > 0 ? (getStudentNotes.length +' Notes') : '-'" class="text-decoration-underline clickable">1 Note</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
 
-
-                                </div>
                             </div>
                         </div>
+
                         <div class="col">
                             <div class="row g-0 row-cols-1" style="top: 1rem;">
                                 <div class="col bg-white p-4 border rounded-3 mb-2" dmx-hide="familyDetails.data.addresses.length === 0">
@@ -1722,241 +1983,296 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col">
+                            <div class="row g-0">
+                                <div class="col bg-white p-4 border rounded-3 mb-2 ">
+                                    <div class="row pb-4 align-items-center">
+                                        <div class="col align-self-center">
+                                            <h5 class="mb-0">Students</h5>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="table-responsive">
+                                                <table class="table align-middle table-hover big-small">
+                                                    <thead class="table-white fw-500 text-black-50 border-bottom text-capitalize">
+                                                        <tr>
+                                                            <th style="width: 1%; white-space: nowrap;">ID</th>
+                                                            <th style="">Student</th>
+                                                            <th>Age</th>
+                                                            <th>Level</th>
+                                                            <th>Notes</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.loopThroughStudents" id="studentTableRepeat" class="table-white">
+                                                        <tr>
+                                                            <td dmx-text="id">15466</td>
+                                                            <td dmx-text="firstname +' '+lastname" class="text-decoration-underline clickable" dmx-on:click="browser1.goto('/families/familydetail/'+query.familyid+'/studentdetail/'+id)">Jeffrey Doe</td>
+                                                            <td dmx-text="age">3y 4m</td>
+                                                            <td dmx-text="appSettings.classLevelsByID[level].name">Duckling</td>
+                                                            <td dmx-text="getStudentNotes.length > 0 ? (getStudentNotes.length +' Notes') : '-'" class="text-decoration-underline clickable">1 Note</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
 
+
+
+                        </div>
                     </div>
 
 
 
                 </div>
-                <div class="tab-pane fade" id="ledger" role="tabpanel">
-                    <div class="row row-cols-1">
-                        <div class="col border-bottom mb-3 pb-4 ps-3 pe-3">
-                            <div class="row row-cols-6">
-                                <div class="col-auto"><a id="btn4" class="btn border btn-light" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment'" dmx-on:click="selectedChargesStore.clear()">New Payment</a></div>
-                                <div class="col-auto"><button id="btn5" class="btn border btn-light">Run a Charge</button></div>
+                <div class="tab-pane fade" id="ledger" role="tabpanel" aria-labelledby="navTabs1_2_tab">
+                    <div class="row">
+                        <div class="col">
+                            <div class="row row-cols-1 g-0">
+                                <div class="col p-3 pt-2 border rounded-3 mb-3 bg-white">
+                                    <h6 class="fw-500 text-uppercase text-black-50 mt-1">Create</h6>
+                                    <div class="row row-cols-6">
+                                        <div class="col-auto"><a id="btn4" class="btn border btn-secondary" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment'" dmx-on:click="selectedChargesStore.clear()"><i class="bi-credit-card-2-back me-2"></i>New Payment
+                                            </a></div>
+                                        <div class="col-auto"><button id="btnrunCharge" class="btn border btn-secondary" data-bs-toggle="modal" data-bs-target="#ledger_runCharge"><i class="bi-lightning-charge-fill me-2"></i>Run a Charge
+                                            </button></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                     </div>
+
                     <div class="row row-cols-1" id="chargeCol">
 
 
-                        <div class="col mb-4">
-
-
-                            <h4 class="mb-3"><i class="bi-cart-plus-fill m-2"></i>Charges
-                            </h4>
-                            <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_familyChargesRepeat" dmx-bind:repeat="familyLedger.data.getStudentCharges">
-                                <div class="col border rounded-small bg-white postition-relative mb-2" dmx-class:border-danger="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount" dmx-class:border-3="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount">
-                                    <div class="row small clickable ms-n2 me-n2 p-3 align-items-center" dmx-on:click="dc_chargeStudentDetail.toggle(undefined)">
-                                        <div class="col-auto align-self-center">
-                                            <h5 class="mb-0 text-center"><i class="bi-triangle-fill text-warning" dmx-show="chargeOverdue === false &amp;&amp; chargePaymentsTotal < chargeAmount"></i>
-                                                <i class="bi-exclamation-triangle-fill text-danger" dmx-show="chargeOverdue === true &amp;&amp; chargePaymentsTotal < chargeAmount"></i>
-                                                <i class="bi-check-circle-fill text-success" dmx-show="chargePaymentsTotal === chargeAmount"></i>
+                        <div class="col">
+                            <div class="row">
+                                <div class="col-5">
+                                    <div class="row g-0">
+                                        <div class="p-3 border rounded-3 bg-white col-12" id="paymentsCol">
+                                            <h5 class="mb-3 fw-450"><i class="bi-credit-card-2-back me-2"></i>Payments
                                             </h5>
-                                        </div>
-                                        <div class="col align-self-center">
 
-                                            <p class="mb-0 text-muted small">Charge for:</p>
-                                            <p class="mb-0 fw-bold text-uppercase" dmx-text="chargeFor.toDate().formatDate('MMM yyyy')">August 2021</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Total:</p>
+                                            <div class="row row-cols-1 g-0" dmx-hide="!familyLedger.data.familyPayments.hasItems()" is="dmx-repeat" id="rp_familyPayments" dmx-bind:repeat="familyLedger.data.familyPayments">
+                                                <div class="col border rounded-small bg-white postition-relative mb-2">
+                                                    <div class="row small clickable ms-n2 me-n2 p-3">
 
 
-                                            <p class="mb-0" dmx-text="chargeAmount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">75.54</p>
+                                                        <div class="col align-self-center">
 
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Paid:</p>
-
-                                            <p class="mb-0 fw-bold" dmx-text="chargePaymentsTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Remaining:</p>
-                                            <p wappler-command="editContent" class="mb-0" dmx-text="chargePaymentsTotal == chargeAmount ? 'PAID' : (chargeAmount - chargePaymentsTotal).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount" dmx-class:fw-bold="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount">75.54</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Due:</p>
-                                            <p class="mb-0" dmx-text="dueDate.formatDate('dd MMM y') ">31 July 2021</p>
-                                        </div>
-
-                                    </div>
-                                    <div class="collapse" id="dc_chargeStudentDetail" is="dmx-bs5-collapse">
-                                        <ul class="nav nav-pills p-3 flex-row border-top border-bottom">
-                                            <li class="nav-item">
-                                                <a class="btn btn-outline-info text-body active rounded-1 border" id="chargeTab_1_tab" role="tab" aria-controls="chargeTab_1" aria-selected="true" style="" data-bs-toggle="tab" dmx-bind:data-bs-target="#chargeTab_1_{{$index}}" href="#">Payments
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="btn btn-outline-info text-body rounded-1 border" id="chargeTab_2_tab" role="tab" aria-controls="chargeTab_2" style="" data-bs-toggle="tab" href="#" dmx-bind:data-bs-target="#chargeTab_2_{{$index}}">Student Breakdown</a>
-                                            </li>
-                                        </ul>
-                                        <div class="tab-content mt-3" id="chargeTab_content" dmx-bind:id="chargeTab_content_{{$index}}">
-                                            <dmx-value id="var_chargid" dmx-bind:value="id"></dmx-value>
-                                            <div class="tab-pane active fade show p-3" id="chargeTab_1" dmx-bind:id="chargeTab_1_{{$index}}" role="tabpanel" aria-labelledby="chargeTab_1_tab">
-                                                <h5 class="mb-0">
-                                                    Payments for this charge.
-                                                </h5>
-                                                <small class="text-muted fw-light small">Click payment for more information.</small>
-                                                <table class="table table-bordered table-hover mt-3 align-middle">
-                                                    <thead class="small fw-bold table-light">
-                                                        <tr>
-                                                            <th scope="row" style="width: 1%; /* white-space: nowrap */" class="text-center">Actions</th>
-                                                            <th>ID:</th>
-                                                            <th>Title</th>
-                                                            <th>Date:</th>
-                                                            <th>TXN Type:</th>
-                                                            <th>Amount</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="paymentLineItemsList" id="tableRepeat3" class="small">
-                                                        <tr>
-                                                            <td>
-                                                                <div class="row flex-nowrap g-1 align-items-center">
-                                                                    <div class="col"><button id="viewPayDetails" class="btn btn-sm btn-light border" type="submit" dmx-on:click="run([{run:{action:`ledgerStorage.set(\'paymentLineItems\',lineItems)`}},{run:{action:`ledgerStorage.set(\'paymentTitle\',title == \'\' || null ? +\'Payment on \'+paymentdate : title)`}},{run:{action:`ledgerStorage.set(\'paymentTotal\',amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2))`}},{wait:{delay:200}},{run:{action:`paymentLineItemsModal.show()`}}])" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-eye"></i></button></div>
-                                                                    <div class="col">
-                                                                        <form id="generateReceiptFormfromCharges" is="dmx-serverconnect-form" method="post" action="/api/families/ledger/payreceipt_json">
-                                                                            <input id="inp_familyid" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
-                                                                            <input id="inp_host" name="host" type="hidden" class="form-control" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.host">
-                                                                            <input id="inp_paymentid" name="paymentid" type="hidden" class="form-control" dmx-bind:value="id"><button id="generatePayReceipt" class="btn btn-sm btn-light border" type="submit" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-receipt"></i></button>
-                                                                        </form>
-                                                                    </div>
-                                                                </div>
-
-
-
-                                                            </td>
-                                                            <td dmx-text="id" class="text-center"></td>
-                                                            <td dmx-text="title"></td>
-                                                            <td dmx-text="paymentdate.formatDate('dd/MM/yyyy')"></td>
-                                                            <td dmx-text="pay_type"></td>
-                                                            <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
-
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-
+                                                            <p class="mb-0 text-muted small">Amount:</p>
+                                                            <p class="mb-0 fw-bold" dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
+                                                        </div>
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 text-muted small">Date:</p>
+                                                            <p class="mb-0" dmx-text="paymentdate.formatDate('dd/MM/yyyy')">01/01/1970</p>
+                                                        </div>
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 text-muted small">Payment Type:</p>
+                                                            <p class="mb-0" dmx-text="'$'+chargeAmount">Credit/Debit Card</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="tab-pane fade" id="chargeTab_2" dmx-bind:id="chargeTab_2_{{$index}}" role="tabpanel" aria-labelledby="chargeTab_1_tab">
+                                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" dmx-show="!familyLedger.data.familyPayments.hasItems()">
+                                                <div class="col align-self-center">
 
-                                                <h5 class="px-3">Student charge breakdown.</h5>
+                                                    <h6 class="mb-0 text-center text-danger">No payment information.</h6>
+                                                    <p class="mb-0 text-muted small text-center">Once a payment is made, the information will show up here.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row g-0">
+                                        <div class="p-3 border rounded-3 bg-white col-12">
+                                            <h5 class="mb-3 fw-450"><i class="bi-lightning-charge-fill me-2"></i>Charges
+                                            </h5>
+                                            <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_familyChargesRepeat" dmx-bind:repeat="familyLedger.data.getStudentCharges">
+                                                <div class="col border rounded-small bg-white postition-relative mb-2" dmx-class:border-danger="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount" dmx-class:border-3="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount">
+                                                    <div class="row clickable ms-n2 me-n2 p-3 align-items-center" dmx-on:click="dc_chargeStudentDetail.toggle(undefined)">
+                                                        <div class="col-auto align-self-center">
+                                                            <h5 class="mb-0 text-center">
+                                                                <i class="bi-triangle-fill text-warning clickable user-select-none" dmx-show="chargeOverdue === false &amp;&amp; chargePaymentsTotal < total" dmx-bs-tooltip="'Unpaid'" data-bs-trigger="hover" data-bs-placement="left"></i>
 
-                                                <div id="rp_chargeStudents" class="row row-cols-1 p-3" is="dmx-repeat" dmx-bind:repeat="getEnrolmentChargeIds">
-                                                    <dmx-value id="arr_chargeEnrolid" dmx-bind:value="[var_chargid.value, enrolid]"></dmx-value>
-                                                    <div class="col">
-                                                        <div class="row g-0">
-                                                            <div class="col border bg-white postition-relative mb-3 rounded rounded-1 overflow-hidden">
+                                                                <i class="bi-exclamation-triangle-fill text-danger clickable user-select-none" dmx-show="chargeOverdue === true &amp;&amp; chargePaymentsTotal < total" dmx-bs-tooltip="'OVERDUE'" data-bs-trigger="hover" data-bs-placement="left"></i>
 
-                                                                <h6 class="py-3 px-3 mb-0 border-bottom" dmx-text="firstName+' '+lastName">Student Name</h6>
-                                                                <div class="row row-cols-1 g-0" id="rp_studentChargeBreakdown" is="dmx-repeat" dmx-bind:repeat="allEnrolmentCharges">
-                                                                    <div class="col py-2 px-3 align-self-center clickable border-bottom light-grey-hover" dmx-on:click="run([{run:{action:`enrChargeBreakdownModal.sc_enrChargeBreakdown.load({chargeid: var_chargid.value, enrolid: enrolid, studentid: student})`}},{wait:{delay:150}},{run:{action:`enrChargeBreakdownModal.show()`}}])">
+                                                                <i class="bi-check-circle-fill text-success clickable user-select-none" dmx-show="chargePaymentsTotal === total" dmx-bs-tooltip="'Paid'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                            </h5>
+                                                        </div>
+                                                        <div class="col align-self-center">
 
-                                                                        <div class="row small">
-                                                                            <div class="align-self-center col-1">
+                                                            <p class="mb-0 text-muted mb-1">Charge for:</p>
+                                                            <p class="mb-0 fw-400" dmx-text="chargeFor_monthly.formatDate('MMMM - yyyy')">August 2021</p>
+                                                        </div>
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 text-muted mb-1">Remaining:</p>
+                                                            <p wappler-command="editContent" class="mb-0 fw-500" dmx-text="chargePaymentsTotal == total ? 'PAID' : (total - chargePaymentsTotal).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount" dmx-class:fw-bold="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount">75.54</p>
+                                                        </div>
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 text-muted mb-1">Paid:</p>
 
-                                                                                <p class="mb-0 small lh-sm text-muted">EID: {{enrolid}}</p>
+                                                            <p class="mb-0 fw-500" dmx-text="chargePaymentsTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
+                                                        </div>
+
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 text-muted mb-1">Due:</p>
+                                                            <p class="mb-0" dmx-text="dueDate.formatDate('dd MMM y') ">31 July 2021</p>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="collapse" id="dc_chargeStudentDetail" is="dmx-bs5-collapse">
+                                                        <ul class="nav nav-pills p-3 flex-row border-top border-bottom">
+                                                            <li class="nav-item">
+                                                                <a class="btn btn-outline-info text-body active rounded-1 border" id="chargeTab_1_tab" role="tab" aria-controls="chargeTab_1" aria-selected="true" style="" data-bs-toggle="tab" dmx-bind:data-bs-target="#chargeTab_1_{{$index}}" href="#">Payments
+                                                                </a>
+                                                            </li>
+                                                            <li class="nav-item">
+                                                                <a class="btn btn-outline-info text-body rounded-1 border" id="chargeTab_2_tab" role="tab" aria-controls="chargeTab_2" style="" data-bs-toggle="tab" href="#" dmx-bind:data-bs-target="#chargeTab_2_{{$index}}">Student Breakdown</a>
+                                                            </li>
+                                                        </ul>
+                                                        <div class="tab-content mt-3" id="chargeTab_content" dmx-bind:id="chargeTab_content_{{$index}}">
+                                                            <dmx-value id="var_chargid" dmx-bind:value="id"></dmx-value>
+                                                            <div class="tab-pane active fade show p-3" id="chargeTab_1" dmx-bind:id="chargeTab_1_{{$index}}" role="tabpanel" aria-labelledby="chargeTab_1_tab">
+                                                                <h5 class="mb-0">
+                                                                    Payments for this charge.
+                                                                </h5>
+                                                                <small class="text-muted fw-light small">Click payment for more information.</small>
+                                                                <table class="table table-bordered table-hover mt-3 align-middle">
+                                                                    <thead class="small fw-bold table-light">
+                                                                        <tr>
+                                                                            <th scope="row" style="width: 1%; /* white-space: nowrap */" class="text-center">Actions</th>
+                                                                            <th>ID:</th>
+                                                                            <th>Title</th>
+                                                                            <th>Date:</th>
+                                                                            <th>TXN Type:</th>
+                                                                            <th>Amount</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="paymentLineItemsList" id="tableRepeat3" class="small">
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="row flex-nowrap g-1 align-items-center">
+                                                                                    <div class="col"><button id="viewPayDetails" class="btn btn-sm btn-light border" type="submit" dmx-on:click="run([{run:{action:`ledgerStorage.set(\'paymentLineItems\',lineItems)`}},{run:{action:`ledgerStorage.set(\'paymentTitle\',title == \'\' || null ? +\'Payment on \'+paymentdate : title)`}},{run:{action:`ledgerStorage.set(\'paymentTotal\',amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2))`}},{wait:{delay:200}},{run:{action:`paymentLineItemsModal.show()`}}])" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-eye"></i></button></div>
+                                                                                    <div class="col">
+                                                                                        <form id="generateReceiptFormfromCharges" is="dmx-serverconnect-form" method="post" action="/api/families/ledger/payreceipt_json">
+                                                                                            <input id="inp_familyid" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                                                                                            <input id="inp_host" name="host" type="hidden" class="form-control" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.host">
+                                                                                            <input id="inp_paymentid" name="paymentid" type="hidden" class="form-control" dmx-bind:value="id"><button id="generatePayReceipt" class="btn btn-sm btn-light border" type="submit" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-receipt"></i></button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </div>
+
+
+
+                                                                            </td>
+                                                                            <td dmx-text="id" class="text-center"></td>
+                                                                            <td dmx-text="title"></td>
+                                                                            <td dmx-text="paymentdate.formatDate('dd/MM/yyyy')"></td>
+                                                                            <td dmx-text="pay_type"></td>
+                                                                            <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+
+                                                            </div>
+                                                            <div class="tab-pane fade" id="chargeTab_2" dmx-bind:id="chargeTab_2_{{$index}}" role="tabpanel" aria-labelledby="chargeTab_1_tab">
+
+                                                                <h5 class="px-3">Student charge breakdown.</h5>
+
+                                                                <div id="rp_chargeStudents" class="row row-cols-1 p-3" is="dmx-repeat" dmx-bind:repeat="getEnrolmentChargeIds">
+                                                                    <dmx-value id="arr_chargeEnrolid" dmx-bind:value="[var_chargid.value, enrolid]"></dmx-value>
+                                                                    <div class="col">
+                                                                        <div class="row g-0">
+                                                                            <div class="col border bg-white postition-relative mb-3 rounded rounded-1 overflow-hidden">
+
+                                                                                <h6 class="py-3 px-3 mb-0 border-bottom" dmx-text="firstName+' '+lastName">Student Name</h6>
+                                                                                <div class="row row-cols-1 g-0" id="rp_studentChargeBreakdown" is="dmx-repeat" dmx-bind:repeat="allEnrolmentCharges">
+                                                                                    <div class="col py-2 px-3 align-self-center clickable border-bottom light-grey-hover" dmx-on:click="run([{run:{action:`enrChargeBreakdownModal.sc_enrChargeBreakdown.load({chargeid: var_chargid.value, enrolid: enrolid, studentid: student})`}},{wait:{delay:150}},{run:{action:`enrChargeBreakdownModal.show()`}}])">
+
+                                                                                        <div class="row small">
+                                                                                            <div class="align-self-center col-1">
+
+                                                                                                <p class="mb-0 small lh-sm text-muted">EID: {{enrolid}}</p>
+                                                                                            </div>
+                                                                                            <div class="col align-self-center">
+                                                                                                <p class="mb-0 text-muted small">Class:</p>
+
+
+
+                                                                                                <p class="mb-0" dmx-text="classLevelName +' - '+classDay.trunc(3, 'true', '.')+' '+classStartTime+' - '+instructorFirst+' '+instructorLast.trunc(1, true,'.')">Level - Day XX:XXam - Instructor Name</p>
+
+                                                                                            </div>
+                                                                                            <div class="col align-self-center">
+                                                                                                <p class="mb-0 text-muted small">Start Date:</p>
+
+                                                                                                <p class="mb-0" dmx-text="startDate.toDate().formatDate('dd MMMM yyyy')">01 Month 1900</p>
+
+
+                                                                                            </div>
+                                                                                            <div class="col align-self-center">
+                                                                                                <p class="mb-0 text-muted small" dmx-hide="dropDate === null">Drop Date:</p>
+                                                                                                <p class="mb-0" dmx-text="dropDate.formatDate('dd MMMM yyyy')">30 Month 1901</p>
+                                                                                            </div>
+                                                                                            <div class="col align-self-center">
+                                                                                                <p class="mb-0 text-end" dmx-text="classTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Enrolment Total</p>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div class="row g-0 pt-1 pb-1 ps-3 pe-3" dmx-on:click="dc_studentChargeBreakdown.toggle()">
+                                                                                    <div class="col align-self-center">
+                                                                                        <h6 class="mb-0 text-end fw-bold" dmx-text="'Total: '+enrolmentsTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Total</h6>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
-                                                                            <div class="col align-self-center">
-                                                                                <p class="mb-0 text-muted small">Class:</p>
 
-
-
-                                                                                <p class="mb-0" dmx-text="classLevelName +' - '+classDay.trunc(3, 'true', '.')+' '+classStartTime+' - '+instructorFirst+' '+instructorLast.trunc(1, true,'.')">Level - Day XX:XXam - Instructor Name</p>
-
-                                                                            </div>
-                                                                            <div class="col align-self-center">
-                                                                                <p class="mb-0 text-muted small">Start Date:</p>
-
-                                                                                <p class="mb-0" dmx-text="startDate.toDate().formatDate('dd MMMM yyyy')">01 Month 1900</p>
-
-
-                                                                            </div>
-                                                                            <div class="col align-self-center">
-                                                                                <p class="mb-0 text-muted small" dmx-hide="dropDate === null">Drop Date:</p>
-                                                                                <p class="mb-0" dmx-text="dropDate.formatDate('dd MMMM yyyy')">30 Month 1901</p>
-                                                                            </div>
-                                                                            <div class="col align-self-center">
-                                                                                <p class="mb-0 text-end" dmx-text="classTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Enrolment Total</p>
-                                                                            </div>
                                                                         </div>
 
-                                                                    </div>
-                                                                </div>
 
-                                                                <div class="row g-0 pt-1 pb-1 ps-3 pe-3" dmx-on:click="dc_studentChargeBreakdown.toggle()">
-                                                                    <div class="col align-self-center">
-                                                                        <h6 class="mb-0 text-end fw-bold" dmx-text="'Total: '+enrolmentsTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">Total</h6>
                                                                     </div>
+
+
+
                                                                 </div>
                                                             </div>
-
                                                         </div>
+
 
 
                                                     </div>
 
-
-
                                                 </div>
                                             </div>
+
                                         </div>
-
-
 
                                     </div>
-
                                 </div>
-                            </div>
-
-                        </div>
-                        <div class="col" id="paymentsCol">
-                            <h4 class="mb-3"><i class="bi-credit-card-fill m-2"></i>Payments
-                            </h4>
-
-                            <div class="row row-cols-1 g-0" dmx-hide="!familyLedger.data.familyPayments.hasItems()" is="dmx-repeat" id="rp_familyPayments" dmx-bind:repeat="familyLedger.data.familyPayments">
-                                <div class="col border rounded-small bg-white postition-relative mb-2">
-                                    <div class="row small clickable ms-n2 me-n2 p-3">
 
 
-                                        <div class="col align-self-center">
-
-                                            <p class="mb-0 text-muted small">Amount:</p>
-                                            <p class="mb-0 fw-bold" dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Date:</p>
-                                            <p class="mb-0" dmx-text="paymentdate.formatDate('dd/MM/yyyy')">01/01/1970</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Charges paid to:</p>
-                                            <p class="mb-0" dmx-text="'$'+chargeAmount">Unknown</p>
-                                        </div>
-                                        <div class="col align-self-center">
-                                            <p class="mb-0 text-muted small">Payment Type:</p>
-                                            <p class="mb-0" dmx-text="'$'+chargeAmount">Credit/Debit Card</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" dmx-show="!familyLedger.data.familyPayments.hasItems()">
-                                <div class="col align-self-center">
-
-                                    <h6 class="mb-0 text-center text-danger">No payment information.</h6>
-                                    <p class="mb-0 text-muted small text-center">Once a payment is made, the information will show up here.</p>
-                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
-                <div class="tab-pane fade" id="emails" role="tabpanel">
+                <div class="tab-pane fade" id="emails" role="tabpanel" aria-labelledby="navTabs1_3_tab">
                     <p>Est quis nulla laborum officia ad nisi ex nostrud culpa Lorem excepteur aliquip dolor aliqua irure ex. Nulla ut duis ipsum nisi elit fugiat commodo sunt reprehenderit laborum veniam eu veniam. Eiusmod minim exercitation
                         fugiat irure ex labore incididunt do fugiat commodo aliquip sit id deserunt reprehenderit aliquip nostrud. Amet ex cupidatat excepteur aute veniam incididunt mollit cupidatat esse irure officia elit do ipsum ullamco Lorem.
                         Ullamco ut ad minim do mollit labore ipsum laboris ipsum commodo sunt tempor enim incididunt. Commodo quis sunt dolore aliquip aute tempor irure magna enim minim reprehenderit. Ullamco consectetur culpa veniam sint cillum
                         aliqua incididunt velit ullamco sunt ullamco quis quis commodo voluptate. Mollit nulla nostrud adipisicing aliqua cupidatat aliqua pariatur mollit voluptate voluptate consequat non.</p>
                 </div>
 
-                <div class="tab-pane fade" id="notes" role="tabpanel">
+                <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="navTabs1_4_tab">
                     <div class="row g-0">
                         <div class="col mb-3 p-3 bg-white border rounded-3 text-body d-flex justify-content-between">
                             <div class="row">
@@ -1992,7 +2308,7 @@
                     </div>
 
                 </div>
-                <div class="tab-pane fade" id="logs" role="tabpanel">
+                <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="navTabs1__tab">
                     <p>Est quis nulla laborum officia ad nisi ex nostrud culpa Lorem excepteur aliquip dolor aliqua irure ex. Nulla ut duis ipsum nisi elit fugiat commodo sunt reprehenderit laborum veniam eu veniam. Eiusmod minim exercitation
                         fugiat irure ex labore incididunt do fugiat commodo aliquip sit id deserunt reprehenderit aliquip nostrud. Amet ex cupidatat excepteur aute veniam incididunt mollit cupidatat esse irure officia elit do ipsum ullamco Lorem.
                         Ullamco ut ad minim do mollit labore ipsum laboris ipsum commodo sunt tempor enim incididunt. Commodo quis sunt dolore aliquip aute tempor irure magna enim minim reprehenderit. Ullamco consectetur culpa veniam sint cillum
@@ -2004,33 +2320,8 @@
     </div>
 
 </main>
-<script defer="true">
-    // Deeplinking bootstrap tabs
-    let url = location.href.replace(/\/$/, '');
-    if (location.hash) {
-        const hash = url.split('#');
-        const currentTab = document.querySelector('#navtabs_parent a[href="#' + hash[1] + '"]');
-        const curTab = new bootstrap.Tab(currentTab);
-        curTab.show();
-        url = location.href.replace(/\/#/, '#');
-        history.replaceState(null, null, url);
-        setTimeout(() => {
-        window.scrollTop = 0;
-        }, 400);
-    }
-    // change url based on selected tab
-    const selectableTabList = [].slice.call(document.querySelectorAll('a[data-bs-toggle="tab"]'));
-    selectableTabList.forEach((selectableTab) => {
-    const selTab = new bootstrap.Tab(selectableTab);
-    selectableTab.addEventListener('click', function () {
-    var newUrl;
-    const hash = selectableTab.getAttribute('href');
-    if (hash == '#home-tab') {
-    newUrl = url.split('#')[0];
-    } else {
-    newUrl = url.split('#')[0] + hash;
-    }
-    history.replaceState(null, null, newUrl);
-    });
-    });
+<script>
+    window.addEventListener('load', function(event) {
+        tabDeeplink(location.href.replace(/\/$/, ''));
+    })
 </script>
