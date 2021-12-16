@@ -7984,7 +7984,16 @@ dmx.config({
           }
         ]
       }
-    ]
+    ],
+    "rp_ne_chargecalc_dates": {
+      "meta": [
+        {
+          "name": "dates",
+          "type": "array"
+        }
+      ],
+      "outputType": "text"
+    }
   },
   "_classFilterSidebar": {
     "rp_selectedTimes2": {

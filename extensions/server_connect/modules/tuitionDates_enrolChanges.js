@@ -32,9 +32,11 @@ exports.tuitiondates = async function(options) {
         let c = 0;
         while(moment(dp).isSameOrBefore(moment(maxcharge))) {
             let sd = moment(dp).format('YYYY-MM-DD');
-            let dd_raw = dbClientFlat(await db.raw(`SELECT dueDate FROM charges_family WHERE family = ${fid} AND chargeFor_monthly = '${sd}'`));
+            let dd_raw = dbClientFlat(await db.raw(`SELECT * FROM charges_family WHERE family = ${fid} AND chargeFor_monthly = '${sd}'`));
             let dd = dd_raw ? moment(dd_raw.dueDate).format('YYYY-MM-DD') : null;
-            datesarray.push({"date": sd, "due": dd });
+            let cd = dd_raw ? moment(dd_raw.chargeDate).format('YYYY-MM-DD') : null;
+
+            datesarray.push({"date": sd, "due": dd, "charge" : cd });
             dp = moment(dp).add(1, 'month');
             ++c;
             if(c > 50) break;

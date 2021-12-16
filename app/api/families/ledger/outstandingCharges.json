@@ -24,7 +24,7 @@
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.chargeAmount - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.chargeAmount) AS totalOwing\nFROM familyCharges fc\nWHERE\n    IFNULL((\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN perWeekEnrolmentCharges pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ),0.00) < fc.chargeAmount AND fc.family = :P1\nORDER BY fc.chargeFor;",
+            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.total - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.total) AS totalOwing\nFROM charges_family fc\nWHERE\n    IFNULL((\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ),0.00) < fc.total AND fc.family = :P1\nORDER BY fc.total;",
             "params": [
               {
                 "name": ":P1",
@@ -161,48 +161,48 @@
                 "output": false,
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "text",
+                    "name": "age"
                   }
                 ],
                 "outputType": "array",
@@ -215,12 +215,12 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT sl.studentid as id, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        pw.studentid\n    FROM perWeekEnrolmentCharges pw\n        LEFT OUTER JOIN\n        tuitionLinePayments tl on tl.enrolchargeid = pw.id\n    WHERE\n        (tl.id IS NULL OR tl.amount < pw.enr_grandTotal)\n        AND pw.chargeId = :P1\n        AND IFNULL((pw.enr_grandTotal - (\n               SELECT SUM(tl.amount)\n               FROM tuitionLinePayments tl\n                   JOIN perWeekEnrolmentCharges pWEC\n                    ON tl.enrolchargeid = pWEC.id\n               WHERE pWEC.id = pw.id\n               )),pw.enr_grandTotal) > 0\n    GROUP BY pw.id, pw.studentid, pw.startofweek, pw.enr_grandTotal, pw.enrolid, pw.classDate\n    ORDER BY pw.studentid, pw.startofweek, pw.enrolid\n         ) AS sl JOIN students s ON sl.studentid = s.id",
+                    "query": "SELECT DISTINCT sl.studentid as id, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.studentid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        tuitionLinePayments tl on tl.enrolchargeid = ec.id\n    WHERE\n        (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n        AND ec.chargeId = :P1\n        AND IFNULL((ec.enrolGrandTotal - (\n               SELECT SUM(tl.amount)\n               FROM tuitionLinePayments tl\n                   JOIN charges_enrolments ec\n                    ON tl.enrolchargeid = ec.id\n               WHERE ec.id = ec.id\n               )),ec.enrolGrandTotal) > 0\n    GROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\n    ORDER BY ec.studentid, ec.startofweek, ec.enrolid\n         ) AS sl JOIN students s ON sl.studentid = s.id",
                     "params": [
                       {
                         "name": ":P1",
                         "value": "{{id}}",
-                        "test": "13"
+                        "test": "31"
                       }
                     ]
                   }
@@ -256,7 +256,9 @@
                 "action": "setvalue",
                 "options": {
                   "value": "{{id}}"
-                }
+                },
+                "meta": [],
+                "outputType": "text"
               },
               {
                 "name": "studentOwingLines",
@@ -280,12 +282,12 @@
                         "options": {
                           "connection": "db",
                           "sql": {
-                            "query": "SELECT\n   pw.id,\n   pw.studentid,\n   pw.startofweek,\n   pw.enr_grandTotal,\n   pw.enrolid,\n   pw.classDate,\n   IFNULL((pw.enr_grandTotal - (\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN perWeekEnrolmentCharges pWEC ON tl.enrolchargeid = pWEC.id\n       WHERE pWEC.id = pw.id\n       )),pw.enr_grandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN perWeekEnrolmentCharges pWEC ON tl.enrolchargeid = pWEC.id\n       WHERE pWEC.id = pw.id\n       ),0.00) AS totalPaid\nFROM perWeekEnrolmentCharges pw\n    LEFT OUTER JOIN\n    tuitionLinePayments tl on tl.enrolchargeid = pw.id\nWHERE\n    (tl.id IS NULL OR tl.amount < pw.enr_grandTotal)\n    AND pw.chargeId = :P1 AND pw.studentid = :P2\n    AND IFNULL((pw.enr_grandTotal - (\n           SELECT SUM(tl.amount)\n           FROM tuitionLinePayments tl\n               JOIN perWeekEnrolmentCharges pWEC \n      \t\t\tON tl.enrolchargeid = pWEC.id\n           WHERE pWEC.id = pw.id\n           )),pw.enr_grandTotal) > 0\nGROUP BY pw.id, pw.studentid, pw.startofweek, pw.enr_grandTotal, pw.enrolid, pw.classDate\nORDER BY pw.studentid, pw.startofweek, pw.enrolid;",
+                            "query": "SELECT\n   ec.id,\n   ec.studentid,\n   ec.startofweek,\n   ec.enrolGrandTotal,\n   ec.enrolid,\n   ec.classDate,\n   IFNULL((ec.enrolGrandTotal - (\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       )),ec.enrolGrandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    tuitionLinePayments tl on tl.enrolchargeid = ec.id\nWHERE\n    (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n    AND ec.chargeId = :P1 AND ec.studentid = :P2\n    AND IFNULL((ec.enrolGrandTotal - (\n           SELECT SUM(tl.amount)\n           FROM tuitionLinePayments tl\n               JOIN charges_enrolments ce \n      \t\t\tON tl.enrolchargeid = ce.id\n           WHERE ce.id = ec.id\n           )),ec.enrolGrandTotal) > 0\nGROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\nORDER BY ec.studentid, ec.startofweek, ec.enrolid;",
                             "params": [
                               {
                                 "name": ":P1",
                                 "value": "{{chargeid}}",
-                                "test": "14"
+                                "test": "31"
                               },
                               {
                                 "name": ":P2",
@@ -302,31 +304,19 @@
                             "type": "number"
                           },
                           {
-                            "name": "studentid",
-                            "type": "number"
-                          },
-                          {
-                            "name": "startofweek",
+                            "name": "firstName",
                             "type": "text"
                           },
                           {
-                            "name": "enr_grandTotal",
-                            "type": "number"
-                          },
-                          {
-                            "name": "enrolid",
-                            "type": "number"
-                          },
-                          {
-                            "name": "classDate",
+                            "name": "lastName",
                             "type": "text"
                           },
                           {
-                            "name": "remaining",
+                            "name": "family",
                             "type": "number"
                           },
                           {
-                            "name": "totalPaid",
+                            "name": "level",
                             "type": "number"
                           }
                         ],
@@ -502,24 +492,24 @@
                               "output": true,
                               "meta": [
                                 {
-                                  "name": "startTimeDisplay",
-                                  "type": "text"
+                                  "type": "text",
+                                  "name": "startTimeDisplay"
                                 },
                                 {
-                                  "name": "instructorFirst",
-                                  "type": "text"
+                                  "type": "text",
+                                  "name": "instructorFirst"
                                 },
                                 {
-                                  "name": "instructorLast",
-                                  "type": "text"
+                                  "type": "text",
+                                  "name": "instructorLast"
                                 },
                                 {
-                                  "name": "levelName",
-                                  "type": "text"
+                                  "type": "text",
+                                  "name": "levelName"
                                 },
                                 {
-                                  "name": "dayName",
-                                  "type": "text"
+                                  "type": "text",
+                                  "name": "dayName"
                                 }
                               ],
                               "outputType": "object",
@@ -550,15 +540,11 @@
                             "type": "number"
                           },
                           {
-                            "name": "chargeAmount",
-                            "type": "number"
-                          },
-                          {
-                            "name": "chargeDateTo",
+                            "name": "firstName",
                             "type": "text"
                           },
                           {
-                            "name": "chargeDateFrom",
+                            "name": "lastName",
                             "type": "text"
                           },
                           {
@@ -566,35 +552,7 @@
                             "type": "number"
                           },
                           {
-                            "name": "description",
-                            "type": "text"
-                          },
-                          {
-                            "name": "title",
-                            "type": "text"
-                          },
-                          {
-                            "name": "reference",
-                            "type": "text"
-                          },
-                          {
-                            "name": "chargeFor",
-                            "type": "text"
-                          },
-                          {
-                            "name": "dueDate",
-                            "type": "text"
-                          },
-                          {
-                            "name": "chargeType",
-                            "type": "text"
-                          },
-                          {
-                            "name": "totalPaid",
-                            "type": "number"
-                          },
-                          {
-                            "name": "totalOwing",
+                            "name": "level",
                             "type": "number"
                           },
                           {
@@ -602,24 +560,24 @@
                             "type": "object",
                             "sub": [
                               {
-                                "name": "startTimeDisplay",
-                                "type": "text"
+                                "type": "text",
+                                "name": "startTimeDisplay"
                               },
                               {
-                                "name": "instructorFirst",
-                                "type": "text"
+                                "type": "text",
+                                "name": "instructorFirst"
                               },
                               {
-                                "name": "instructorLast",
-                                "type": "text"
+                                "type": "text",
+                                "name": "instructorLast"
                               },
                               {
-                                "name": "levelName",
-                                "type": "text"
+                                "type": "text",
+                                "name": "levelName"
                               },
                               {
-                                "name": "dayName",
-                                "type": "text"
+                                "type": "text",
+                                "name": "dayName"
                               }
                             ]
                           }
@@ -648,58 +606,6 @@
                     "type": "object"
                   },
                   {
-                    "name": "id",
-                    "type": "number"
-                  },
-                  {
-                    "name": "chargeAmount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "chargeDateTo",
-                    "type": "text"
-                  },
-                  {
-                    "name": "chargeDateFrom",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
-                    "type": "number"
-                  },
-                  {
-                    "name": "description",
-                    "type": "text"
-                  },
-                  {
-                    "name": "title",
-                    "type": "text"
-                  },
-                  {
-                    "name": "reference",
-                    "type": "text"
-                  },
-                  {
-                    "name": "chargeFor",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dueDate",
-                    "type": "text"
-                  },
-                  {
-                    "name": "chargeType",
-                    "type": "text"
-                  },
-                  {
-                    "name": "totalPaid",
-                    "type": "number"
-                  },
-                  {
-                    "name": "totalOwing",
-                    "type": "number"
-                  },
-                  {
                     "name": "lineItems",
                     "type": "array",
                     "sub": [
@@ -708,51 +614,31 @@
                         "type": "number"
                       },
                       {
-                        "name": "chargeAmount",
+                        "name": "studentid",
                         "type": "number"
                       },
                       {
-                        "name": "chargeDateTo",
+                        "name": "startofweek",
                         "type": "text"
                       },
                       {
-                        "name": "chargeDateFrom",
-                        "type": "text"
-                      },
-                      {
-                        "name": "family",
+                        "name": "enr_grandTotal",
                         "type": "number"
                       },
                       {
-                        "name": "description",
+                        "name": "enrolid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classDate",
                         "type": "text"
                       },
                       {
-                        "name": "title",
-                        "type": "text"
-                      },
-                      {
-                        "name": "reference",
-                        "type": "text"
-                      },
-                      {
-                        "name": "chargeFor",
-                        "type": "text"
-                      },
-                      {
-                        "name": "dueDate",
-                        "type": "text"
-                      },
-                      {
-                        "name": "chargeType",
-                        "type": "text"
+                        "name": "remaining",
+                        "type": "number"
                       },
                       {
                         "name": "totalPaid",
-                        "type": "number"
-                      },
-                      {
-                        "name": "totalOwing",
                         "type": "number"
                       },
                       {
@@ -760,26 +646,42 @@
                         "type": "object",
                         "sub": [
                           {
-                            "name": "startTimeDisplay",
-                            "type": "text"
+                            "type": "text",
+                            "name": "startTimeDisplay"
                           },
                           {
-                            "name": "instructorFirst",
-                            "type": "text"
+                            "type": "text",
+                            "name": "instructorFirst"
                           },
                           {
-                            "name": "instructorLast",
-                            "type": "text"
+                            "type": "text",
+                            "name": "instructorLast"
                           },
                           {
-                            "name": "levelName",
-                            "type": "text"
+                            "type": "text",
+                            "name": "levelName"
                           },
                           {
-                            "name": "dayName",
-                            "type": "text"
+                            "type": "text",
+                            "name": "dayName"
                           }
                         ]
+                      },
+                      {
+                        "name": "firstName",
+                        "type": "text"
+                      },
+                      {
+                        "name": "lastName",
+                        "type": "text"
+                      },
+                      {
+                        "name": "family",
+                        "type": "number"
+                      },
+                      {
+                        "name": "level",
+                        "type": "number"
                       }
                     ]
                   }
@@ -864,58 +766,6 @@
             "type": "array",
             "sub": [
               {
-                "name": "id",
-                "type": "number"
-              },
-              {
-                "name": "chargeAmount",
-                "type": "number"
-              },
-              {
-                "name": "chargeDateTo",
-                "type": "text"
-              },
-              {
-                "name": "chargeDateFrom",
-                "type": "text"
-              },
-              {
-                "name": "family",
-                "type": "number"
-              },
-              {
-                "name": "description",
-                "type": "text"
-              },
-              {
-                "name": "title",
-                "type": "text"
-              },
-              {
-                "name": "reference",
-                "type": "text"
-              },
-              {
-                "name": "chargeFor",
-                "type": "text"
-              },
-              {
-                "name": "dueDate",
-                "type": "text"
-              },
-              {
-                "name": "chargeType",
-                "type": "text"
-              },
-              {
-                "name": "totalPaid",
-                "type": "number"
-              },
-              {
-                "name": "totalOwing",
-                "type": "number"
-              },
-              {
                 "name": "lineItems",
                 "type": "array",
                 "sub": [
@@ -924,51 +774,31 @@
                     "type": "number"
                   },
                   {
-                    "name": "chargeAmount",
+                    "name": "studentid",
                     "type": "number"
                   },
                   {
-                    "name": "chargeDateTo",
+                    "name": "startofweek",
                     "type": "text"
                   },
                   {
-                    "name": "chargeDateFrom",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
+                    "name": "enr_grandTotal",
                     "type": "number"
                   },
                   {
-                    "name": "description",
+                    "name": "enrolid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classDate",
                     "type": "text"
                   },
                   {
-                    "name": "title",
-                    "type": "text"
-                  },
-                  {
-                    "name": "reference",
-                    "type": "text"
-                  },
-                  {
-                    "name": "chargeFor",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dueDate",
-                    "type": "text"
-                  },
-                  {
-                    "name": "chargeType",
-                    "type": "text"
+                    "name": "remaining",
+                    "type": "number"
                   },
                   {
                     "name": "totalPaid",
-                    "type": "number"
-                  },
-                  {
-                    "name": "totalOwing",
                     "type": "number"
                   },
                   {
@@ -976,26 +806,42 @@
                     "type": "object",
                     "sub": [
                       {
-                        "name": "startTimeDisplay",
-                        "type": "text"
+                        "type": "text",
+                        "name": "startTimeDisplay"
                       },
                       {
-                        "name": "instructorFirst",
-                        "type": "text"
+                        "type": "text",
+                        "name": "instructorFirst"
                       },
                       {
-                        "name": "instructorLast",
-                        "type": "text"
+                        "type": "text",
+                        "name": "instructorLast"
                       },
                       {
-                        "name": "levelName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "levelName"
                       },
                       {
-                        "name": "dayName",
-                        "type": "text"
+                        "type": "text",
+                        "name": "dayName"
                       }
                     ]
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "level",
+                    "type": "number"
                   }
                 ]
               }

@@ -60,9 +60,11 @@ exports.classAvail = async function (options) {
         }
 
         for (let i = 0; i < cd.length; i++) {
-            let c = cd[i];
+            let c = cd[i], wed = null;
             c.details = {};
-            let wed = moment(options.startdate).add(c.day_int - 1, 'd');
+            wed = moment(options.startdate).add((c.day_int - 1), 'days');
+            c.optsd = options.startdate;
+            c.wed = wed;
             c.details = await classProcess(wed, c.id, c.max, c);
         }
 
@@ -92,6 +94,8 @@ exports.classAvail = async function (options) {
     async function classProcess(wed, classid, classmax, classinfo) {
         let ci = classinfo;
         let enr_total = [];
+        let wd = wed.clone();
+        let wda = [];
         // let enr_all = [];
         let startd = moment(options.startdate),
             endd = moment(options.enddate);
@@ -127,10 +131,10 @@ exports.classAvail = async function (options) {
             // let r = dbClient(await db.raw('SELECT * FROM enrolments WHERE classId = ? AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true AND startDate <= ?', [classid, startd.format('YYYY-MM-DD'), endd.format('YYYY-MM-DD')]));
             // enr_all.push(r);
 
-            weekday_arr.push(wed.format('YYYY-MM-DD'));
-            startd = startd.add(7, 'days');
-            endd = endd.add(7, 'days');
-            wed = wed.add(7, 'days');
+            wda.push(wd.format('YYYY-MM-DD'));
+            startd = startd.clone().add(7, 'days');
+            endd = endd.clone().add(7, 'days');
+            wd = wd.add(7, 'days');
         }
 
         let mu_array_indexes = [],
@@ -144,9 +148,9 @@ exports.classAvail = async function (options) {
             }
         }
         for (let i = 0; i < mu_array_indexes.length; i++) {
-            if (moment(weekday_arr[mu_array_indexes[i]]).isSameOrBefore(mumax) && moment(weekday_arr[mu_array_indexes[i]]).isSameOrAfter(moment())) {
+            if (moment(wda[mu_array_indexes[i]]).isSameOrBefore(mumax) && moment(wda[mu_array_indexes[i]]).isSameOrAfter(moment())) {
                 mu_avail.push({
-                    'date': weekday_arr[mu_array_indexes[i]],
+                    'date': wda[mu_array_indexes[i]],
                     'availabilities': classmax - enr_total[mu_array_indexes[i]]
                 });
             }
@@ -161,7 +165,7 @@ exports.classAvail = async function (options) {
         }
 
         // Set makeup response if no makeups available.
-        mu_unavail_response = moment(weekday_arr[0]).isAfter(mumax) ? mu_unavail_response = {
+        mu_unavail_response = moment(wda[0]).isAfter(mumax) ? mu_unavail_response = {
             "code": 102,
             "response": 'Too far into future.',
             "total": 0
@@ -176,7 +180,7 @@ exports.classAvail = async function (options) {
         };
 
         let endmax = enr_total.lastIndexOf(classmax);
-        let nextactive = moment(weekday_arr[endmax + 1]) || 0;
+        let nextactive = moment(wda[endmax + 1]) || 0;
         if (nextactive.isBefore(moment()) && nextactive != 0) {
             nextactive.add(7, 'd');
         }
@@ -186,7 +190,7 @@ exports.classAvail = async function (options) {
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
             'total': Math.max(...enr_total),
-            'weekday': weekday_arr[0],
+            'weekday': wd,
             'enrolments': {
                 'active_enrols': active_enrols,
                 'makeup_enrols': makeup_enrols,
