@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_paymentintent",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "payment_intents"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "payment_intents.uuid",
+                  "field": "payment_intents.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.uuid}}",
+                  "data": {
+                    "table": "payment_intents",
+                    "column": "uuid",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM payment_intents\nWHERE uuid = :P1 /* {{$_GET.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "datetime",
+            "name": "created"
+          },
+          {
+            "type": "number",
+            "name": "familyid"
+          },
+          {
+            "type": "number",
+            "name": "total"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_paymentintent_lines",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "pil",
+                "column": "chargeid"
+              },
+              {
+                "table": "pil",
+                "column": "paymenttotal"
+              },
+              {
+                "table": "ce",
+                "column": "studentid"
+              }
+            ],
+            "table": {
+              "name": "payment_intents_lines",
+              "alias": "pil"
+            },
+            "joins": [
+              {
+                "table": "charges_enrolments",
+                "column": "*",
+                "alias": "ce",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "ce",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "pil",
+                        "column": "chargeid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "pil.uuid",
+                  "field": "pil.uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.uuid}}",
+                  "data": {
+                    "table": "pil",
+                    "column": "uuid",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT pil.chargeid, pil.paymenttotal, ce.studentid\nFROM payment_intents_lines AS pil\nLEFT JOIN charges_enrolments AS ce ON (ce.id = pil.chargeid)\nWHERE pil.uuid = :P1 /* {{$_GET.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.uuid}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "chargeid"
+          },
+          {
+            "type": "number",
+            "name": "paymenttotal"
+          },
+          {
+            "type": "number",
+            "name": "studentid"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

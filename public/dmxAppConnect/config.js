@@ -1513,11 +1513,11 @@ dmx.config({
       },
       {
         "type": "text",
-        "name": "payamount"
+        "name": "studentid"
       },
       {
         "type": "text",
-        "name": "studentid"
+        "name": "uuid"
       }
     ],
     "tableRepeat1": {
@@ -6751,6 +6751,10 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "var_stripeOnboardingText": {
+      "meta": null,
+      "outputType": "boolean"
     }
   },
   "classes": {
@@ -8096,6 +8100,18 @@ dmx.config({
       {
         "type": "number",
         "name": "payamount"
+      },
+      {
+        "type": "array",
+        "name": "pay_chargeid"
+      },
+      {
+        "type": "array",
+        "name": "pay_chargeremaining"
+      },
+      {
+        "type": "array",
+        "name": "pay_chargestudentid"
       }
     ],
     "guardianRepeat": {
@@ -8715,20 +8731,10 @@ dmx.config({
       "outputType": "array"
     },
     "var_chargePayment": {
-      "meta": [
-        {
-          "name": "$id",
-          "type": "number"
-        },
-        {
-          "type": "text",
-          "name": "chargeid"
-        },
-        {
-          "type": "number",
-          "name": "remaining"
-        }
-      ],
+      "outputType": "text"
+    },
+    "rp_pi_selectedcharges": {
+      "meta": null,
       "outputType": "array"
     }
   },
@@ -8771,20 +8777,20 @@ dmx.config({
     "rp_hiddenChargeInputs": {
       "meta": [
         {
-          "name": "$id",
-          "type": "number"
+          "type": "number",
+          "name": "uuid"
         },
         {
-          "type": "text",
+          "type": "number",
           "name": "chargeid"
         },
         {
           "type": "number",
-          "name": "remaining"
+          "name": "paymenttotal"
         },
         {
           "type": "number",
-          "name": "studentid"
+          "name": "chargetotal"
         }
       ],
       "outputType": "array"

@@ -1,7 +1,8 @@
-<!-- Wappler include head-page="layouts/standardHeaderFooter" is="dmx-app" id="confirmChargePayment" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{},dmxValidator:{},dmxStateManagement:{}}" moment_2="cdn with locales" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="confirmChargePayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{},dmxValidator:{},dmxStateManagement:{}}" moment_2="cdn with locales" -->
 <dmx-session-manager id="paymentSessionStorage"></dmx-session-manager>
+<dmx-serverconnect id="get_paymentintents" url="/api/families/ledger/payments/GET_paymentIntent" dmx-param:chargeids="" dmx-param:uuid="query.uuid"></dmx-serverconnect>
 <dmx-local-manager id="successfulPaymentId"></dmx-local-manager>
-<dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid" dmx-on:done="run({condition:{if:`selectedChargesStore.data.length === 0`,then:{steps:{run:{action:`browser1.goto(\'/families/familydetail/\'+query.familyid+\'/payment/payment_options\')`}}}}})"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 <dmx-datastore id="selectedChargesStore"></dmx-datastore>
 <dmx-datetime id="currentDateTime" utc="true"></dmx-datetime>
 <meta name="ac:route" content="/families/familydetail/:familyid/payment/confirm_payment">
@@ -9,7 +10,7 @@
 <main class="w-100 d-flex flex-grow-1 flex-direction-column align-items-start" dmx-style:padding-bottom.important="browser1.location.pathparts.contains('newFamilyPayment') ? '100px' : 'initial'">
     <div class="wappler-block container ms-md-4 ms-lg-4 pt-5 pb-5 ps-5 pe-5">
         <div class="row">
-            <div class="text-start col mb-4 pb-4 border-bottom">
+            <div class="text-start col mb-4">
                 <h1 class="display-2 fw-bolder">Submit Payment</h1>
                 <h1 dmx-text="familyDetails.data.primaryGuardian.lastName+' Family'">XXXXXXXXX Family</h1>
 
@@ -18,7 +19,7 @@
 
             </div>
         </div>
-        <section class="container">
+        <section class="container p-4 bg-white border rounded-3">
             <div class="row">
                 <div class="col">
                     <h4 class="fw-bold mb-4">Payment Details</h4>
@@ -44,10 +45,10 @@
                                 </div>
                                 <div class="mb-3 row">
                                     <label for="inp_amount" class="col-sm-2 col-form-label">Amount:</label>
-                                    <div class="col-sm-2">
+                                    <div class="col-auto">
                                         <div class="input-group">
                                             <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">*</span>
-                                            <input type="number" class="form-control" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00" dmx-bind:value="selectedChargesStore.data.sum('remaining').formatNumber(2, '.', ',')" readonly="true" required="">
+                                            <input type="number" class="form-control w-auto" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00" dmx-bind:value="get_paymentintents.data.query_paymentintent.total" readonly="true" required="" size="8">
                                         </div>
                                     </div>
                                 </div>
@@ -78,11 +79,11 @@
 
                             </div>
                         </div>
-                        <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="selectedChargesStore.data">
+                        <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="get_paymentintents.data.query_paymentintent_lines">
 
-                            <input id="enrolchargeid" name="enrolchargeid" type="hidden" class="form-control" dmx-bind:value="chargeid" dmx-bind:name="record[{{$index}}][enrolchargeid]">
-                            <input id="studentid" name="studentid" type="hidden" class="form-control" dmx-bind:value="stid" dmx-bind:name="record[{{$index}}][studentid]">
-                            <input id="amount" name="amount" type="hidden" class="form-control" dmx-bind:value="remaining" dmx-bind:name="record[{{$index}}][amount]">
+                            <input id="hd_inp_enrolchargeid" name="enrolchargeid" type="hidden" class="form-control" dmx-bind:value="chargeid" dmx-bind:name="record[{{$index}}][enrolchargeid]">
+                            <input id="hd_inp_studentid" name="studentid" type="hidden" class="form-control" dmx-bind:value="studentid" dmx-bind:name="record[{{$index}}][studentid]">
+                            <input id="hd_inp_amount" name="amount" type="hidden" class="form-control" dmx-bind:value="paymenttotal" dmx-bind:name="record[{{$index}}][amount]">
                         </div>
                     </form>
 
@@ -94,7 +95,7 @@
             <div class="row">
                 <div class="col d-flex justify-content-between">
                     <a class="btn btn-secondary" href="#" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment/payment_options'"><i class="bi-arrow-left me-1"></i>Previous</a>
-                    <button type="submit" class="btn btn-success" href="#" form="chargesSubmitForm" dmx-bind:disabled="selectedChargesStore.data.length === 0"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
+                    <button type="submit" class="btn btn-success" href="#" form="chargesSubmitForm" dmx-bind:disabled="!get_paymentintents.data.query_paymentintent"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
 
                 </div>
             </div>

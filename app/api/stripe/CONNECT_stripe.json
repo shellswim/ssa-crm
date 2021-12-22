@@ -1,0 +1,216 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "name"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "settings",
+                "column": "value"
+              }
+            ],
+            "table": {
+              "name": "settings"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "settings.name",
+                  "field": "settings.name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "STRIPE_account_id",
+                  "data": {
+                    "table": "settings",
+                    "column": "name",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_account_id'",
+            "params": []
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "value"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "retrieveAccount",
+              "module": "stripe",
+              "action": "retrieveAccount",
+              "options": {
+                "__extra": {},
+                "account": "{{query.value}}"
+              },
+              "outputType": "object",
+              "meta": [
+                {
+                  "name": "business_profile",
+                  "type": "object",
+                  "ref": "stripe_account_business_profile"
+                },
+                {
+                  "name": "business_type",
+                  "type": "text"
+                },
+                {
+                  "name": "capabilities",
+                  "type": "object",
+                  "ref": "stripe_account_capabilities"
+                },
+                {
+                  "name": "charges_enabled",
+                  "type": "boolean"
+                },
+                {
+                  "name": "company",
+                  "type": "object",
+                  "ref": "stripe_legal_entity_company"
+                },
+                {
+                  "name": "controller",
+                  "type": "object",
+                  "ref": "stripe_account_controller"
+                },
+                {
+                  "name": "country",
+                  "type": "text"
+                },
+                {
+                  "name": "created",
+                  "type": "number"
+                },
+                {
+                  "name": "default_currency",
+                  "type": "text"
+                },
+                {
+                  "name": "details_submitted",
+                  "type": "boolean"
+                },
+                {
+                  "name": "email",
+                  "type": "text"
+                },
+                {
+                  "name": "external_accounts",
+                  "type": "object",
+                  "sub": [
+                    {
+                      "name": "data",
+                      "type": "array",
+                      "sub": [
+                        {
+                          "name": "external_account",
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "has_more",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "object",
+                      "type": "text"
+                    },
+                    {
+                      "name": "url",
+                      "type": "text"
+                    }
+                  ]
+                },
+                {
+                  "name": "id",
+                  "type": "text"
+                },
+                {
+                  "name": "individual",
+                  "type": "object",
+                  "ref": "stripe_person"
+                },
+                {
+                  "name": "metadata",
+                  "type": "object"
+                },
+                {
+                  "name": "object",
+                  "type": "text"
+                },
+                {
+                  "name": "payouts_enabled",
+                  "type": "boolean"
+                },
+                {
+                  "name": "requirements",
+                  "type": "object",
+                  "ref": "stripe_account_requirements"
+                },
+                {
+                  "name": "settings",
+                  "type": "object",
+                  "ref": "stripe_account_settings"
+                },
+                {
+                  "name": "tos_acceptance",
+                  "type": "object",
+                  "ref": "stripe_account_tos_acceptance"
+                },
+                {
+                  "name": "type",
+                  "type": "text"
+                }
+              ],
+              "output": true
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "response",
+              "module": "core",
+              "action": "setvalue",
+              "options": {
+                "value": "false"
+              },
+              "meta": [],
+              "outputType": "text",
+              "output": true
+            }
+          }
+        }
+      }
+    ]
+  }
+}

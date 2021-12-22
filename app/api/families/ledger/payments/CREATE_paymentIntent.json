@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "array",
+        "name": "charges",
+        "sub": [
+          {
+            "type": "text",
+            "name": "chargeid"
+          },
+          {
+            "type": "text",
+            "name": "remaining"
+          },
+          {
+            "type": "text",
+            "name": "total"
+          }
+        ]
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "uuid",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{UUID}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "insert_paymentintent",
+              "module": "dbupdater",
+              "action": "insert",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "insert",
+                  "values": [
+                    {
+                      "table": "payment_intents",
+                      "column": "familyid",
+                      "type": "number",
+                      "value": "{{$_GET.familyid}}"
+                    },
+                    {
+                      "table": "payment_intents",
+                      "column": "created",
+                      "type": "datetime",
+                      "value": "{{NOW_UTC.formatDate('yyyy-MM-dd h:mm:ss')}}"
+                    },
+                    {
+                      "table": "payment_intents",
+                      "column": "uuid",
+                      "type": "text",
+                      "value": "{{uuid}}"
+                    },
+                    {
+                      "table": "payment_intents",
+                      "column": "total",
+                      "type": "number",
+                      "value": "{{$_POST.charges.sum('remaining')}}"
+                    }
+                  ],
+                  "table": "payment_intents",
+                  "returning": "uuid",
+                  "query": "INSERT INTO payment_intents\n(familyid, created, uuid, total) VALUES (:P1 /* {{$_GET.familyid}} */, :P2 /* {{NOW_UTC.formatDate('yyyy-MM-dd h:mm:ss')}} */, :P3 /* {{uuid}} */, :P4 /* {{$_POST.charges.sum('remaining')}} */)",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_GET.familyid}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{NOW_UTC.formatDate('yyyy-MM-dd h:mm:ss')}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{uuid}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{$_POST.charges.sum('remaining')}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "identity",
+                  "type": "text"
+                },
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ],
+              "output": true
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "error",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "data": "{{$_ERROR.message}}",
+                "status": "{{$_ERROR.status}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "rp_intentcharges",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{$_POST.charges}}",
+          "outputFields": [],
+          "exec": {
+            "steps": {
+              "name": "insert_paymentintent_line",
+              "module": "dbupdater",
+              "action": "insert",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "insert",
+                  "values": [
+                    {
+                      "table": "payment_intents_lines",
+                      "column": "uuid",
+                      "type": "number",
+                      "value": "{{uuid}}"
+                    },
+                    {
+                      "table": "payment_intents_lines",
+                      "column": "chargeid",
+                      "type": "number",
+                      "value": "{{chargeid}}"
+                    },
+                    {
+                      "table": "payment_intents_lines",
+                      "column": "paymenttotal",
+                      "type": "number",
+                      "value": "{{remaining}}"
+                    },
+                    {
+                      "table": "payment_intents_lines",
+                      "column": "chargetotal",
+                      "type": "number",
+                      "value": "{{total}}"
+                    }
+                  ],
+                  "table": "payment_intents_lines",
+                  "query": "INSERT INTO payment_intents_lines\n(uuid, chargeid, paymenttotal, chargetotal) VALUES (:P1 /* {{uuid}} */, :P2 /* {{chargeid}} */, :P3 /* {{remaining}} */, :P4 /* {{total}} */)",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{uuid}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{chargeid}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{remaining}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{total}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "identity",
+                  "type": "text"
+                },
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ],
+              "output": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "chargeid",
+            "type": "text"
+          },
+          {
+            "name": "remaining",
+            "type": "text"
+          },
+          {
+            "name": "total",
+            "type": "text"
+          },
+          {
+            "name": "insert_paymentintent_line",
+            "type": "text",
+            "sub": [
+              {
+                "name": "identity",
+                "type": "text"
+              },
+              {
+                "name": "affected",
+                "type": "number"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

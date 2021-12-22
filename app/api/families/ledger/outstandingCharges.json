@@ -18,13 +18,13 @@
   "exec": {
     "steps": [
       {
-        "name": "owingCharges",
+        "name": "owingChargesBulk",
         "module": "dbupdater",
         "action": "custom",
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.total - (\n    SELECT SUM(tl.amount)\n    FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.total) AS totalOwing\nFROM charges_family fc\nWHERE\n    IFNULL((\n        SELECT SUM(tl.amount)\n        FROM tuitionLinePayments tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ),0.00) < fc.total AND fc.family = :P1\nORDER BY fc.total;",
+            "query": "SELECT *,\n    IFNULL((\n    SELECT SUM(tl.amount)\n    FROM payments_enrolcharges tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),0.00) AS totalPaid,\n    IFNULL(fc.total - (\n    SELECT SUM(tl.amount)\n    FROM payments_enrolcharges tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n    WHERE pWEC.chargeId = fc.id\n    ),fc.total) AS totalOwing\nFROM charges_family fc\nWHERE\n    IFNULL((\n        SELECT SUM(tl.amount)\n        FROM payments_enrolcharges tl LEFT JOIN charges_enrolments pWEC on pWEC.id = tl.enrolchargeid\n        WHERE pWEC.chargeId = fc.id\n    ),0.00) < fc.total AND fc.family = :P1\nORDER BY fc.total;",
             "params": [
               {
                 "name": ":P1",
@@ -41,16 +41,8 @@
             "type": "number"
           },
           {
-            "name": "chargeAmount",
+            "name": "total",
             "type": "number"
-          },
-          {
-            "name": "chargeDateTo",
-            "type": "text"
-          },
-          {
-            "name": "chargeDateFrom",
-            "type": "text"
           },
           {
             "name": "family",
@@ -69,7 +61,7 @@
             "type": "text"
           },
           {
-            "name": "chargeFor",
+            "name": "chargeFor_monthly",
             "type": "text"
           },
           {
@@ -79,6 +71,38 @@
           {
             "name": "chargeType",
             "type": "text"
+          },
+          {
+            "name": "chargeFor_session",
+            "type": "text"
+          },
+          {
+            "name": "basetotal",
+            "type": "number"
+          },
+          {
+            "name": "discountotal",
+            "type": "number"
+          },
+          {
+            "name": "chargeDate",
+            "type": "text"
+          },
+          {
+            "name": "created",
+            "type": "text"
+          },
+          {
+            "name": "updated",
+            "type": "text"
+          },
+          {
+            "name": "createdby",
+            "type": "number"
+          },
+          {
+            "name": "updatedby",
+            "type": "number"
           },
           {
             "name": "totalPaid",
@@ -92,122 +116,45 @@
         "outputType": "array"
       },
       {
+        "name": "fam_id_test",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_GET.familyid}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
         "name": "owingCharges",
         "module": "core",
         "action": "repeat",
         "options": {
-          "repeat": "{{owingCharges}}",
+          "repeat": "{{owingChargesBulk}}",
           "outputFields": [
             "id",
-            "chargeAmount",
-            "chargeDateTo",
-            "chargeDateFrom",
             "family",
             "description",
             "title",
             "reference",
-            "chargeFor",
             "dueDate",
             "chargeType",
             "totalPaid",
-            "totalOwing"
+            "totalOwing",
+            "total",
+            "chargeFor_monthly",
+            "chargeFor_session",
+            "basetotal",
+            "discountotal",
+            "chargeDate",
+            "created",
+            "updated",
+            "createdby",
+            "updatedby"
           ],
           "exec": {
             "steps": [
-              {
-                "name": "familyStudents_old",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [],
-                    "table": {
-                      "name": "students"
-                    },
-                    "joins": [],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "students.family",
-                          "field": "students.family",
-                          "type": "string",
-                          "operator": "equal",
-                          "value": "{{family}}",
-                          "data": {
-                            "table": "students",
-                            "column": "family",
-                            "type": "text"
-                          },
-                          "operation": "="
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT *\nFROM students\nWHERE family = :P1 /* {{family}} */",
-                    "params": [
-                      {
-                        "operator": "equal",
-                        "type": "expression",
-                        "name": ":P1",
-                        "value": "{{family}}"
-                      }
-                    ]
-                  }
-                },
-                "output": false,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "text",
-                    "name": "firstName"
-                  },
-                  {
-                    "type": "text",
-                    "name": "lastName"
-                  },
-                  {
-                    "type": "date",
-                    "name": "dob"
-                  },
-                  {
-                    "type": "text",
-                    "name": "rollSheetComments"
-                  },
-                  {
-                    "type": "text",
-                    "name": "rollSheetMedical"
-                  },
-                  {
-                    "type": "text",
-                    "name": "additionalMedical"
-                  },
-                  {
-                    "type": "number",
-                    "name": "family"
-                  },
-                  {
-                    "type": "text",
-                    "name": "gender"
-                  },
-                  {
-                    "type": "number",
-                    "name": "level"
-                  },
-                  {
-                    "type": "text",
-                    "name": "age"
-                  }
-                ],
-                "outputType": "array",
-                "disabled": true
-              },
               {
                 "name": "familyStudents",
                 "module": "dbupdater",
@@ -215,7 +162,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT sl.studentid as id, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.studentid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        tuitionLinePayments tl on tl.enrolchargeid = ec.id\n    WHERE\n        (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n        AND ec.chargeId = :P1\n        AND IFNULL((ec.enrolGrandTotal - (\n               SELECT SUM(tl.amount)\n               FROM tuitionLinePayments tl\n                   JOIN charges_enrolments ec\n                    ON tl.enrolchargeid = ec.id\n               WHERE ec.id = ec.id\n               )),ec.enrolGrandTotal) > 0\n    GROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\n    ORDER BY ec.studentid, ec.startofweek, ec.enrolid\n         ) AS sl JOIN students s ON sl.studentid = s.id",
+                    "query": "SELECT DISTINCT sl.studentid as id, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.studentid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        payments_enrolcharges tl on tl.enrolchargeid = ec.id\n    WHERE\n        (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n        AND ec.chargeId = :P1\n        AND IFNULL((ec.enrolGrandTotal - (\n               SELECT SUM(tl.amount)\n               FROM payments_enrolcharges tl\n                   JOIN charges_enrolments ec2\n                    ON tl.enrolchargeid = ec.id\n               WHERE ec2.id = ec.id\n               )),ec.enrolGrandTotal) > 0\n    GROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\n    ORDER BY ec.studentid, ec.startofweek, ec.enrolid\n         ) AS sl JOIN students s ON sl.studentid = s.id",
                     "params": [
                       {
                         "name": ":P1",
@@ -225,7 +172,7 @@
                     ]
                   }
                 },
-                "output": false,
+                "output": true,
                 "meta": [
                   {
                     "name": "id",
@@ -267,11 +214,11 @@
                 "options": {
                   "repeat": "{{familyStudents}}",
                   "outputFields": [
+                    "id",
                     "firstName",
                     "lastName",
                     "family",
-                    "level",
-                    "id"
+                    "level"
                   ],
                   "exec": {
                     "steps": [
@@ -282,41 +229,53 @@
                         "options": {
                           "connection": "db",
                           "sql": {
-                            "query": "SELECT\n   ec.id,\n   ec.studentid,\n   ec.startofweek,\n   ec.enrolGrandTotal,\n   ec.enrolid,\n   ec.classDate,\n   IFNULL((ec.enrolGrandTotal - (\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       )),ec.enrolGrandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(tl.amount)\n       FROM tuitionLinePayments tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    tuitionLinePayments tl on tl.enrolchargeid = ec.id\nWHERE\n    (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n    AND ec.chargeId = :P1 AND ec.studentid = :P2\n    AND IFNULL((ec.enrolGrandTotal - (\n           SELECT SUM(tl.amount)\n           FROM tuitionLinePayments tl\n               JOIN charges_enrolments ce \n      \t\t\tON tl.enrolchargeid = ce.id\n           WHERE ce.id = ec.id\n           )),ec.enrolGrandTotal) > 0\nGROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\nORDER BY ec.studentid, ec.startofweek, ec.enrolid;",
+                            "query": "SELECT\n   ec.id,\n   ec.studentid,\n   ec.startofweek,\n   ec.enrolGrandTotal,\n   ec.enrolid,\n   ec.classDate,\n   IFNULL((ec.enrolGrandTotal - (\n       SELECT SUM(tl.amount)\n       FROM payments_enrolcharges tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       )),ec.enrolGrandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(tl.amount)\n       FROM payments_enrolcharges tl\n           JOIN charges_enrolments ce ON tl.enrolchargeid = ce.id\n       WHERE ce.id = ec.id\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    payments_enrolcharges tl on tl.enrolchargeid = ec.id\nWHERE\n    (tl.id IS NULL OR tl.amount < ec.enrolGrandTotal)\n    AND ec.chargeId = :P1 AND ec.studentid = :P2\n    AND IFNULL((ec.enrolGrandTotal - (\n           SELECT SUM(tl.amount)\n           FROM payments_enrolcharges tl\n               JOIN charges_enrolments ce \n      \t\t\tON tl.enrolchargeid = ce.id\n           WHERE ce.id = ec.id\n           )),ec.enrolGrandTotal) > 0\nGROUP BY ec.id, ec.studentid, ec.startofweek, ec.enrolGrandTotal, ec.enrolid, ec.classDate\nORDER BY ec.studentid, ec.startofweek, ec.enrolid;",
                             "params": [
                               {
                                 "name": ":P1",
                                 "value": "{{chargeid}}",
-                                "test": "31"
+                                "test": "28"
                               },
                               {
                                 "name": ":P2",
                                 "value": "{{id}}",
-                                "test": "12"
+                                "test": "93"
                               }
                             ]
                           }
                         },
-                        "output": false,
+                        "output": true,
                         "meta": [
                           {
                             "name": "id",
                             "type": "number"
                           },
                           {
-                            "name": "firstName",
-                            "type": "text"
-                          },
-                          {
-                            "name": "lastName",
-                            "type": "text"
-                          },
-                          {
-                            "name": "family",
+                            "name": "studentid",
                             "type": "number"
                           },
                           {
-                            "name": "level",
+                            "name": "startofweek",
+                            "type": "text"
+                          },
+                          {
+                            "name": "enrolGrandTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "remaining",
+                            "type": "number"
+                          },
+                          {
+                            "name": "totalPaid",
                             "type": "number"
                           }
                         ],
@@ -332,7 +291,7 @@
                             "id",
                             "studentid",
                             "startofweek",
-                            "enr_grandTotal",
+                            "enrolGrandTotal",
                             "enrolid",
                             "remaining",
                             "totalPaid",
@@ -540,19 +499,31 @@
                             "type": "number"
                           },
                           {
-                            "name": "firstName",
-                            "type": "text"
-                          },
-                          {
-                            "name": "lastName",
-                            "type": "text"
-                          },
-                          {
-                            "name": "family",
+                            "name": "studentid",
                             "type": "number"
                           },
                           {
-                            "name": "level",
+                            "name": "startofweek",
+                            "type": "text"
+                          },
+                          {
+                            "name": "enrolGrandTotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "remaining",
+                            "type": "number"
+                          },
+                          {
+                            "name": "totalPaid",
                             "type": "number"
                           },
                           {
@@ -606,6 +577,64 @@
                     "type": "object"
                   },
                   {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "level",
+                    "type": "number"
+                  },
+                  {
+                    "name": "owingLineItems",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "id",
+                        "type": "number"
+                      },
+                      {
+                        "name": "studentid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "startofweek",
+                        "type": "text"
+                      },
+                      {
+                        "name": "enrolGrandTotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolid",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classDate",
+                        "type": "text"
+                      },
+                      {
+                        "name": "remaining",
+                        "type": "number"
+                      },
+                      {
+                        "name": "totalPaid",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
                     "name": "lineItems",
                     "type": "array",
                     "sub": [
@@ -622,7 +651,7 @@
                         "type": "text"
                       },
                       {
-                        "name": "enr_grandTotal",
+                        "name": "enrolGrandTotal",
                         "type": "number"
                       },
                       {
@@ -666,22 +695,6 @@
                             "name": "dayName"
                           }
                         ]
-                      },
-                      {
-                        "name": "firstName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "lastName",
-                        "type": "text"
-                      },
-                      {
-                        "name": "family",
-                        "type": "number"
-                      },
-                      {
-                        "name": "level",
-                        "type": "number"
                       }
                     ]
                   }
@@ -714,16 +727,8 @@
             "type": "number"
           },
           {
-            "name": "chargeAmount",
+            "name": "total",
             "type": "number"
-          },
-          {
-            "name": "chargeDateTo",
-            "type": "text"
-          },
-          {
-            "name": "chargeDateFrom",
-            "type": "text"
           },
           {
             "name": "family",
@@ -742,7 +747,7 @@
             "type": "text"
           },
           {
-            "name": "chargeFor",
+            "name": "chargeFor_monthly",
             "type": "text"
           },
           {
@@ -754,6 +759,38 @@
             "type": "text"
           },
           {
+            "name": "chargeFor_session",
+            "type": "text"
+          },
+          {
+            "name": "basetotal",
+            "type": "number"
+          },
+          {
+            "name": "discountotal",
+            "type": "number"
+          },
+          {
+            "name": "chargeDate",
+            "type": "text"
+          },
+          {
+            "name": "created",
+            "type": "text"
+          },
+          {
+            "name": "updated",
+            "type": "text"
+          },
+          {
+            "name": "createdby",
+            "type": "number"
+          },
+          {
+            "name": "updatedby",
+            "type": "number"
+          },
+          {
             "name": "totalPaid",
             "type": "number"
           },
@@ -762,9 +799,93 @@
             "type": "number"
           },
           {
+            "name": "familyStudents",
+            "type": "array",
+            "sub": [
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "family",
+                "type": "number"
+              },
+              {
+                "name": "level",
+                "type": "number"
+              }
+            ]
+          },
+          {
             "name": "studentOwingLines",
             "type": "array",
             "sub": [
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "firstName",
+                "type": "text"
+              },
+              {
+                "name": "lastName",
+                "type": "text"
+              },
+              {
+                "name": "family",
+                "type": "number"
+              },
+              {
+                "name": "level",
+                "type": "number"
+              },
+              {
+                "name": "owingLineItems",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "studentid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startofweek",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolGrandTotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classDate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "remaining",
+                    "type": "number"
+                  },
+                  {
+                    "name": "totalPaid",
+                    "type": "number"
+                  }
+                ]
+              },
               {
                 "name": "lineItems",
                 "type": "array",
@@ -782,7 +903,7 @@
                     "type": "text"
                   },
                   {
-                    "name": "enr_grandTotal",
+                    "name": "enrolGrandTotal",
                     "type": "number"
                   },
                   {
@@ -826,22 +947,6 @@
                         "name": "dayName"
                       }
                     ]
-                  },
-                  {
-                    "name": "firstName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "lastName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "family",
-                    "type": "number"
-                  },
-                  {
-                    "name": "level",
-                    "type": "number"
                   }
                 ]
               }

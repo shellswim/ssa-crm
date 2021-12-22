@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "options": {
+      "rule": "0 0 * * * *"
+    }
+  },
+  "exec": {
+    "steps": {
+      "name": "delete",
+      "module": "dbupdater",
+      "action": "delete",
+      "options": {
+        "connection": "db",
+        "sql": {
+          "type": "delete",
+          "table": "payment_intents",
+          "wheres": {
+            "condition": "AND",
+            "rules": [
+              {
+                "id": "created",
+                "field": "created",
+                "type": "datetime",
+                "operator": "less",
+                "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}",
+                "data": {
+                  "column": "created"
+                },
+                "operation": "<"
+              }
+            ],
+            "conditional": null,
+            "valid": true
+          },
+          "query": "DELETE\nFROM payment_intents\nWHERE created < :P1 /* {{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}} */",
+          "params": [
+            {
+              "operator": "less",
+              "type": "expression",
+              "name": ":P1",
+              "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}"
+            }
+          ]
+        }
+      },
+      "meta": [
+        {
+          "name": "affected",
+          "type": "number"
+        }
+      ]
+    }
+  }
+}

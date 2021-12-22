@@ -37,11 +37,11 @@
             "type": "SELECT",
             "columns": [
               {
-                "table": "tuitionLinePayments",
+                "table": "payments_enrolcharges",
                 "column": "studentid"
               },
               {
-                "table": "tuitionLinePayments",
+                "table": "payments_enrolcharges",
                 "column": "paymentid"
               },
               {
@@ -55,22 +55,22 @@
               }
             ],
             "table": {
-              "name": "tuitionLinePayments"
+              "name": "payments_enrolcharges"
             },
             "joins": [
               {
-                "table": "tuitionPayments",
+                "table": "payments_familycharges",
                 "column": "*",
                 "type": "LEFT",
                 "clauses": {
                   "condition": "AND",
                   "rules": [
                     {
-                      "table": "tuitionPayments",
+                      "table": "payments_familycharges",
                       "column": "id",
                       "operator": "equal",
                       "value": {
-                        "table": "tuitionLinePayments",
+                        "table": "payments_enrolcharges",
                         "column": "paymentid"
                       },
                       "operation": "="
@@ -90,7 +90,7 @@
                       "column": "id",
                       "operator": "equal",
                       "value": {
-                        "table": "tuitionLinePayments",
+                        "table": "payments_enrolcharges",
                         "column": "studentid"
                       },
                       "operation": "="
@@ -104,13 +104,13 @@
               "condition": "AND",
               "rules": [
                 {
-                  "id": "tuitionLinePayments.paymentid",
-                  "field": "tuitionLinePayments.paymentid",
+                  "id": "payments_enrolcharges.paymentid",
+                  "field": "payments_enrolcharges.paymentid",
                   "type": "double",
                   "operator": "equal",
                   "value": "{{$_POST.paymentid}}",
                   "data": {
-                    "table": "tuitionLinePayments",
+                    "table": "payments_enrolcharges",
                     "column": "paymentid",
                     "type": "number"
                   },
@@ -122,12 +122,12 @@
             },
             "orders": [
               {
-                "table": "tuitionLinePayments",
+                "table": "payments_enrolcharges",
                 "column": "studentid",
                 "direction": "ASC"
               }
             ],
-            "query": "SELECT DISTINCT tuitionLinePayments.studentid, tuitionLinePayments.paymentid, students.firstName, students.lastName\nFROM tuitionLinePayments\nLEFT JOIN tuitionPayments ON (tuitionPayments.id = tuitionLinePayments.paymentid) LEFT JOIN students ON (students.id = tuitionLinePayments.studentid)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{$_POST.paymentid}} */\nORDER BY tuitionLinePayments.studentid ASC",
+            "query": "SELECT DISTINCT payments_enrolcharges.studentid, payments_enrolcharges.paymentid, students.firstName, students.lastName\nFROM payments_enrolcharges\nLEFT JOIN payments_familycharges ON (payments_familycharges.id = payments_enrolcharges.paymentid) LEFT JOIN students ON (students.id = payments_enrolcharges.studentid)\nWHERE payments_enrolcharges.paymentid = :P1 /* {{$_POST.paymentid}} */\nORDER BY payments_enrolcharges.studentid ASC",
             "params": [
               {
                 "operator": "equal",
@@ -194,13 +194,13 @@
                       "column": "lastName"
                     },
                     {
-                      "table": "perWeekEnrolmentCharges",
+                      "table": "charges_enrolments",
                       "column": "classDate",
                       "alias": "classDate"
                     },
                     {
-                      "table": "perWeekEnrolmentCharges",
-                      "column": "enr_grandTotal",
+                      "table": "charges_enrolments",
+                      "column": "enrolGrandTotal",
                       "alias": "enrolmentTotal"
                     },
                     {
@@ -229,7 +229,7 @@
                     }
                   ],
                   "table": {
-                    "name": "tuitionLinePayments",
+                    "name": "payments_enrolcharges",
                     "alias": "tlp"
                   },
                   "joins": [
@@ -254,14 +254,14 @@
                       }
                     },
                     {
-                      "table": "perWeekEnrolmentCharges",
+                      "table": "charges_enrolments",
                       "column": "*",
                       "type": "LEFT",
                       "clauses": {
                         "condition": "AND",
                         "rules": [
                           {
-                            "table": "perWeekEnrolmentCharges",
+                            "table": "charges_enrolments",
                             "column": "id",
                             "operator": "equal",
                             "value": {
@@ -285,7 +285,7 @@
                             "column": "id",
                             "operator": "equal",
                             "value": {
-                              "table": "perWeekEnrolmentCharges",
+                              "table": "charges_enrolments",
                               "column": "classId"
                             },
                             "operation": "="
@@ -389,13 +389,13 @@
                   },
                   "orders": [
                     {
-                      "table": "perWeekEnrolmentCharges",
+                      "table": "charges_enrolments",
                       "column": "classDate",
                       "direction": "ASC",
                       "recid": 1
                     }
                   ],
-                  "query": "SELECT tlp.amount, students.firstName, students.lastName, perWeekEnrolmentCharges.classDate AS classDate, perWeekEnrolmentCharges.enr_grandTotal AS enrolmentTotal, classes.startTimeDisplay, days.name AS dayname, staff.firstName AS instructorfirst, staff.lastName AS instructorlast, classLevels.name AS levelname\nFROM tuitionLinePayments AS tlp\nLEFT JOIN students ON (students.id = tlp.studentid) LEFT JOIN perWeekEnrolmentCharges ON (perWeekEnrolmentCharges.id = tlp.enrolchargeid) LEFT JOIN classes ON (classes.id = perWeekEnrolmentCharges.classId) LEFT JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN classLevels ON (classLevels.id = classes.classLevel)\nWHERE tlp.paymentid = :P1 /* {{paymentid}} */ AND tlp.studentid = :P2 /* {{studentid}} */\nORDER BY perWeekEnrolmentCharges.classDate ASC",
+                  "query": "SELECT tlp.amount, students.firstName, students.lastName, charges_enrolments.classDate AS classDate, charges_enrolments.enrolGrandTotal AS enrolmentTotal, classes.startTimeDisplay, days.name AS dayname, staff.firstName AS instructorfirst, staff.lastName AS instructorlast, classLevels.name AS levelname\nFROM payments_enrolcharges AS tlp\nLEFT JOIN students ON (students.id = tlp.studentid) LEFT JOIN charges_enrolments ON (charges_enrolments.id = tlp.enrolchargeid) LEFT JOIN classes ON (classes.id = charges_enrolments.classId) LEFT JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN classLevels ON (classLevels.id = classes.classLevel)\nWHERE tlp.paymentid = :P1 /* {{paymentid}} */ AND tlp.studentid = :P2 /* {{studentid}} */\nORDER BY charges_enrolments.classDate ASC",
                   "params": [
                     {
                       "operator": "equal",

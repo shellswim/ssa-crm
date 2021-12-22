@@ -10,8 +10,8 @@
     <div class="wappler-block container ms-md-4 ms-lg-4 pt-5 pb-5 ps-5 pe-5">
         <div class="row">
             <div class="text-start col mb-4 pb-4 border-bottom">
-                <h1 class="fw-bolder display-3">Select &amp; Apply Payment</h1>
-                <h1 dmx-text="familyDetails.data.primaryGuardian.lastName+' Family'">XXXXXXXXX Family</h1>
+                <h1 class="fw-bolder fw-500">Select &amp; Apply Payment</h1>
+                <h3 dmx-text="familyDetails.data.primaryGuardian.lastName+' Family'" class="fw-430">XXXXXXXXX Family</h3>
 
 
                 <a class="btn btn-primary mt-4" dmx-bind:href="'/families/familydetail/'+query.familyid+'#ledger'" internal dmx-on:click="selectedChargesStore.clear()"><i class="bi-x-circle me-1"></i>Cancel &amp; Return</a>
@@ -25,58 +25,81 @@
             </div>
         </div>
         <div class="row">
-            <div class="col mt-4 pt-4 border-top">
+            <div class="col mt-4 p-4 border rounded-3 bg-white">
                 <h3 class="text-decoration-underline fw-bold">Charges.</h3>
-                <p>Select charges to autocalculate payment. <u>Click charge</u> to see student breakdowns and to select separate students or weeks.</p>
+                <p>Select charges to autocalculate payment. <u>Click on charge</u> to see student breakdowns and to select separate students or weeks.</p>
 
                 <div class="row row-cols-1 g-0" id="chargeRepeat" is="dmx-repeat" dmx-bind:repeat="owing.data.owingCharges">
-                    <div class="border rounded mb-2 col-md-12 col-12 col-xl-9 col-xxl-8">
-                        <div class="row py-2 px-4 clickable g-0">
+                    <div class="border rounded mb-2 col bg-white">
+                        <div class="row p-3 clickable">
+                            <div class="col-auto align-self-center" onclick="preventDefault();">
+                                <input type="checkbox" class="btn-check" id="chargeCheck" autocomplete="off" dmx-bind:id="chargeCheck_{{$index}}">
+                                <label class="btn border" dmx-bind:for="chargeCheck_{{$index}}" dmx-class:btn-primary="chargeCheck.checked">
+                                    <i dmx-hide="chargeCheck.checked" class="bi-check-circle"></i>
+                                    <i dmx-hide="!chargeCheck.checked" class="bi-check-circle-fill"></i>
+                                </label>
+                            </div>
                             <div class="col" dmx-on:click="studentChargeDetail.toggle()">
-                                <p class="mb-0 small">For:</p>
-                                <p class="mb-0 fw-bold" dmx-text="chargeFor.formatDate('MMM yyyy')">JUN 2021</p>
+                                <p class="mb-1 fw-450 text-muted">For:</p>
+                                <p class="mb-0 fw-450" dmx-text="chargeFor.formatDate('MMM yyyy')">JUN 2021</p>
 
                             </div>
                             <div class="col" dmx-on:click="studentChargeDetail.toggle()">
-                                <p class="mb-0 small">Total:</p>
-                                <p class="mb-0 fw-bold" dmx-text="chargeAmount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</p>
+                                <p class="mb-1 fw-450 text-muted">Remaining:</p>
+                                <p class="mb-0 fw-bold text-danger" dmx-text="totalOwing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$55.54</p>
                             </div>
                             <div class="col" dmx-on:click="studentChargeDetail.toggle()">
-                                <p class="mb-0 small">Due Date:</p>
-                                <p class="mb-0 fw-bold" dmx-text="dueDate.formatDate('dd/MM/yyyy')">31/05/2021</p>
+                                <p class="mb-1 fw-450 text-muted">Due Date:</p>
+                                <p class="mb-0 fw-450" dmx-text="dueDate.formatDate('dd/MM/yyyy')">31/05/2021</p>
                             </div>
                             <div class="col" dmx-on:click="studentChargeDetail.toggle()">
-                                <p class="mb-0 small">Paid:</p>
-                                <p class="mb-0 fw-bold" dmx-text="totalPaid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$20.00</p>
+                                <p class="mb-1 fw-450 text-muted">Total:</p>
+                                <p class="mb-0 fw-450" dmx-text="chargeAmount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</p>
                             </div>
+
                             <div class="col" dmx-on:click="studentChargeDetail.toggle()">
-                                <p class="mb-0 small">Remaining:</p>
-                                <p class="mb-0 fw-bold" dmx-text="totalOwing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$55.54</p>
+                                <p class="mb-1 fw-450 text-muted">Paid:</p>
+                                <p class="mb-0 fw-bold text-active" dmx-text="totalPaid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$20.00</p>
                             </div>
+
                         </div>
                         <div class="collapse  border-top" id="studentChargeDetail" is="dmx-bs5-collapse" show="true">
                             <div class="row row-cols-1 g-0 py-2 px-3 " is="dmx-repeat" id="studentRepeat" dmx-bind:repeat="studentOwingLines">
                                 <div class="col">
                                     <div class="row">
-                                        <div class="col d-flex flex-row align-items-center justify-content-start mb-2">
+                                        <div class="col d-flex flex-row align-items-center justify-content-start mb-2 pb-2 border-bottom mx-2">
+                                            <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentSelect" dmx-bind:id="studentSelect_{{$index}}_{{id}}" dmx-bind:checked="chargeCheck.checked">
                                             <p class="fw-bold mb-0 me-1" dmx-text="firstName +' '+lastName+':'">Jane Doe:&nbsp;</p>
                                             <p class="mb-0" dmx-text="lineItems.sum('remaining').formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$15.55</p>
                                         </div>
                                     </div>
                                     <div class="row row-cols-1 g-0 payment-line-items mb-3" is="dmx-repeat" id="studentLinesRepeat" dmx-bind:repeat="lineItems">
-                                        <div class="ps-5 col-xl-11 col-md-10 col-12 line-item">
+                                        <div class="col ps-3 py-2 line-item">
                                             <div class="row">
+                                                <div class="col-auto align-self-center">
+                                                    <i class="bi-arrow-down-right"></i>
+                                                </div>
                                                 <div class="col-auto d-flex justify-content-center align-items-center p-0">
-                                                    <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1" dmx-bind:checked="studentSelect.checked" dmx-on:updated="checked ? selectedChargesStore.insert({chargeid: id, remaining: var_balance.value < remaining ? var_balance.value : remaining, stid: studentid}) : selectedChargesStore.delete({chargeid: id})" dmx-bind:disabled="var_balanceExhausted.value == true && !checked">
+                                                    <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1" dmx-bind:checked="studentSelect.checked || arr_chargesStoreId.items.contains(id)" dmx-on:updated="run({condition:{if:`checked`,then:{steps:{run:{action:`arr_chargesStoreId.add(id);arr_chargesStoreRemaining.add(remaining);arr_chargesStoreStudent.add(studentid)`}}},else:{steps:[{runJS:{function:'arrIndexFromValue',args:[`arr_chargesStoreId.items`,`id`],name:'arrindex'}},{run:{action:`arr_chargesStoreStudent.removeAt(arrindex);arr_chargesStoreRemaining.removeAt(arrindex);arr_chargesStoreId.removeAt(arrindex)`}}]}}})">
                                                 </div>
-                                                <div class="align-self-center col-7">
-                                                    <label class="mb-0 small user-select-none clickable" dmx-bind:for="studentLineCheck_{{id}}" dmx-text="classDate.formatDate('dd/MM/yyyy')+' - '+classDetails.dayName.trunc(3,true,' ') +' '+classDetails.startTimeDisplay +' '+classDetails.levelName+' '+classDetails.instructorFirst +' '+classDetails.instructorLast.trunc(1,true,'.')">Sun 2:30 PM Goldfish</label>
-                                                </div>
-                                                <div class="col align-self-center">
-                                                    <p class="mb-0 small text-end" dmx-text="remaining">$15.55</p>
+                                                <div class="ps-5 col-xl-11 col-md-10 col-12 line-item">
+                                                    <div class="row">
+                                                        <div class="col-auto d-flex justify-content-center align-items-center p-0">
+                                                            <input class="form-check-input p-2 m-2 clickable" type="checkbox" value="" id="studentLineCheck" dmx-bind:id="studentLineCheck_{{id}}" name="input1" dmx-bind:checked="studentSelect.checked" dmx-on:updated="checked ? selectedChargesStore.insert({chargeid: id, remaining: var_balance.value < remaining ? var_balance.value : remaining, stid: studentid}) : selectedChargesStore.delete({chargeid: id})" dmx-bind:disabled="var_balanceExhausted.value == true && !checked">
+                                                        </div>
+                                                        <div class="align-self-center col-7">
+                                                            <label class="mb-0 small user-select-none clickable" dmx-bind:for="studentLineCheck_{{id}}" dmx-text="classDate.formatDate('dd/MM/yyyy')+' - '+classDetails.dayName.trunc(3,true,' ') +' '+classDetails.startTimeDisplay +' '+classDetails.levelName+' '+classDetails.instructorFirst +' '+classDetails.instructorLast.trunc(1,true,'.')">Sun 2:30 PM Goldfish</label>
+                                                        </div>
+                                                        <div class="col align-self-center">
+                                                            <p class="mb-0 small text-end" dmx-text="remaining">$15.55</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+
+
+
                                     </div>
                                 </div>
                             </div>
@@ -85,7 +108,7 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col d-flex justify-content-end">
-                        <a href="#" class="btn btn-success" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment/submit_payment'" dmx-class:disabled="var_chargePayment.value == 0">Continue
+                        <a href="#" class="btn btn-success" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment/confirm_payment'" dmx-class:disabled="var_chargePayment.value == 0">Continue
                             <i class="bi-arrow-right"></i></a>
                     </div>
                 </div>

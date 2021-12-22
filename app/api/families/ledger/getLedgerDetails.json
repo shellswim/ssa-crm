@@ -183,7 +183,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT SUM(tp.amount) as paid, (SELECT SUM(pw.enrolGrandTotal) FROM charges_enrolments pw WHERE pw.chargeId = :P1) as enrolTotals\nFROM tuitionLinePayments tp JOIN charges_enrolments pw ON tp.enrolchargeid = pw.id WHERE pw.chargeId = :P1;",
+                    "query": "SELECT SUM(tp.amount) as paid, (SELECT SUM(pw.enrolGrandTotal) FROM charges_enrolments pw WHERE pw.chargeId = :P1) as enrolTotals\nFROM payments_enrolcharges tp JOIN charges_enrolments pw ON tp.enrolchargeid = pw.id WHERE pw.chargeId = :P1;",
                     "params": [
                       {
                         "name": ":P1",
@@ -260,7 +260,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT tpayments.*, pt.pay_type\nFROM (\n    SELECT tp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN charges_enrolments pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments LEFT JOIN paymentTypes pt ON tpayments.paymentType = pt.id\nORDER BY tpayments.paymentdate DESC",
+                    "query": "SELECT DISTINCT tpayments.*, pt.pay_type\nFROM (\n    SELECT tp.*\n    FROM payments_familycharges tp\n        LEFT JOIN payments_enrolcharges tlp ON tp.id = tlp.paymentid\n        LEFT JOIN charges_enrolments pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments LEFT JOIN paymentTypes pt ON tpayments.paymentType = pt.id\nORDER BY tpayments.paymentdate DESC",
                     "params": [
                       {
                         "name": ":P1",
@@ -339,11 +339,11 @@
                           "type": "SELECT",
                           "columns": [
                             {
-                              "table": "tuitionLinePayments",
+                              "table": "payments_enrolcharges",
                               "column": "paymentid"
                             },
                             {
-                              "table": "tuitionLinePayments",
+                              "table": "payments_enrolcharges",
                               "column": "amount"
                             },
                             {
@@ -394,7 +394,7 @@
                             }
                           ],
                           "table": {
-                            "name": "tuitionLinePayments"
+                            "name": "payments_enrolcharges"
                           },
                           "joins": [
                             {
@@ -409,7 +409,7 @@
                                     "column": "id",
                                     "operator": "equal",
                                     "value": {
-                                      "table": "tuitionLinePayments",
+                                      "table": "payments_enrolcharges",
                                       "column": "studentid"
                                     },
                                     "operation": "="
@@ -429,7 +429,7 @@
                                     "column": "id",
                                     "operator": "equal",
                                     "value": {
-                                      "table": "tuitionLinePayments",
+                                      "table": "payments_enrolcharges",
                                       "column": "enrolchargeid"
                                     },
                                     "operation": "="
@@ -518,7 +518,7 @@
                               }
                             }
                           ],
-                          "query": "SELECT tuitionLinePayments.paymentid, tuitionLinePayments.amount, students.firstName AS studentFirst, students.lastName AS studentLast, charges_enrolments.classDate, charges_enrolments.enrolGrandTotal, days.name AS dayName, classes.startTimeDisplay, classLevels.name AS levelName, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, charges_enrolments.ennetrate\nFROM tuitionLinePayments\nINNER JOIN students ON (students.id = tuitionLinePayments.studentid) INNER JOIN charges_enrolments ON (charges_enrolments.id = tuitionLinePayments.enrolchargeid) INNER JOIN classes ON (classes.id = charges_enrolments.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN days ON (days.id = classes.day)\nWHERE tuitionLinePayments.paymentid = :P1 /* {{id}} */\nORDER BY tuitionLinePayments.studentid ASC, charges_enrolments.classDate ASC, charges_enrolments.enrolid ASC",
+                          "query": "SELECT payments_enrolcharges.paymentid, payments_enrolcharges.amount, students.firstName AS studentFirst, students.lastName AS studentLast, charges_enrolments.classDate, charges_enrolments.enrolGrandTotal, days.name AS dayName, classes.startTimeDisplay, classLevels.name AS levelName, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, charges_enrolments.ennetrate\nFROM payments_enrolcharges\nINNER JOIN students ON (students.id = payments_enrolcharges.studentid) INNER JOIN charges_enrolments ON (charges_enrolments.id = payments_enrolcharges.enrolchargeid) INNER JOIN classes ON (classes.id = charges_enrolments.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN days ON (days.id = classes.day)\nWHERE payments_enrolcharges.paymentid = :P1 /* {{id}} */\nORDER BY payments_enrolcharges.studentid ASC, charges_enrolments.classDate ASC, charges_enrolments.enrolid ASC",
                           "params": [
                             {
                               "operator": "equal",
@@ -531,13 +531,13 @@
                             "condition": "AND",
                             "rules": [
                               {
-                                "id": "tuitionLinePayments.paymentid",
-                                "field": "tuitionLinePayments.paymentid",
+                                "id": "payments_enrolcharges.paymentid",
+                                "field": "payments_enrolcharges.paymentid",
                                 "type": "string",
                                 "operator": "equal",
                                 "value": "{{id}}",
                                 "data": {
-                                  "table": "tuitionLinePayments",
+                                  "table": "payments_enrolcharges",
                                   "column": "paymentid",
                                   "type": "text"
                                 },
@@ -549,7 +549,7 @@
                           },
                           "orders": [
                             {
-                              "table": "tuitionLinePayments",
+                              "table": "payments_enrolcharges",
                               "column": "studentid",
                               "direction": "ASC",
                               "recid": 1
@@ -706,7 +706,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT SUM(tpayments.amount) AS paymentsTotal\nFROM (\n    SELECT DISTINCT tlp.*\n    FROM tuitionPayments tp\n        LEFT JOIN tuitionLinePayments tlp ON tp.id = tlp.paymentid\n        LEFT JOIN charges_enrolments pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments",
+                    "query": "SELECT SUM(tpayments.amount) AS paymentsTotal\nFROM (\n    SELECT DISTINCT tlp.*\n    FROM payments_familycharges tp\n        LEFT JOIN payments_enrolcharges tlp ON tp.id = tlp.paymentid\n        LEFT JOIN charges_enrolments pw ON tlp.enrolchargeid = pw.id\n        WHERE pw.chargeId = :P1\n    ) tpayments",
                     "params": [
                       {
                         "name": ":P1",

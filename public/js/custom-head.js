@@ -1,9 +1,11 @@
 // Bootstrap Deeplinking
-function tabDeeplink(url) {
+function tabDeeplink(url, defaulthash) {
     // Deeplinking bootstrap tabs
     // let url = location.href.replace(/\/$/, '');
-    if (location.hash) {
-        const hash = url.split('#');
+    // if (location.hash) {
+        if(!location.hash) url = url.concat('#',defaulthash);
+        let hash = url.split('#');
+        // if(!hash[1]) hash.splice(1,0,'guardians');
         const currentTab = document.querySelector('#navtabs_parent a[href="#' + hash[1] + '"]');
         const currentTabTarget = currentTab.getAttribute('data-bs-target');
         const currentTabPane = document.querySelector(currentTabTarget);
@@ -16,7 +18,7 @@ function tabDeeplink(url) {
         setTimeout(() => {
             window.scrollTop = 0;
         }, 400);
-    }
+    // }
     // change url based on selected tab
     const selectableTabList = [].slice.call(document.querySelectorAll('a[data-bs-toggle="tab"]'));
     selectableTabList.forEach((selectableTab) => {
