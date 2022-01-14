@@ -13,5 +13,8 @@ module.exports = {
                 arr[i] = Number(arr[i]);
             }
         }
+    },
+    unstringify: function(val) {
+        return JSON.parse(val);
     }
 }

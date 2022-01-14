@@ -5,50 +5,1375 @@
     }
   },
   "exec": {
-    "steps": {
-      "name": "delete",
-      "module": "dbupdater",
-      "action": "delete",
-      "options": {
-        "connection": "db",
-        "sql": {
-          "type": "delete",
-          "table": "payment_intents",
-          "wheres": {
-            "condition": "AND",
-            "rules": [
-              {
-                "id": "created",
-                "field": "created",
-                "type": "datetime",
-                "operator": "less",
-                "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}",
-                "data": {
-                  "column": "created"
+    "steps": [
+      {
+        "name": "payintents_with_stripe",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "payment_intents"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "payment_intents.created",
+                  "field": "payment_intents.created",
+                  "type": "datetime",
+                  "operator": "less",
+                  "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}",
+                  "data": {
+                    "table": "payment_intents",
+                    "column": "created",
+                    "type": "datetime"
+                  },
+                  "operation": "<"
                 },
-                "operation": "<"
+                {
+                  "id": "payment_intents.stripe_charge",
+                  "field": "payment_intents.stripe_charge",
+                  "type": "string",
+                  "operator": "is_not_null",
+                  "value": null,
+                  "data": {
+                    "table": "payment_intents",
+                    "column": "stripe_charge",
+                    "type": "text"
+                  },
+                  "operation": "IS NOT NULL"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM payment_intents\nWHERE created < :P1 /* {{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}} */ AND stripe_charge IS NOT NULL",
+            "params": [
+              {
+                "operator": "less",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "datetime",
+            "name": "created"
+          },
+          {
+            "type": "number",
+            "name": "familyid"
+          },
+          {
+            "type": "number",
+            "name": "total"
+          },
+          {
+            "type": "text",
+            "name": "stripe_charge"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "connected_account",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "settings",
+                "column": "value"
               }
             ],
-            "conditional": null,
-            "valid": true
+            "table": {
+              "name": "settings"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "settings.name",
+                  "field": "settings.name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "STRIPE_account_id",
+                  "data": {
+                    "table": "settings",
+                    "column": "name",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_account_id'",
+            "params": []
           },
-          "query": "DELETE\nFROM payment_intents\nWHERE created < :P1 /* {{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}} */",
-          "params": [
-            {
-              "operator": "less",
-              "type": "expression",
-              "name": ":P1",
-              "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}"
-            }
-          ]
-        }
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "value"
+          }
+        ],
+        "type": "dbconnector_single",
+        "outputType": "object"
       },
-      "meta": [
-        {
-          "name": "affected",
-          "type": "number"
-        }
-      ]
-    }
+      {
+        "name": "repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{payintents_with_stripe}}",
+          "outputFields": [],
+          "exec": {
+            "steps": [
+              {
+                "name": "retrievePaymentIntent",
+                "module": "stripe",
+                "action": "retrievePaymentIntent",
+                "options": {
+                  "__extra": {
+                    "stripe_account": "{{connected_account.value}}"
+                  },
+                  "intent": "{{stripe_charge}}"
+                },
+                "outputType": "object",
+                "meta": [
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount_capturable",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount_received",
+                    "type": "number"
+                  },
+                  {
+                    "name": "application",
+                    "type": "text",
+                    "expand": [
+                      "stripe_application"
+                    ]
+                  },
+                  {
+                    "name": "application_fee_amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "canceled_at",
+                    "type": "number"
+                  },
+                  {
+                    "name": "cancellation_reason",
+                    "type": "text"
+                  },
+                  {
+                    "name": "capture_method",
+                    "type": "text"
+                  },
+                  {
+                    "name": "charges",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "data",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "alternate_statement_descriptors",
+                            "type": "object",
+                            "ref": "stripe_alternate_statement_descriptors"
+                          },
+                          {
+                            "name": "amount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "amount_captured",
+                            "type": "number"
+                          },
+                          {
+                            "name": "amount_refunded",
+                            "type": "number"
+                          },
+                          {
+                            "name": "application",
+                            "type": "text",
+                            "expand": [
+                              "stripe_application"
+                            ]
+                          },
+                          {
+                            "name": "application_fee",
+                            "type": "text",
+                            "expand": [
+                              "stripe_application_fee"
+                            ]
+                          },
+                          {
+                            "name": "application_fee_amount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "authorization_code",
+                            "type": "text"
+                          },
+                          {
+                            "name": "balance_transaction",
+                            "type": "text",
+                            "expand": [
+                              "stripe_balance_transaction"
+                            ]
+                          },
+                          {
+                            "name": "billing_details",
+                            "type": "object",
+                            "ref": "stripe_billing_details"
+                          },
+                          {
+                            "name": "calculated_statement_descriptor",
+                            "type": "text"
+                          },
+                          {
+                            "name": "captured",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "created",
+                            "type": "number"
+                          },
+                          {
+                            "name": "currency",
+                            "type": "text"
+                          },
+                          {
+                            "name": "customer",
+                            "type": "text",
+                            "expand": [
+                              "stripe_customer",
+                              "stripe_deleted_customer"
+                            ]
+                          },
+                          {
+                            "name": "description",
+                            "type": "text"
+                          },
+                          {
+                            "name": "destination",
+                            "type": "text",
+                            "expand": [
+                              "stripe_account"
+                            ]
+                          },
+                          {
+                            "name": "dispute",
+                            "type": "text",
+                            "expand": [
+                              "stripe_dispute"
+                            ]
+                          },
+                          {
+                            "name": "disputed",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "failure_code",
+                            "type": "text"
+                          },
+                          {
+                            "name": "failure_message",
+                            "type": "text"
+                          },
+                          {
+                            "name": "fraud_details",
+                            "type": "object",
+                            "ref": "stripe_charge_fraud_details"
+                          },
+                          {
+                            "name": "id",
+                            "type": "text"
+                          },
+                          {
+                            "name": "invoice",
+                            "type": "text",
+                            "expand": [
+                              "stripe_invoice"
+                            ]
+                          },
+                          {
+                            "name": "level3",
+                            "type": "object",
+                            "ref": "stripe_level3"
+                          },
+                          {
+                            "name": "livemode",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "metadata",
+                            "type": "object"
+                          },
+                          {
+                            "name": "object",
+                            "type": "text"
+                          },
+                          {
+                            "name": "on_behalf_of",
+                            "type": "text",
+                            "expand": [
+                              "stripe_account"
+                            ]
+                          },
+                          {
+                            "name": "order",
+                            "type": "text",
+                            "expand": [
+                              "stripe_order"
+                            ]
+                          },
+                          {
+                            "name": "outcome",
+                            "type": "object",
+                            "ref": "stripe_charge_outcome"
+                          },
+                          {
+                            "name": "paid",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "payment_intent",
+                            "type": "text",
+                            "expand": [
+                              "stripe_payment_intent"
+                            ]
+                          },
+                          {
+                            "name": "payment_method",
+                            "type": "text"
+                          },
+                          {
+                            "name": "payment_method_details",
+                            "type": "object",
+                            "ref": "stripe_payment_method_details"
+                          },
+                          {
+                            "name": "receipt_email",
+                            "type": "text"
+                          },
+                          {
+                            "name": "receipt_number",
+                            "type": "text"
+                          },
+                          {
+                            "name": "receipt_url",
+                            "type": "text"
+                          },
+                          {
+                            "name": "refunded",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "refunds",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "data",
+                                "type": "array",
+                                "sub": [
+                                  {
+                                    "name": "amount",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "balance_transaction",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_balance_transaction"
+                                    ]
+                                  },
+                                  {
+                                    "name": "charge",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_charge"
+                                    ]
+                                  },
+                                  {
+                                    "name": "created",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "currency",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "description",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "failure_balance_transaction",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_balance_transaction"
+                                    ]
+                                  },
+                                  {
+                                    "name": "failure_reason",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "id",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "metadata",
+                                    "type": "object"
+                                  },
+                                  {
+                                    "name": "object",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "payment_intent",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_payment_intent"
+                                    ]
+                                  },
+                                  {
+                                    "name": "reason",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "receipt_number",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "source_transfer_reversal",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_transfer_reversal"
+                                    ]
+                                  },
+                                  {
+                                    "name": "status",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "transfer_reversal",
+                                    "type": "text",
+                                    "expand": [
+                                      "stripe_transfer_reversal"
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "has_more",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "object",
+                                "type": "text"
+                              },
+                              {
+                                "name": "url",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "review",
+                            "type": "text",
+                            "expand": [
+                              "stripe_review"
+                            ]
+                          },
+                          {
+                            "name": "shipping",
+                            "type": "object",
+                            "ref": "stripe_shipping"
+                          },
+                          {
+                            "name": "source",
+                            "type": "object",
+                            "ref": "stripe_payment_source"
+                          },
+                          {
+                            "name": "source_transfer",
+                            "type": "text",
+                            "expand": [
+                              "stripe_transfer"
+                            ]
+                          },
+                          {
+                            "name": "statement_descriptor",
+                            "type": "text"
+                          },
+                          {
+                            "name": "statement_descriptor_suffix",
+                            "type": "text"
+                          },
+                          {
+                            "name": "status",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transfer",
+                            "type": "text",
+                            "expand": [
+                              "stripe_transfer"
+                            ]
+                          },
+                          {
+                            "name": "transfer_data",
+                            "type": "object",
+                            "ref": "stripe_charge_transfer_data"
+                          },
+                          {
+                            "name": "transfer_group",
+                            "type": "text"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "has_more",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "url",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "client_secret",
+                    "type": "text"
+                  },
+                  {
+                    "name": "confirmation_method",
+                    "type": "text"
+                  },
+                  {
+                    "name": "created",
+                    "type": "number"
+                  },
+                  {
+                    "name": "currency",
+                    "type": "text"
+                  },
+                  {
+                    "name": "customer",
+                    "type": "text",
+                    "expand": [
+                      "stripe_customer",
+                      "stripe_deleted_customer"
+                    ]
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "invoice",
+                    "type": "text",
+                    "expand": [
+                      "stripe_invoice"
+                    ]
+                  },
+                  {
+                    "name": "last_payment_error",
+                    "type": "object",
+                    "ref": "stripe_api_errors"
+                  },
+                  {
+                    "name": "livemode",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "metadata",
+                    "type": "object"
+                  },
+                  {
+                    "name": "next_action",
+                    "type": "object",
+                    "ref": "stripe_payment_intent_next_action"
+                  },
+                  {
+                    "name": "object",
+                    "type": "text"
+                  },
+                  {
+                    "name": "on_behalf_of",
+                    "type": "text",
+                    "expand": [
+                      "stripe_account"
+                    ]
+                  },
+                  {
+                    "name": "payment_method",
+                    "type": "text",
+                    "expand": [
+                      "stripe_payment_method"
+                    ]
+                  },
+                  {
+                    "name": "payment_method_options",
+                    "type": "object",
+                    "ref": "stripe_payment_intent_payment_method_options"
+                  },
+                  {
+                    "name": "payment_method_types",
+                    "type": "array",
+                    "sub": []
+                  },
+                  {
+                    "name": "receipt_email",
+                    "type": "text"
+                  },
+                  {
+                    "name": "review",
+                    "type": "text",
+                    "expand": [
+                      "stripe_review"
+                    ]
+                  },
+                  {
+                    "name": "setup_future_usage",
+                    "type": "text"
+                  },
+                  {
+                    "name": "shipping",
+                    "type": "object",
+                    "ref": "stripe_shipping"
+                  },
+                  {
+                    "name": "source",
+                    "type": "text",
+                    "expand": [
+                      "stripe_payment_source",
+                      "stripe_deleted_payment_source"
+                    ]
+                  },
+                  {
+                    "name": "statement_descriptor",
+                    "type": "text"
+                  },
+                  {
+                    "name": "statement_descriptor_suffix",
+                    "type": "text"
+                  },
+                  {
+                    "name": "status",
+                    "type": "text"
+                  },
+                  {
+                    "name": "transfer_data",
+                    "type": "object",
+                    "ref": "stripe_transfer_data"
+                  },
+                  {
+                    "name": "transfer_group",
+                    "type": "text"
+                  }
+                ]
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{retrievePaymentIntent.status != 'succeeded' && retrievePaymentIntent.status != 'processing'}}",
+                  "then": {
+                    "steps": {
+                      "name": "cancelPaymentIntent",
+                      "module": "stripe",
+                      "action": "cancelPaymentIntent",
+                      "options": {
+                        "__extra": {
+                          "stripe_account": "{{connected_account.value}}"
+                        },
+                        "cancellation_reason": "abandoned",
+                        "intent": "{{stripe_charge}}"
+                      },
+                      "outputType": "object",
+                      "meta": [
+                        {
+                          "name": "amount",
+                          "type": "number"
+                        },
+                        {
+                          "name": "amount_capturable",
+                          "type": "number"
+                        },
+                        {
+                          "name": "amount_received",
+                          "type": "number"
+                        },
+                        {
+                          "name": "application",
+                          "type": "text",
+                          "expand": [
+                            "stripe_application"
+                          ]
+                        },
+                        {
+                          "name": "application_fee_amount",
+                          "type": "number"
+                        },
+                        {
+                          "name": "canceled_at",
+                          "type": "number"
+                        },
+                        {
+                          "name": "cancellation_reason",
+                          "type": "text"
+                        },
+                        {
+                          "name": "capture_method",
+                          "type": "text"
+                        },
+                        {
+                          "name": "charges",
+                          "type": "object",
+                          "sub": [
+                            {
+                              "name": "data",
+                              "type": "array",
+                              "sub": [
+                                {
+                                  "name": "alternate_statement_descriptors",
+                                  "type": "object",
+                                  "ref": "stripe_alternate_statement_descriptors"
+                                },
+                                {
+                                  "name": "amount",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "amount_captured",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "amount_refunded",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "application",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_application"
+                                  ]
+                                },
+                                {
+                                  "name": "application_fee",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_application_fee"
+                                  ]
+                                },
+                                {
+                                  "name": "application_fee_amount",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "authorization_code",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "balance_transaction",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_balance_transaction"
+                                  ]
+                                },
+                                {
+                                  "name": "billing_details",
+                                  "type": "object",
+                                  "ref": "stripe_billing_details"
+                                },
+                                {
+                                  "name": "calculated_statement_descriptor",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "captured",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "created",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "currency",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "customer",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_customer",
+                                    "stripe_deleted_customer"
+                                  ]
+                                },
+                                {
+                                  "name": "description",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "destination",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_account"
+                                  ]
+                                },
+                                {
+                                  "name": "dispute",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_dispute"
+                                  ]
+                                },
+                                {
+                                  "name": "disputed",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "failure_code",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "failure_message",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "fraud_details",
+                                  "type": "object",
+                                  "ref": "stripe_charge_fraud_details"
+                                },
+                                {
+                                  "name": "id",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "invoice",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_invoice"
+                                  ]
+                                },
+                                {
+                                  "name": "level3",
+                                  "type": "object",
+                                  "ref": "stripe_level3"
+                                },
+                                {
+                                  "name": "livemode",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "metadata",
+                                  "type": "object"
+                                },
+                                {
+                                  "name": "object",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "on_behalf_of",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_account"
+                                  ]
+                                },
+                                {
+                                  "name": "order",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_order"
+                                  ]
+                                },
+                                {
+                                  "name": "outcome",
+                                  "type": "object",
+                                  "ref": "stripe_charge_outcome"
+                                },
+                                {
+                                  "name": "paid",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "payment_intent",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_payment_intent"
+                                  ]
+                                },
+                                {
+                                  "name": "payment_method",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "payment_method_details",
+                                  "type": "object",
+                                  "ref": "stripe_payment_method_details"
+                                },
+                                {
+                                  "name": "receipt_email",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "receipt_number",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "receipt_url",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "refunded",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "refunds",
+                                  "type": "object",
+                                  "sub": [
+                                    {
+                                      "name": "data",
+                                      "type": "array",
+                                      "sub": [
+                                        {
+                                          "name": "amount",
+                                          "type": "number"
+                                        },
+                                        {
+                                          "name": "balance_transaction",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_balance_transaction"
+                                          ]
+                                        },
+                                        {
+                                          "name": "charge",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_charge"
+                                          ]
+                                        },
+                                        {
+                                          "name": "created",
+                                          "type": "number"
+                                        },
+                                        {
+                                          "name": "currency",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "description",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "failure_balance_transaction",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_balance_transaction"
+                                          ]
+                                        },
+                                        {
+                                          "name": "failure_reason",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "id",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "metadata",
+                                          "type": "object"
+                                        },
+                                        {
+                                          "name": "object",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "payment_intent",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_payment_intent"
+                                          ]
+                                        },
+                                        {
+                                          "name": "reason",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "receipt_number",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "source_transfer_reversal",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_transfer_reversal"
+                                          ]
+                                        },
+                                        {
+                                          "name": "status",
+                                          "type": "text"
+                                        },
+                                        {
+                                          "name": "transfer_reversal",
+                                          "type": "text",
+                                          "expand": [
+                                            "stripe_transfer_reversal"
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "name": "has_more",
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "name": "object",
+                                      "type": "text"
+                                    },
+                                    {
+                                      "name": "url",
+                                      "type": "text"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "review",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_review"
+                                  ]
+                                },
+                                {
+                                  "name": "shipping",
+                                  "type": "object",
+                                  "ref": "stripe_shipping"
+                                },
+                                {
+                                  "name": "source",
+                                  "type": "object",
+                                  "ref": "stripe_payment_source"
+                                },
+                                {
+                                  "name": "source_transfer",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_transfer"
+                                  ]
+                                },
+                                {
+                                  "name": "statement_descriptor",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "statement_descriptor_suffix",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "status",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "transfer",
+                                  "type": "text",
+                                  "expand": [
+                                    "stripe_transfer"
+                                  ]
+                                },
+                                {
+                                  "name": "transfer_data",
+                                  "type": "object",
+                                  "ref": "stripe_charge_transfer_data"
+                                },
+                                {
+                                  "name": "transfer_group",
+                                  "type": "text"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "has_more",
+                              "type": "boolean"
+                            },
+                            {
+                              "name": "object",
+                              "type": "text"
+                            },
+                            {
+                              "name": "url",
+                              "type": "text"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "client_secret",
+                          "type": "text"
+                        },
+                        {
+                          "name": "confirmation_method",
+                          "type": "text"
+                        },
+                        {
+                          "name": "created",
+                          "type": "number"
+                        },
+                        {
+                          "name": "currency",
+                          "type": "text"
+                        },
+                        {
+                          "name": "customer",
+                          "type": "text",
+                          "expand": [
+                            "stripe_customer",
+                            "stripe_deleted_customer"
+                          ]
+                        },
+                        {
+                          "name": "description",
+                          "type": "text"
+                        },
+                        {
+                          "name": "id",
+                          "type": "text"
+                        },
+                        {
+                          "name": "invoice",
+                          "type": "text",
+                          "expand": [
+                            "stripe_invoice"
+                          ]
+                        },
+                        {
+                          "name": "last_payment_error",
+                          "type": "object",
+                          "ref": "stripe_api_errors"
+                        },
+                        {
+                          "name": "livemode",
+                          "type": "boolean"
+                        },
+                        {
+                          "name": "metadata",
+                          "type": "object"
+                        },
+                        {
+                          "name": "next_action",
+                          "type": "object",
+                          "ref": "stripe_payment_intent_next_action"
+                        },
+                        {
+                          "name": "object",
+                          "type": "text"
+                        },
+                        {
+                          "name": "on_behalf_of",
+                          "type": "text",
+                          "expand": [
+                            "stripe_account"
+                          ]
+                        },
+                        {
+                          "name": "payment_method",
+                          "type": "text",
+                          "expand": [
+                            "stripe_payment_method"
+                          ]
+                        },
+                        {
+                          "name": "payment_method_options",
+                          "type": "object",
+                          "ref": "stripe_payment_intent_payment_method_options"
+                        },
+                        {
+                          "name": "payment_method_types",
+                          "type": "array",
+                          "sub": []
+                        },
+                        {
+                          "name": "receipt_email",
+                          "type": "text"
+                        },
+                        {
+                          "name": "review",
+                          "type": "text",
+                          "expand": [
+                            "stripe_review"
+                          ]
+                        },
+                        {
+                          "name": "setup_future_usage",
+                          "type": "text"
+                        },
+                        {
+                          "name": "shipping",
+                          "type": "object",
+                          "ref": "stripe_shipping"
+                        },
+                        {
+                          "name": "source",
+                          "type": "text",
+                          "expand": [
+                            "stripe_payment_source",
+                            "stripe_deleted_payment_source"
+                          ]
+                        },
+                        {
+                          "name": "statement_descriptor",
+                          "type": "text"
+                        },
+                        {
+                          "name": "statement_descriptor_suffix",
+                          "type": "text"
+                        },
+                        {
+                          "name": "status",
+                          "type": "text"
+                        },
+                        {
+                          "name": "transfer_data",
+                          "type": "object",
+                          "ref": "stripe_transfer_data"
+                        },
+                        {
+                          "name": "transfer_group",
+                          "type": "text"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "outputType": "boolean"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "created",
+            "type": "datetime"
+          },
+          {
+            "name": "familyid",
+            "type": "number"
+          },
+          {
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "name": "stripe_charge",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "delete",
+        "module": "dbupdater",
+        "action": "delete",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "delete",
+            "table": "payment_intents",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "created",
+                  "field": "created",
+                  "type": "datetime",
+                  "operator": "less",
+                  "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}",
+                  "data": {
+                    "column": "created"
+                  },
+                  "operation": "<"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "DELETE\nFROM payment_intents\nWHERE created < :P1 /* {{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}} */",
+            "params": [
+              {
+                "operator": "less",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{NOW.dateAdd('minutes', -60).formatDate('yyyy-MM-dd h:mm:ss')}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      }
+    ]
   }
 }

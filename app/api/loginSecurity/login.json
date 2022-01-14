@@ -32,7 +32,183 @@
         "meta": []
       },
       {
+        "name": "query_settings",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT \n  JSON_OBJECTAGG(\n    name, value\n  ) as settings\nFROM settings s\nWHERE s.name IN('timezone','localization_dateformat','localization_puddle_dateformat','localization_timeformat');",
+            "params": []
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "name": "settings",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "settings",
+        "module": "core",
+        "action": "setsession",
+        "options": {
+          "value": "{{query_settings[0].settings.unstringify()}}"
+        }
+      },
+      {
+        "name": "query_stripe_id",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "settings",
+                "column": "value"
+              }
+            ],
+            "table": {
+              "name": "settings"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "settings.name",
+                  "field": "settings.name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "STRIPE_account_id",
+                  "data": {
+                    "table": "settings",
+                    "column": "name",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_account_id'",
+            "params": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "value"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_stripe_billing_portal_id",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "settings",
+                "column": "value"
+              }
+            ],
+            "table": {
+              "name": "settings"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "settings.name",
+                  "field": "settings.name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "STRIPE_billing_portal_config",
+                  "data": {
+                    "table": "settings",
+                    "column": "name",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_billing_portal_config'",
+            "params": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "value"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_stripe_id.value}}",
+          "then": {
+            "steps": {
+              "name": "stripe_connect",
+              "module": "core",
+              "action": "setsession",
+              "options": {
+                "value": "{{query_stripe_id.value}}"
+              }
+            }
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_stripe_billing_portal_id.value}}",
+          "then": {
+            "steps": {
+              "name": "stripe_billing_portal",
+              "module": "core",
+              "action": "setsession",
+              "options": {
+                "value": "{{query_stripe_billing_portal_id.value}}"
+              }
+            }
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
         "name": "navbarToggle",
+        "module": "core",
+        "action": "setcookie",
+        "options": {
+          "value": "false"
+        }
+      },
+      {
+        "name": "webhook_processing",
         "module": "core",
         "action": "setcookie",
         "options": {

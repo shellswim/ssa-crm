@@ -1,0 +1,362 @@
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" jquery_slim_35="local" components="{dmxBootstrap5Navigation:{},dmxSockets:{},dmxBootstrap5Modal:{},dmxValidator:{}}" fontawesome_5="cdn" -->
+<dmx-serverconnect id="LIST_stripeAccounts" url="/api/stripe/LIST_allAccounts"></dmx-serverconnect>
+<dmx-serverconnect id="GOTO_stripeAccount" url="/api/stripe/GOTO_stripeAccount" noload dmx-on:success="browser1.goto(GOTO_stripeAccount.data.createAccountLink.url)"></dmx-serverconnect>
+<dmx-serverconnect id="CREATE_stripeAccount" url="/api/stripe/CREATE_newStripeAccount" dmx-on:success="browser1.goto(CREATE_stripeAccount.data.createAccountLink.url)" noload></dmx-serverconnect>
+<div class="row" is="dmx-if" id="cr_stripeSettings" dmx-bind:condition="var_selectedSettings.value === 'stripe'">
+    <div class="col">
+
+
+        <div class="row mb-2 pb-2 border-bottom align-items-center">
+            <div class="col">
+                <h2 class="fw-400 mb-0">
+
+                    Stripe Payments
+                </h2>
+            </div>
+            <div class="col d-flex flex-row justify-content-end"><a id="btn_stripeAccount" class="btn btn-primary" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == true" dmx-bind:href="'https://dashboard.stripe.com/'+CONNECT_stripe.data.retrieveAccount.id" target="_blank"><i class="bi-eye me-2"></i>View Stripe Dashboard<i class="fas fa-link ms-2 fa-xs"></i></a></div>
+        </div>
+
+
+        <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 border-bottom" id="navTabs1_tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link py-3 px-4 active" id="navTabs_stripe_account_tab" data-bs-toggle="tab" href="#" data-bs-target="#navTabs_stripe_account" role="tab" aria-controls="navTabs1_1" aria-selected="true"><i class="far fa-user-circle me-2"></i>Account</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-3 px-4" id="navTabs_stripe_balance_tab" data-bs-toggle="tab" href="#" data-bs-target="#navTabs_stripe_balance" role="tab" aria-controls="navTabs1_2" aria-selected="false"><i class="fas fa-coins me-2"></i>Balance
+
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-3 px-4" id="navTabs_stripe_billingPortal_tab" data-bs-toggle="tab" href="#" data-bs-target="#navTabs_stripe_billingPortal" role="tab" aria-controls="navTabs1_3" aria-selected="false"><i class="fas fa-globe-asia me-2"></i>Billing Portal<br></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-3 px-4" id="navTabs_stripe_exdetails_tab" data-bs-toggle="tab" href="#" data-bs-target="#navTabs_stripe_exdetails" role="tab" aria-controls="navTabs1_3" aria-selected="false"><i class="fas fa-asterisk me-2"></i>Extra Details
+
+
+                </a>
+            </li>
+
+        </ul>
+        <div class="tab-content py-3" id="navTabs1_content">
+            <div class="tab-pane fade show active" id="navTabs_stripe_account" role="tabpanel">
+                <div class="d-flex flex-column" is="dmx-if" id="cr_stripeIncomplete_pretext" dmx-bind:condition="CONNECT_stripe.data.response == &quot;false&quot;">
+                    <p>Puddle has partnered with Stripe to enable our swim schools to easily take payments through your Puddle account. Save customer payment details to file for easy processing at your reception desk, or for automated payments, in a completely secure environment provided by the world's leading online payment gateway.</p>
+                    <p>It's fast and easy to setup for your swim school, just click the setup Stripe account below.</p>
+                    <p class="fw-550 fst-italic mb-3 pb-3 border-bottom">** Be sure to read Puddle's terms and conditions which outline transaction fees before using this service.</p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="row row-cols-1 g-0">
+                            <div class="col mb-3 pb-3 border-bottom d-flex align-items-center flex-row justify-content-between">
+                                <h4 class="fw-600 mb-0">My Account</h4>
+                                <small class="ms-3 text-muted fw-350 small"><i>Account Number: {{CONNECT_stripe.data.retrieveAccount.id}}</i></small>
+                            </div>
+                            <div class="col-12 d-flex justify-content-start flex-row align-items-start"><button id="btn_stripeOnboarding" class="btn btn-primary" dmx-show="CONNECT_stripe.data.response == &quot;false&quot;" dmx-on:click="CREATE_stripeAccount.load()"><i class="bi-credit-card-2-back me-2"></i>Setup Stripe Account</button>
+                                <button id="btn_stripeOnboardingContinue" class="btn btn-primary" dmx-on:click="GOTO_stripeAccount.load({account_id: CONNECT_stripe.data.retrieveAccount.id, charge_enabled: CONNECT_stripe.data.retrieveAccount.charges_enabled})" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == false"><i class="bi-arrow-right-circle me-2"></i>Continue Stripe Setup</button>
+
+                            </div>
+
+
+
+
+                        </div>
+
+                    </div>
+                    <div class="col-12">
+                        <p class="my-2" dmx-show="CONNECT_stripe.data.response == 'false'">Nothing to show. You need to setup a Stripe account to continue.</p>
+                        <p class="my-2" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == false">You have not completed your setup of your Stripe account. Please click 'Continue Stripe Setup' above.</p>
+                        <h5 class="fw-600 mt-2 mb-4 py-2 border-bottom lh-lg">Account Details</h5>
+                        <div class="row mb-4 pb-4 border-bottom">
+                            <div class="col">
+                                <div class="modal fade" id="modal_UPDATE_STRIPE_acc" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header border-bottom">
+                                                <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" width="150">
+                                                <img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" width="150" class="me-3">
+                                            </div>
+                                            <div class="modal-body">
+                                                <h4 class="mb-3 pb-3 border-bottom fw-600">Edit Stripe Details</h4>
+                                                <p class="mb-3">
+                                                    Your security is of upmost importance to Puddle, therefore, to edit your details and business information, we require you to login to your Stripe dashboard and update your details directly in your account.</p>
+                                                <a id="btn_STRIPE_editAcc_dashboard" target="_blank" class="btn btn-outline-primary" dmx-bind:href="'https://dashboard.stripe.com/'+CONNECT_stripe.data.retrieveAccount.id+'/settings'"><i class="bi-pencil me-2"></i>Edit Business Details
+                                                </a>
+                                            </div>
+                                            <div class="modal-footer border-top justify-content-between">
+                                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" form="form_UPDATE_STRIPE_acc" class="btn btn-primary">Submit Changes</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="btn_editStripeInfo" class="btn btn-secondary me-4" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == true" data-bs-toggle="modal" data-bs-target="#modal_UPDATE_STRIPE_acc"><i class="bi-pencil me-2"></i>Edit Details
+
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row row-cols-1 flex-table">
+                            <div class="col">
+                                <div class="row mb-1">
+                                    <div class="col">
+                                        <p class="text-muted">Account Name</p>
+                                    </div>
+                                    <div class="col">
+                                        <p dmx-text="CONNECT_stripe.data.retrieveAccount.business_profile.name">ACME Company</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-1">
+                                    <div class="col">
+                                        <p class="text-muted">Address</p>
+                                    </div>
+                                    <div class="col">
+                                        <p dmx-text="(CONNECT_stripe.data.retrieveAccount.business_profile.support_address.line1 ? (CONNECT_stripe.data.retrieveAccount.business_profile.support_address.line1+', ') : '') +(CONNECT_stripe.data.retrieveAccount.business_profile.support_address.line2 ? (CONNECT_stripe.data.retrieveAccount.business_profile.support_address.line2+', ') : '') +CONNECT_stripe.data.retrieveAccount.business_profile.support_address.city+', '+CONNECT_stripe.data.retrieveAccount.business_profile.support_address.state+' '+CONNECT_stripe.data.retrieveAccount.business_profile.support_address.postal_code+' '+CONNECT_stripe.data.retrieveAccount.business_profile.support_address.country ">123 Acme Street, Acmetown, NSW 2527 AU</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-1">
+                                    <div class="col">
+                                        <p class="text-muted">Email</p>
+                                    </div>
+                                    <div class="col">
+                                        <p dmx-text="CONNECT_stripe.data.retrieveAccount.email">example@acme.com</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-1">
+                                    <div class="col">
+                                        <p class="text-muted">Website/URL</p>
+                                    </div>
+                                    <div class="col">
+                                        <p dmx-text="CONNECT_stripe.data.retrieveAccount.business_profile.url">https://www.acme.com</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="navTabs_stripe_balance" role="tabpanel">
+                <div class="row gx-0">
+
+
+                    <div class="col mb-3 pb-3 border-bottom d-flex flex-row align-items-center">
+                        <h4 class="fw-600 mb-0">Balance:</h4>
+
+
+
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-auto">
+                        <p class="fw-450">Available:</p>
+                        <p class="fw-450">Pending:</p>
+                    </div>
+                    <div class="col">
+                        <p dmx-text="CONNECT_stripe.data.retrieveBalance.available[0].amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$7522.33</p>
+                        <p dmx-text="(CONNECT_stripe.data.retrieveBalance.pending[0].amount / 100).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$5823.85</p>
+                    </div>
+                </div>
+                <div class="row">
+
+
+                    <div class="col visually-hidden">
+                        <h4 class="fw-400 mt-2 mb-3">Attached Bank Account:</h4>
+                        <div class="row">
+                            <div class="col-auto">
+                                <p class="fw-450">Bank:</p>
+                            </div>
+                            <div class="col">
+                                <p dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].bank_name">$5823.85</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto">
+                                <p class="fw-450">Account Number:</p>
+                            </div>
+                            <div class="col">
+                                <p dmx-text="'****'+CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].last4">$7522.33</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto">
+                                <p class="fw-450">BSB / Routing Number:</p>
+                            </div>
+                            <div class="col">
+                                <p dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].routing_number">$7522.33</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto">
+                                <p class="fw-450">Country:</p>
+                            </div>
+                            <div class="col">
+                                <p dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].country">$7522.33</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto">
+                                <p class="fw-450">Currency:</p>
+                            </div>
+                            <div class="col">
+                                <p dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].currency.uppercase()">$7522.33</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="row gx-0">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col my-3 py-3 border-bottom d-flex flex-row align-items-center">
+                                <h4 class="fw-600 mb-0">Payout Schedule:</h4>
+                            </div>
+                            <div class="col-break w-100"></div>
+                            <div class="col-auto">
+                                <p>Payments made through Stripe will be deposited in the following account.<br></p>
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Bank</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].bank_name">Bank Name</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Account Number:</th>
+                                            <td dmx-text="'****'+CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].last4">15854165489</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">BSB / Routing #</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].routing_number">000 8445</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Country</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].country">AU</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Currency</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].currency.uppercase()">AUD</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col my-3 py-3 border-bottom d-flex flex-row align-items-center">
+                                <h4 class="fw-600 mb-0">Bank Account:</h4>
+                            </div>
+                            <div class="col-break w-100"></div>
+                            <div class="col-auto">
+                                <p>Payments made through Stripe will be deposited in the following account.<br></p>
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Bank</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].bank_name">Bank Name</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Account Number:</th>
+                                            <td dmx-text="'****'+CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].last4">15854165489</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">BSB / Routing #</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].routing_number">000 8445</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Country</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].country">AU</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Currency</th>
+                                            <td dmx-text="CONNECT_stripe.data.retrieveAccount.external_accounts.data[0].currency.uppercase()">AUD</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="navTabs_stripe_billingPortal" role="tabpanel">
+                <h5 class="fw-600 my-2 py-2 border-bottom lh-lg">Billing Portal Configuration</h5>
+                <div class="row" is="dmx-if" id="cr_noBillingPortalConfig" dmx-bind:condition="!CONNECT_stripe.data.retrieveBillingPortalConfiguration">
+                    <div class="col">
+                        <dmx-serverconnect id="CREATE_STRIPE_billingPortalConfig" url="/api/stripe/CREATE_billingPortalConfig" dmx-param:connected_account="CONNECT_stripe.data.retrieveAccount.id" noload></dmx-serverconnect>
+                        <p>
+                            There is currently no configuration for your customer billing portal. This means it has likely not been created yet.</p><button id="btn_createBillingPortalConfig" class="btn btn-primary" dmx-on:click="CREATE_STRIPE_billingPortalConfig.load({})"><i class="fas fa-globe-asia me-2"></i>Create Billing Portal</button>
+                    </div>
+
+                </div>
+                <div class="row" is="dmx-if" id="cr_existsbillingPortalConfig" dmx-bind:condition="CONNECT_stripe.data.retrieveBillingPortalConfiguration">
+                    <div class="col">
+                        <h5 class="fw-600 my-2 py-2 border-bottom lh-lg">Stripe Customer ID</h5>
+
+                        <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.id">cus_hfnuwefh2984</p>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-600 my-2 py-2 border-bottom lh-lg">Invoice Prefix:<i class="bi-question-circle-fill ms-2" dmx-bs-tooltip="'Invoice Prefix is the string of characters a customer will see in their bank account after a successful transaction.'" data-bs-trigger="hover"></i>
+                        </h5>
+                        <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.invoice_prefix">2693F829</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="navTabs_stripe_exdetails" role="tabpanel">
+                <div class="row" is="dmx-if" id="cr_stripeAccountInformation" dmx-bind:condition="CONNECT_stripe.data.retrieveAccount.charges_enabled == true">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col mb-3 pb-3 border-bottom d-flex flex-row align-items-center">
+                                <h4 class="fw-600 mb-0">Extra Account Details</h4>
+                            </div>
+                        </div>
+
+                        <div class="row row-cols-1 gy-2">
+                            <div class="col">
+                                <h6 class="mb-2 pb-2 border-bottom">Stripe Account Number:</h6>
+                                <p dmx-text="CONNECT_stripe.data.retrieveAccount.id">acct_nbcuigh32rdaep0</p>
+                            </div>
+
+
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row"></div>
+                                <h6 class="my-2 py-2 border-bottom">Capabilities:</h6>
+
+                                <div class="row align-items-center mb-1 gx-1">
+                                    <div class="col-auto">
+                                        <p class="mb-0">Card Payments:</p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="mb-0 px-2 rounded-3 text-success fw-500 d-inline-block" dmx-show="CONNECT_stripe.data.retrieveAccount.capabilities.card_payments == 'active'">ACTIVE</p>
+                                        <p class="mb-0 px-2 rounded-3 fw-500 d-inline-block text-danger" dmx-hide="CONNECT_stripe.data.retrieveAccount.capabilities.card_payments == 'active'">INACTIVE</p>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center gx-1">
+                                    <div class="col-auto">
+                                        <p class="mb-0">Transfers:</p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="mb-0 px-2 rounded-3 text-success fw-500 d-inline-block" dmx-show="CONNECT_stripe.data.retrieveAccount.capabilities.transfers == 'active'">ACTIVE</p>
+                                        <p class="mb-0 px-2 rounded-3 fw-500 d-inline-block text-danger" dmx-hide="CONNECT_stripe.data.retrieveAccount.capabilities.transfers == 'active'">INACTIVE</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+
+    </div>
+</div>

@@ -1,5 +1,4 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="settings" appconnect="local" fontawesome_5="cdn" jquery_slim_35="local" components="{dmxDatastore:{},dmxBootstrap4Modal:{},dmxDataTraversal:{},dmxFormatter:{},dmxStripe:{}}" bootstrap5="local" bootstrap_icons="cdn" -->
-<script is="dmx-flow" id="flow1" type="text/dmx-flow" src="/app/flows/stripe/CREATE_account.json"></script>
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="settings" appconnect="local" jquery_slim_35="local" components="{dmxDatastore:{},dmxBootstrap4Modal:{},dmxDataTraversal:{},dmxFormatter:{},dmxStripe:{},dmxBootstrap5TableGenerator:{},dmxBootbox:{},dmxBootstrap5Navigation:{}}" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5pro="cdn" -->
 <div class="modal fade" id="classLevelEditModal" is="dmx-bs5-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -51,65 +50,67 @@
     </div>
 </div>
 <dmx-datastore id="settingsUpdatedDS" session="true"></dmx-datastore>
-<dmx-serverconnect id="CONNECT_stripe" url="/api/stripe/CONNECT_stripe"></dmx-serverconnect>
 
 
 <meta name="ac:route" content="/settings">
-<main class="d-flex flex-grow-1 flex-column p-4">
-    <section>
-        <form id="updateLocaleForm" is="dmx-serverconnect-form" method="post" action="/api/baseActions/updates/updateAppSettings">
-            <dmx-array id="settingsArray" dmx-on:updated="settingsUpdated.set('settings',items)">
-                <dmx-value id="key"></dmx-value>
-                <dmx-value id="value"></dmx-value>
-            </dmx-array>
-            <input id="inp_settingsArray" type="text" class="form-control">
+<main class="d-flex flex-grow-1 flex-column">
+    <h1 class="fw-300 mb-0 p-4"><i class="bi-gear me-3"></i>Settings
+    </h1>
+    <div class="row gx-0 d-flex flex-grow-1">
+        <div class="col-2 align-self-stretch border-end bg-white border-top">
+            <dmx-value id="var_selectedSettings" dmx-bind:value="'general'"></dmx-value>
+            <div class="nav flex-column settings-nav">
+                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'general'" dmx-on:click="var_selectedSettings.setValue('general')">General</li>
+                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'classlevels'" dmx-on:click="var_selectedSettings.setValue('classlevels')">Class Levels
+                </li>
+                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'stripe'" dmx-on:click="var_selectedSettings.setValue('stripe')">Stripe Payments</li>
+            </div>
+        </div>
+        <div class="p-4 col-10 bg-white border-top">
+            <div class="row" is="dmx-if" id="cr_generalSettings" dmx-bind:condition="var_selectedSettings.value === 'general'">
+                <form id="updateLocaleForm" is="dmx-serverconnect-form" method="post" action="/api/baseActions/updates/updateAppSettings">
+                    <dmx-array id="settingsArray" dmx-on:updated="settingsUpdated.set('settings',items)">
+                        <dmx-value id="key"></dmx-value>
+                        <dmx-value id="value"></dmx-value>
+                    </dmx-array>
 
 
-            <div class="row gx-3">
+                    <div class="row row-cols-4">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="sel_defaultCountry" class="col-form-label form-label">Select default
+                                    country</label>
+                                <select id="sel_defaultCountry" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_country" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="sel_defaultTimezone" class="col-form-label form-label">Select default time zone</label>
+                                <select id="sel_defaultTimezone" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_timezone" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button id="localeSubmitBtn" class="btn btn-primary" type="submit">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="row" is="dmx-if" id="cr_classlevelsSettings" dmx-bind:condition="var_selectedSettings.value === 'classlevels'">
                 <div class="col">
-                    <div class="mb-3">
-                        <label for="sel_defaultCountry" class="col-form-label form-label">Select default
-                            country</label>
-                        <select id="sel_defaultCountry" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_country" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])">
-                        </select>
+                    <h2 class="fw-400">Class Level Settings</h2>
+                    <div class="row row-cols-4 g-3 mt-2" dmx-bind:repeat="getLevels.data.query" is="dmx-repeat" id="rp_classLevels">
+                        <div class="col" dmx-bind:id="classLevel_{{id}}">
+                            <div class="d-flex card-list bg-white align-self-center position-relative clickable border rounded-3 pt-2 pb-2 ps-2 pe-2 flex-row justify-content-start align-items-center" dmx-on:click="classLevelEditModal.dd_editClassLevel.select(id);classLevelEditModal.show()" dmx-style:background-color.important="'#'+colour">
+                                <p dmx-text="name+' - '+shortName" class="m-0 fw-400 ps-3" dmx-style:color.important="'#'+textcolour">Fancy display heading</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="row gx-3">
-                <div class="col">
-                    <div class="mb-3">
-                        <label for="sel_defaultTimezone" class="col-form-label form-label">Select Time Zone</label>
-                        <select id="sel_defaultTimezone" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_timezone" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])"></select>
-                    </div>
-                </div>
-            </div>
-            <div class="row gx-3">
-                <div class="col">
-                    <button id="localeSubmitBtn" class="btn btn-primary" type="submit">Save</button>
-                </div>
-            </div>
-        </form>
-    </section>
-    <section id="classesAndLevelsSettings" class="mb-5">
-        <div class="row row-cols-4 no-gutters" id="classLevelsSettings" is="dmx-repeat" dmx-bind:repeat="getLevels.data.query">
-            <div class="col p-3" dmx-bind:id="classLevel_{{id}}">
-                <div class="d-flex card-list bg-white shadow-light rounded-small d-flex align-self-center py-2 ps-5 pe-2 position-relative clickable" dmx-on:click="classLevelEditModal.dd_editClassLevel.select(id);classLevelEditModal.show()">
-                    <div class="container colour-tab ps-1 pe-2" dmx-style:background.important="'#'+colour"></div>
-                    <h5 dmx-text="name" class="m-0 fw-350">Fancy display heading</h5>
-                </div>
-
-            </div>
+            <%- await include('/partials/settings/stripe/_stripeGeneral', Object.assign({}, locals)) %>
         </div>
-    </section>
-    <section id="stripeSettings">
-        <h1>Stripe Settings</h1>
-        <div class="row">
-            <div class="col d-flex justify-content-start align-items-start flex-row"><button id="btn_stripeOnboarding" class="btn btn-primary" dmx-show="CONNECT_stripe.data.response == &quot;false&quot;" dmx-on:click="run([{serverConnect:{url:'/api/stripe/CREATE_newStripeAccount',site:'SSA-CRM',name:'CREATE_stripeAccount'}},{run:{action:`browser1.goto(CREATE_stripeAccount.createAccountLink.url)`}}])"><i class="bi-credit-card-2-back me-2"></i>Setup Stripe Account</button>
-                <button id="btn_stripeOnboardingContinue" class="btn btn-primary" dmx-on:click="STRIPE_GET_accountlink.load()" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == false"><i class="bi-arrow-right-circle me-2"></i>Continue Stripe Setup</button>
-                <button id="btn_stripeAccount" class="btn btn-primary" dmx-on:click="STRIPE_GET_accountlink.load()" dmx-show="CONNECT_stripe.data.retrieveAccount.charges_enabled == true"><i class="bi-eye me-2"></i>View Stripe Account</button>
-            </div>
-        </div>
-
-
-    </section>
+    </div>
 </main>

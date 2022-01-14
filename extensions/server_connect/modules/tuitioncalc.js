@@ -41,7 +41,7 @@ exports.tuitioncalc = async function (options) {
     let fid = options.familyid;
     let mtp = moment.utc(options.monthtoprocess).tz(tz.value);
     let som = mtp.clone().startOf('month').format('YYYY-MM-DD');
-    let findexistingcharge = dbClient(await db.raw(`SELECT * FROM charges_family WHERE family = ${fid} AND chargeFor_monthly = '${som}'`)); 
+    let findexistingcharge = dbClient(await db.raw(`SELECT * FROM charges_family WHERE family_uuid = '${fid}' AND chargeFor_monthly = '${som}'`)); 
     let hascharge_monthly = findexistingcharge.length > 0 ? true : false;
     let mtp_show = mtp.clone().format('YYYY-MM-DD ha z')
     let stp = options.sessiontoprocess;
@@ -102,9 +102,9 @@ exports.tuitioncalc = async function (options) {
         let students = await getStudents(fid);
         async function getStudents(fid) {
             let arr = {};
-            let s = dbClient(await db.raw(`SELECT * FROM students WHERE family = ${fid}`));
+            let s = dbClient(await db.raw(`SELECT * FROM students WHERE family = '${fid}'`));
             for (let i = 0; i < s.length; i++) {
-                arr[s[i].id] = s[i];
+                arr[s[i].uuid] = s[i];
             }
             return arr;
         }
@@ -135,6 +135,7 @@ exports.tuitioncalc = async function (options) {
                 }
             }
             students[student].tuition = {
+                'student': student,
                 'netenrolcharge': round(sum(netcharge),2),
                 'grossenrolcharge': round(sum(grosscharge),2),
                 'totaldiscounts': round(sum(discounttotal),2)
@@ -323,12 +324,12 @@ exports.tuitioncalc = async function (options) {
             let cd = dr_current.weekarr[i];
             enrols[cd.startofweek] = {};
             let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor, c.classLevel
+            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid
             FROM enrolments e 
-                INNER JOIN students s ON e.student = s.id
-                INNER JOIN classes c ON e.classID = c.id 
-                INNER JOIN classTypes ct ON c.classType = ct.id
-                WHERE e.student = ${sid} AND
+                LEFT JOIN students s ON e.student_uuid = s.uuid
+                LEFT JOIN classes c ON e.class_uuid = c.uuid 
+                LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
+                WHERE e.student_uuid = '${sid}' AND
                 e.enrolmentType = 1 
                 AND (e.dropDate IS NULL 
                     OR e.dropDate >= '${cd.startofweek}'
@@ -337,7 +338,6 @@ exports.tuitioncalc = async function (options) {
                 AND c.day IN(${cd.dayint})
                 ORDER BY c.day ASC, c.startTimeDecimal ASC
                 `)) || null;
-
             // Get pricing - Raw & Discounted - Add class meeting date.
             if (enrolments.length > 0) {
                 
@@ -351,15 +351,14 @@ exports.tuitioncalc = async function (options) {
                             enrolcount[eid] = 1
                         }
                     }
-    
                     pricecalc = await pricingCalc(enrolments[i], (i + 1), enrolments.length);
                     // rawprice = rawprice += pricecalc.netamt;
                     enrolments[i]['pricing'] = {
-                        'enNetRate': enrolcount[eid] >=5 ? 0 : pricecalc.netamt,
-                        'endisc': enrolcount[eid] >=5 ? pricecalc.enrolprice : pricecalc.disc_total,
+                        'enNetRate': (enrolcount[eid] >=5 ? 0 : pricecalc.netamt) || 0,
+                        'endisc': (enrolcount[eid] >=5 ? pricecalc.enrolprice : pricecalc.disc_total) || 0,
                         'endiscrate': enrolcount[eid] >=5 ? '100%' : pricecalc.disc_rate,
                         'endiscdescription': enrolcount[eid] >=5 ? '5th Week of Enrolment Free' : pricecalc.disc_desc,
-                        'baseRate': enrolments[i].baseRate,
+                        'baseRate': (enrolments[i].baseRate) || 0,
                         'enrolmentOrder': i + 1
                     }
                     enrolments[i].classdate = moment(cd.startofweek).add((Number(enrolments[i].classday) - 1), 'd');
@@ -379,7 +378,7 @@ exports.tuitioncalc = async function (options) {
     }
 
     ///// Billing Calculations
-    /* e = enrolment, e = loop count, ec = enrolment count */
+    /* e = enrolment, c = loop count, ec = enrolment count */
     async function pricingCalc(e, c, ec) {
         // return e.classType;
         let price = rawPriceCalc(e);

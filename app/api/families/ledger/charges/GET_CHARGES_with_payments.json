@@ -1,0 +1,706 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_charges",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "charges_family"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "charges_family.family",
+                  "field": "charges_family.family",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.familyid}}",
+                  "data": {
+                    "table": "charges_family",
+                    "column": "family",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM charges_family\nWHERE family = :P1 /* {{$_GET.familyid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.familyid}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "total"
+          },
+          {
+            "type": "text",
+            "name": "title"
+          },
+          {
+            "type": "text",
+            "name": "reference"
+          },
+          {
+            "type": "text",
+            "name": "description"
+          },
+          {
+            "type": "date",
+            "name": "chargeFor_monthly"
+          },
+          {
+            "type": "date",
+            "name": "dueDate"
+          },
+          {
+            "type": "text",
+            "name": "chargeType"
+          },
+          {
+            "type": "number",
+            "name": "chargeFor_session"
+          },
+          {
+            "type": "number",
+            "name": "basetotal"
+          },
+          {
+            "type": "number",
+            "name": "discountotal"
+          },
+          {
+            "type": "date",
+            "name": "chargeDate"
+          },
+          {
+            "type": "object",
+            "name": "payments"
+          },
+          {
+            "type": "date",
+            "name": "created"
+          },
+          {
+            "type": "date",
+            "name": "updated"
+          },
+          {
+            "type": "number",
+            "name": "createdby"
+          },
+          {
+            "type": "number",
+            "name": "updatedby"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "rp_charges_GET_payments",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_charges}}",
+          "outputFields": [
+            "id",
+            "total",
+            "family",
+            "description",
+            "title",
+            "chargeFor_monthly",
+            "reference",
+            "dueDate",
+            "chargeType",
+            "chargeFor_session",
+            "basetotal",
+            "discountotal",
+            "chargeDate",
+            "created",
+            "updated",
+            "createdby",
+            "updatedby"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "GET_payments",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT *\nFROM payments_familycharges pf JOIN charges_family cf on pf.family = cf.family\nWHERE JSON_SEARCH(cf.payments, 'all', pf.uuid) AND cf.uuid =  :P1;",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{uuid}}",
+                        "test": "b3ebbf3c-6fa3-11ec-832c-0242ac160003"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "paymentType",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "payref",
+                    "type": "text"
+                  },
+                  {
+                    "name": "title",
+                    "type": "text"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "text"
+                  },
+                  {
+                    "name": "paymentdate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_payment",
+                    "type": "number"
+                  },
+                  {
+                    "name": "stripe_payment_id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_receipt_number",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_receipt_url",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_payment_type",
+                    "type": "text"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  },
+                  {
+                    "name": "reference",
+                    "type": "text"
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeFor_monthly",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dueDate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeType",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeFor_session",
+                    "type": "text"
+                  },
+                  {
+                    "name": "basetotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "discountotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "chargeDate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "payments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "created",
+                    "type": "text"
+                  },
+                  {
+                    "name": "updated",
+                    "type": "text"
+                  },
+                  {
+                    "name": "createdby",
+                    "type": "number"
+                  },
+                  {
+                    "name": "updatedby",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "rp_payments_GET_lineitems",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{GET_payments}}",
+                  "outputFields": [],
+                  "exec": {
+                    "steps": {
+                      "name": "GET_lineitems",
+                      "module": "dbconnector",
+                      "action": "select",
+                      "options": {
+                        "sql": {
+                          "type": "SELECT",
+                          "columns": [],
+                          "table": {
+                            "name": "payments_enrolcharges"
+                          },
+                          "joins": [],
+                          "query": "SELECT *\nFROM payments_enrolcharges\nWHERE payment_uuid = :P1 /* {{uuid}} */",
+                          "params": [
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P1",
+                              "value": "{{uuid}}"
+                            }
+                          ],
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "payments_enrolcharges.payment_uuid",
+                                "field": "payments_enrolcharges.payment_uuid",
+                                "type": "double",
+                                "operator": "equal",
+                                "value": "{{uuid}}",
+                                "data": {
+                                  "table": "payments_enrolcharges",
+                                  "column": "payment_uuid",
+                                  "type": "number"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          }
+                        },
+                        "connection": "db"
+                      },
+                      "output": true,
+                      "meta": [
+                        {
+                          "type": "text",
+                          "name": "uuid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "id"
+                        },
+                        {
+                          "type": "number",
+                          "name": "amount"
+                        },
+                        {
+                          "type": "number",
+                          "name": "paymentid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "studentid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "enrolchargeid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "payment_uuid"
+                        },
+                        {
+                          "type": "boolean",
+                          "name": "stripe_payment"
+                        },
+                        {
+                          "type": "text",
+                          "name": "charge_enrol_uuid"
+                        }
+                      ],
+                      "outputType": "array"
+                    }
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "paymentType",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "number"
+                  },
+                  {
+                    "name": "payref",
+                    "type": "text"
+                  },
+                  {
+                    "name": "title",
+                    "type": "text"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "text"
+                  },
+                  {
+                    "name": "paymentdate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_payment",
+                    "type": "number"
+                  },
+                  {
+                    "name": "stripe_payment_id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_receipt_number",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_receipt_url",
+                    "type": "text"
+                  },
+                  {
+                    "name": "stripe_payment_type",
+                    "type": "text"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  },
+                  {
+                    "name": "reference",
+                    "type": "text"
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeFor_monthly",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dueDate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeType",
+                    "type": "text"
+                  },
+                  {
+                    "name": "chargeFor_session",
+                    "type": "text"
+                  },
+                  {
+                    "name": "basetotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "discountotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "chargeDate",
+                    "type": "text"
+                  },
+                  {
+                    "name": "payments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "created",
+                    "type": "text"
+                  },
+                  {
+                    "name": "updated",
+                    "type": "text"
+                  },
+                  {
+                    "name": "createdby",
+                    "type": "number"
+                  },
+                  {
+                    "name": "updatedby",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "name": "reference",
+            "type": "text"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor_monthly",
+            "type": "date"
+          },
+          {
+            "name": "dueDate",
+            "type": "date"
+          },
+          {
+            "name": "chargeType",
+            "type": "text"
+          },
+          {
+            "name": "chargeFor_session",
+            "type": "number"
+          },
+          {
+            "name": "basetotal",
+            "type": "number"
+          },
+          {
+            "name": "discountotal",
+            "type": "number"
+          },
+          {
+            "name": "chargeDate",
+            "type": "date"
+          },
+          {
+            "name": "payments",
+            "type": "object"
+          },
+          {
+            "name": "created",
+            "type": "date"
+          },
+          {
+            "name": "updated",
+            "type": "date"
+          },
+          {
+            "name": "createdby",
+            "type": "number"
+          },
+          {
+            "name": "updatedby",
+            "type": "number"
+          },
+          {
+            "name": "query_payments",
+            "type": "array",
+            "sub": [
+              {
+                "type": "text",
+                "name": "uuid"
+              },
+              {
+                "type": "number",
+                "name": "id"
+              },
+              {
+                "type": "number",
+                "name": "amount"
+              },
+              {
+                "type": "number",
+                "name": "paymentType"
+              },
+              {
+                "type": "number",
+                "name": "family"
+              },
+              {
+                "type": "text",
+                "name": "payref"
+              },
+              {
+                "type": "text",
+                "name": "title"
+              },
+              {
+                "type": "text",
+                "name": "notes"
+              },
+              {
+                "type": "datetime",
+                "name": "paymentdate"
+              },
+              {
+                "type": "boolean",
+                "name": "stripe_payment"
+              },
+              {
+                "type": "text",
+                "name": "stripe_payment_id"
+              },
+              {
+                "type": "text",
+                "name": "stripe_receipt_number"
+              },
+              {
+                "type": "text",
+                "name": "stripe_receipt_url"
+              },
+              {
+                "type": "text",
+                "name": "stripe_payment_type"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

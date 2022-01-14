@@ -54,7 +54,7 @@
 
 <dmx-session-manager id="ss_FamilyFilters"></dmx-session-manager>
 <dmx-serverconnect id="createFamily" url="api/createFamilyWithGuardians" noload=""></dmx-serverconnect>
-<dmx-serverconnect id="getAllFamilies" url="api/getFamilies_paged" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch">
+<dmx-serverconnect id="getAllFamilies" url="/api/GET_FAMILY_LIST_paged" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch">
 </dmx-serverconnect>
 <dmx-serverconnect id="getRelationships" url="api/getRelationships"></dmx-serverconnect>
 
@@ -539,30 +539,30 @@
                                             <th scope="row" style="width: 1%; white-space: nowrap;" class="text-center"></th>
                                             <th>Guardian</th>
                                             <th>Students</th>
-                                            <th class="d-none d-md-table-cell">Phone numbers</th>
-                                            <th class="d-none d-lg-table-cell">Emails</th>
+                                            <th class="d-none d-md-table-cell">Default Phone</th>
+                                            <th class="d-none d-lg-table-cell">Default Email</th>
 
 
                                         </tr>
                                     </thead>
-                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getAllFamilies.data.query.data" id="tableRepeat4" class="table-white">
+                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getAllFamilies.data.rp_family" id="tableRepeat4" class="table-white">
                                         <tr>
 
                                             <td class="align-middle">
                                                 <div class="dropdown">
                                                     <button id="family_actions" class="btn btn-sm dropdown-toggle btn-secondary px-1 py-1 lh-1" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="bi-chevron-down small"></i></button>
                                                     <div class="dropdown-menu" aria-labelledby="family_actions">
-                                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+id">Details</a>
-                                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+id+'#ledger'">Ledger</a>
+                                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+uuid">Details</a>
+                                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+uuid+'#ledger'">Ledger</a>
                                                     </div>
                                                 </div>
 
 
                                             </td>
-                                            <td dmx-html="'<a href=&quot;/families/familydetail/'+id+'#guardians&quot; class=&quot;text-body&quot;>'+guardian+'</a>'" class="align-middle fw-500">Jane Doe</td>
-                                            <td dmx-text="students" class="align-middle">Jill, Joe, Bob, John</td>
-                                            <td dmx-text="phoneNumbers" class="align-middle d-none d-md-table-cell text-muted redhat font-monospace">Mobile: 0433000000<br>Home: 0242951006</td>
-                                            <td dmx-text="emails" class="align-middle d-none d-lg-table-cell fst-italic small text-muted">tester@ssa.com.au</td>
+                                            <td dmx-html="'<a href=&quot;/families/familydetail/'+uuid+'#guardians&quot; class=&quot;text-body&quot;>'+firstName +' '+lastName+'</a>'" class="align-middle fw-500">Jane Doe</td>
+                                            <td dmx-text="student_names" class="align-middle">Jill, Joe, Bob, John</td>
+                                            <td dmx-text="phone_number.phone" class="align-middle d-none d-md-table-cell text-muted small font-monospace fw-450" style="letter-spacing: 1.3px;">0433000000<br></td>
+                                            <td dmx-text="email.address" class="align-middle d-none d-lg-table-cell text-muted small">tester@ssa.com.au</td>
 
                                         </tr>
                                     </tbody>
@@ -570,14 +570,14 @@
                             </div>
                         </div>
                         <ul class="pagination justify-content-center" dmx-populate="getAllFamilies.data.query" dmx-state="queryManager" dmx-offset="offset" dmx-generator="bs5paging">
-                            <li class="page-item" dmx-class:disabled="getAllFamilies.data.query.page.current == 1" aria-label="Previous">
-                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.query.page.offset.prev)"><span aria-hidden="true" class="visually-hidden">&lsaquo;</span></a>
+                            <li class="page-item" dmx-class:disabled="getAllFamilies.data.family.page.current == 1" aria-label="Previous">
+                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.family.page.offset.prev)"><span aria-hidden="true" class="visually-hidden">&lsaquo;</span></a>
                             </li>
-                            <li class="page-item" dmx-class:active="title == getAllFamilies.data.query.page.current" dmx-class:disabled="!active" dmx-repeat="getAllFamilies.data.query.getServerConnectPagination(0,1,'...')">
-                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',(page-1)*getAllFamilies.data.query.limit)">{{title}}</a>
+                            <li class="page-item" dmx-class:active="title == getAllFamilies.data.family.page.current" dmx-class:disabled="!active" dmx-repeat="getAllFamilies.data.family.getServerConnectPagination(0,1,'...')">
+                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',(page-1)*getAllFamilies.data.family.limit)">{{title}}</a>
                             </li>
-                            <li class="page-item" dmx-class:disabled="getAllFamilies.data.query.page.current ==  getAllFamilies.data.query.page.total" aria-label="Next">
-                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.query.page.offset.next)"><span aria-hidden="true" class="visually-hidden">&rsaquo;</span></a>
+                            <li class="page-item" dmx-class:disabled="getAllFamilies.data.family.page.current ==  getAllFamilies.data.family.page.total" aria-label="Next">
+                                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllFamilies.data.family.page.offset.next)"><span aria-hidden="true" class="visually-hidden">&rsaquo;</span></a>
                             </li>
                         </ul>
                     </div>

@@ -2,22 +2,97 @@
   "meta": {
     "$_SESSION": [
       {
-        "type": "text",
-        "name": "pptr_usr"
-      },
-      {
-        "type": "text",
-        "name": "pptr_pss"
-      },
-      {
         "type": "boolean",
         "name": "publ"
       },
       {
         "type": "text",
         "name": "basicauth"
+      },
+      {
+        "type": "text",
+        "name": "stripe_connect"
+      },
+      {
+        "type": "text",
+        "name": "stripe_billing_portal"
+      },
+      {
+        "type": "object",
+        "name": "settings",
+        "sub": [
+          {
+            "type": "text",
+            "name": "timezone"
+          },
+          {
+            "type": "text",
+            "name": "localization_dateformat"
+          },
+          {
+            "type": "text",
+            "name": "localization_puddle_dateformat"
+          },
+          {
+            "type": "text",
+            "name": "localization_timeformat"
+          }
+        ]
       }
     ]
   },
-  "exec": {}
+  "exec": {
+    "steps": [
+      {
+        "name": "identity",
+        "module": "auth",
+        "action": "identify",
+        "options": {
+          "provider": "security"
+        },
+        "output": true,
+        "meta": []
+      },
+      {
+        "name": "now_string",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{NOW_UTC.localtime(NOW_UTC, $_SESSION.settings.timezone, 'YYYY-MM-DD', $_SESSION.settings.localization_timeformat)}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      },
+      {
+        "name": "now_mysql_formatted",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{now_string.formatDate('yyyy-MM-dd HH:mm:ss')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      },
+      {
+        "name": "times_formats",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": {
+            "now": "{{now_string}}",
+            "now_sql": "{{now_string.formatDate('yyyy-MM-dd HH:mm:ss')}}",
+            "date_format": "{{$_SESSION.settings.localization_dateformat}}",
+            "time_format": "{{$_SESSION.settings.localization_timeformat}}",
+            "puddle_date_format": "{{$_SESSION.settings.localization_puddle_dateformat}}",
+            "time_format_mysql": "{{$_SESSION.settings.localization_timeformat.replace(' A', '')}}"
+          }
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      }
+    ]
+  }
 }

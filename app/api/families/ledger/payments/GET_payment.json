@@ -1,0 +1,556 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "payment_uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_payment",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "payments_familycharges"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "payments_familycharges.uuid",
+                  "field": "payments_familycharges.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.payment_uuid}}",
+                  "data": {
+                    "table": "payments_familycharges",
+                    "column": "uuid",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM payments_familycharges\nWHERE uuid = :P1 /* {{$_GET.payment_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.payment_uuid}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "amount"
+          },
+          {
+            "type": "number",
+            "name": "paymentType"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "text",
+            "name": "payref"
+          },
+          {
+            "type": "text",
+            "name": "title"
+          },
+          {
+            "type": "text",
+            "name": "notes"
+          },
+          {
+            "type": "datetime",
+            "name": "paymentdate"
+          },
+          {
+            "type": "boolean",
+            "name": "stripe_payment"
+          },
+          {
+            "type": "text",
+            "name": "stripe_payment_id"
+          },
+          {
+            "type": "text",
+            "name": "stripe_receipt_number"
+          },
+          {
+            "type": "text",
+            "name": "stripe_receipt_url"
+          },
+          {
+            "type": "text",
+            "name": "stripe_payment_type"
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_single"
+      },
+      {
+        "name": "query_lineitems",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "pe",
+                "column": "*"
+              }
+            ],
+            "table": {
+              "name": "payments_enrolcharges",
+              "alias": "pe"
+            },
+            "joins": [
+              {
+                "table": "charges_enrolments",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "charges_enrolments",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "pe",
+                        "column": "enrolcharge_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "orders": [
+              {
+                "table": "charges_enrolments",
+                "column": "classDate",
+                "direction": "ASC"
+              }
+            ],
+            "query": "SELECT pe.*\nFROM payments_enrolcharges AS pe\nLEFT JOIN charges_enrolments ON (charges_enrolments.uuid = pe.enrolcharge_uuid)\nWHERE pe.payment_uuid = :P1 /* {{$_GET.payment_uuid}} */\nORDER BY charges_enrolments.classDate ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.payment_uuid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "pe.payment_uuid",
+                  "field": "pe.payment_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.payment_uuid}}",
+                  "data": {
+                    "table": "pe",
+                    "column": "payment_uuid",
+                    "type": "number"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "amount"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "payment_uuid"
+          },
+          {
+            "type": "number",
+            "name": "enrolcharge_uuid"
+          },
+          {
+            "type": "boolean",
+            "name": "stripe_payment"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "lineitems",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_lineitems}}",
+          "outputFields": [
+            "id",
+            "uuid",
+            "amount",
+            "student_uuid",
+            "payment_uuid",
+            "enrolcharge_uuid",
+            "stripe_payment"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "item",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "ce",
+                        "column": "id"
+                      },
+                      {
+                        "table": "ce",
+                        "column": "startofweek"
+                      },
+                      {
+                        "table": "cl",
+                        "column": "startTimeDisplay"
+                      },
+                      {
+                        "table": "cl",
+                        "column": "classlevel_uuid"
+                      },
+                      {
+                        "table": "cl",
+                        "column": "instructor_uuid"
+                      },
+                      {
+                        "table": "ce",
+                        "column": "enrolGrandTotal"
+                      },
+                      {
+                        "table": "cl",
+                        "column": "day",
+                        "alias": "day_int"
+                      },
+                      {
+                        "table": "s",
+                        "column": "firstName",
+                        "alias": "studentfirst"
+                      },
+                      {
+                        "table": "s",
+                        "column": "lastName",
+                        "alias": "studentlast"
+                      }
+                    ],
+                    "table": {
+                      "name": "charges_enrolments",
+                      "alias": "ce"
+                    },
+                    "joins": [
+                      {
+                        "table": "enrolments",
+                        "column": "*",
+                        "alias": "e",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "e",
+                              "column": "uuid",
+                              "operator": "equal",
+                              "value": {
+                                "table": "ce",
+                                "column": "enrolment_uuid"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "table": "classes",
+                        "column": "*",
+                        "alias": "cl",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "cl",
+                              "column": "uuid",
+                              "operator": "equal",
+                              "value": {
+                                "table": "e",
+                                "column": "class_uuid"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "table": "students",
+                        "column": "*",
+                        "alias": "s",
+                        "type": "LEFT",
+                        "clauses": {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "table": "s",
+                              "column": "uuid",
+                              "operator": "equal",
+                              "value": {
+                                "table": "ce",
+                                "column": "student_uuid"
+                              },
+                              "operation": "="
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "ce.uuid",
+                          "field": "ce.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{enrolcharge_uuid}}",
+                          "data": {
+                            "table": "ce",
+                            "column": "uuid",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT ce.id, ce.startofweek, cl.startTimeDisplay, cl.classlevel_uuid, cl.instructor_uuid, ce.enrolGrandTotal, cl.day AS day_int, s.firstName AS studentfirst, s.lastName AS studentlast\nFROM charges_enrolments AS ce\nLEFT JOIN enrolments AS e ON (e.uuid = ce.enrolment_uuid) LEFT JOIN classes AS cl ON (cl.uuid = e.class_uuid) LEFT JOIN students AS s ON (s.uuid = ce.student_uuid)\nWHERE ce.uuid = :P1 /* {{enrolcharge_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{enrolcharge_uuid}}"
+                      }
+                    ]
+                  },
+                  "connection": "db"
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startofweek"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolGrandTotal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day_int"
+                  },
+                  {
+                    "type": "text",
+                    "name": "studentfirst"
+                  },
+                  {
+                    "type": "text",
+                    "name": "studentlast"
+                  }
+                ],
+                "outputType": "object",
+                "type": "dbconnector_single"
+              },
+              {
+                "name": "query_remaining",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT SUM(pe.amount - :P2) AS remaining\nFROM payments_enrolcharges pe \nWHERE pe.enrolcharge_uuid = :P1 ",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{enrolcharge_uuid}}",
+                        "test": "che_b94761456fa311ec832c0242ac160003"
+                      },
+                      {
+                        "name": ":P2",
+                        "value": "{{item.enrolGrandTotal}}",
+                        "test": "50"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "remaining",
+                    "type": "number"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "remaining",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{query_remaining[0].remaining}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              },
+              {
+                "name": "classdate",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{item.startofweek.dateAdd('days', item.day_int - 1)}}"
+                },
+                "meta": [],
+                "outputType": "date",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "amount",
+            "type": "number"
+          },
+          {
+            "name": "student_uuid",
+            "type": "number"
+          },
+          {
+            "name": "payment_uuid",
+            "type": "number"
+          },
+          {
+            "name": "enrolcharge_uuid",
+            "type": "number"
+          },
+          {
+            "name": "stripe_payment",
+            "type": "boolean"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

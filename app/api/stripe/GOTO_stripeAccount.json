@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "account_id"
+      },
+      {
+        "type": "text",
+        "name": "charge_enabled"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "loginlink",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "loginlink",
+          "value": "{{null}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_GET.charge_enabled == \"false\" || $_GET.charge_enabled == false}}",
+          "then": {
+            "steps": [
+              {
+                "name": "createAccountLink",
+                "module": "stripe",
+                "action": "createAccountLink",
+                "options": {
+                  "type": "account_onboarding",
+                  "__extra": {},
+                  "account": "{{$_GET.account_id}}",
+                  "refresh_url": "http://localhost:8100/settings",
+                  "return_url": "http://localhost:8100/settings"
+                },
+                "outputType": "object",
+                "meta": [
+                  {
+                    "name": "created",
+                    "type": "number"
+                  },
+                  {
+                    "name": "expires_at",
+                    "type": "number"
+                  },
+                  {
+                    "name": "object",
+                    "type": "text"
+                  },
+                  {
+                    "name": "url",
+                    "type": "text"
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "loginlink_onboard",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "loginlink",
+                  "value": "{{createAccountLink.url}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              }
+            ]
+          },
+          "else": {
+            "steps": [
+              {
+                "name": "createAccountLink",
+                "module": "stripe",
+                "action": "createAccountLoginLink",
+                "options": {
+                  "__extra": {},
+                  "redirect_url": "http://localhost:8100/settings",
+                  "account": "{{$_GET.account_id}}"
+                },
+                "outputType": "object",
+                "meta": [
+                  {
+                    "name": "created",
+                    "type": "number"
+                  },
+                  {
+                    "name": "object",
+                    "type": "text"
+                  },
+                  {
+                    "name": "url",
+                    "type": "text"
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "loginlink_login",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "loginlink",
+                  "value": "{{createAccountLoginLink.url}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

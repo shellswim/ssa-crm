@@ -8,71 +8,20 @@
     ]
   },
   "exec": {
-    "steps": [
-      {
-        "name": "query",
-        "module": "dbconnector",
-        "action": "single",
-        "options": {
-          "connection": "db",
-          "sql": {
-            "type": "SELECT",
-            "columns": [
-              {
-                "table": "settings",
-                "column": "value"
-              }
-            ],
-            "table": {
-              "name": "settings"
-            },
-            "joins": [],
-            "wheres": {
-              "condition": "AND",
-              "rules": [
-                {
-                  "id": "settings.name",
-                  "field": "settings.name",
-                  "type": "string",
-                  "operator": "equal",
-                  "value": "STRIPE_account_id",
-                  "data": {
-                    "table": "settings",
-                    "column": "name",
-                    "type": "text"
-                  },
-                  "operation": "="
-                }
-              ],
-              "conditional": null,
-              "valid": true
-            },
-            "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_account_id'",
-            "params": []
-          }
-        },
-        "output": false,
-        "meta": [
-          {
-            "type": "text",
-            "name": "value"
-          }
-        ],
-        "outputType": "object"
-      },
-      {
-        "name": "",
-        "module": "core",
-        "action": "trycatch",
-        "options": {
-          "try": {
-            "steps": {
+    "steps": {
+      "name": "",
+      "module": "core",
+      "action": "trycatch",
+      "options": {
+        "try": {
+          "steps": [
+            {
               "name": "retrieveAccount",
               "module": "stripe",
               "action": "retrieveAccount",
               "options": {
                 "__extra": {},
-                "account": "{{query.value}}"
+                "account": "{{$_SESSION.stripe_connect}}"
               },
               "outputType": "object",
               "meta": [
@@ -194,23 +143,345 @@
                 }
               ],
               "output": true
-            }
-          },
-          "catch": {
-            "steps": {
-              "name": "response",
-              "module": "core",
-              "action": "setvalue",
+            },
+            {
+              "name": "retrieveBalance",
+              "module": "stripe",
+              "action": "retrieveBalance",
               "options": {
-                "value": "false"
+                "__extra": {
+                  "stripe_account": "{{retrieveAccount.id}}"
+                }
               },
-              "meta": [],
-              "outputType": "text",
+              "outputType": "object",
+              "meta": [
+                {
+                  "name": "available",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "currency",
+                      "type": "text"
+                    },
+                    {
+                      "name": "source_types",
+                      "type": "object",
+                      "ref": "stripe_balance_amount_by_source_type"
+                    }
+                  ]
+                },
+                {
+                  "name": "connect_reserved",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "currency",
+                      "type": "text"
+                    },
+                    {
+                      "name": "source_types",
+                      "type": "object",
+                      "ref": "stripe_balance_amount_by_source_type"
+                    }
+                  ]
+                },
+                {
+                  "name": "instant_available",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "currency",
+                      "type": "text"
+                    },
+                    {
+                      "name": "source_types",
+                      "type": "object",
+                      "ref": "stripe_balance_amount_by_source_type"
+                    }
+                  ]
+                },
+                {
+                  "name": "issuing",
+                  "type": "object",
+                  "ref": "stripe_balance_detail"
+                },
+                {
+                  "name": "livemode",
+                  "type": "boolean"
+                },
+                {
+                  "name": "object",
+                  "type": "text"
+                },
+                {
+                  "name": "pending",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "currency",
+                      "type": "text"
+                    },
+                    {
+                      "name": "source_types",
+                      "type": "object",
+                      "ref": "stripe_balance_amount_by_source_type"
+                    }
+                  ]
+                }
+              ],
               "output": true
+            },
+            {
+              "name": "listPayouts",
+              "module": "stripe",
+              "action": "listPayouts",
+              "options": {
+                "__extra": {
+                  "stripe_account": "{{retrieveAccount.id}}"
+                }
+              },
+              "outputType": "object",
+              "meta": [
+                {
+                  "name": "data",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "arrival_date",
+                      "type": "number"
+                    },
+                    {
+                      "name": "automatic",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "balance_transaction",
+                      "type": "text",
+                      "expand": [
+                        "stripe_balance_transaction"
+                      ]
+                    },
+                    {
+                      "name": "created",
+                      "type": "number"
+                    },
+                    {
+                      "name": "currency",
+                      "type": "text"
+                    },
+                    {
+                      "name": "description",
+                      "type": "text"
+                    },
+                    {
+                      "name": "destination",
+                      "type": "text",
+                      "expand": [
+                        "stripe_external_account",
+                        "stripe_deleted_external_account"
+                      ]
+                    },
+                    {
+                      "name": "failure_balance_transaction",
+                      "type": "text",
+                      "expand": [
+                        "stripe_balance_transaction"
+                      ]
+                    },
+                    {
+                      "name": "failure_code",
+                      "type": "text"
+                    },
+                    {
+                      "name": "failure_message",
+                      "type": "text"
+                    },
+                    {
+                      "name": "id",
+                      "type": "text"
+                    },
+                    {
+                      "name": "livemode",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "metadata",
+                      "type": "object"
+                    },
+                    {
+                      "name": "method",
+                      "type": "text"
+                    },
+                    {
+                      "name": "object",
+                      "type": "text"
+                    },
+                    {
+                      "name": "original_payout",
+                      "type": "text",
+                      "expand": [
+                        "stripe_payout"
+                      ]
+                    },
+                    {
+                      "name": "reversed_by",
+                      "type": "text",
+                      "expand": [
+                        "stripe_payout"
+                      ]
+                    },
+                    {
+                      "name": "source_type",
+                      "type": "text"
+                    },
+                    {
+                      "name": "statement_descriptor",
+                      "type": "text"
+                    },
+                    {
+                      "name": "status",
+                      "type": "text"
+                    },
+                    {
+                      "name": "type",
+                      "type": "text"
+                    }
+                  ]
+                },
+                {
+                  "name": "has_more",
+                  "type": "boolean"
+                },
+                {
+                  "name": "object",
+                  "type": "text"
+                },
+                {
+                  "name": "url",
+                  "type": "text"
+                }
+              ],
+              "output": true
+            },
+            {
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
+              "options": {
+                "try": {
+                  "steps": {
+                    "name": "retrieveBillingPortalConfiguration",
+                    "module": "stripe",
+                    "action": "retrieveBillingPortalConfiguration",
+                    "options": {
+                      "__extra": {
+                        "stripe_account": "{{$_SESSION.stripe_connect}}"
+                      },
+                      "configuration": "{{$_SESSION.stripe_billing_portal}}"
+                    },
+                    "outputType": "object",
+                    "meta": [
+                      {
+                        "name": "active",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "application",
+                        "type": "text"
+                      },
+                      {
+                        "name": "business_profile",
+                        "type": "object",
+                        "ref": "stripe_portal_business_profile"
+                      },
+                      {
+                        "name": "created",
+                        "type": "number"
+                      },
+                      {
+                        "name": "default_return_url",
+                        "type": "text"
+                      },
+                      {
+                        "name": "features",
+                        "type": "object",
+                        "ref": "stripe_portal_features"
+                      },
+                      {
+                        "name": "id",
+                        "type": "text"
+                      },
+                      {
+                        "name": "is_default",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "livemode",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "updated",
+                        "type": "number"
+                      }
+                    ],
+                    "output": true
+                  }
+                },
+                "catch": {
+                  "steps": {
+                    "name": "retrieveBillingPortalConfiguration",
+                    "module": "core",
+                    "action": "setvalue",
+                    "options": {
+                      "value": "{{null}}"
+                    },
+                    "meta": [],
+                    "output": true,
+                    "outputType": "text"
+                  }
+                }
+              }
             }
+          ]
+        },
+        "catch": {
+          "steps": {
+            "name": "response",
+            "module": "core",
+            "action": "setvalue",
+            "options": {
+              "value": "false"
+            },
+            "meta": [],
+            "outputType": "text",
+            "output": true
           }
         }
       }
-    ]
+    }
   }
 }

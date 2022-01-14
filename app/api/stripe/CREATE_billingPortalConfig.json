@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "connected_account"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "name"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "createBillingPortalConfiguration",
+        "module": "stripe",
+        "action": "createBillingPortalConfiguration",
+        "options": {
+          "business_profile": {
+            "headline": "Puddle partners with Stripe to process payment securely.",
+            "privacy_policy_url": "http://localhost:8100",
+            "terms_of_service_url": "http://localhost:8100"
+          },
+          "features": {
+            "customer_update": {
+              "allowed_updates": "{{['email', 'tax_id', 'address', 'phone', 'shipping']}}",
+              "enabled": true
+            },
+            "invoice_history": {
+              "enabled": true
+            },
+            "payment_method_update": {
+              "enabled": true
+            },
+            "subscription_cancel": {
+              "cancellation_reason": {}
+            },
+            "subscription_pause": {},
+            "subscription_update": {}
+          },
+          "__extra": {
+            "stripe_account": "{{$_GET.connected_account}}"
+          }
+        },
+        "outputType": "object",
+        "meta": [
+          {
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "application",
+            "type": "text"
+          },
+          {
+            "name": "business_profile",
+            "type": "object",
+            "ref": "stripe_portal_business_profile"
+          },
+          {
+            "name": "created",
+            "type": "number"
+          },
+          {
+            "name": "default_return_url",
+            "type": "text"
+          },
+          {
+            "name": "features",
+            "type": "object",
+            "ref": "stripe_portal_features"
+          },
+          {
+            "name": "id",
+            "type": "text"
+          },
+          {
+            "name": "is_default",
+            "type": "boolean"
+          },
+          {
+            "name": "livemode",
+            "type": "boolean"
+          },
+          {
+            "name": "object",
+            "type": "text"
+          },
+          {
+            "name": "updated",
+            "type": "number"
+          }
+        ],
+        "output": true
+      },
+      {
+        "name": "update",
+        "module": "dbupdater",
+        "action": "update",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "update",
+            "values": [
+              {
+                "table": "settings",
+                "column": "value",
+                "type": "text",
+                "value": "{{createBillingPortalConfiguration.id}}"
+              }
+            ],
+            "table": "settings",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "name",
+                  "field": "name",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "STRIPE_billing_portal_config",
+                  "data": {
+                    "column": "name"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "UPDATE settings\nSET value = :P1 /* {{createBillingPortalConfiguration.id}} */\nWHERE name = 'STRIPE_billing_portal_config'",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{createBillingPortalConfiguration.id}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ],
+        "output": true
+      }
+    ]
+  }
+}

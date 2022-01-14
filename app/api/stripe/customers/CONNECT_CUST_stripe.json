@@ -1,0 +1,1074 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "options": {
+          "rules": {}
+        },
+        "name": "stripe_cust_id"
+      },
+      {
+        "type": "text",
+        "name": "return_url"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": [
+              {
+                "name": "connected_account_id_query",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "settings",
+                        "column": "value"
+                      }
+                    ],
+                    "table": {
+                      "name": "settings"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "settings.name",
+                          "field": "settings.name",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "STRIPE_account_id",
+                          "data": {
+                            "table": "settings",
+                            "column": "name",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT value\nFROM settings\nWHERE name = 'STRIPE_account_id'",
+                    "params": []
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "retrieveCustomer",
+                "module": "stripe",
+                "action": "retrieveCustomer",
+                "options": {
+                  "__extra": {
+                    "stripe_account": "{{connected_account_id_query.value}}"
+                  },
+                  "customer": "{{$_GET.stripe_cust_id}}"
+                },
+                "outputType": "text",
+                "meta": [
+                  {
+                    "name": "address",
+                    "type": "object",
+                    "ref": "stripe_address"
+                  },
+                  {
+                    "name": "balance",
+                    "type": "number"
+                  },
+                  {
+                    "name": "created",
+                    "type": "number"
+                  },
+                  {
+                    "name": "currency",
+                    "type": "text"
+                  },
+                  {
+                    "name": "default_source",
+                    "type": "text",
+                    "expand": [
+                      "stripe_payment_source"
+                    ]
+                  },
+                  {
+                    "name": "delinquent",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  },
+                  {
+                    "name": "discount",
+                    "type": "object",
+                    "ref": "stripe_discount"
+                  },
+                  {
+                    "name": "email",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "text"
+                  },
+                  {
+                    "name": "invoice_prefix",
+                    "type": "text"
+                  },
+                  {
+                    "name": "invoice_settings",
+                    "type": "object",
+                    "ref": "stripe_invoice_setting_customer_setting"
+                  },
+                  {
+                    "name": "livemode",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "metadata",
+                    "type": "object"
+                  },
+                  {
+                    "name": "name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "next_invoice_sequence",
+                    "type": "number"
+                  },
+                  {
+                    "name": "object",
+                    "type": "text"
+                  },
+                  {
+                    "name": "phone",
+                    "type": "text"
+                  },
+                  {
+                    "name": "preferred_locales",
+                    "type": "array",
+                    "sub": []
+                  },
+                  {
+                    "name": "shipping",
+                    "type": "object",
+                    "ref": "stripe_shipping"
+                  },
+                  {
+                    "name": "sources",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "data",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "payment_source",
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "has_more",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "url",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "subscriptions",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "data",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "automatic_tax",
+                            "type": "object",
+                            "ref": "stripe_subscription_automatic_tax"
+                          },
+                          {
+                            "name": "billing_cycle_anchor",
+                            "type": "number"
+                          },
+                          {
+                            "name": "billing_thresholds",
+                            "type": "object",
+                            "ref": "stripe_subscription_billing_thresholds"
+                          },
+                          {
+                            "name": "cancel_at",
+                            "type": "number"
+                          },
+                          {
+                            "name": "cancel_at_period_end",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "canceled_at",
+                            "type": "number"
+                          },
+                          {
+                            "name": "collection_method",
+                            "type": "text"
+                          },
+                          {
+                            "name": "created",
+                            "type": "number"
+                          },
+                          {
+                            "name": "current_period_end",
+                            "type": "number"
+                          },
+                          {
+                            "name": "current_period_start",
+                            "type": "number"
+                          },
+                          {
+                            "name": "customer",
+                            "type": "text",
+                            "expand": [
+                              "stripe_customer",
+                              "stripe_deleted_customer"
+                            ]
+                          },
+                          {
+                            "name": "days_until_due",
+                            "type": "number"
+                          },
+                          {
+                            "name": "default_payment_method",
+                            "type": "text",
+                            "expand": [
+                              "stripe_payment_method"
+                            ]
+                          },
+                          {
+                            "name": "default_source",
+                            "type": "text",
+                            "expand": [
+                              "stripe_payment_source"
+                            ]
+                          },
+                          {
+                            "name": "default_tax_rates",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "active",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "country",
+                                "type": "text"
+                              },
+                              {
+                                "name": "created",
+                                "type": "number"
+                              },
+                              {
+                                "name": "description",
+                                "type": "text"
+                              },
+                              {
+                                "name": "display_name",
+                                "type": "text"
+                              },
+                              {
+                                "name": "id",
+                                "type": "text"
+                              },
+                              {
+                                "name": "inclusive",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "jurisdiction",
+                                "type": "text"
+                              },
+                              {
+                                "name": "livemode",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "metadata",
+                                "type": "object"
+                              },
+                              {
+                                "name": "object",
+                                "type": "text"
+                              },
+                              {
+                                "name": "state",
+                                "type": "text"
+                              },
+                              {
+                                "name": "tax_type",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "discount",
+                            "type": "object",
+                            "ref": "stripe_discount"
+                          },
+                          {
+                            "name": "ended_at",
+                            "type": "number"
+                          },
+                          {
+                            "name": "id",
+                            "type": "text"
+                          },
+                          {
+                            "name": "items",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "data",
+                                "type": "array",
+                                "sub": [
+                                  {
+                                    "name": "billing_thresholds",
+                                    "type": "object",
+                                    "ref": "stripe_subscription_item_billing_thresholds"
+                                  },
+                                  {
+                                    "name": "created",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "id",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "metadata",
+                                    "type": "object"
+                                  },
+                                  {
+                                    "name": "object",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "plan",
+                                    "type": "object",
+                                    "ref": "stripe_plan"
+                                  },
+                                  {
+                                    "name": "price",
+                                    "type": "object",
+                                    "ref": "stripe_price"
+                                  },
+                                  {
+                                    "name": "quantity",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "subscription",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "tax_rates",
+                                    "type": "array",
+                                    "sub": [
+                                      {
+                                        "name": "active",
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "name": "country",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "created",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "description",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "display_name",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "id",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "inclusive",
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "name": "jurisdiction",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "livemode",
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "name": "metadata",
+                                        "type": "object"
+                                      },
+                                      {
+                                        "name": "object",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "state",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "tax_type",
+                                        "type": "text"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "has_more",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "object",
+                                "type": "text"
+                              },
+                              {
+                                "name": "url",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "latest_invoice",
+                            "type": "text",
+                            "expand": [
+                              "stripe_invoice"
+                            ]
+                          },
+                          {
+                            "name": "livemode",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "metadata",
+                            "type": "object"
+                          },
+                          {
+                            "name": "next_pending_invoice_item_invoice",
+                            "type": "number"
+                          },
+                          {
+                            "name": "object",
+                            "type": "text"
+                          },
+                          {
+                            "name": "pause_collection",
+                            "type": "object",
+                            "ref": "stripe_subscriptions_resource_pause_collection"
+                          },
+                          {
+                            "name": "payment_settings",
+                            "type": "object",
+                            "ref": "stripe_subscriptions_resource_payment_settings"
+                          },
+                          {
+                            "name": "pending_invoice_item_interval",
+                            "type": "object",
+                            "ref": "stripe_subscription_pending_invoice_item_interval"
+                          },
+                          {
+                            "name": "pending_setup_intent",
+                            "type": "text",
+                            "expand": [
+                              "stripe_setup_intent"
+                            ]
+                          },
+                          {
+                            "name": "pending_update",
+                            "type": "object",
+                            "ref": "stripe_subscriptions_resource_pending_update"
+                          },
+                          {
+                            "name": "schedule",
+                            "type": "text",
+                            "expand": [
+                              "stripe_subscription_schedule"
+                            ]
+                          },
+                          {
+                            "name": "start_date",
+                            "type": "number"
+                          },
+                          {
+                            "name": "status",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transfer_data",
+                            "type": "object",
+                            "ref": "stripe_subscription_transfer_data"
+                          },
+                          {
+                            "name": "trial_end",
+                            "type": "number"
+                          },
+                          {
+                            "name": "trial_start",
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "has_more",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "url",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "tax",
+                    "type": "object",
+                    "ref": "stripe_customer_tax"
+                  },
+                  {
+                    "name": "tax_exempt",
+                    "type": "text"
+                  },
+                  {
+                    "name": "tax_ids",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "data",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "country",
+                            "type": "text"
+                          },
+                          {
+                            "name": "created",
+                            "type": "number"
+                          },
+                          {
+                            "name": "customer",
+                            "type": "text",
+                            "expand": [
+                              "stripe_customer"
+                            ]
+                          },
+                          {
+                            "name": "id",
+                            "type": "text"
+                          },
+                          {
+                            "name": "livemode",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "object",
+                            "type": "text"
+                          },
+                          {
+                            "name": "type",
+                            "type": "text"
+                          },
+                          {
+                            "name": "value",
+                            "type": "text"
+                          },
+                          {
+                            "name": "verification",
+                            "type": "object",
+                            "ref": "stripe_tax_id_verification"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "has_more",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "url",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{$_GET.return_url}}",
+                  "then": {
+                    "steps": {
+                      "name": "createBillingPortalSession",
+                      "module": "stripe",
+                      "action": "createBillingPortalSession",
+                      "options": {
+                        "__extra": {
+                          "stripe_account": "{{connected_account_id_query.value}}"
+                        },
+                        "customer": "{{$_GET.stripe_cust_id}}",
+                        "return_url": "{{$_GET.return_url}}"
+                      },
+                      "outputType": "object",
+                      "meta": [
+                        {
+                          "name": "configuration",
+                          "type": "text",
+                          "expand": [
+                            "stripe_billing_portal.configuration"
+                          ]
+                        },
+                        {
+                          "name": "created",
+                          "type": "number"
+                        },
+                        {
+                          "name": "customer",
+                          "type": "text"
+                        },
+                        {
+                          "name": "id",
+                          "type": "text"
+                        },
+                        {
+                          "name": "livemode",
+                          "type": "boolean"
+                        },
+                        {
+                          "name": "locale",
+                          "type": "text"
+                        },
+                        {
+                          "name": "object",
+                          "type": "text"
+                        },
+                        {
+                          "name": "on_behalf_of",
+                          "type": "text"
+                        },
+                        {
+                          "name": "return_url",
+                          "type": "text"
+                        },
+                        {
+                          "name": "url",
+                          "type": "text"
+                        }
+                      ],
+                      "output": true
+                    }
+                  }
+                },
+                "outputType": "boolean"
+              },
+              {
+                "name": "listPaymentMethods_cards",
+                "module": "stripe",
+                "action": "listPaymentMethods",
+                "options": {
+                  "type": "card",
+                  "__extra": {
+                    "stripe_account": "{{connected_account_id_query.value}}"
+                  },
+                  "customer": "{{retrieveCustomer.id}}"
+                },
+                "outputType": "object",
+                "meta": [
+                  {
+                    "name": "data",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "acss_debit",
+                        "type": "object",
+                        "ref": "stripe_payment_method_acss_debit"
+                      },
+                      {
+                        "name": "afterpay_clearpay",
+                        "type": "object",
+                        "ref": "stripe_payment_method_afterpay_clearpay"
+                      },
+                      {
+                        "name": "alipay",
+                        "type": "object",
+                        "ref": "stripe_payment_flows_private_payment_methods_alipay"
+                      },
+                      {
+                        "name": "au_becs_debit",
+                        "type": "object",
+                        "ref": "stripe_payment_method_au_becs_debit"
+                      },
+                      {
+                        "name": "bacs_debit",
+                        "type": "object",
+                        "ref": "stripe_payment_method_bacs_debit"
+                      },
+                      {
+                        "name": "bancontact",
+                        "type": "object",
+                        "ref": "stripe_payment_method_bancontact"
+                      },
+                      {
+                        "name": "billing_details",
+                        "type": "object",
+                        "ref": "stripe_billing_details"
+                      },
+                      {
+                        "name": "boleto",
+                        "type": "object",
+                        "ref": "stripe_payment_method_boleto"
+                      },
+                      {
+                        "name": "card",
+                        "type": "object",
+                        "ref": "stripe_payment_method_card"
+                      },
+                      {
+                        "name": "card_present",
+                        "type": "object",
+                        "ref": "stripe_payment_method_card_present"
+                      },
+                      {
+                        "name": "created",
+                        "type": "number"
+                      },
+                      {
+                        "name": "customer",
+                        "type": "text",
+                        "expand": [
+                          "stripe_customer"
+                        ]
+                      },
+                      {
+                        "name": "eps",
+                        "type": "object",
+                        "ref": "stripe_payment_method_eps"
+                      },
+                      {
+                        "name": "fpx",
+                        "type": "object",
+                        "ref": "stripe_payment_method_fpx"
+                      },
+                      {
+                        "name": "giropay",
+                        "type": "object",
+                        "ref": "stripe_payment_method_giropay"
+                      },
+                      {
+                        "name": "grabpay",
+                        "type": "object",
+                        "ref": "stripe_payment_method_grabpay"
+                      },
+                      {
+                        "name": "id",
+                        "type": "text"
+                      },
+                      {
+                        "name": "ideal",
+                        "type": "object",
+                        "ref": "stripe_payment_method_ideal"
+                      },
+                      {
+                        "name": "interac_present",
+                        "type": "object",
+                        "ref": "stripe_payment_method_interac_present"
+                      },
+                      {
+                        "name": "livemode",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "metadata",
+                        "type": "object"
+                      },
+                      {
+                        "name": "object",
+                        "type": "text"
+                      },
+                      {
+                        "name": "oxxo",
+                        "type": "object",
+                        "ref": "stripe_payment_method_oxxo"
+                      },
+                      {
+                        "name": "p24",
+                        "type": "object",
+                        "ref": "stripe_payment_method_p24"
+                      },
+                      {
+                        "name": "sepa_debit",
+                        "type": "object",
+                        "ref": "stripe_payment_method_sepa_debit"
+                      },
+                      {
+                        "name": "sofort",
+                        "type": "object",
+                        "ref": "stripe_payment_method_sofort"
+                      },
+                      {
+                        "name": "type",
+                        "type": "text"
+                      },
+                      {
+                        "name": "wechat_pay",
+                        "type": "object",
+                        "ref": "stripe_payment_method_wechat_pay"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "has_more",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "object",
+                    "type": "text"
+                  },
+                  {
+                    "name": "url",
+                    "type": "text"
+                  }
+                ],
+                "output": true
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{retrieveCustomer.invoice_settings.default_payment_method}}",
+                  "then": {
+                    "steps": {
+                      "name": "retrievePaymentMethod",
+                      "module": "stripe",
+                      "action": "retrievePaymentMethod",
+                      "options": {
+                        "__extra": {
+                          "stripe_account": "{{connected_account_id_query.value}}"
+                        },
+                        "payment_method": "{{retrieveCustomer.invoice_settings.default_payment_method}}"
+                      },
+                      "outputType": "object",
+                      "meta": [
+                        {
+                          "name": "acss_debit",
+                          "type": "object",
+                          "ref": "stripe_payment_method_acss_debit"
+                        },
+                        {
+                          "name": "afterpay_clearpay",
+                          "type": "object",
+                          "ref": "stripe_payment_method_afterpay_clearpay"
+                        },
+                        {
+                          "name": "alipay",
+                          "type": "object",
+                          "ref": "stripe_payment_flows_private_payment_methods_alipay"
+                        },
+                        {
+                          "name": "au_becs_debit",
+                          "type": "object",
+                          "ref": "stripe_payment_method_au_becs_debit"
+                        },
+                        {
+                          "name": "bacs_debit",
+                          "type": "object",
+                          "ref": "stripe_payment_method_bacs_debit"
+                        },
+                        {
+                          "name": "bancontact",
+                          "type": "object",
+                          "ref": "stripe_payment_method_bancontact"
+                        },
+                        {
+                          "name": "billing_details",
+                          "type": "object",
+                          "ref": "stripe_billing_details"
+                        },
+                        {
+                          "name": "boleto",
+                          "type": "object",
+                          "ref": "stripe_payment_method_boleto"
+                        },
+                        {
+                          "name": "card",
+                          "type": "object",
+                          "ref": "stripe_payment_method_card"
+                        },
+                        {
+                          "name": "card_present",
+                          "type": "object",
+                          "ref": "stripe_payment_method_card_present"
+                        },
+                        {
+                          "name": "created",
+                          "type": "number"
+                        },
+                        {
+                          "name": "customer",
+                          "type": "text",
+                          "expand": [
+                            "stripe_customer"
+                          ]
+                        },
+                        {
+                          "name": "eps",
+                          "type": "object",
+                          "ref": "stripe_payment_method_eps"
+                        },
+                        {
+                          "name": "fpx",
+                          "type": "object",
+                          "ref": "stripe_payment_method_fpx"
+                        },
+                        {
+                          "name": "giropay",
+                          "type": "object",
+                          "ref": "stripe_payment_method_giropay"
+                        },
+                        {
+                          "name": "grabpay",
+                          "type": "object",
+                          "ref": "stripe_payment_method_grabpay"
+                        },
+                        {
+                          "name": "id",
+                          "type": "text"
+                        },
+                        {
+                          "name": "ideal",
+                          "type": "object",
+                          "ref": "stripe_payment_method_ideal"
+                        },
+                        {
+                          "name": "interac_present",
+                          "type": "object",
+                          "ref": "stripe_payment_method_interac_present"
+                        },
+                        {
+                          "name": "livemode",
+                          "type": "boolean"
+                        },
+                        {
+                          "name": "metadata",
+                          "type": "object"
+                        },
+                        {
+                          "name": "object",
+                          "type": "text"
+                        },
+                        {
+                          "name": "oxxo",
+                          "type": "object",
+                          "ref": "stripe_payment_method_oxxo"
+                        },
+                        {
+                          "name": "p24",
+                          "type": "object",
+                          "ref": "stripe_payment_method_p24"
+                        },
+                        {
+                          "name": "sepa_debit",
+                          "type": "object",
+                          "ref": "stripe_payment_method_sepa_debit"
+                        },
+                        {
+                          "name": "sofort",
+                          "type": "object",
+                          "ref": "stripe_payment_method_sofort"
+                        },
+                        {
+                          "name": "type",
+                          "type": "text"
+                        },
+                        {
+                          "name": "wechat_pay",
+                          "type": "object",
+                          "ref": "stripe_payment_method_wechat_pay"
+                        }
+                      ],
+                      "output": true
+                    }
+                  }
+                },
+                "outputType": "boolean"
+              }
+            ]
+          },
+          "catch": {
+            "steps": {
+              "name": "Not_found",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 200,
+                "data": "Request OK. However, unable to find customer information."
+              },
+              "output": false,
+              "disabled": true
+            }
+          }
+        }
+      }
+    ]
+  }
+}

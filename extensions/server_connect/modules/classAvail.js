@@ -16,7 +16,9 @@ exports.classAvail = async function (options) {
             "weekday": moment(options.weekdate)
         },
         dates_arr = [],
-        weekday_arr = [], filtered_classes;
+        weekday_arr = [],
+        filtered_classes,
+        process_time_array = [];
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -44,8 +46,6 @@ exports.classAvail = async function (options) {
     ////////// Start Calendar Type Calculations //////////
     else if (options.data_type == 'calendar' || options.data_type == 'list') {
 
-        let pstart = performance.now();
-
         let cd = options.classdump;
         // Set class times slots for calendar
         let mintime, maxtime, calint, stt, ts_arr = [];
@@ -54,44 +54,59 @@ exports.classAvail = async function (options) {
         maxtime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
         stt = mintime;
 
+        // Get Dump of All Enrolments in All Classes
+        let enroldump = dbClientEnrols(await db.raw(`
+        SELECT e.uuid, e.student_uuid, e.class_uuid, e.startDate, e.dropDate, e.isTransferIn, e.isTransferOut, e.transferToStart, e.enrolmentType, s.firstName, s.lastName, s.dob, s.age, s.family 
+        FROM enrolments e LEFT JOIN students s ON e.student_uuid = s.uuid 
+        WHERE (e.dropDate >= '${moment(options.startDate).clone().format('YYYY-MM-DD')}' OR e.dropDate IS NULL) 
+            AND e.isValid = true
+        `));
+
         while (stt < maxtime) {
             ts_arr.push(stt);
             stt += calint;
         }
 
+        let pstart = performance.now();
         for (let i = 0; i < cd.length; i++) {
-            let c = cd[i], wed = null;
+            let c = cd[i],
+                wed = null;
             c.details = {};
-            wed = moment(options.startdate).add((c.day_int - 1), 'days');
+            wed = moment(options.startdate).add((c.day - 1), 'days');
             c.optsd = options.startdate;
             c.wed = wed;
-            c.details = await classProcess(wed, c.id, c.max, c);
-        }
 
+            c.details = await classProcess(wed, c.id, c.max, c, enroldump);
+
+        }
         let pend = performance.now();
+
+
         let avail_array = [];
-        if(options.avail_type) {
-            if(options.avail_type == 'permanent') {
-                filtered_classes = _.filter(cd, function(o) {
+        if (options.avail_type) {
+            if (options.avail_type == 'permanent') {
+                filtered_classes = _.filter(cd, function (o) {
                     return (Number(o.max) - Number(o.details.total)) >= options.avail_amount;
                 });
-            } else if(options.avail_type == 'temporary') {
-                filtered_classes = _.filter(cd, function(o) {
+            } else if (options.avail_type == 'temporary') {
+                filtered_classes = _.filter(cd, function (o) {
                     return Number(o.details.makeup_avail_max) >= Number(options.avail_amount);
                 });
             }
         }
         let classresponse = {
+            'process_times': process_time_array,
             "timesarray": ts_arr,
             "availarray": avail_array,
             "classes": filtered_classes || cd,
-            "perclassaverage_perf": ((pend - pstart) / 1000) / cd.length
+            "perclassaverage_perf": ((pend - pstart) / 1000)
         }
 
         return classresponse;
     }
 
-    async function classProcess(wed, classid, classmax, classinfo) {
+    async function classProcess(wed, classid, classmax, classinfo, e) {
+        let pstartclass = performance.now();
         let ci = classinfo;
         let enr_total = [];
         let wd = wed.clone();
@@ -100,24 +115,32 @@ exports.classAvail = async function (options) {
         let startd = moment(options.startdate),
             endd = moment(options.enddate);
 
-        let active_enrols, makeup_enrols, trial_enrols, casual_enrols, waitlisted;
+        let active_enrols = _.filter(e, function(enrolment) {
+            return enrolment.enrolmentType == 1 && enrolment.class_uuid == ci.uuid;
+            }),
+            makeup_enrols = _.filter(e, function(enrolment) {
+                return enrolment.enrolmentType == 2 && enrolment.class_uuid == ci.uuid;
+            }),
+            trial_enrols = _.filter(e, function(enrolment) {
+                return enrolment.enrolmentType == 3 && enrolment.class_uuid == ci.uuid;
+            }),
+            casual_enrols = _.filter(e, function(enrolment) {
+                return enrolment.enrolmentType == 5 && enrolment.class_uuid == ci.uuid;
+            }),
+            waitlisted;
 
-        ////// Get enrolments by type
-
-            // Active
-            active_enrols = dbClientEnrols(await db.raw('SELECT e.*, s.firstName, s.lastName, s.dob, s.age, s.family FROM enrolments e INNER JOIN students s ON e.student = s.id WHERE classId = ? AND enrolmentType = 1 AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true', [classid, startd.format('YYYY-MM-DD')]));
-
-            // Makeup
-            makeup_enrols = dbClientEnrols(await db.raw('SELECT e.*, s.firstName, s.lastName, s.dob, s.age, s.family FROM enrolments e INNER JOIN students s ON e.student = s.id WHERE classId = ? AND enrolmentType = 2 AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true', [classid, startd.format('YYYY-MM-DD')]));
-            
-            // Trial
-            trial_enrols = dbClientEnrols(await db.raw('SELECT e.*, s.firstName, s.lastName, s.dob, s.age, s.family FROM enrolments e INNER JOIN students s ON e.student = s.id WHERE classId = ? AND enrolmentType = 3 AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true', [classid, startd.format('YYYY-MM-DD')]));
-            
-            // Casual
-            casual_enrols = dbClientEnrols(await db.raw('SELECT e.*, s.firstName, s.lastName, s.dob, s.age, s.family FROM enrolments e INNER JOIN students s ON e.student = s.id WHERE classId = ? AND enrolmentType = 5 AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true', [classid, startd.format('YYYY-MM-DD')]));
-            
-            // Waitlist
-            waitlisted = dbClientEnrols(await db.raw('SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family FROM waitlists w INNER JOIN students s ON w.studentid = s.id  WHERE (w.endtimedec >= ? AND w.starttimedec <= ? AND w.dayint = ? AND (w.instructor = ? OR w.instructor IS NULL) AND w.fulfil_date IS NULL AND (w.classlevel = ? OR w.classlevel IS NULL))', [ci.endTimeDecimal, ci.startTimeDecimal, ci.day_int, ci.instructorid, ci.classLevel]));
+        // GET WAITLIST
+        waitlisted = dbClientEnrols(await db.raw(`
+            SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family 
+            FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
+            WHERE (w.endtimedec >= ${ci.endTimeDecimal} 
+                AND w.starttimedec <= ${ci.startTimeDecimal} 
+                AND w.dayint = '${ci.day}' 
+                AND (w.instructor_uuid = '${ci.instructor_uuid}' 
+                    OR w.instructor IS NULL) 
+                AND w.fulfil_date IS NULL 
+                AND (w.classlevel = '${ci.uuid}'
+                    OR w.classlevel IS NULL))`));
 
         ///// Availabilities
         for (let i = 0; i < max; i++) {
@@ -156,9 +179,9 @@ exports.classAvail = async function (options) {
             }
         }
 
-        if(mu_avail.length > 0) {
+        if (mu_avail.length > 0) {
             let x = [];
-            for(let i=0;i<mu_avail.length;i++) {
+            for (let i = 0; i < mu_avail.length; i++) {
                 x.push(mu_avail[i].availabilities);
             }
             mu_avail_max = Math.max(...x);
@@ -184,7 +207,10 @@ exports.classAvail = async function (options) {
         if (nextactive.isBefore(moment()) && nextactive != 0) {
             nextactive.add(7, 'd');
         }
+        let pendclass = performance.now();
+        process_time_array.push(((pendclass - pstartclass) / 1000));
         return {
+            'process_time': (pendclass - pstartclass) / 1000,
             'active': nextactive.format('YYYY-MM-DD') || 0,
             'makeup': mu_avail,
             'makeup_avail_max': mu_avail_max || null,
@@ -208,6 +234,7 @@ exports.classAvail = async function (options) {
             return v = v.rows;
         }
     }
+
     function dbClientEnrols(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
             return v[0];

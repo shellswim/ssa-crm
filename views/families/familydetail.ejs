@@ -1,4 +1,5 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
+<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})" sockets="true" dmx-param:familyuuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="familyLedger" url="/api/families/ledger/GET_LEDGER_details" dmx-param:familyid="" dmx-param:family_uuid="query.familyid" dmx-on:start="absolutePreloader.show()" dmx-on:done="absolutePreloader.hide()"></dmx-serverconnect><!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
 <script is="dmx-flow" id="checkEmailArray" type="text/dmx-flow">{
   meta: {
     $param: [
@@ -67,7 +68,9 @@
 }</script>
 <dmx-download id="downloadFile"></dmx-download>
 <dmx-session-manager id="ledgerStorage"></dmx-session-manager>
-<dmx-serverconnect id="familyLedger" url="/api/families/ledger/getLedgerDetails" dmx-param:familyid="query.familyid"></dmx-serverconnect>
+
+<dmx-serverconnect id="CONNECT_CUST_stripe" url="/api/stripe/customers/CONNECT_CUST_stripe" dmx-param:stripe_cust_id="familyDetails.data.familyDetails.stripe_cust_id" sockets="true" dmx-param:return_url="browser1.location.href"></dmx-serverconnect>
+<dmx-serverconnect id="CREATE_CUST_stripe" url="/api/stripe/customers/CREATE_CUST_stripe" dmx-param:uuid="familyDetails.data.familyDetails.uuid" noload dmx-param:connected_account="CONNECT_stripe.data.retrieveAccount.id" dmx-param:customer_name="familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName" dmx-param:customer_email="familyDetails.data.primaryGuardian.address"></dmx-serverconnect>
 
 
 
@@ -131,7 +134,7 @@
     </div>
 </div>
 
-<div class="modal" id="address_createModal" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="run([{run:{action:`form_createAddress.reset()`}},{run:{action:`form_createAddress.var_countryid.setValue(null)`}},{run:{action:`form_createAddress.var_stateid.setValue(null)`}},{runJS:{function:'gpReset',args:['address_createModal.form_createAddress.inp_residenceAutocomplete'],name:'resetAutocomplete'}}])">
+<div class="modal fade" id="address_createModal" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="run([{run:{action:`form_createAddress.reset()`}},{run:{action:`form_createAddress.var_countryid.setValue(null)`}},{run:{action:`form_createAddress.var_stateid.setValue(null)`}},{runJS:{function:'gpReset',args:['address_createModal.form_createAddress.inp_residenceAutocomplete'],name:'resetAutocomplete'}}])">
     <div class="modal-dialog modal-lg modal-fullscreen-lg-down modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header text-light bg-secondary">
@@ -331,7 +334,7 @@
         </div>
     </div>
 </div>
-<div class="modal" id="createStudentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="createStudentForm.reset()" dmx-on:show-bs-modal="ns_pageCounter.setValue(1)">
+<div class="modal fade" id="createStudentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="createStudentForm.reset()" dmx-on:show-bs-modal="ns_pageCounter.setValue(1)">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header border-bottom-0 text-light bg-secondary">
@@ -1498,7 +1501,7 @@
                 <dmx-serverconnect id="tuitionquotesettings" url="/api/families/ledger/tuitionquotesettings" dmx-param:startdate="ledger_runCharge.chargePeriod_startDate.value" dmx-on:done="arr_chargePeriods.empty()">
 
                 </dmx-serverconnect>
-                <dmx-serverconnect id="tuitionquote" url="/api/families/ledger/tuitionquote" noload dmx-param:familyid="query.familyid" dmx-param:periods="ledger_runCharge.arr_chargePeriods.items" dmx-on:done="run([{wait:{delay:750}},{runJS:{function:'initMergeTable',args:['.periodChargeBreakdown','2,3,4,5,6,7,8,9,10'],name:'initMergeTable'}}])">
+                <dmx-serverconnect id="tuitionquote" url="/api/families/ledger/tuitionquote" noload dmx-param:familyid="query.familyid" dmx-param:periods="ledger_runCharge.arr_chargePeriods.items" dmx-on:done="run([{wait:{delay:750}},{runJS:{function:'initMergeTable',args:['.periodChargeBreakdown','2,3,4,5,6,7,8,9,10'],name:'initMergeTable'}}])" dmx-param:family_uuid="query.familyid">
                 </dmx-serverconnect>
                 <dmx-array id="arr_chargePeriods" dmx-on:updated="run([{run:{action:`arr_chargePeriods.sort()`}},{run:{action:`tuitionquote.reset()`}},{runJS:{function:'removeMergeTable'}}])"></dmx-array>
                 <div class="row border-bottom mb-2 pt-3 pb-3">
@@ -1773,7 +1776,7 @@
     </div>
 </div>
 
-<dmx-serverconnect id="familyDetails" url="api/familyParameters" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})"></dmx-serverconnect>
+
 
 
 <dmx-serverconnect id="checkEmail" noload url="/api/families/checkEmail" dmx-on:success="createGuardianModalForm.arr_emailAddresses.addUniq(createGuardianModalForm.hd_emailObj.value)"></dmx-serverconnect>
@@ -1789,14 +1792,11 @@
 <dmx-serverconnect id="deleteGuardian" url="/api/families/guardians/deleteGuardian" dmx-param:guardianid="" noload=""></dmx-serverconnect>
 <dmx-serverconnect id="deleteFamily" url="/api/deleteFamily" dmx-param:familyid="" noload></dmx-serverconnect>
 <dmx-serverconnect id="deleteFamilyNote" url="api/deleteFamilyNote" dmx-param:guardianid="updateGuardianModal.data_detail1.data.id" noload="" dmx-param:noteid=""></dmx-serverconnect>
-<dmx-serverconnect id="getStudents" url="api/getStudentsInFamily" dmx-param:familyid="query.familyid"></dmx-serverconnect>
 
 
 <dmx-serverconnect id="updateFamily" url="api/updateFamily" dmx-param:familyid="familyDetails.data.familyDetails.id" noload="" dmx-param:family_id="query.familyid"></dmx-serverconnect>
 
 <dmx-serverconnect id="updatePrimaryGuardian" url="api/updateFamilyPrimaryGuardian" dmx-param:familyid="query.familyid" noload=""></dmx-serverconnect>
-<dmx-serverconnect id="getStudentNote_Single" url="api/getStudentNote_Single" dmx-param:noteid=""></dmx-serverconnect>
-<dmx-serverconnect id="getStudentNotes" url="api/getStudentNotes" dmx-param:studentid="id"></dmx-serverconnect>
 <dmx-serverconnect id="getGuardianContactDetails" url="/api/getGuardianContactDetails" noload></dmx-serverconnect>
 <dmx-serverconnect id="deleteGuardianEmail" url="/api/deleteGuardianEmail"></dmx-serverconnect>
 <div class="container d-none" id="countries_states_scs">
@@ -1816,39 +1816,69 @@
 <section class="bg-white px-3 pt-2 border-bottom">
     <div class="row">
         <div class="col d-flex flex-column">
-            <div class="row row-cols-1 g-0">
+            <div class="row g-0">
+                <div class="col">
+                    <div class="row row-cols-1">
+                        <div class="col d-flex justify-content-between ps-4">
+                            <a href="/families" class="btn text-body px-0 mb-2"><i class="bi-arrow-left-circle me-1"></i>Back to Families List</a>
 
-                <div class="col d-flex justify-content-between">
-                    <a href="/families" class="btn text-body px-0 mb-3 ms-4"><i class="bi-arrow-left-circle me-1"></i>Back to Families List</a>
 
 
 
-
+                        </div>
+                        <div class="col px-4">
+                            <h1 class="fw-500 mb-1" dmx-html="'Family:<span style=&quot;font-weight: normal;&quot;> '+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+' </span>'">Family:<span style="font-weight: normal;"> </span></h1>
+                        </div>
+                    </div>
                 </div>
-                <div class="col px-4">
-                    <h1 class="fw-500" dmx-html="'Family:<span style=&quot;font-weight: normal;&quot;> '+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+' </span>'">Family:<span style="font-weight: normal;"> </span></h1>
+                <div class="col-auto align-self-end">
+                    <p class="mb-1 fw-500 text-end">Default Address</p>
+
+                    <p dmx-text="familyDetails.data.default_address.unit" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null" class="mb-0 text-end">Unit/Suite</p>
+                    <p dmx-text="familyDetails.data.default_address.street1" class="mb-0 text-end">Street 1</p>
+                    <p dmx-text="familyDetails.data.default_address.street2" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null" class="mb-0 text-end">Street 2</p>
+                    <p dmx-text="familyDetails.data.default_address.suburb" class="mb-0 text-end">Suburb</p>
+                    <p dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-end">State, ZIP Postal Code, Country</p>
                 </div>
+
+
+
+
+            </div>
+            <div class="row">
                 <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
                     <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-1"></i>Family Overview</a>
+                            <a class="nav-link py-3 px-4" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-2"></i>Family Overview</a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-1"></i>Ledger
+                            <a class="nav-link py-3 px-4" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-2"></i>Ledger
 
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-1"></i>Emails
+                            <a class="nav-link py-3 px-4" id="navTabs1_6_tab" href="#paymentinfo" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#paymentinfo"><i class="fas fa-coins me-2"></i>Payment Information
+                            </a>
+
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-4" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-2"></i>Emails
                             </a>
                         </li>
 
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="bi-stickies-fill me-1" dmx-class:pri-5-icon="familyDetails.data.familyNotes[0].maxPriority == 5" dmx-class:pri-4-icon="familyDetails.data.familyNotes[0].maxPriority == 4" dmx-class:pri-3-icon="familyDetails.data.familyNotes[0].maxPriority == 3" dmx-class:pri-2-icon="familyDetails.data.familyNotes[0].maxPriority == 2" dmx-class:pri-1-icon="familyDetails.data.familyNotes[0].maxPriority == 1" dmx-hide="familyDetails.data.familyNotes.length === 0"></i>Notes</a>
+                            <a class="nav-link py-3 px-4" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="far fa-sticky-note me-2"></i>Notes
+                            </a>
 
                         </li>
+
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_5_tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-1"></i>Logs
+                            <a class="nav-link py-3 px-4" id="navTabs1_5_tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-2"></i>Logs
+                            </a>
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-4" id="navTabs1_7_tab" href="#advanced" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#advanced_tab"><i class="fas fa-user-cog me-2"></i>Advanced
+
                             </a>
                         </li>
                     </ul>
@@ -1860,7 +1890,8 @@
         </div>
     </div>
 </section>
-<main class="d-flex flex-grow-1 flex-column p-4">
+<main class="d-flex flex-grow-1 flex-column p-4 position-relative">
+
 
     <div class="row d-flex flex-grow-1">
 
@@ -1872,7 +1903,7 @@
                     <div class="row gx-2">
                         <div class="col-auto">
                             <div class="d-flex p-3 pt-2 bg-white border rounded-3 text-body d-flex flex-column">
-                                <h6 class="fw-500 text-uppercase text-black-50 mt-1">Create</h6>
+                                <h6 class="fw-500 text-uppercase text-black-50 mt-1 small">Create</h6>
 
 
                                 <div class="row g-2">
@@ -1884,7 +1915,7 @@
                         </div>
                         <div class="col-auto">
                             <div class="d-flex p-3 pt-2 bg-white border rounded-3 text-body d-flex flex-column">
-                                <h6 class="fw-500 text-uppercase text-black-50 mt-1">Modify</h6>
+                                <h6 class="fw-500 text-uppercase text-black-50 mt-1 small">Modify</h6>
                                 <div class="row g-2">
                                     <div class="col-auto">
                                         <button id="btn_addresses" class="btn btn-secondary" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="bi-map me-2"></i>Add/Edit Address</button>
@@ -1906,8 +1937,10 @@
                         </div>
                     </div>
 
-                    <div class="row row-cols-2 mt-3">
-                        <div class="col-6">
+                    <div class="row row-cols-1 mt-3">
+
+
+                        <div class="col">
                             <div class="row row-cols-1 g-0">
                                 <div class="col p-4 d-flex flex-column mb-4 border rounded-1 bg-white">
                                     <div class="row pb-3">
@@ -1921,7 +1954,7 @@
 
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
-                                                    <thead class="table-white fw-500 text-black-50 border-bottom text-capitalize">
+                                                    <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
                                                         <tr>
                                                             <th scope="row" style="width: 1%; white-space: nowrap;"></th>
                                                             <th style="white-space: nowrap; width: 1%;">name</th>
@@ -1929,7 +1962,7 @@
                                                             <th scope="row">Phones</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.getGuardiansWContacts" id="guardianTableRepeat" class="table-white">
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.guardians" id="guardianTableRepeat" class="table-white">
                                                         <tr>
                                                             <td class="text-center align-middle">
                                                                 <div class="pg-badge clickable user-select-none" dmx-hide="primaryGuardian !== id" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover">P</div>
@@ -1939,8 +1972,9 @@
                                                             </td>
                                                             <td dmx-text="appSettings.relationships[relationship].name">Father</td>
                                                             <td>
-                                                                <div class="row row-cols-1" is="dmx-repeat" id="rp_phones" dmx-bind:repeat="phoneNumbersArray">
-                                                                    <div class="col" dmx-text="appSettings.contactTypes[type].type +': '+phone"></div>
+                                                                <div class="row " is="dmx-repeat" id="rp_phones" dmx-bind:repeat="phones">
+                                                                    <div class="col-auto my-1 font-monospace " dmx-text="number" style="letter-spacing: 1px;">0400 000 000
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1951,36 +1985,6 @@
                                     </div>
                                 </div>
 
-                            </div>
-                        </div>
-
-                        <div class="col">
-                            <div class="row g-0 row-cols-1" style="top: 1rem;">
-                                <div class="col bg-white p-4 border rounded-3 mb-2" dmx-hide="familyDetails.data.addresses.length === 0">
-                                    <div class="row align-items-center">
-                                        <div class="col">
-                                            <h4 class="mb-0"><i class="bi-map me-2"></i>Addresses</h4>
-                                        </div>
-                                        <div class="col d-flex justify-content-end">
-                                            <button class="btn btn-link p-0 mb-0 text-end">View All</button>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mt-3">
-                                        <div class="col">
-                                            <h6 class="fw-bold">Default Address</h6>
-
-                                            <p class="mb-1" dmx-text="familyDetails.data.default_address.unit" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null">Unit/Suite</p>
-                                            <p class="mb-1" dmx-text="familyDetails.data.default_address.street1">Street 1</p>
-                                            <p class="mb-1" dmx-text="familyDetails.data.default_address.street2" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null">Street 2</p>
-                                            <p class="mb-1" dmx-text="familyDetails.data.default_address.suburb">Suburb</p>
-                                            <p class="mb-0" dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name">State, ZIP Postal Code, Country</p>
-                                        </div>
-
-                                    </div>
-
-                                </div>
                             </div>
                         </div>
                         <div class="col">
@@ -1995,7 +1999,7 @@
                                         <div class="col">
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
-                                                    <thead class="table-white fw-500 text-black-50 border-bottom text-capitalize">
+                                                    <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
                                                         <tr>
                                                             <th style="width: 1%; white-space: nowrap;">ID</th>
                                                             <th style="">Student</th>
@@ -2004,13 +2008,13 @@
                                                             <th>Notes</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.loopThroughStudents" id="studentTableRepeat" class="table-white">
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.students" id="studentTableRepeat" class="table-white">
                                                         <tr>
                                                             <td dmx-text="id">15466</td>
-                                                            <td dmx-text="firstname +' '+lastname" class="text-decoration-underline clickable" dmx-on:click="browser1.goto('/families/familydetail/'+query.familyid+'/studentdetail/'+id)">Jeffrey Doe</td>
+                                                            <td dmx-text="firstName+' '+lastName" class="text-decoration-underline clickable" dmx-on:click="browser1.goto('/families/familydetail/'+query.familyid+'/studentdetail/'+uuid)">Jeffrey Doe</td>
                                                             <td dmx-text="age">3y 4m</td>
                                                             <td dmx-text="appSettings.classLevelsByID[level].name">Duckling</td>
-                                                            <td dmx-text="getStudentNotes.length > 0 ? (getStudentNotes.length +' Notes') : '-'" class="text-decoration-underline clickable">1 Note</td>
+                                                            <td dmx-text="note_count" class="text-decoration-underline clickable">1 Note</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -2024,17 +2028,20 @@
 
 
                         </div>
+
+
                     </div>
 
 
 
                 </div>
-                <div class="tab-pane fade" id="ledger" role="tabpanel" aria-labelledby="navTabs1_2_tab">
+                <div class="tab-pane fade position-relative" id="ledger" role="tabpanel" aria-labelledby="navTabs1_2_tab">
+
                     <div class="row">
                         <div class="col">
                             <div class="row row-cols-1 g-0">
                                 <div class="col p-3 pt-2 border rounded-3 mb-3 bg-white">
-                                    <h6 class="fw-500 text-uppercase text-black-50 mt-1">Create</h6>
+                                    <h6 class="fw-500 text-uppercase text-black-50 mt-1 small">Create</h6>
                                     <div class="row row-cols-6">
                                         <div class="col-auto"><a id="btn4" class="btn border btn-secondary" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment'" dmx-on:click="selectedChargesStore.clear()"><i class="bi-credit-card-2-back me-2"></i>New Payment
                                             </a></div>
@@ -2051,35 +2058,49 @@
 
 
                         <div class="col">
-                            <div class="row">
-                                <div class="col-5">
+                            <div class="row row-cols-1 gy-3">
+                                <div class="col">
                                     <div class="row g-0">
-                                        <div class="p-3 border rounded-3 bg-white col-12" id="paymentsCol">
+                                        <div class="p-3 border rounded-3 bg-white col" id="paymentsCol">
                                             <h5 class="mb-3 fw-450"><i class="bi-credit-card-2-back me-2"></i>Payments
                                             </h5>
 
-                                            <div class="row row-cols-1 g-0" dmx-hide="!familyLedger.data.familyPayments.hasItems()" is="dmx-repeat" id="rp_familyPayments" dmx-bind:repeat="familyLedger.data.familyPayments">
-                                                <div class="col border rounded-small bg-white postition-relative mb-2">
-                                                    <div class="row small clickable ms-n2 me-n2 p-3">
+                                            <div class="table-responsive">
+                                                <table class="table align-middle table-hover big-small">
+                                                    <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Title</th>
+                                                            <th>Amount</th>
+                                                            <th>Date &amp; Time</th>
+                                                            <th>Type</th>
+                                                            <th>Ref</th>
+
+                                                            <th>Notes</th>
 
 
-                                                        <div class="col align-self-center">
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyLedger.data.payments_familycharges" id="tableRepeat2">
+                                                        <tr>
+                                                            <td dmx-text="id">1835</td>
+                                                            <td dmx-text="title" class="text-decoration-underline clickable">Tuition Payment</td>
+                                                            <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</td>
+                                                            <td dmx-text="paymentdate.formatDate(familyLedger.data.times_formats.puddle_date_format + ' ' + familyLedger.data.times_formats.time_format)">01/01/2022 12:53 PM</td>
+                                                            <td>
+                                                                <p class="mb-0" dmx-hide="stripe_payment == 1">External Credit</p>
+                                                                <i class="fab fa-stripe fa-fw stripe-blurple-text fa-2x" dmx-show="stripe_payment == 1" dmx-bs-tooltip="'Click to view Stripe receipt.'" data-bs-trigger="hover" data-bs-placement="right"></i>
+                                                            </td>
+                                                            <td dmx-text="payref || '-'">-</td>
 
-                                                            <p class="mb-0 text-muted small">Amount:</p>
-                                                            <p class="mb-0 fw-bold" dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
-                                                        </div>
-                                                        <div class="col align-self-center">
-                                                            <p class="mb-0 text-muted small">Date:</p>
-                                                            <p class="mb-0" dmx-text="paymentdate.formatDate('dd/MM/yyyy')">01/01/1970</p>
-                                                        </div>
-                                                        <div class="col align-self-center">
-                                                            <p class="mb-0 text-muted small">Payment Type:</p>
-                                                            <p class="mb-0" dmx-text="'$'+chargeAmount">Credit/Debit Card</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                            <td dmx-text="notes || '-'">-</td>
+
+
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" dmx-show="!familyLedger.data.familyPayments.hasItems()">
+                                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" dmx-show="!familyLedger.data.payments_familycharges.hasItems()">
                                                 <div class="col align-self-center">
 
                                                     <h6 class="mb-0 text-center text-danger">No payment information.</h6>
@@ -2094,35 +2115,35 @@
                                         <div class="p-3 border rounded-3 bg-white col-12">
                                             <h5 class="mb-3 fw-450"><i class="bi-lightning-charge-fill me-2"></i>Charges
                                             </h5>
-                                            <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_familyChargesRepeat" dmx-bind:repeat="familyLedger.data.getStudentCharges">
+                                            <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="familyLedger.data.charges_family">
                                                 <div class="col border rounded-small bg-white postition-relative mb-2" dmx-class:border-danger="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount" dmx-class:border-3="chargeOverdue &amp;&amp; chargePaymentsTotal[0]['SUM(amount)'] < chargeAmount">
                                                     <div class="row clickable ms-n2 me-n2 p-3 align-items-center" dmx-on:click="dc_chargeStudentDetail.toggle(undefined)">
                                                         <div class="col-auto align-self-center">
                                                             <h5 class="mb-0 text-center">
-                                                                <i class="bi-triangle-fill text-warning clickable user-select-none" dmx-show="chargeOverdue === false &amp;&amp; chargePaymentsTotal < total" dmx-bs-tooltip="'Unpaid'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                                <i class="bi-triangle-fill text-warning clickable user-select-none" dmx-show="overdue === false &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'Unpaid'" data-bs-trigger="hover" data-bs-placement="left"></i>
 
-                                                                <i class="bi-exclamation-triangle-fill text-danger clickable user-select-none" dmx-show="chargeOverdue === true &amp;&amp; chargePaymentsTotal < total" dmx-bs-tooltip="'OVERDUE'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                                <i class="bi-exclamation-triangle-fill text-danger clickable user-select-none" dmx-show="overdue === true &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'OVERDUE'" data-bs-trigger="hover" data-bs-placement="left"></i>
 
-                                                                <i class="bi-check-circle-fill text-success clickable user-select-none" dmx-show="chargePaymentsTotal === total" dmx-bs-tooltip="'Paid'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                                <i class="bi-check-circle-fill text-success clickable user-select-none" dmx-show="balance.owing == 0" dmx-bs-tooltip="'Paid'" data-bs-trigger="hover" data-bs-placement="left"></i>
                                                             </h5>
                                                         </div>
                                                         <div class="col align-self-center">
 
-                                                            <p class="mb-0 text-muted mb-1">Charge for:</p>
+                                                            <p class="text-muted mb-1">Charge for:</p>
                                                             <p class="mb-0 fw-400" dmx-text="chargeFor_monthly.formatDate('MMMM - yyyy')">August 2021</p>
                                                         </div>
                                                         <div class="col align-self-center">
-                                                            <p class="mb-0 text-muted mb-1">Remaining:</p>
-                                                            <p wappler-command="editContent" class="mb-0 fw-500" dmx-text="chargePaymentsTotal == total ? 'PAID' : (total - chargePaymentsTotal).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount" dmx-class:fw-bold="chargePaymentsTotal > 0 &amp;&amp; chargePaymentsTotal != chargeAmount">75.54</p>
+                                                            <p class="text-muted mb-1">Remaining:</p>
+                                                            <p wappler-command="editContent" class="mb-0 fw-500" dmx-text="balance.paid == balance.total ? 'PAID' : balance.owing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="balance.owing > 0" dmx-class:fw-bold="balance.owing > 0">75.54</p>
                                                         </div>
                                                         <div class="col align-self-center">
-                                                            <p class="mb-0 text-muted mb-1">Paid:</p>
+                                                            <p class="text-muted mb-1">Paid:</p>
 
-                                                            <p class="mb-0 fw-500" dmx-text="chargePaymentsTotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
+                                                            <p class="mb-0 fw-500" dmx-text="balance.paid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">0.00</p>
                                                         </div>
 
                                                         <div class="col align-self-center">
-                                                            <p class="mb-0 text-muted mb-1">Due:</p>
+                                                            <p class="text-muted mb-1">Due:</p>
                                                             <p class="mb-0" dmx-text="dueDate.formatDate('dd MMM y') ">31 July 2021</p>
                                                         </div>
 
@@ -2143,45 +2164,38 @@
                                                                 <h5 class="mb-0">
                                                                     Payments for this charge.
                                                                 </h5>
-                                                                <small class="text-muted fw-light small">Click payment for more information.</small>
+                                                                <small class="text-muted fw-light small d-block">Click payment for more information.</small>
                                                                 <table class="table table-bordered table-hover mt-3 align-middle">
                                                                     <thead class="small fw-bold table-light">
                                                                         <tr>
-                                                                            <th scope="row" style="width: 1%; /* white-space: nowrap */" class="text-center">Actions</th>
+                                                                            <th scope="row" style="width: 1%; /* white-space: nowrap */" class="text-center"></th>
                                                                             <th>ID:</th>
                                                                             <th>Title</th>
                                                                             <th>Date:</th>
                                                                             <th>TXN Type:</th>
-                                                                            <th>Amount</th>
+                                                                            <th>Paid to Charge: *</th>
                                                                         </tr>
                                                                     </thead>
-                                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="paymentLineItemsList" id="tableRepeat3" class="small">
+                                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="payments" id="tbl_rp_payments" class="small">
                                                                         <tr>
                                                                             <td>
-                                                                                <div class="row flex-nowrap g-1 align-items-center">
-                                                                                    <div class="col"><button id="viewPayDetails" class="btn btn-sm btn-light border" type="submit" dmx-on:click="run([{run:{action:`ledgerStorage.set(\'paymentLineItems\',lineItems)`}},{run:{action:`ledgerStorage.set(\'paymentTitle\',title == \'\' || null ? +\'Payment on \'+paymentdate : title)`}},{run:{action:`ledgerStorage.set(\'paymentTotal\',amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2))`}},{wait:{delay:200}},{run:{action:`paymentLineItemsModal.show()`}}])" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-eye"></i></button></div>
-                                                                                    <div class="col">
-                                                                                        <form id="generateReceiptFormfromCharges" is="dmx-serverconnect-form" method="post" action="/api/families/ledger/payreceipt_json">
-                                                                                            <input id="inp_familyid" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
-                                                                                            <input id="inp_host" name="host" type="hidden" class="form-control" dmx-bind:value="browser1.location.protocol+'//'+browser1.location.host">
-                                                                                            <input id="inp_paymentid" name="paymentid" type="hidden" class="form-control" dmx-bind:value="id"><button id="generatePayReceipt" class="btn btn-sm btn-light border" type="submit" dmx-bs-tooltip="'Generate Receipt'" data-bs-animation="false" data-bs-trigger="hover"><i class="bi-receipt"></i></button>
-                                                                                        </form>
-                                                                                    </div>
-                                                                                </div>
+                                                                                <a id="viewPayDetails" class="btn btn-sm btn-light border" dmx-bs-tooltip="'View Receipt'" data-bs-animation="false" data-bs-trigger="hover" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment/payment_success?payment_uuid='+payment_uuid">
+                                                                                    <i class="far fa-eye"></i>
+                                                                                </a>
 
 
 
                                                                             </td>
-                                                                            <td dmx-text="id" class="text-center"></td>
+                                                                            <td dmx-text="payment_uuid.trunc(15, true, '...')" class="text-start clickable user-select-none" dmx-bs-tooltip="'Payment UUID: '+payment_uuid" data-bs-trigger="hover" data-bs-placement="top"></td>
                                                                             <td dmx-text="title"></td>
                                                                             <td dmx-text="paymentdate.formatDate('dd/MM/yyyy')"></td>
-                                                                            <td dmx-text="pay_type"></td>
-                                                                            <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                                                            <td dmx-text="paymentType === null ? 'STRIPE' : paymentType"></td>
+                                                                            <td dmx-text="towards_current_charge.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
 
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
-
+                                                                <small class="text-muted fw-light small d-block">* Payment towards charge doesn't include other charges this payment may have been used with. Total payment amount may be higher.</small>
                                                             </div>
                                                             <div class="tab-pane fade" id="chargeTab_2" dmx-bind:id="chargeTab_2_{{$index}}" role="tabpanel" aria-labelledby="chargeTab_1_tab">
 
@@ -2260,9 +2274,307 @@
                                 </div>
 
 
+
+
                             </div>
                         </div>
 
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="paymentinfo" role="tabpanel" aria-labelledby="navTabs1_6_tab">
+                    <div class="row gx-0 position-relative" dmx-animate-leave.duration:450="fadeOut" dmx-hide="cookies.data.webhook_processing == 'true'">
+                        <div class="col mb-3 p-4 bg-white border rounded-3 text-body">
+                            <div class="row">
+                                <div class="col d-flex flex-row justify-content-between">
+                                    <h4>Stripe Customer Account</h4>
+                                    <div class="dropdown" dmx-show="familyDetails.data.familyDetails.stripe_cust_id">
+                                        <button id="dd_stripeActions" class="btn dropdown-toggle btn-sm btn-light no-caret bg-white border rounded-3 shadow-sm" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-h"></i></button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdown1">
+                                            <button class="dropdown-item text-light bg-danger small" dmx-on:click="run([{condition:{if:`CONNECT_CUST_stripe.data.retrieveCustomer.id`}},{'bootbox.confirm':{buttons:{confirm:{label:'DELETE',className:'btn-danger'},cancel:{}},message:'This will permanently delete this customers Stripe data. It cannot be undone. ',title:'Delete Customer\'s Stripe Account?',swapButtonOrder:true,size:'lg',backdrop:'true',then:{steps:{serverConnect:{url:'/api/stripe/customers/DELETE_CUST_stripe',site:'SSA-CRM',params:{customer:`CONNECT_CUST_stripe.data.retrieveCustomer.id`,connected_account:`CONNECT_stripe.data.retrieveAccount.id`},name:'DELETE_CUSTOMER_stripe'}}},else:{steps:{'bootbox.alert':{buttons:{ok:{className:'btn-success'}},title:'ABORTED',message:'Customer deletion was successfully cancelled.',closeButton:false}}}}}])"><i class="fas fa-trash me-2"></i>Delete Stripe Account</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p>Puddle partners with online payments processor Stripe to allow our customers to securely pay online.</p>
+                            <div class="modal fade" id="modal_CREATE_STRIPE_customer" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="form_newStripeCustomer.reset()">
+                                <div class="modal-dialog modal-lg" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header border-bottom pe-4">
+                                            <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" loading="lazy" width="150"><img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" loading="lazy" width="150" class="me-2">
+
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="fw-450">To set this customer up with Stripe payments, you must create them as a new 'Stripe Customer'.</p>
+                                            <p class="mb-4">You can add a payment method to this file after you have finished creating the Stripe Customer Account.</p>
+                                            <form id="form_newStripeCustomer" method="post" is="dmx-serverconnect-form" action="/api/stripe/customers/CREATE_CUST_stripe" dmx-on:success="modal_CREATE_STRIPE_customer.hide()">
+                                                <input id="inp_customer_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="familyDetails.data.familyDetails.uuid">
+                                                <dmx-data-detail id="dd_selectedGuardian" dmx-bind:data="familyDetails.data.getGuardiansWContacts" key="id"></dmx-data-detail>
+                                                <h4 class="fw-500 mb-2 pb-2 border-bottom">Create Customer</h4>
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <h6 class="fw-400">Use existing guardian details?</h6>
+                                                    <p id="bs5-form-group-help1" class="form-text text-muted">Prefill customer details by selecting from the guardian drop list.</p>
+
+                                                    <select id="sel_chooseGuardian" class="form-select" dmx-bind:options="familyDetails.data.getGuardiansWContacts" optiontext="firstName +' '+lastName" optionvalue="id" dmx-on:updated="dd_selectedGuardian.select(sel_chooseGuardian.value.toNumber())">
+                                                        <option value="">Select Guardian...</option>
+                                                    </select>
+                                                </div>
+                                                <h6 class="fw-400">Customer Details</h6>
+
+                                                <div class="mb-3">
+                                                    <label for="inp_customer_name" class="form-label col-form-label">Full Name *</label>
+                                                    <input type="text" class="form-control" id="inp_customer_name" name="customer_name" aria-describedby="input1_help" placeholder="John Doe" required="" dmx-bind:value="dd_selectedGuardian.data ? dd_selectedGuardian.data.firstName +' '+dd_selectedGuardian.data.lastName : null">
+                                                </div>
+
+                                                <div class="mb-3">
+
+
+                                                    <label for="inp_customer_email" class="form-label col-form-label">Preferred Email *</label>
+                                                    <p id="bs5-form-group-help2" class="form-text text-muted">Select existing email address for selected customer, or add a new one.</p>
+
+                                                    <div class="row">
+                                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_chooseEmail" class="form-select" dmx-bind:options="dd_selectedGuardian.data.emailAddressesArray" dmx-on:updated="inp_customer_email.setValue(value)" optiontext="address" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="address">
+                                                                <option value="">Select Email Address...</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col"><input type="email" class="form-control" id="inp_customer_email" name="customer_email" aria-describedby="input1_help" placeholder="johndoe@example.com" required="" data-rule-email=""></div>
+
+                                                    </div>
+
+
+
+                                                </div>
+                                                <div class="mb-5">
+
+
+                                                    <label for="inp_customer_phone" class="form-label col-form-label">Preferred Phone Number *</label>
+                                                    <p id="bs5-form-group-help3" class="form-text text-muted">Select existing phone number for selected customer, or add a new one.</p>
+
+                                                    <div class="row">
+                                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_choosePhone" class="form-select" dmx-bind:options="dd_selectedGuardian.data.phoneNumbersArray" dmx-on:updated="inp_customer_phone.setValue(value)" optiontext="phone" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="phone">
+                                                                <option value="">Select Phone Number...</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col"><input type="tel" class="form-control" id="inp_customer_phone" name="customer_phone" aria-describedby="input1_help" placeholder="xxxx xxx xxx" required="" data-msg-required="Please enter a phone number."></div>
+
+                                                    </div>
+
+
+
+                                                </div>
+
+                                            </form>
+
+
+                                        </div>
+                                        <div class="modal-footer border-top d-flex justify-content-between">
+                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                            <button class="btn btn-primary" form="form_newStripeCustomer" type="submit">Create Stripe Customer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" is="dmx-if" id="cr_nocust_stripe" dmx-bind:condition="!familyDetails.data.familyDetails.stripe_cust_id" dmx-show="!CONNECT_CUST_stripe.data.retrieveCustomer.id">
+                                <div class="col">
+                                    <p class="mb-3 pb-3 border-bottom">If a customer wishes to pay their tuition via saved payment details, it is required they become a customer of yours through Stripe. To start, click the button below to get them set up.</p>
+                                    <dmx-value id="var_stripeSetup" dmx-bind:value="false"></dmx-value>
+                                    <button id="btn_createCust_stripe_modal" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_CREATE_STRIPE_customer"><span class="spinner-border spinner-border-sm me-2" role="status" dmx-hide="cr_nocust_stripe.var_stripeSetup.value == false" id="btn_createCust_stripe_modal"></span><i dmx-hide="cr_nocust_stripe.var_stripeSetup.value == true" class="fas fa-credit-card me-2"></i>Setup Payment Information
+
+                                    </button>
+                                </div>
+                            </div>
+
+
+                            <div class="row" is="dmx-if" id="cr_custdetails_stripe" dmx-bind:condition="familyDetails.data.familyDetails.stripe_cust_id">
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col">
+                                            <ul class="nav my-3 py-3 border-top border-bottom detail-tabs flex-row justify-content-start gx-2 nav-pills" id="navTabs_stripe" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link py-3 px-4 active" id="stripeTab_stripeDetails" data-bs-toggle="tab" data-bs-target="#navTabs_stripe_details" role="tab" aria-controls="navTabs1_2" aria-selected="false">Stripe Details</a>
+
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link py-3 px-4" id="stripeTab_stripeSavedPayment" data-bs-toggle="tab" data-bs-target="#navTabs_stripe_SavedPayment" role="tab" aria-controls="navTabs1_2" aria-selected="false">Payment Methods</a>
+
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content" id="navTabs1_content">
+                                                <div class="tab-pane fade active show" id="navTabs_stripe_details" role="tabpanel">
+                                                    <h5 class="fw-600 mt-2 mb-4 py-2 border-bottom lh-lg">Stripe Customer Information</h5>
+                                                    <div class="row flex-table">
+                                                        <div class="col">
+
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Stripe ID</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.id">cus_hfnuwefh2984</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Full Name</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.name">Jane Doe</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Email Address</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.email || 'N/A'">jane.doe@example.com</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Phone Number</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.phone || 'N/A'">+61400300300</p>
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="col">
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Saved Payment Method?</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.invoice_settings.default_payment_method ? 'TRUE' : 'FALSE'">FALSE</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Invoice Prefix:<i class="bi-question-circle-fill ms-2" dmx-bs-tooltip="'Invoice Prefix is the string of characters a customer will see on a Stripe invoice after a successful transaction. This is a unique prefix auto-created by Stripe.'" data-bs-trigger="hover"></i>
+                                                                    </p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.invoice_prefix">2693F829</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row mb-1">
+                                                                <div class="col">
+                                                                    <p class="text-muted">Stripe Customer Created</p>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.created.toDate().formatDate('dd MMMM yyyy hh:mm:ss a')">02 January 2022 10:54 PM</p>
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane fade" id="navTabs_stripe_SavedPayment" role="tabpanel">
+                                                    <div class="modal fade" id="modal_STRIPE_ADD_paymentInfo" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+                                                        <div class="modal-dialog modal-lg" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header border-bottom pe-4">
+                                                                    <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" width="150">
+                                                                    <img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" width="150" class="me-2">
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p class="mb-3">To ensure the security of your customers, Puddle requires you to head to the customer billing portal to update any payment information including card details, address, tax identification and more.</p>
+                                                                    <a id="btn_addPaymentMethod" class="btn btn-outline-primary" dmx-bind:href="CONNECT_CUST_stripe.data.createBillingPortalSession.url">Go to Billing Portal</a>
+                                                                </div>
+                                                                <div class="modal-footer border-top justify-content-end">
+                                                                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-3 gx-0" is="dmx-if" id="cr_noBillingPortal" dmx-bind:condition="!CONNECT_stripe.data.retrieveBillingPortalConfiguration" dmx-class:mb-3="!CONNECT_stripe.data.retrieveBillingPortalConfiguration">
+                                                        <div class="p-2 col-auto bg-danger text-white rounded-3">
+                                                            <p class="mb-0 lh-sm">Billing portal is INACTIVE or has not been configured for your account.<br>Customers will be unable to save payment methods until this has been completed. <br>Please talk to your system administrator about getting this feature enabled.</p>
+                                                        </div>
+                                                    </div><button id="btn_addPaymentInfo" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal_STRIPE_ADD_paymentInfo" dmx-bind:disabled="!CONNECT_stripe.data.retrieveBillingPortalConfiguration"><i class="fas fa-file-invoice-dollar me-2"></i>Add/Edit Payment Methods&nbsp;</button>
+
+                                                    <h5 class="fw-600 mt-3 pt-3 mb-4 pb-2 border-bottom border-top lh-lg">Saved Payment Information</h5>
+                                                    <div id="cr_existsPaymentMethods" is="dmx-if" dmx-bind:condition="CONNECT_CUST_stripe.data.listPaymentMethods_cards.data">
+                                                        <div id="rp_STRIPE_payment_methods" is="dmx-repeat" dmx-bind:repeat="CONNECT_CUST_stripe.data.listPaymentMethods_cards.data">
+                                                            <div class="row gx-0 row-cols-2 flex-table pb-3 mb-3 border-bottom">
+                                                                <div class="col">
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Payment Type</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="type.capitalize()">Card</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Card Type</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="card.brand.capitalize()">MasterCard</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Card Number (Last 4)</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="'**** **** **** '+card.last4">**** **** **** 1234</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Expiry Date</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="card.exp_month+' / '+card.exp_year">01 / 2022</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">CVC Check Passed?</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="card.checks.cvc_check.capitalize()">Pass</p>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                </div>
+                                                                <div class="col">
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Payment Method ID</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="id">pm_opnqc4028941jdi190423urfhicnqp21</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row mb-1">
+                                                                        <div class="col">
+                                                                            <p class="text-muted">Customer ID</p>
+                                                                        </div>
+                                                                        <div class="col">
+                                                                            <p dmx-text="customer">cus_fh324ue80wfh32</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="emails" role="tabpanel" aria-labelledby="navTabs1_3_tab">
@@ -2308,11 +2620,32 @@
                     </div>
 
                 </div>
+
                 <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="navTabs1__tab">
                     <p>Est quis nulla laborum officia ad nisi ex nostrud culpa Lorem excepteur aliquip dolor aliqua irure ex. Nulla ut duis ipsum nisi elit fugiat commodo sunt reprehenderit laborum veniam eu veniam. Eiusmod minim exercitation
                         fugiat irure ex labore incididunt do fugiat commodo aliquip sit id deserunt reprehenderit aliquip nostrud. Amet ex cupidatat excepteur aute veniam incididunt mollit cupidatat esse irure officia elit do ipsum ullamco Lorem.
                         Ullamco ut ad minim do mollit labore ipsum laboris ipsum commodo sunt tempor enim incididunt. Commodo quis sunt dolore aliquip aute tempor irure magna enim minim reprehenderit. Ullamco consectetur culpa veniam sint cillum
                         aliqua incididunt velit ullamco sunt ullamco quis quis commodo voluptate. Mollit nulla nostrud adipisicing aliqua cupidatat aliqua pariatur mollit voluptate voluptate consequat non.</p>
+                </div>
+                <div class="tab-pane fade" id="advanced_tab" role="tabpanel" aria-labelledby="navTabs1_7_tab">
+                    <div class="row">
+                        <div class="col mb-3 p-3 bg-white border rounded-3 text-body">
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <h6 class="fw-450 mb-1">Universally Unique Identifier (UUID)</h6>
+                                    <p class="mb-0" dmx-text="familyDetails.data.familyDetails.uuid">adsa323r-32fs-342g-jdsq-ggjtos87admc</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="fw-450 mb-1">Stripe Customer ID</h6>
+                                    <p class="mb-0" dmx-text="familyDetails.data.familyDetails.stripe_cust_id || 'N/A'">cust_wnwuohf32yhrwo1</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

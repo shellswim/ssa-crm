@@ -1,0 +1,874 @@
+{
+    "meta": {
+        "$_GET": [
+            {
+                "type": "text",
+                "name": "sort"
+            },
+            {
+                "type": "text",
+                "name": "dir"
+            },
+            {
+                "type": "number",
+                "name": "familyid"
+            }
+        ]
+    },
+    "exec": {
+        "steps": [
+            {
+                "name": "query_charges",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                    "connection": "db",
+                    "sql": {
+                        "query": "SELECT *,\n    IFNULL((\n    SELECT \n           SUM(pe.amount)\n    FROM \n        payments_enrolcharges pe\n        LEFT JOIN charges_enrolments ce on ce.uuid = pe.enrolcharge_uuid\n    \n    WHERE ce.charge_uuid = fc.uuid\n    ),0.00) AS paid,\n       \n    IFNULL(fc.total - (\n    SELECT SUM(pe.amount)\n    FROM payments_enrolcharges pe LEFT JOIN charges_enrolments ce on ce.uuid = pe.enrolcharge_uuid\n    WHERE ce.charge_uuid = fc.uuid\n    ),fc.total) AS owing\n\nFROM charges_family fc\n\nWHERE\n    IFNULL((\n        SELECT SUM(pe.amount)\n        FROM payments_enrolcharges pe LEFT JOIN charges_enrolments ce on ce.uuid = pe.enrolcharge_uuid\n        WHERE ce.charge_uuid = fc.uuid\n    ),0.00) < fc.total AND fc.family_uuid = :P1\nORDER BY fc.total;",
+                        "params": [
+                            {
+                                "name": ":P1",
+                                "value": "{{$_GET.familyid}}",
+                                "test": "fam_a4eb27ec625211ecae3e0242ac160002"
+                            }
+                        ]
+                    }
+                },
+                "output": false,
+                "meta": [
+                    {
+                        "name": "uuid",
+                        "type": "text"
+                    },
+                    {
+                        "name": "id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "family_uuid",
+                        "type": "text"
+                    },
+                    {
+                        "name": "family",
+                        "type": "number"
+                    },
+                    {
+                        "name": "total",
+                        "type": "number"
+                    },
+                    {
+                        "name": "title",
+                        "type": "text"
+                    },
+                    {
+                        "name": "reference",
+                        "type": "text"
+                    },
+                    {
+                        "name": "description",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeFor_monthly",
+                        "type": "text"
+                    },
+                    {
+                        "name": "dueDate",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeType",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeFor_session",
+                        "type": "text"
+                    },
+                    {
+                        "name": "basetotal",
+                        "type": "number"
+                    },
+                    {
+                        "name": "discountotal",
+                        "type": "number"
+                    },
+                    {
+                        "name": "chargeDate",
+                        "type": "text"
+                    },
+                    {
+                        "name": "payments",
+                        "type": "text"
+                    },
+                    {
+                        "name": "created",
+                        "type": "text"
+                    },
+                    {
+                        "name": "updated",
+                        "type": "text"
+                    },
+                    {
+                        "name": "createdby",
+                        "type": "number"
+                    },
+                    {
+                        "name": "updatedby",
+                        "type": "number"
+                    },
+                    {
+                        "name": "paid",
+                        "type": "number"
+                    },
+                    {
+                        "name": "owing",
+                        "type": "number"
+                    }
+                ],
+                "outputType": "array"
+            },
+            {
+                "name": "charges",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                    "repeat": "{{query_charges}}",
+                    "outputFields": [
+                        "uuid",
+                        "id",
+                        "family_uuid",
+                        "family",
+                        "total",
+                        "title",
+                        "reference",
+                        "description",
+                        "chargeFor_monthly",
+                        "dueDate",
+                        "chargeType",
+                        "chargeFor_session",
+                        "basetotal",
+                        "discountotal",
+                        "chargeDate",
+                        "payments",
+                        "created",
+                        "updated",
+                        "createdby",
+                        "updatedby",
+                        "paid",
+                        "owing"
+                    ],
+                    "exec": {
+                        "steps": [
+                            {
+                                "name": "query_students",
+                                "module": "dbupdater",
+                                "action": "custom",
+                                "options": {
+                                    "connection": "db",
+                                    "sql": {
+                                        "query": "SELECT DISTINCT sl.student_uuid as student_uuid, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.student_uuid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\n    WHERE\n        (pe.uuid IS NULL OR pe.amount < ec.enrolGrandTotal)\n        AND ec.charge_uuid = :P1\n        AND IFNULL((ec.enrolGrandTotal - (\n               SELECT SUM(pe.amount)\n               FROM payments_enrolcharges pe\n                   JOIN charges_enrolments ec2\n                    ON pe.enrolcharge_uuid = ec.uuid\n               WHERE ec2.uuid = ec.uuid\n               )),ec.enrolGrandTotal) > 0\n    GROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolGrandTotal, ec.enrolment_uuid, ec.classDate\n    ORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid\n         ) AS sl JOIN students s ON sl.student_uuid = s.uuid\n;",
+                                        "params": [
+                                            {
+                                                "name": ":P1",
+                                                "value": "{{uuid}}",
+                                                "test": "chf_b3ebafc56fa311ec832c0242ac160003"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "meta": [
+                                    {
+                                        "name": "student_uuid",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "firstName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "lastName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "family",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "level",
+                                        "type": "number"
+                                    }
+                                ],
+                                "outputType": "array"
+                            },
+                            {
+                                "name": "chargeid",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                    "value": "{{uuid}}"
+                                },
+                                "meta": [],
+                                "outputType": "text"
+                            },
+                            {
+                                "name": "students",
+                                "module": "core",
+                                "action": "repeat",
+                                "options": {
+                                    "repeat": "{{query_students}}",
+                                    "outputFields": [
+                                        "id",
+                                        "family",
+                                        "firstName",
+                                        "lastName",
+                                        "level"
+                                    ],
+                                    "exec": {
+                                        "steps": [
+                                            {
+                                                "name": "query_lineitems",
+                                                "module": "dbupdater",
+                                                "action": "custom",
+                                                "options": {
+                                                    "connection": "db",
+                                                    "sql": {
+                                                        "query": "SELECT\n   ec.uuid as enrolcharge_uuid,\n   ec.student_uuid,\n   ec.startofweek,\n   ec.enrolGrandTotal,\n   ec.enrolment_uuid,\n   ec.classDate,\n   IFNULL((ec.enrolGrandTotal - (\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges pe\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       )),ec.enrolGrandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges tl\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\nWHERE\n    (pe.uuid IS NULL OR pe.amount < ec.enrolGrandTotal)\n    AND ec.charge_uuid = :P1 AND ec.student_uuid = :P2\n    AND IFNULL((ec.enrolGrandTotal - (\n           SELECT SUM(pe.amount)\n           FROM payments_enrolcharges pe\n               JOIN charges_enrolments ce\n      \t\t\tON pe.enrolcharge_uuid = ce.uuid\n           WHERE ce.uuid = ec.uuid\n           )),ec.enrolGrandTotal) > 0\nGROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolGrandTotal, ec.enrolment_uuid, ec.classDate\nORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid;",
+                                                        "params": [
+                                                            {
+                                                                "name": ":P1",
+                                                                "value": "{{chargeid}}",
+                                                                "test": "chf_b3ebafc56fa311ec832c0242ac160003"
+                                                            },
+                                                            {
+                                                                "name": ":P2",
+                                                                "value": "{{student_uuid}}",
+                                                                "test": "stu_a31d235a707a11eca6ee0242ac160002"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "output": false,
+                                                "meta": [
+                                                    {
+                                                        "name": "enrolcharge_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "student_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "startofweek",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "enrolGrandTotal",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "enrolment_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "classDate",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "remaining",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "totalPaid",
+                                                        "type": "number"
+                                                    }
+                                                ],
+                                                "outputType": "array"
+                                            },
+                                            {
+                                                "name": "lineitems",
+                                                "module": "core",
+                                                "action": "repeat",
+                                                "options": {
+                                                    "repeat": "{{query_lineitems}}",
+                                                    "outputFields": [
+                                                        "student_uuid",
+                                                        "startofweek",
+                                                        "enrolGrandTotal",
+                                                        "enrolment_uuid",
+                                                        "classDate",
+                                                        "remaining",
+                                                        "totalPaid",
+                                                        "enrolcharge_uuid"
+                                                    ],
+                                                    "exec": {
+                                                        "steps": {
+                                                            "name": "classDetails",
+                                                            "module": "dbconnector",
+                                                            "action": "single",
+                                                            "options": {
+                                                                "connection": "db",
+                                                                "sql": {
+                                                                    "type": "SELECT",
+                                                                    "columns": [
+                                                                        {
+                                                                            "table": "classes",
+                                                                            "column": "startTimeDisplay"
+                                                                        },
+                                                                        {
+                                                                            "table": "staff",
+                                                                            "column": "firstName",
+                                                                            "alias": "instructorFirst"
+                                                                        },
+                                                                        {
+                                                                            "table": "staff",
+                                                                            "column": "lastName",
+                                                                            "alias": "instructorLast"
+                                                                        },
+                                                                        {
+                                                                            "table": "classLevels",
+                                                                            "column": "name",
+                                                                            "alias": "levelName"
+                                                                        },
+                                                                        {
+                                                                            "table": "days",
+                                                                            "column": "name",
+                                                                            "alias": "dayName"
+                                                                        }
+                                                                    ],
+                                                                    "table": {
+                                                                        "name": "enrolments"
+                                                                    },
+                                                                    "joins": [
+                                                                        {
+                                                                            "table": "classes",
+                                                                            "column": "*",
+                                                                            "type": "LEFT",
+                                                                            "clauses": {
+                                                                                "condition": "AND",
+                                                                                "rules": [
+                                                                                    {
+                                                                                        "table": "classes",
+                                                                                        "column": "uuid",
+                                                                                        "operator": "equal",
+                                                                                        "value": {
+                                                                                            "table": "enrolments",
+                                                                                            "column": "class_uuid"
+                                                                                        },
+                                                                                        "operation": "="
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "table": "staff",
+                                                                            "column": "*",
+                                                                            "type": "LEFT",
+                                                                            "clauses": {
+                                                                                "condition": "AND",
+                                                                                "rules": [
+                                                                                    {
+                                                                                        "table": "staff",
+                                                                                        "column": "uuid",
+                                                                                        "operator": "equal",
+                                                                                        "value": {
+                                                                                            "table": "classes",
+                                                                                            "column": "instructor_uuid"
+                                                                                        },
+                                                                                        "operation": "="
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "table": "classLevels",
+                                                                            "column": "*",
+                                                                            "type": "LEFT",
+                                                                            "clauses": {
+                                                                                "condition": "AND",
+                                                                                "rules": [
+                                                                                    {
+                                                                                        "table": "classLevels",
+                                                                                        "column": "uuid",
+                                                                                        "operator": "equal",
+                                                                                        "value": {
+                                                                                            "table": "classes",
+                                                                                            "column": "classlevel_uuid"
+                                                                                        },
+                                                                                        "operation": "="
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "table": "days",
+                                                                            "column": "*",
+                                                                            "type": "INNER",
+                                                                            "clauses": {
+                                                                                "condition": "AND",
+                                                                                "rules": [
+                                                                                    {
+                                                                                        "table": "days",
+                                                                                        "column": "id",
+                                                                                        "operator": "equal",
+                                                                                        "value": {
+                                                                                            "table": "classes",
+                                                                                            "column": "day"
+                                                                                        },
+                                                                                        "operation": "="
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "query": "SELECT classes.startTimeDisplay, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, classLevels.name AS levelName, days.name AS dayName\nFROM enrolments\nLEFT JOIN classes ON (classes.uuid = enrolments.class_uuid) LEFT JOIN staff ON (staff.uuid = classes.instructor_uuid) LEFT JOIN classLevels ON (classLevels.uuid = classes.classlevel_uuid) INNER JOIN days ON (days.id = classes.day)\nWHERE enrolments.uuid = :P1 /* {{enrolment_uuid}} */",
+                                                                    "params": [
+                                                                        {
+                                                                            "operator": "equal",
+                                                                            "type": "expression",
+                                                                            "name": ":P1",
+                                                                            "value": "{{enrolment_uuid}}"
+                                                                        }
+                                                                    ],
+                                                                    "wheres": {
+                                                                        "condition": "AND",
+                                                                        "rules": [
+                                                                            {
+                                                                                "id": "enrolments.uuid",
+                                                                                "field": "enrolments.uuid",
+                                                                                "type": "string",
+                                                                                "operator": "equal",
+                                                                                "value": "{{enrolment_uuid}}",
+                                                                                "data": {
+                                                                                    "table": "enrolments",
+                                                                                    "column": "uuid",
+                                                                                    "type": "text"
+                                                                                },
+                                                                                "operation": "="
+                                                                            }
+                                                                        ],
+                                                                        "conditional": null,
+                                                                        "valid": true
+                                                                    },
+                                                                    "orders": []
+                                                                }
+                                                            },
+                                                            "output": true,
+                                                            "meta": [
+                                                                {
+                                                                    "type": "text",
+                                                                    "name": "startTimeDisplay"
+                                                                },
+                                                                {
+                                                                    "type": "text",
+                                                                    "name": "instructorFirst"
+                                                                },
+                                                                {
+                                                                    "type": "text",
+                                                                    "name": "instructorLast"
+                                                                },
+                                                                {
+                                                                    "type": "text",
+                                                                    "name": "levelName"
+                                                                },
+                                                                {
+                                                                    "type": "text",
+                                                                    "name": "dayName"
+                                                                }
+                                                            ],
+                                                            "outputType": "object",
+                                                            "type": "dbconnector_single"
+                                                        }
+                                                    }
+                                                },
+                                                "output": true,
+                                                "meta": [
+                                                    {
+                                                        "name": "$index",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "$number",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "$name",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "$value",
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "name": "enrolcharge_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "student_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "startofweek",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "enrolGrandTotal",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "enrolment_uuid",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "classDate",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "name": "remaining",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "totalPaid",
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "name": "classDetails",
+                                                        "type": "object",
+                                                        "sub": [
+                                                            {
+                                                                "type": "text",
+                                                                "name": "startTimeDisplay"
+                                                            },
+                                                            {
+                                                                "type": "text",
+                                                                "name": "instructorFirst"
+                                                            },
+                                                            {
+                                                                "type": "text",
+                                                                "name": "instructorLast"
+                                                            },
+                                                            {
+                                                                "type": "text",
+                                                                "name": "levelName"
+                                                            },
+                                                            {
+                                                                "type": "text",
+                                                                "name": "dayName"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "outputType": "array"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "output": true,
+                                "meta": [
+                                    {
+                                        "name": "$index",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "$number",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "$name",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "$value",
+                                        "type": "object"
+                                    },
+                                    {
+                                        "name": "student_uuid",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "firstName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "lastName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "family",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "level",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "lineitems",
+                                        "type": "array",
+                                        "sub": [
+                                            {
+                                                "name": "enrolcharge_uuid",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "student_uuid",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "startofweek",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "enrolGrandTotal",
+                                                "type": "number"
+                                            },
+                                            {
+                                                "name": "enrolment_uuid",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "classDate",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "remaining",
+                                                "type": "number"
+                                            },
+                                            {
+                                                "name": "totalPaid",
+                                                "type": "number"
+                                            },
+                                            {
+                                                "name": "classDetails",
+                                                "type": "object",
+                                                "sub": [
+                                                    {
+                                                        "type": "text",
+                                                        "name": "startTimeDisplay"
+                                                    },
+                                                    {
+                                                        "type": "text",
+                                                        "name": "instructorFirst"
+                                                    },
+                                                    {
+                                                        "type": "text",
+                                                        "name": "instructorLast"
+                                                    },
+                                                    {
+                                                        "type": "text",
+                                                        "name": "levelName"
+                                                    },
+                                                    {
+                                                        "type": "text",
+                                                        "name": "dayName"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "outputType": "array"
+                            }
+                        ]
+                    }
+                },
+                "output": true,
+                "meta": [
+                    {
+                        "name": "$index",
+                        "type": "number"
+                    },
+                    {
+                        "name": "$number",
+                        "type": "number"
+                    },
+                    {
+                        "name": "$name",
+                        "type": "text"
+                    },
+                    {
+                        "name": "$value",
+                        "type": "object"
+                    },
+                    {
+                        "name": "uuid",
+                        "type": "text"
+                    },
+                    {
+                        "name": "id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "family_uuid",
+                        "type": "text"
+                    },
+                    {
+                        "name": "family",
+                        "type": "number"
+                    },
+                    {
+                        "name": "total",
+                        "type": "number"
+                    },
+                    {
+                        "name": "title",
+                        "type": "text"
+                    },
+                    {
+                        "name": "reference",
+                        "type": "text"
+                    },
+                    {
+                        "name": "description",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeFor_monthly",
+                        "type": "text"
+                    },
+                    {
+                        "name": "dueDate",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeType",
+                        "type": "text"
+                    },
+                    {
+                        "name": "chargeFor_session",
+                        "type": "text"
+                    },
+                    {
+                        "name": "basetotal",
+                        "type": "number"
+                    },
+                    {
+                        "name": "discountotal",
+                        "type": "number"
+                    },
+                    {
+                        "name": "chargeDate",
+                        "type": "text"
+                    },
+                    {
+                        "name": "payments",
+                        "type": "text"
+                    },
+                    {
+                        "name": "created",
+                        "type": "text"
+                    },
+                    {
+                        "name": "updated",
+                        "type": "text"
+                    },
+                    {
+                        "name": "createdby",
+                        "type": "number"
+                    },
+                    {
+                        "name": "updatedby",
+                        "type": "number"
+                    },
+                    {
+                        "name": "paid",
+                        "type": "number"
+                    },
+                    {
+                        "name": "owing",
+                        "type": "number"
+                    },
+                    {
+                        "name": "students",
+                        "type": "array",
+                        "sub": [
+                            {
+                                "name": "student_uuid",
+                                "type": "text"
+                            },
+                            {
+                                "name": "firstName",
+                                "type": "text"
+                            },
+                            {
+                                "name": "lastName",
+                                "type": "text"
+                            },
+                            {
+                                "name": "family",
+                                "type": "text"
+                            },
+                            {
+                                "name": "level",
+                                "type": "number"
+                            },
+                            {
+                                "name": "lineitems",
+                                "type": "array",
+                                "sub": [
+                                    {
+                                        "name": "enrolcharge_uuid",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "student_uuid",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "startofweek",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "enrolGrandTotal",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "enrolment_uuid",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "classDate",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "name": "remaining",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "totalPaid",
+                                        "type": "number"
+                                    },
+                                    {
+                                        "name": "classDetails",
+                                        "type": "object",
+                                        "sub": [
+                                            {
+                                                "type": "text",
+                                                "name": "startTimeDisplay"
+                                            },
+                                            {
+                                                "type": "text",
+                                                "name": "instructorFirst"
+                                            },
+                                            {
+                                                "type": "text",
+                                                "name": "instructorLast"
+                                            },
+                                            {
+                                                "type": "text",
+                                                "name": "levelName"
+                                            },
+                                            {
+                                                "type": "text",
+                                                "name": "dayName"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "outputType": "array"
+            }
+        ]
+    }
+}

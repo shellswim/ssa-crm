@@ -1127,6 +1127,57 @@ dmx.config({
     "emails": {
       "meta": null,
       "outputType": "array"
+    },
+    "tableRepeat4": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "specialDiscount",
+          "type": "number"
+        },
+        {
+          "name": "address",
+          "type": "number"
+        },
+        {
+          "name": "stripe_cust_id",
+          "type": "text"
+        },
+        {
+          "name": "guardian_uuid",
+          "type": "text"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "student_names",
+          "type": "array",
+          "sub": [
+            {
+              "name": "studentNames",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
     }
   },
   "index layoutMain": {
@@ -1517,7 +1568,11 @@ dmx.config({
       },
       {
         "type": "text",
-        "name": "uuid"
+        "name": "payment_uuid"
+      },
+      {
+        "type": "text",
+        "name": "payintent_uuid"
       }
     ],
     "tableRepeat1": {
@@ -1984,6 +2039,10 @@ dmx.config({
       {
         "type": "boolean",
         "name": "navbarToggle"
+      },
+      {
+        "type": "boolean",
+        "name": "webhook_processing"
       }
     ]
   },
@@ -5660,8 +5719,12 @@ dmx.config({
     "rp_familyPayments": {
       "meta": [
         {
-          "name": "id",
+          "name": "uuid",
           "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
         },
         {
           "name": "amount",
@@ -5673,10 +5736,10 @@ dmx.config({
         },
         {
           "name": "family",
-          "type": "text"
+          "type": "number"
         },
         {
-          "name": "charges",
+          "name": "family_uuid",
           "type": "number"
         },
         {
@@ -5694,6 +5757,231 @@ dmx.config({
         {
           "name": "paymentdate",
           "type": "datetime"
+        },
+        {
+          "name": "stripe_payment",
+          "type": "boolean"
+        },
+        {
+          "name": "stripe_payment_id",
+          "type": "text"
+        },
+        {
+          "name": "stripe_receipt_number",
+          "type": "text"
+        },
+        {
+          "name": "stripe_receipt_url",
+          "type": "text"
+        },
+        {
+          "name": "stripe_payment_type",
+          "type": "text"
+        },
+        {
+          "name": "query_charges_family",
+          "type": "array",
+          "sub": [
+            {
+              "name": "uuid",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "family_uuid",
+              "type": "text"
+            },
+            {
+              "name": "family",
+              "type": "number"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            },
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "reference",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "text"
+            },
+            {
+              "name": "chargeFor_monthly",
+              "type": "text"
+            },
+            {
+              "name": "dueDate",
+              "type": "text"
+            },
+            {
+              "name": "chargeType",
+              "type": "text"
+            },
+            {
+              "name": "chargeFor_session",
+              "type": "text"
+            },
+            {
+              "name": "basetotal",
+              "type": "number"
+            },
+            {
+              "name": "discountotal",
+              "type": "number"
+            },
+            {
+              "name": "chargeDate",
+              "type": "text"
+            },
+            {
+              "name": "payments",
+              "type": "text"
+            },
+            {
+              "name": "created",
+              "type": "text"
+            },
+            {
+              "name": "updated",
+              "type": "text"
+            },
+            {
+              "name": "createdby",
+              "type": "number"
+            },
+            {
+              "name": "updatedby",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "payment_uuid",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "charges",
+          "type": "array",
+          "sub": [
+            {
+              "name": "uuid",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "family_uuid",
+              "type": "text"
+            },
+            {
+              "name": "family",
+              "type": "number"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            },
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "reference",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "text"
+            },
+            {
+              "name": "chargeFor_monthly",
+              "type": "text"
+            },
+            {
+              "name": "dueDate",
+              "type": "text"
+            },
+            {
+              "name": "chargeType",
+              "type": "text"
+            },
+            {
+              "name": "chargeFor_session",
+              "type": "text"
+            },
+            {
+              "name": "basetotal",
+              "type": "number"
+            },
+            {
+              "name": "discountotal",
+              "type": "number"
+            },
+            {
+              "name": "chargeDate",
+              "type": "text"
+            },
+            {
+              "name": "payments",
+              "type": "text"
+            },
+            {
+              "name": "created",
+              "type": "text"
+            },
+            {
+              "name": "updated",
+              "type": "text"
+            },
+            {
+              "name": "createdby",
+              "type": "number"
+            },
+            {
+              "name": "updatedby",
+              "type": "number"
+            },
+            {
+              "name": "lines",
+              "type": "array",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "payment_enrolcharge_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "payment_amount"
+                }
+              ]
+            },
+            {
+              "name": "towards_current_charge",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "payment_enrolcharge_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "payment_amount",
+                  "type": "number"
+                }
+              ]
+            }
+          ]
         }
       ],
       "outputType": "array"
@@ -6360,20 +6648,9 @@ dmx.config({
     "rp_phones": {
       "meta": [
         {
-          "type": "number",
-          "name": "id"
-        },
-        {
+          "name": "number",
           "type": "text",
-          "name": "phone"
-        },
-        {
-          "type": "number",
-          "name": "guardianId"
-        },
-        {
-          "type": "number",
-          "name": "type"
+          "sub": []
         }
       ],
       "outputType": "array"
@@ -6391,6 +6668,812 @@ dmx.config({
             {
               "name": "dates",
               "type": "array"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_selectedGuardian": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "phoneNumbers",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "emailAddresses",
+          "type": "text"
+        },
+        {
+          "name": "phoneNumbersArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "phone"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        },
+        {
+          "name": "emailAddressesArray",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "address"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_STRIPE_payment_methods": {
+      "meta": [
+        {
+          "name": "acss_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_acss_debit"
+        },
+        {
+          "name": "afterpay_clearpay",
+          "type": "object",
+          "ref": "stripe_payment_method_afterpay_clearpay"
+        },
+        {
+          "name": "alipay",
+          "type": "object",
+          "ref": "stripe_payment_flows_private_payment_methods_alipay"
+        },
+        {
+          "name": "au_becs_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_au_becs_debit"
+        },
+        {
+          "name": "bacs_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_bacs_debit"
+        },
+        {
+          "name": "bancontact",
+          "type": "object",
+          "ref": "stripe_payment_method_bancontact"
+        },
+        {
+          "name": "billing_details",
+          "type": "object",
+          "ref": "stripe_billing_details"
+        },
+        {
+          "name": "boleto",
+          "type": "object",
+          "ref": "stripe_payment_method_boleto"
+        },
+        {
+          "name": "card",
+          "type": "object",
+          "ref": "stripe_payment_method_card"
+        },
+        {
+          "name": "card_present",
+          "type": "object",
+          "ref": "stripe_payment_method_card_present"
+        },
+        {
+          "name": "created",
+          "type": "number"
+        },
+        {
+          "name": "customer",
+          "type": "text",
+          "expand": [
+            "stripe_customer"
+          ]
+        },
+        {
+          "name": "eps",
+          "type": "object",
+          "ref": "stripe_payment_method_eps"
+        },
+        {
+          "name": "fpx",
+          "type": "object",
+          "ref": "stripe_payment_method_fpx"
+        },
+        {
+          "name": "giropay",
+          "type": "object",
+          "ref": "stripe_payment_method_giropay"
+        },
+        {
+          "name": "grabpay",
+          "type": "object",
+          "ref": "stripe_payment_method_grabpay"
+        },
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "ideal",
+          "type": "object",
+          "ref": "stripe_payment_method_ideal"
+        },
+        {
+          "name": "interac_present",
+          "type": "object",
+          "ref": "stripe_payment_method_interac_present"
+        },
+        {
+          "name": "livemode",
+          "type": "boolean"
+        },
+        {
+          "name": "metadata",
+          "type": "object"
+        },
+        {
+          "name": "object",
+          "type": "text"
+        },
+        {
+          "name": "oxxo",
+          "type": "object",
+          "ref": "stripe_payment_method_oxxo"
+        },
+        {
+          "name": "p24",
+          "type": "object",
+          "ref": "stripe_payment_method_p24"
+        },
+        {
+          "name": "sepa_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_sepa_debit"
+        },
+        {
+          "name": "sofort",
+          "type": "object",
+          "ref": "stripe_payment_method_sofort"
+        },
+        {
+          "name": "type",
+          "type": "text"
+        },
+        {
+          "name": "wechat_pay",
+          "type": "object",
+          "ref": "stripe_payment_method_wechat_pay"
+        }
+      ],
+      "outputType": "array"
+    },
+    "guardianTableRepeat": {
+      "meta": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "primaryGuardian",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "phoneNumbers",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "emailAddresses",
+          "type": "text"
+        },
+        {
+          "name": "is_pg",
+          "type": "number"
+        },
+        {
+          "name": "phones",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "phone"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            },
+            {
+              "type": "number",
+              "name": "guardian_uuid"
+            }
+          ]
+        },
+        {
+          "name": "emails",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "address"
+            },
+            {
+              "type": "number",
+              "name": "guardianId"
+            },
+            {
+              "type": "text",
+              "name": "guardian_uuid"
+            },
+            {
+              "type": "number",
+              "name": "type"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_family_charges": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor_monthly",
+          "type": "date"
+        },
+        {
+          "name": "dueDate",
+          "type": "date"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor_session",
+          "type": "number"
+        },
+        {
+          "name": "basetotal",
+          "type": "number"
+        },
+        {
+          "name": "discountotal",
+          "type": "number"
+        },
+        {
+          "name": "chargeDate",
+          "type": "date"
+        },
+        {
+          "name": "payments",
+          "type": "object",
+          "sub": [
+            {
+              "name": "lines",
+              "type": "array",
+              "sub": [
+                {
+                  "type": "number",
+                  "name": "paymentid"
+                },
+                {
+                  "type": "number",
+                  "name": "amount"
+                },
+                {
+                  "type": "text",
+                  "name": "studentFirst"
+                },
+                {
+                  "type": "text",
+                  "name": "studentLast"
+                },
+                {
+                  "type": "date",
+                  "name": "classDate"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolGrandTotal"
+                },
+                {
+                  "type": "text",
+                  "name": "dayName"
+                },
+                {
+                  "type": "text",
+                  "name": "startTimeDisplay"
+                },
+                {
+                  "type": "text",
+                  "name": "levelName"
+                },
+                {
+                  "type": "text",
+                  "name": "instructorFirst"
+                },
+                {
+                  "type": "text",
+                  "name": "instructorLast"
+                },
+                {
+                  "type": "text",
+                  "name": "ennetrate"
+                },
+                {
+                  "type": "number",
+                  "name": "payment_uuid"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "created",
+          "type": "date"
+        },
+        {
+          "name": "updated",
+          "type": "date"
+        },
+        {
+          "name": "createdby",
+          "type": "number"
+        },
+        {
+          "name": "updatedby",
+          "type": "number"
+        },
+        {
+          "name": "payments",
+          "type": "array",
+          "sub": [
+            {
+              "name": "lines",
+              "type": "array",
+              "sub": [
+                {
+                  "type": "number",
+                  "name": "paymentid"
+                },
+                {
+                  "type": "number",
+                  "name": "amount"
+                },
+                {
+                  "type": "text",
+                  "name": "studentFirst"
+                },
+                {
+                  "type": "text",
+                  "name": "studentLast"
+                },
+                {
+                  "type": "date",
+                  "name": "classDate"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolGrandTotal"
+                },
+                {
+                  "type": "text",
+                  "name": "dayName"
+                },
+                {
+                  "type": "text",
+                  "name": "startTimeDisplay"
+                },
+                {
+                  "type": "text",
+                  "name": "levelName"
+                },
+                {
+                  "type": "text",
+                  "name": "instructorFirst"
+                },
+                {
+                  "type": "text",
+                  "name": "instructorLast"
+                },
+                {
+                  "type": "text",
+                  "name": "ennetrate"
+                },
+                {
+                  "type": "number",
+                  "name": "payment_uuid"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "query_balance",
+          "type": "array",
+          "sub": [
+            {
+              "name": "paid",
+              "type": "number"
+            },
+            {
+              "name": "charge_total",
+              "type": "number"
+            },
+            {
+              "name": "owing",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "balance",
+          "type": "array",
+          "sub": [
+            {
+              "name": "paid",
+              "type": "number"
+            },
+            {
+              "name": "charge_total",
+              "type": "number"
+            },
+            {
+              "name": "owing",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "overdue",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "students",
+          "type": "array",
+          "sub": [
+            {
+              "name": "enrolments",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "classTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolid",
+                  "type": "number"
+                },
+                {
+                  "name": "charge_enrolment_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "charge_uuid",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolment_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "student",
+                  "type": "number"
+                },
+                {
+                  "name": "startDate",
+                  "type": "date"
+                },
+                {
+                  "name": "dropDate",
+                  "type": "date"
+                },
+                {
+                  "name": "classStartTime",
+                  "type": "text"
+                },
+                {
+                  "name": "classEndTime",
+                  "type": "text"
+                },
+                {
+                  "name": "classLevelName",
+                  "type": "text"
+                },
+                {
+                  "name": "classDay",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorFirst",
+                  "type": "text"
+                },
+                {
+                  "name": "instructorLast",
+                  "type": "text"
+                },
+                {
+                  "name": "classId",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolment_charges",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "type": "text",
+                      "name": "uuid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "id"
+                    },
+                    {
+                      "type": "date",
+                      "name": "startofweek"
+                    },
+                    {
+                      "type": "number",
+                      "name": "classId"
+                    },
+                    {
+                      "type": "number",
+                      "name": "studentid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "student_uuid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "classTypeId"
+                    },
+                    {
+                      "type": "number",
+                      "name": "enrolid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "enrolment_uuid"
+                    },
+                    {
+                      "type": "date",
+                      "name": "classDate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "baseRate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "endisc"
+                    },
+                    {
+                      "type": "text",
+                      "name": "ennetrate"
+                    },
+                    {
+                      "type": "text",
+                      "name": "endiscdescription"
+                    },
+                    {
+                      "type": "text",
+                      "name": "endiscrate"
+                    },
+                    {
+                      "type": "text",
+                      "name": "familydiscountdesc"
+                    },
+                    {
+                      "type": "text",
+                      "name": "familydiscountrate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "familydiscounttotal"
+                    },
+                    {
+                      "type": "number",
+                      "name": "enrolGrandTotal"
+                    },
+                    {
+                      "type": "number",
+                      "name": "chargeId"
+                    },
+                    {
+                      "type": "number",
+                      "name": "charge_uuid"
+                    },
+                    {
+                      "type": "text",
+                      "name": "lineInvNumber"
+                    },
+                    {
+                      "type": "number",
+                      "name": "isvalid"
+                    },
+                    {
+                      "type": "text",
+                      "name": "debuggerstatus"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "tbl_rp_payments": {
+      "meta": [
+        {
+          "name": "lines",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "paymentid"
+            },
+            {
+              "type": "number",
+              "name": "amount"
+            },
+            {
+              "type": "text",
+              "name": "studentFirst"
+            },
+            {
+              "type": "text",
+              "name": "studentLast"
+            },
+            {
+              "type": "date",
+              "name": "classDate"
+            },
+            {
+              "type": "number",
+              "name": "enrolGrandTotal"
+            },
+            {
+              "type": "text",
+              "name": "dayName"
+            },
+            {
+              "type": "text",
+              "name": "startTimeDisplay"
+            },
+            {
+              "type": "text",
+              "name": "levelName"
+            },
+            {
+              "type": "text",
+              "name": "instructorFirst"
+            },
+            {
+              "type": "text",
+              "name": "instructorLast"
+            },
+            {
+              "type": "text",
+              "name": "ennetrate"
+            },
+            {
+              "type": "number",
+              "name": "payment_uuid"
             }
           ]
         }
@@ -6755,6 +7838,47 @@ dmx.config({
     "var_stripeOnboardingText": {
       "meta": null,
       "outputType": "boolean"
+    },
+    "cr_classlevelsSettings": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "name"
+        },
+        {
+          "type": "boolean",
+          "name": "isValid"
+        },
+        {
+          "type": "text",
+          "name": "colour"
+        },
+        {
+          "type": "number",
+          "name": "order"
+        },
+        {
+          "type": "number",
+          "name": "classType"
+        },
+        {
+          "type": "text",
+          "name": "longName"
+        },
+        {
+          "type": "text",
+          "name": "shortName"
+        },
+        {
+          "type": "text",
+          "name": "textcolour"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "classes": {
@@ -8117,11 +9241,11 @@ dmx.config({
     "guardianRepeat": {
       "meta": [
         {
-          "name": "id",
-          "type": "number"
+          "name": "uuid",
+          "type": "text"
         },
         {
-          "name": "primaryGuardian",
+          "name": "id",
           "type": "number"
         },
         {
@@ -8133,24 +9257,51 @@ dmx.config({
           "type": "text"
         },
         {
+          "name": "family",
+          "type": "number"
+        },
+        {
           "name": "relationship",
           "type": "number"
         },
         {
-          "name": "phoneNumbers",
-          "type": "text"
-        },
-        {
-          "name": "email",
-          "type": "text"
-        },
-        {
-          "name": "emailAddresses",
-          "type": "text"
-        },
-        {
-          "name": "plusEmails",
+          "name": "family_uuid",
           "type": "number"
+        },
+        {
+          "name": "default_email",
+          "type": "number"
+        },
+        {
+          "name": "default_phone",
+          "type": "number"
+        },
+        {
+          "name": "phones",
+          "type": "array",
+          "sub": [
+            {
+              "name": "number",
+              "type": "text",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "name": "emails",
+          "type": "array",
+          "sub": [
+            {
+              "name": "address",
+              "type": "text",
+              "sub": []
+            }
+          ]
+        },
+        {
+          "name": "primary",
+          "type": "text",
+          "sub": []
         }
       ],
       "outputType": "array"
@@ -8158,87 +9309,179 @@ dmx.config({
     "studentRepeat": {
       "meta": [
         {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
           "name": "id",
           "type": "number"
         },
         {
-          "name": "chargeAmount",
-          "type": "number"
-        },
-        {
-          "name": "chargeDateTo",
+          "name": "firstName",
           "type": "text"
         },
         {
-          "name": "chargeDateFrom",
+          "name": "lastName",
           "type": "text"
+        },
+        {
+          "name": "dob",
+          "type": "date"
         },
         {
           "name": "family",
           "type": "number"
         },
         {
-          "name": "description",
+          "name": "rollSheetComments",
           "type": "text"
         },
         {
-          "name": "title",
+          "name": "rollSheetMedical",
           "type": "text"
         },
         {
-          "name": "reference",
+          "name": "additionalMedical",
           "type": "text"
         },
         {
-          "name": "chargeFor",
+          "name": "gender",
           "type": "text"
         },
         {
-          "name": "dueDate",
-          "type": "text"
-        },
-        {
-          "name": "chargeType",
-          "type": "text"
-        },
-        {
-          "name": "totalPaid",
+          "name": "level",
           "type": "number"
         },
         {
-          "name": "totalOwing",
+          "name": "age",
+          "type": "text"
+        },
+        {
+          "name": "familyold",
           "type": "number"
         },
         {
-          "name": "owingLineItems",
+          "name": "student_notes",
           "type": "array",
           "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "content"
+            },
+            {
+              "type": "number",
+              "name": "student"
+            },
+            {
+              "type": "text",
+              "name": "student_uuid"
+            },
+            {
+              "type": "number",
+              "name": "priority"
+            },
+            {
+              "type": "text",
+              "name": "subject"
+            },
+            {
+              "type": "text",
+              "name": "status"
+            },
+            {
+              "type": "date",
+              "name": "date_created"
+            },
+            {
+              "type": "date",
+              "name": "date_closed"
+            },
+            {
+              "type": "number",
+              "name": "staff_created"
+            },
+            {
+              "type": "number",
+              "name": "staff_closed"
+            }
+          ]
+        },
+        {
+          "name": "note_count",
+          "type": "array",
+          "sub": [
+            {
+              "name": "uuid",
+              "type": "text"
+            },
             {
               "name": "id",
               "type": "number"
             },
             {
-              "name": "studentid",
-              "type": "number"
-            },
-            {
-              "name": "startofweek",
+              "name": "content",
               "type": "text"
             },
             {
-              "name": "enr_grandTotal",
+              "name": "student",
               "type": "number"
             },
             {
-              "name": "enrolid",
-              "type": "number"
-            },
-            {
-              "name": "remaining",
+              "name": "student_uuid",
               "type": "text"
             },
             {
-              "name": "totalPaid",
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "subject",
+              "type": "text"
+            },
+            {
+              "name": "status",
+              "type": "text"
+            },
+            {
+              "name": "date_created",
+              "type": "date"
+            },
+            {
+              "name": "date_closed",
+              "type": "date"
+            },
+            {
+              "name": "staff_created",
+              "type": "number"
+            },
+            {
+              "name": "staff_closed",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "grouped_priorities",
+          "type": "array",
+          "sub": [
+            {
+              "name": "note_count",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "priority_name",
               "type": "text"
             }
           ]
@@ -8611,55 +9854,35 @@ dmx.config({
     "studentLinesRepeat": {
       "meta": [
         {
-          "name": "id",
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "student_uuid",
+          "type": "text"
+        },
+        {
+          "name": "startofweek",
+          "type": "text"
+        },
+        {
+          "name": "enrolGrandTotal",
           "type": "number"
         },
         {
-          "name": "chargeAmount",
+          "name": "enrolment_uuid",
+          "type": "text"
+        },
+        {
+          "name": "classDate",
+          "type": "text"
+        },
+        {
+          "name": "remaining",
           "type": "number"
-        },
-        {
-          "name": "chargeDateTo",
-          "type": "text"
-        },
-        {
-          "name": "chargeDateFrom",
-          "type": "text"
-        },
-        {
-          "name": "family",
-          "type": "number"
-        },
-        {
-          "name": "description",
-          "type": "text"
-        },
-        {
-          "name": "title",
-          "type": "text"
-        },
-        {
-          "name": "reference",
-          "type": "text"
-        },
-        {
-          "name": "chargeFor",
-          "type": "text"
-        },
-        {
-          "name": "dueDate",
-          "type": "text"
-        },
-        {
-          "name": "chargeType",
-          "type": "text"
         },
         {
           "name": "totalPaid",
-          "type": "number"
-        },
-        {
-          "name": "totalOwing",
           "type": "number"
         },
         {
@@ -8667,24 +9890,24 @@ dmx.config({
           "type": "object",
           "sub": [
             {
-              "name": "startTimeDisplay",
-              "type": "text"
+              "type": "text",
+              "name": "startTimeDisplay"
             },
             {
-              "name": "instructorFirst",
-              "type": "text"
+              "type": "text",
+              "name": "instructorFirst"
             },
             {
-              "name": "instructorLast",
-              "type": "text"
+              "type": "text",
+              "name": "instructorLast"
             },
             {
-              "name": "levelName",
-              "type": "text"
+              "type": "text",
+              "name": "levelName"
             },
             {
-              "name": "dayName",
-              "type": "text"
+              "type": "text",
+              "name": "dayName"
             }
           ]
         }
@@ -8735,6 +9958,227 @@ dmx.config({
     },
     "rp_pi_selectedcharges": {
       "meta": null,
+      "outputType": "array"
+    },
+    "rp_charges": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "family_uuid",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "reference",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor_monthly",
+          "type": "text"
+        },
+        {
+          "name": "dueDate",
+          "type": "text"
+        },
+        {
+          "name": "chargeType",
+          "type": "text"
+        },
+        {
+          "name": "chargeFor_session",
+          "type": "text"
+        },
+        {
+          "name": "basetotal",
+          "type": "number"
+        },
+        {
+          "name": "discountotal",
+          "type": "number"
+        },
+        {
+          "name": "chargeDate",
+          "type": "text"
+        },
+        {
+          "name": "payments",
+          "type": "text"
+        },
+        {
+          "name": "created",
+          "type": "text"
+        },
+        {
+          "name": "updated",
+          "type": "text"
+        },
+        {
+          "name": "createdby",
+          "type": "number"
+        },
+        {
+          "name": "updatedby",
+          "type": "number"
+        },
+        {
+          "name": "paid",
+          "type": "number"
+        },
+        {
+          "name": "owing",
+          "type": "number"
+        },
+        {
+          "name": "students",
+          "type": "array",
+          "sub": [
+            {
+              "name": "id",
+              "type": "text"
+            },
+            {
+              "name": "firstName",
+              "type": "text"
+            },
+            {
+              "name": "lastName",
+              "type": "text"
+            },
+            {
+              "name": "family",
+              "type": "text"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            },
+            {
+              "name": "query_lineitems",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "student_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "startofweek",
+                  "type": "text"
+                },
+                {
+                  "name": "enrolGrandTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolment_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "classDate",
+                  "type": "text"
+                },
+                {
+                  "name": "remaining",
+                  "type": "number"
+                },
+                {
+                  "name": "totalPaid",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "name": "lineitems",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "student_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "startofweek",
+                  "type": "text"
+                },
+                {
+                  "name": "enrolGrandTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "enrolment_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "classDate",
+                  "type": "text"
+                },
+                {
+                  "name": "remaining",
+                  "type": "number"
+                },
+                {
+                  "name": "totalPaid",
+                  "type": "number"
+                },
+                {
+                  "name": "classDetails",
+                  "type": "object",
+                  "sub": [
+                    {
+                      "type": "text",
+                      "name": "startTimeDisplay"
+                    },
+                    {
+                      "type": "text",
+                      "name": "instructorFirst"
+                    },
+                    {
+                      "type": "text",
+                      "name": "instructorLast"
+                    },
+                    {
+                      "type": "text",
+                      "name": "levelName"
+                    },
+                    {
+                      "type": "text",
+                      "name": "dayName"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
       "outputType": "array"
     }
   },
@@ -8806,7 +10250,148 @@ dmx.config({
         "type": "number",
         "name": "paymentidentity"
       }
-    ]
+    ],
+    "rp_savePaymentMethods": {
+      "meta": [
+        {
+          "name": "acss_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_acss_debit"
+        },
+        {
+          "name": "afterpay_clearpay",
+          "type": "object",
+          "ref": "stripe_payment_method_afterpay_clearpay"
+        },
+        {
+          "name": "alipay",
+          "type": "object",
+          "ref": "stripe_payment_flows_private_payment_methods_alipay"
+        },
+        {
+          "name": "au_becs_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_au_becs_debit"
+        },
+        {
+          "name": "bacs_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_bacs_debit"
+        },
+        {
+          "name": "bancontact",
+          "type": "object",
+          "ref": "stripe_payment_method_bancontact"
+        },
+        {
+          "name": "billing_details",
+          "type": "object",
+          "ref": "stripe_billing_details"
+        },
+        {
+          "name": "boleto",
+          "type": "object",
+          "ref": "stripe_payment_method_boleto"
+        },
+        {
+          "name": "card",
+          "type": "object",
+          "ref": "stripe_payment_method_card"
+        },
+        {
+          "name": "card_present",
+          "type": "object",
+          "ref": "stripe_payment_method_card_present"
+        },
+        {
+          "name": "created",
+          "type": "number"
+        },
+        {
+          "name": "customer",
+          "type": "text",
+          "expand": [
+            "stripe_customer"
+          ]
+        },
+        {
+          "name": "eps",
+          "type": "object",
+          "ref": "stripe_payment_method_eps"
+        },
+        {
+          "name": "fpx",
+          "type": "object",
+          "ref": "stripe_payment_method_fpx"
+        },
+        {
+          "name": "giropay",
+          "type": "object",
+          "ref": "stripe_payment_method_giropay"
+        },
+        {
+          "name": "grabpay",
+          "type": "object",
+          "ref": "stripe_payment_method_grabpay"
+        },
+        {
+          "name": "id",
+          "type": "text"
+        },
+        {
+          "name": "ideal",
+          "type": "object",
+          "ref": "stripe_payment_method_ideal"
+        },
+        {
+          "name": "interac_present",
+          "type": "object",
+          "ref": "stripe_payment_method_interac_present"
+        },
+        {
+          "name": "livemode",
+          "type": "boolean"
+        },
+        {
+          "name": "metadata",
+          "type": "object"
+        },
+        {
+          "name": "object",
+          "type": "text"
+        },
+        {
+          "name": "oxxo",
+          "type": "object",
+          "ref": "stripe_payment_method_oxxo"
+        },
+        {
+          "name": "p24",
+          "type": "object",
+          "ref": "stripe_payment_method_p24"
+        },
+        {
+          "name": "sepa_debit",
+          "type": "object",
+          "ref": "stripe_payment_method_sepa_debit"
+        },
+        {
+          "name": "sofort",
+          "type": "object",
+          "ref": "stripe_payment_method_sofort"
+        },
+        {
+          "name": "type",
+          "type": "text"
+        },
+        {
+          "name": "wechat_pay",
+          "type": "object",
+          "ref": "stripe_payment_method_wechat_pay"
+        }
+      ],
+      "outputType": "array"
+    }
   },
   "payment_success": {
     "sessionStorage": [
@@ -8880,6 +10465,73 @@ dmx.config({
         {
           "name": "remainingBalance",
           "type": "number"
+        }
+      ],
+      "outputType": "array"
+    },
+    "receiptFilepath": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "tbrp_chargeLines": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "student_uuid",
+          "type": "number"
+        },
+        {
+          "name": "payment_uuid",
+          "type": "number"
+        },
+        {
+          "name": "enrolcharge_uuid",
+          "type": "number"
+        },
+        {
+          "name": "stripe_payment",
+          "type": "boolean"
+        },
+        {
+          "name": "item",
+          "type": "object",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "date",
+              "name": "startofweek"
+            },
+            {
+              "type": "text",
+              "name": "startTimeDisplay"
+            },
+            {
+              "type": "text",
+              "name": "classlevel_uuid"
+            },
+            {
+              "type": "text",
+              "name": "instructor_uuid"
+            },
+            {
+              "type": "number",
+              "name": "enrolGrandTotal"
+            }
+          ]
         }
       ],
       "outputType": "array"

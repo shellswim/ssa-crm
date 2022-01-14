@@ -3,7 +3,7 @@
     "$_GET": [
       {
         "type": "text",
-        "name": "familyid"
+        "name": "familyuuid"
       },
       {
         "type": "text",
@@ -84,15 +84,15 @@
               "condition": "AND",
               "rules": [
                 {
-                  "id": "families.id",
-                  "field": "families.id",
-                  "type": "double",
+                  "id": "families.uuid",
+                  "field": "families.uuid",
+                  "type": "string",
                   "operator": "equal",
-                  "value": "{{$_GET.familyid}}",
+                  "value": "{{$_GET.familyuuid}}",
                   "data": {
                     "table": "families",
-                    "column": "id",
-                    "type": "number"
+                    "column": "uuid",
+                    "type": "text"
                   },
                   "operation": "="
                 }
@@ -100,19 +100,24 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT families.*, guardians.*\nFROM families\nINNER JOIN guardians ON (guardians.family = families.id) LEFT JOIN addresses ON (addresses.id = families.address)\nWHERE families.id = :P1 /* {{$_GET.familyid}} */",
+            "query": "SELECT families.*, guardians.*\nFROM families\nINNER JOIN guardians ON (guardians.family = families.id) LEFT JOIN addresses ON (addresses.id = families.address)\nWHERE families.uuid = :P1 /* {{$_GET.familyuuid}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{$_GET.familyid}}"
+                "value": "{{$_GET.familyuuid}}"
               }
-            ]
+            ],
+            "orders": []
           }
         },
         "output": true,
         "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
           {
             "type": "number",
             "name": "id"
@@ -128,6 +133,10 @@
           {
             "type": "number",
             "name": "address"
+          },
+          {
+            "type": "text",
+            "name": "stripe_cust_id"
           },
           {
             "type": "text",
@@ -249,7 +258,7 @@
                   "field": "addresses.family",
                   "type": "double",
                   "operator": "equal",
-                  "value": "{{$_GET.familyid}}",
+                  "value": "{{$_GET.familyuuid}}",
                   "data": {
                     "table": "addresses",
                     "column": "family",
@@ -258,16 +267,15 @@
                   "operation": "="
                 }
               ],
-              "conditional": null,
               "valid": true
             },
-            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name, addresses.id\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.family = :P1 /* {{$_GET.familyid}} */",
+            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name, addresses.id\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.family = :P1 /* {{$_GET.familyuuid}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{$_GET.familyid}}"
+                "value": "{{$_GET.familyuuid}}"
               }
             ]
           }
@@ -1030,12 +1038,37 @@
               {
                 "table": "guardians",
                 "column": "family"
+              },
+              {
+                "table": "emails",
+                "column": "address"
               }
             ],
             "table": {
               "name": "guardians"
             },
-            "joins": [],
+            "joins": [
+              {
+                "table": "emails",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "emails",
+                      "column": "guardianId",
+                      "operator": "equal",
+                      "value": {
+                        "table": "guardians",
+                        "column": "id"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
             "wheres": {
               "condition": "AND",
               "rules": [
@@ -1056,7 +1089,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT firstName, lastName, id, relationship, family\nFROM guardians\nWHERE id = :P1 /* {{familyDetails.primaryGuardian}} */",
+            "query": "SELECT guardians.firstName, guardians.lastName, guardians.id, guardians.relationship, guardians.family, emails.address\nFROM guardians\nLEFT JOIN emails ON (emails.guardianId = guardians.id)\nWHERE guardians.id = :P1 /* {{familyDetails.primaryGuardian}} */",
             "params": [
               {
                 "operator": "equal",
@@ -1088,6 +1121,10 @@
           {
             "type": "number",
             "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "address"
           }
         ],
         "outputType": "object"

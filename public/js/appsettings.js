@@ -1,10 +1,10 @@
 function appSettingsObject() {
     var l = dmx.parse('appSettings.data.getSettings'),
-        cl = dmx.parse('getLevels.data.query'),
-        et = dmx.parse('enrolmentTypes.data.query'),
-        rl = dmx.parse('getRelationships.data.query'),
-        ct = dmx.parse('getContactTypes.data.contactTypes'),
-        ins = dmx.parse('getAllStaff.data.instructors.getInstructors'),
+        cl = dmx.parse('appSettings.data.query_levels'),
+        et = dmx.parse('appSettings.data.query_enroltypes'),
+        rl = dmx.parse('appSettings.data.query_relationships'),
+        ct = dmx.parse('appSettings.data.query_contacttypes'),
+        ins = dmx.parse('appSettings.data.query_instructors'),
         s = {},
         mn,
         mx,
@@ -65,7 +65,7 @@ function appSettingsObject() {
     // Levels by ID
     for (let i = 0; i < cl.length; i++) {
         let l = cl[i];
-        let n = l.name, c = l.colour, id = l.id, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName, tc = l.textcolour;
+        let n = l.name, c = l.colour, id = l.uuid, o = l.order, v = l.isValid, t = l.classType, ln = l.longName, sn = l.shortName, tc = l.textcolour;
         claid[id] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
@@ -81,7 +81,7 @@ function appSettingsObject() {
     // Instructors by ID & Array
     for (let i = 0; i < ins.length; i++) {
         let x = ins[i];
-        let id = x.id, truncn = x.firstName + ' ' + x.lastName.slice(0, 1) + '.', first = x.firstName, last = x.lastName;
+        let id = x.uuid, truncn = x.firstName + ' ' + x.lastName.slice(0, 1) + '.', first = x.firstName, last = x.lastName;
         instructors[id] = { "trunc_name": truncn, "firstName": first, "lastName": last, "id": id };
         instructors_array.push({ "trunc_name": truncn, "firstName": first, "lastName": last, "id": id });
     }

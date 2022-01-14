@@ -1,10 +1,10 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="confirmChargePayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{},dmxValidator:{},dmxStateManagement:{}}" moment_2="cdn with locales" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="confirmChargePayment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Collapse:{},dmxDatastore:{},dmxDatePicker:{},dmxMoment:{},dmxFormatter:{},dmxValidator:{},dmxStateManagement:{},dmxStripe:{},dmxSockets:{}}" moment_2="cdn with locales" -->
 <dmx-session-manager id="paymentSessionStorage"></dmx-session-manager>
-<dmx-serverconnect id="get_paymentintents" url="/api/families/ledger/payments/GET_paymentIntent" dmx-param:chargeids="" dmx-param:uuid="query.uuid"></dmx-serverconnect>
+<dmx-serverconnect id="get_paymentintents" url="/api/families/ledger/payments/GET_paymentIntent" dmx-param:chargeids="" dmx-param:uuid="query.uuid" sockets="true" dmx-param:payintent_uuid="query.payintent_uuid"></dmx-serverconnect>
 <dmx-local-manager id="successfulPaymentId"></dmx-local-manager>
-<dmx-serverconnect id="familyDetails" url="/api/familyParameters" dmx-param:familyid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="/api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid"></dmx-serverconnect>
 <dmx-datastore id="selectedChargesStore"></dmx-datastore>
-<dmx-datetime id="currentDateTime" utc="true"></dmx-datetime>
+<dmx-datetime id="currentDateTime"></dmx-datetime>
 <meta name="ac:route" content="/families/familydetail/:familyid/payment/confirm_payment">
 
 <main class="w-100 d-flex flex-grow-1 flex-direction-column align-items-start" dmx-style:padding-bottom.important="browser1.location.pathparts.contains('newFamilyPayment') ? '100px' : 'initial'">
@@ -22,70 +22,171 @@
         <section class="container p-4 bg-white border rounded-3">
             <div class="row">
                 <div class="col">
-                    <h4 class="fw-bold mb-4">Payment Details</h4>
+                    <h4 class="fw-bold mb-2">Payment Details</h4>
                 </div>
             </div>
             <div class="row row-cols-1" id="payment">
                 <div class="col">
-                    <form id="chargesSubmitForm" method="post" is="dmx-serverconnect-form" action="/api/families/ledger/addLinePayments" dmx-on:error="browser1.goto('/families/'+query.familyid+'/paymentError')" dmx-on:success="paymentSessionStorage.set('paymentidentity',chargesSubmitForm.data.insertPayment.identity);browser1.goto('/families/familydetail/'+query.familyid+'/payment/payment_success')">
-                        <div class="row">
-                            <div class="col">
-                                <div class="mb-3 row">
-                                    <label for="inp_paymentdateDisplay" class="col-sm-2 col-form-label">Payment Date:</label>
-                                    <div class="col-sm-3">
-                                        <input class="form-control" id="inp_paymentdateDisplay" name="paymentdate-display" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd')" type="date" required="" readonly="true">
-                                        <input class="form-control" id="inp_paymentdate" name="paymentdate" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd HH:mm:ss')" type="hidden" required="">
-                                    </div>
-                                </div>
-                                <div class="mb-3 row">
-                                    <label for="inp_title" class="col-sm-2 col-form-label">Title:</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="inp_title" name="title" aria-describedby="inp_title_help" placeholder="Enter Title" value="Tuition Payment" required="">
-                                    </div>
-                                </div>
-                                <div class="mb-3 row">
-                                    <label for="inp_amount" class="col-sm-2 col-form-label">Amount:</label>
-                                    <div class="col-auto">
-                                        <div class="input-group">
-                                            <span class="input-group-text" dmx-text="localization.data.localization.currrency_symbol">*</span>
-                                            <input type="number" class="form-control w-auto" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00" dmx-bind:value="get_paymentintents.data.query_paymentintent.total" readonly="true" required="" size="8">
+                    <div class="row" is="dmx-if" id="cr_externalPayment" dmx-bind:condition="!get_paymentintents.data.stripe_payment">
+                        <div class="col">
+                            <form method="post" action="/api/families/ledger/payments/SUBMIT_EXTERNAL_payment" dmx-on:success="run({run:{action:`browser1.goto(\'/families/familydetail/\'+query.familyid+\'/payment/payment_success?payment_uuid=\'+FORM_SUBMIT_external.data.exec.payment_uuid)`}})" is="dmx-serverconnect-form" id="FORM_SUBMIT_external">
+
+                                <input id="hd_inp_paymentintent" name="stripe_payment_intent" type="hidden" class="form-control" dmx-bind:value="get_paymentintents.data.retrievePaymentIntent.id">
+                                <input id="hd_inp_db_paymentintent" name="db_paymentintent_uuid" type="hidden" class="form-control" dmx-bind:value="query.payintent_uuid">
+                                <input id="hd_inp_family" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                                <div class="row flex-table gx-0">
+                                    <div class="col">
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Payment Date:</p>
+                                            </div>
+                                            <div class="col"><input class="form-control" id="inp_paymentdate" name="paymentdate" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd HH:mm:ss')" type="hidden" required=""><input class="form-control" id="inp_paymentdateDisplay" name="paymentdate-display" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd')" type="date" required="" readonly="true"></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Charge Title</p>
+                                            </div>
+                                            <div class="col"><input type="text" class="form-control" id="inp_title" name="title" aria-describedby="inp_title_help" placeholder="Enter Title" value="Tuition Payment" required=""></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Amount:</p>
+                                            </div>
+                                            <div class="col">
+                                                <div class="input-group">
+                                                    <span class="input-group-text" dmx-text="localization.data.localization.currency_symbol">*</span>
+                                                    <input type="number" class="form-control w-auto" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00" dmx-bind:value="get_paymentintents.data.query_paymentintent.total" readonly="true" required="" size="8">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-center mt-3" dmx-hide="get_paymentintents.data.stripe_payment">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Payment Type:</p>
+                                            </div>
+                                            <div class="col"><select id="payTypeSelect" name="paymentType" class="form-select" dmx-bind:repeat="{{paymentTypes.data.payTypes_Subs}}" is="dmx-repeat" required="">
+                                                    <optgroup dmx-bind:id="optgroup_{{$index}}" dmx-bind:label="{{pay_type_group}}" dmx-bind:repeat="{{paymentTypes}}" is="dmx-repeat">
+                                                        <option dmx-bind:value="{{id}}" dmx-text="{{pay_type}}"></option>
+                                                    </optgroup>
+                                                </select></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Reference:</p>
+                                            </div>
+                                            <div class="col"><input type="text" class="form-control" id="inp_payref" name="payref" aria-describedby="inp_payref_help" placeholder="Enter payment reference."></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Notes:</p>
+                                            </div>
+                                            <div class="col"><textarea rows="3" type="text" class="form-control" id="inp_notes" name="notes" aria-describedby="inp_notes_help" placeholder="Enter note."></textarea></div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mb-3 row">
-                                    <label for="inp_paymentType" class="col-sm-2 col-form-label"> Payment type:</label>
+                                <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="get_paymentintents.data.query_paymentintent_lines">
 
-                                    <div class="col-sm-3">
-                                        <select id="payTypeSelect" name="paymentType" class="form-select" dmx-bind:repeat="{{paymentTypes.data.payTypes_Subs}}" is="dmx-repeat" required="">
-                                            <optgroup dmx-bind:id="optgroup_{{$index}}" dmx-bind:label="{{pay_type_group}}" dmx-bind:repeat="{{paymentTypes}}" is="dmx-repeat">
-                                                <option dmx-bind:value="{{id}}" dmx-text="{{pay_type}}"></option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-3 row">
-                                    <label for="inp_payref" class="col-sm-2 col-form-label">Reference:</label>
-                                    <div class="col-sm-10">
-                                        <input type="text" class="form-control" id="inp_payref" name="payref" aria-describedby="inp_payref_help" placeholder="Enter payment reference.">
-                                    </div>
-                                </div>
-                                <div class="mb-3 row">
-                                    <label for="inp_notes" class="col-sm-2 col-form-label">Notes:</label>
-                                    <div class="col-sm-10">
-                                        <textarea rows="3" type="text" class="form-control" id="inp_notes" name="notes" aria-describedby="inp_notes_help" placeholder="Enter note."></textarea>
-                                    </div>
-                                </div>
-                                <input class="form-control" id="inp_family" name="family" aria-describedby="inp_family_help" placeholder="Enter Family" dmx-bind:value="query.familyid" type="hidden">
+                                    <input id="hd_inp_enrolchargeid" name="enrolchargeid" type="hidden" class="form-control" dmx-bind:value="enrolcharge_uuid" dmx-bind:name="record[{{$index}}][enrolchargeid]">
+                                    <input id="hd_inp_studentid" name="studentid" type="hidden" class="form-control" dmx-bind:value="student_uuid" dmx-bind:name="record[{{$index}}][studentid]">
+                                    <input id="hd_inp_amount" name="amount" type="hidden" class="form-control" dmx-bind:value="paymenttotal" dmx-bind:name="record[{{$index}}][amount]">
 
-                            </div>
+
+                                </div>
+                            </form>
                         </div>
-                        <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="get_paymentintents.data.query_paymentintent_lines">
+                    </div>
+                    <div class="row" is="dmx-if" id="cr_stripePayment" dmx-bind:condition="get_paymentintents.data.stripe_payment">
+                        <div class="col">
+                            <form method="post" action="/api/families/ledger/payments/SUBMIT_STRIPE_payment" dmx-on:success="run({run:{action:`browser1.goto(\'/families/familydetail/\'+query.familyid+\'/payment/payment_success?payment_uuid=\'+FORM_SUBMIT_stripe.data.payment_uuid)`}})" is="dmx-serverconnect-form" id="FORM_SUBMIT_stripe">
 
-                            <input id="hd_inp_enrolchargeid" name="enrolchargeid" type="hidden" class="form-control" dmx-bind:value="chargeid" dmx-bind:name="record[{{$index}}][enrolchargeid]">
-                            <input id="hd_inp_studentid" name="studentid" type="hidden" class="form-control" dmx-bind:value="studentid" dmx-bind:name="record[{{$index}}][studentid]">
-                            <input id="hd_inp_amount" name="amount" type="hidden" class="form-control" dmx-bind:value="paymenttotal" dmx-bind:name="record[{{$index}}][amount]">
+                                <input id="hd_inp_paymentintent" name="stripe_payment_intent" type="hidden" class="form-control" dmx-bind:value="get_paymentintents.data.retrievePaymentIntent.id">
+                                <input id="hd_inp_db_paymentintent" name="db_paymentintent_uuid" type="hidden" class="form-control" dmx-bind:value="query.uuid">
+                                <input id="hd_inp_family" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                                <div class="row flex-table gx-0">
+                                    <div class="col">
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Payment Date:</p>
+                                            </div>
+                                            <div class="col"><input class="form-control" id="inp_paymentdate" name="paymentdate" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd HH:mm:ss')" type="hidden" required=""><input class="form-control" id="inp_paymentdateDisplay" name="paymentdate-display" aria-describedby="inp_paymentdate_help" is="dmx-date-picker" format="YYYY-MM-DD" dmx-bind:value="currentDateTime.datetime.formatDate('yyyy-MM-dd')" type="date" required="" readonly="true"></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Charge Title</p>
+                                            </div>
+                                            <div class="col"><input type="text" class="form-control" id="inp_title" name="title" aria-describedby="inp_title_help" placeholder="Enter Title" value="Tuition Payment" required=""></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Amount:</p>
+                                            </div>
+                                            <div class="col">
+                                                <div class="input-group">
+                                                    <span class="input-group-text" dmx-text="localization.data.localization.currency_symbol">*</span>
+                                                    <input type="number" class="form-control w-auto" id="inp_amount" name="amount" aria-describedby="inp_amount_help" placeholder="20.00" dmx-bind:value="get_paymentintents.data.query_paymentintent.total" readonly="true" required="" size="8">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-center mt-3" dmx-hide="!get_paymentintents.data.stripe_payment">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Payment Method:</p>
+                                            </div>
+                                            <div class="col">
+
+                                                <div id="rp_savePaymentMethods" class="row row-cols-lg-2 row-cols-1 row-cols-xl-3" is="dmx-repeat" dmx-bind:repeat="get_paymentintents.data.listPaymentMethods.data">
+                                                    <div class="col">
+                                                        <div class="row g-0">
+
+                                                            <div class="col p-3 bg-white border rounded-3 clickable user-select-none cc-select position-relative" dmx-on:click="pmradio_toggle.check();pmradio.select()" dmx-class:selected="pmradio_toggle.checked">
+                                                                <input type="radio" class="btn-check" name="options" id="pmradio" autocomplete="off" dmx-bind:id="pmradio{{$index}}" dmx-bind:checked="pmradio_toggle.checked" dmx-bind:value="id" dmx-on:updated="run({serverConnect:{url:'/api/families/ledger/payments/UPDATE_STRIPE_PI_CARD_select',site:'SSA-CRM',params:{payment_method:`pmradio.value`,payment_intent:`get_paymentintents.data.retrievePaymentIntent.id`},name:'update_payment_intent'}})">
+                                                                <dmx-toggle id="pmradio_toggle" dmx-bind:checked="pmradio.checked"></dmx-toggle>
+                                                                <div class="d-block selected-check">
+                                                                    <i class="fas fa-check-circle fs-4 text-success fa-fw"></i>
+                                                                </div>
+                                                                <img src="/assets/images/payment_logos/credit_cards/mastercard.svg" width="50" id="logo_mastercard" loading="lazy" dmx-show="card.brand == 'mastercard'">
+                                                                <img src="/assets/images/payment_logos/credit_cards/amex.svg" width="50" id="logo_amex" loading="lazy" dmx-show="card.brand == 'amex'">
+                                                                <img src="/assets/images/payment_logos/credit_cards/visa.svg" width="50" id="logo_visa" loading="lazy" dmx-show="card.brand == 'visa'">
+                                                                <img src="/assets/images/payment_logos/credit_cards/china-union-pay.svg" width="50" id="logo_china_union_pay" loading="lazy" dmx-show="card.brand == 'unionpay'">
+                                                                <img src="/assets/images/payment_logos/credit_cards/discover.svg" width="50" id="logo_discover" loading="lazy" dmx-show="card.brand == 'discover'">
+                                                                <p class="mt-3 mb-0 fw-400 text-end text-muted" dmx-text="card.exp_month.toString().padStart(2, '0') +'/'+card.exp_year">Card Number:</p>
+                                                                <h4 class="mb-3 text-end" dmx-text="'**** '+card.last4">**** 7415</h4>
+                                                                <h5 class="my-2 fw-400 text-end" dmx-text="card.exp_month.toString().padStart(2, '0') +'/'+card.exp_year">Exp: 04/22</h5>
+
+
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Reference:</p>
+                                            </div>
+                                            <div class="col"><input type="text" class="form-control" id="inp_payref" name="payref" aria-describedby="inp_payref_help" placeholder="Enter payment reference."></div>
+                                        </div>
+                                        <div class="row align-items-center mt-3">
+                                            <div class="col">
+                                                <p for="inp_paymentdateDisplay" class="text-muted mb-0">Notes:</p>
+                                            </div>
+                                            <div class="col"><textarea rows="3" type="text" class="form-control" id="inp_notes" name="notes" aria-describedby="inp_notes_help" placeholder="Enter note."></textarea></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" is="dmx-repeat" id="rp_hiddenChargeInputs" dmx-bind:repeat="get_paymentintents.data.query_paymentintent_lines">
+
+                                    <input id="hd_inp_enrolchargeid" name="enrolcharge_uuid" type="hidden" class="form-control" dmx-bind:value="enrolcharge_uuid" dmx-bind:name="record[{{$index}}][enrolcharge_uuid]">
+                                    <input id="hd_inp_studentid" name="student_uuid" type="hidden" class="form-control" dmx-bind:value="student_uuid" dmx-bind:name="record[{{$index}}][student_uuid]">
+                                    <input id="hd_inp_amount" name="amount" type="hidden" class="form-control" dmx-bind:value="paymenttotal" dmx-bind:name="record[{{$index}}][amount]">
+
+
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+
+
 
 
                 </div>
@@ -95,7 +196,8 @@
             <div class="row">
                 <div class="col d-flex justify-content-between">
                     <a class="btn btn-secondary" href="#" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment/payment_options'"><i class="bi-arrow-left me-1"></i>Previous</a>
-                    <button type="submit" class="btn btn-success" href="#" form="chargesSubmitForm" dmx-bind:disabled="!get_paymentintents.data.query_paymentintent"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
+                    <button type="submit" class="btn btn-success" href="#" form="FORM_SUBMIT_external" dmx-bind:disabled="!get_paymentintents.data.query_paymentintent" dmx-show="!get_paymentintents.data.stripe_payment" id="btn_submitExternalForm"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
+                    <button type="submit" class="btn btn-success" href="#" form="FORM_SUBMIT_stripe" dmx-bind:disabled="!get_paymentintents.data.query_paymentintent" dmx-show="get_paymentintents.data.stripe_payment" id="btn_submitStripeForm"><i class="bi-cart-check-fill me-1"></i>Submit Payment</button>
 
                 </div>
             </div>

@@ -23,7 +23,7 @@ if(!inf && !lf && !tf) {
 }
 
 for(std in data) {
-  data[std]= _.groupBy(data[std], 'day_int');
+  data[std]= _.groupBy(data[std], 'day');
   if(!filters.day_filter) {
     transdata.days = [];
     for(i=1;i<=7;i++) {

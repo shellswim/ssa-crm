@@ -1,0 +1,495 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "number",
+        "name": "offset"
+      },
+      {
+        "type": "number",
+        "name": "limit"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "textfilter"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "family",
+        "module": "dbconnector",
+        "action": "paged",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "families",
+                "column": "*"
+              },
+              {
+                "table": "guardians",
+                "column": "firstName"
+              },
+              {
+                "table": "guardians",
+                "column": "lastName"
+              },
+              {
+                "table": "guardians",
+                "column": "default_email"
+              },
+              {
+                "table": "guardians",
+                "column": "default_phone"
+              }
+            ],
+            "table": {
+              "name": "families"
+            },
+            "joins": [
+              {
+                "table": "guardians",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "guardians",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "families",
+                        "column": "guardian_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "query": "SELECT families.*, guardians.firstName, guardians.lastName, guardians.default_email, guardians.default_phone\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid)",
+            "params": [],
+            "orders": []
+          }
+        },
+        "meta": [
+          {
+            "name": "offset",
+            "type": "number"
+          },
+          {
+            "name": "limit",
+            "type": "number"
+          },
+          {
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "name": "page",
+            "type": "object",
+            "sub": [
+              {
+                "name": "offset",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "first",
+                    "type": "number"
+                  },
+                  {
+                    "name": "prev",
+                    "type": "number"
+                  },
+                  {
+                    "name": "next",
+                    "type": "number"
+                  },
+                  {
+                    "name": "last",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "current",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "data",
+            "type": "array",
+            "sub": [
+              {
+                "type": "text",
+                "name": "uuid"
+              },
+              {
+                "type": "number",
+                "name": "id"
+              },
+              {
+                "type": "number",
+                "name": "primaryGuardian"
+              },
+              {
+                "type": "number",
+                "name": "specialDiscount"
+              },
+              {
+                "type": "number",
+                "name": "address"
+              },
+              {
+                "type": "text",
+                "name": "stripe_cust_id"
+              },
+              {
+                "type": "text",
+                "name": "guardian_uuid"
+              },
+              {
+                "type": "text",
+                "name": "firstName"
+              },
+              {
+                "type": "text",
+                "name": "lastName"
+              },
+              {
+                "type": "number",
+                "name": "default_email"
+              },
+              {
+                "type": "number",
+                "name": "default_phone"
+              }
+            ]
+          }
+        ],
+        "outputType": "object",
+        "output": true
+      },
+      {
+        "name": "rp_family",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{family.data}}",
+          "outputFields": [
+            "uuid",
+            "id",
+            "primaryGuardian",
+            "specialDiscount",
+            "address",
+            "stripe_cust_id",
+            "guardian_uuid",
+            "firstName",
+            "lastName"
+          ],
+          "exec": {
+            "steps": [
+              {
+                "name": "primary_guardian",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "guardians",
+                        "column": "default_email"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "default_phone"
+                      }
+                    ],
+                    "table": {
+                      "name": "guardians"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "guardians.uuid",
+                          "field": "guardians.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{guardian_uuid}}",
+                          "data": {
+                            "table": "guardians",
+                            "column": "uuid",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT default_email, default_phone\nFROM guardians\nWHERE uuid = :P1 /* {{guardian_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{guardian_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "default_email"
+                  },
+                  {
+                    "type": "number",
+                    "name": "default_phone"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "phone_number",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "phoneNumbers",
+                        "column": "phone"
+                      }
+                    ],
+                    "table": {
+                      "name": "phoneNumbers"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "phoneNumbers.uuid",
+                          "field": "phoneNumbers.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{default_phone}}",
+                          "data": {
+                            "table": "phoneNumbers",
+                            "column": "uuid",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT phone\nFROM phoneNumbers\nWHERE uuid = :P1 /* {{default_phone}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{default_phone}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "phone"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "email",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "emails",
+                        "column": "address"
+                      }
+                    ],
+                    "table": {
+                      "name": "emails"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "emails.uuid",
+                          "field": "emails.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{default_email}}",
+                          "data": {
+                            "table": "emails",
+                            "column": "uuid",
+                            "type": "text"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT address\nFROM emails\nWHERE uuid = :P1 /* {{default_email}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{default_email}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [],
+                "outputType": "object"
+              },
+              {
+                "name": "query_student_names",
+                "module": "dbupdater",
+                "action": "custom",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "query": "SELECT GROUP_CONCAT(s.firstname SEPARATOR ', ') AS studentNames\nFROM students s\nWHERE s.family = :P1\nLIMIT 1",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "value": "{{uuid}}",
+                        "test": "fam_a4eb27ec625211ecae3e0242ac160002"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "studentNames",
+                    "type": "text"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "student_names",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{query_student_names[0].studentNames}}",
+                  "key": "student_names"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "primaryGuardian",
+            "type": "number"
+          },
+          {
+            "name": "specialDiscount",
+            "type": "number"
+          },
+          {
+            "name": "address",
+            "type": "number"
+          },
+          {
+            "name": "stripe_cust_id",
+            "type": "text"
+          },
+          {
+            "name": "guardian_uuid",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "default_email",
+            "type": "number"
+          },
+          {
+            "name": "default_phone",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}
