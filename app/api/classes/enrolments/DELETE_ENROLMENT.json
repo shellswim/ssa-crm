@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "uuid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "dropReason"
+      },
+      {
+        "type": "text",
+        "name": "debuggerstatus"
+      },
+      {
+        "type": "number",
+        "name": "chargeable"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "options": {
+          "comment": "**IMPORTANT**: Enrolments are never actually deleted. They are made inactive."
+        }
+      },
+      {
+        "name": "update_enrolment",
+        "module": "dbupdater",
+        "action": "update",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "update",
+            "values": [
+              {
+                "table": "enrolments",
+                "column": "isValid",
+                "type": "boolean",
+                "value": "{{0}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "dropReason",
+                "type": "text",
+                "value": "{{$_POST.dropReason}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "debuggerstatus",
+                "type": "text",
+                "value": "{{$_POST.debuggerstatus}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "deleted",
+                "type": "boolean",
+                "value": "1"
+              },
+              {
+                "table": "enrolments",
+                "column": "deleted_time",
+                "type": "number",
+                "value": "{{TIMESTAMP}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "chargeable",
+                "type": "number",
+                "value": "{{$_POST.chargeable}}"
+              }
+            ],
+            "table": "enrolments",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "uuid",
+                  "field": "uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.uuid}}",
+                  "data": {
+                    "column": "uuid"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "UPDATE enrolments\nSET isValid = :P1 /* {{0}} */, dropReason = :P2 /* {{$_POST.dropReason}} */, debuggerstatus = :P3 /* {{$_POST.debuggerstatus}} */, deleted = '1', deleted_time = :P4 /* {{TIMESTAMP}} */, chargeable = :P5 /* {{$_POST.chargeable}} */\nWHERE uuid = :P6 /* {{$_GET.uuid}} */",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{0}}"
+              },
+              {
+                "name": ":P2",
+                "type": "expression",
+                "value": "{{$_POST.dropReason}}"
+              },
+              {
+                "name": ":P3",
+                "type": "expression",
+                "value": "{{$_POST.debuggerstatus}}"
+              },
+              {
+                "name": ":P4",
+                "type": "expression",
+                "value": "{{TIMESTAMP}}"
+              },
+              {
+                "name": ":P5",
+                "type": "expression",
+                "value": "{{$_POST.chargeable}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P6",
+                "value": "{{$_GET.uuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      }
+    ]
+  }
+}

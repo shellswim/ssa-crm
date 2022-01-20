@@ -22,7 +22,7 @@ exports.tuitiondates = async function(options) {
     let currenttime = moment.utc().tz(tz.timezone);
 
     let chargeahead = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'billing_cycle_charge_ahead'`)).value;
-    let maxcharge = dbClientFlat(await db.raw(`SELECT MAX(chargeFor_monthly) AS value FROM charges_family WHERE family = ${fid}`)).value;
+    let maxcharge = dbClientFlat(await db.raw(`SELECT MAX(chargeFor_monthly) AS value FROM charges_family WHERE family_uuid = '${fid}'`)).value;
     // Start Date Manipulation
     const startdate = moment(options.startdate).startOf('month').format('YYYY-MM-DD');
     // return moment(maxcharge).isAfter(moment(startdate));
@@ -32,7 +32,7 @@ exports.tuitiondates = async function(options) {
         let c = 0;
         while(moment(dp).isSameOrBefore(moment(maxcharge))) {
             let sd = moment(dp).format('YYYY-MM-DD');
-            let dd_raw = dbClientFlat(await db.raw(`SELECT * FROM charges_family WHERE family = ${fid} AND chargeFor_monthly = '${sd}'`));
+            let dd_raw = dbClientFlat(await db.raw(`SELECT * FROM charges_family WHERE family_uuid = '${fid}' AND chargeFor_monthly = '${sd}'`));
             let dd = dd_raw ? moment(dd_raw.dueDate).format('YYYY-MM-DD') : null;
             let cd = dd_raw ? moment(dd_raw.chargeDate).format('YYYY-MM-DD') : null;
 

@@ -4,6 +4,7 @@ const _ = require('underscore');
 const {
     performance
 } = require('perf_hooks');
+const mathjs = require('mathjs');
 
 exports.classAvail = async function (options) {
     options = this.parse(options);
@@ -38,7 +39,7 @@ exports.classAvail = async function (options) {
         let classmax = await db.raw('SELECT max FROM classes WHERE id = ?', [options.classid]);
         classmax = dbClient(classmax).max;
 
-        let classresponse = await classProcess(wed, options.classid, classmax);
+        let classresponse = await classProcess(wed, options.classid, classmax, options.classdump);
 
         return classresponse;
     }
@@ -54,14 +55,6 @@ exports.classAvail = async function (options) {
         maxtime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
         stt = mintime;
 
-        // Get Dump of All Enrolments in All Classes
-        let enroldump = dbClientEnrols(await db.raw(`
-        SELECT e.uuid, e.student_uuid, e.class_uuid, e.startDate, e.dropDate, e.isTransferIn, e.isTransferOut, e.transferToStart, e.enrolmentType, s.firstName, s.lastName, s.dob, s.age, s.family 
-        FROM enrolments e LEFT JOIN students s ON e.student_uuid = s.uuid 
-        WHERE (e.dropDate >= '${moment(options.startDate).clone().format('YYYY-MM-DD')}' OR e.dropDate IS NULL) 
-            AND e.isValid = true
-        `));
-
         while (stt < maxtime) {
             ts_arr.push(stt);
             stt += calint;
@@ -76,7 +69,14 @@ exports.classAvail = async function (options) {
             c.optsd = options.startdate;
             c.wed = wed;
 
-            c.details = await classProcess(wed, c.id, c.max, c, enroldump);
+            c.details = await classProcess(wed, c.id, c.max, c);
+            c.waitlists = await waitlists(c);
+
+            for (let i = 0; i < c.details.enrolments.length; i++) {
+                let e = c.details.enrolments[i];
+                let att = await attendance(e);
+                e.attendance = att || null;
+            }
 
         }
         let pend = performance.now();
@@ -105,54 +105,65 @@ exports.classAvail = async function (options) {
         return classresponse;
     }
 
-    async function classProcess(wed, classid, classmax, classinfo, e) {
+    async function classProcess(wed, classid, classmax, classinfo) {
         let pstartclass = performance.now();
-        let ci = classinfo;
-        let enr_total = [];
-        let wd = wed.clone();
-        let wda = [];
-        // let enr_all = [];
+        // wd = Weekday, wda = Weekday Array
+        let ci = classinfo,
+            e = JSON.parse(ci.enrolments),
+            wd = wed.clone(),
+            wd_unix = moment(wd).unix(),
+            enr_total = [],
+            wda = [],
+            eca = [],
+            att = [],
+            absence = [];
+
         let startd = moment(options.startdate),
             endd = moment(options.enddate);
 
-        let active_enrols = _.filter(e, function(enrolment) {
-            return enrolment.enrolmentType == 1 && enrolment.class_uuid == ci.uuid;
-            }),
-            makeup_enrols = _.filter(e, function(enrolment) {
-                return enrolment.enrolmentType == 2 && enrolment.class_uuid == ci.uuid;
-            }),
-            trial_enrols = _.filter(e, function(enrolment) {
-                return enrolment.enrolmentType == 3 && enrolment.class_uuid == ci.uuid;
-            }),
-            casual_enrols = _.filter(e, function(enrolment) {
-                return enrolment.enrolmentType == 5 && enrolment.class_uuid == ci.uuid;
-            }),
-            waitlisted;
-
-        // GET WAITLIST
-        waitlisted = dbClientEnrols(await db.raw(`
-            SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family 
-            FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
-            WHERE (w.endtimedec >= ${ci.endTimeDecimal} 
-                AND w.starttimedec <= ${ci.startTimeDecimal} 
-                AND w.dayint = '${ci.day}' 
-                AND (w.instructor_uuid = '${ci.instructor_uuid}' 
-                    OR w.instructor IS NULL) 
-                AND w.fulfil_date IS NULL 
-                AND (w.classlevel = '${ci.uuid}'
-                    OR w.classlevel IS NULL))`));
-
         ///// Availabilities
         for (let i = 0; i < max; i++) {
-            // DB Query
-            let q = dbClient(await db.raw('SELECT COUNT(id) AS total FROM enrolments WHERE classId = ? AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true AND startDate <= ?', [classid, startd.format('YYYY-MM-DD'), endd.format('YYYY-MM-DD')])).total;
+            let enrolcount = {
+                "active_enrols": 0,
+                "makeup_enrols": 0,
+                "trial_enrols": 0,
+                "casual_enrols": 0,
+            };
+            Object.keys(e).forEach(key => {
+                // et = enrolment type => loops through enrolment object from MySQL db.
+                let et = e[key];
+                if (et !== null) {
+                    // Loop through enrolments in enrolment object.
+                    for (let j = 0; j < et.length; j++) {
+                        // **** en = current enrolment in loop.
+                        let en = et[j];
+                        let estart = moment(en.startDate),
+                            edrop = moment(en.dropDate);
+                        if (estart.isSameOrBefore(endd) && (!en.dropDate || edrop.isSameOrAfter(startd))) {
+                            enrolcount[key] += 1;
 
-            // Add total to array
-            enr_total.push(q);
-
-            // To test enrolments output.
-            // let r = dbClient(await db.raw('SELECT * FROM enrolments WHERE classId = ? AND (dropDate >= ? OR dropDate IS NULL) AND isValid = true AND startDate <= ?', [classid, startd.format('YYYY-MM-DD'), endd.format('YYYY-MM-DD')]));
-            // enr_all.push(r);
+                            // WHILE IN AVAILABILITIES, GET ATTENDANCE RECORDS AND GET ABSENCES FOR CURRENT WEEK.
+                            (async () => {
+                                // let timestamps = {
+                                //     'weekday': wd_unix,
+                                //     'starttime': mathjs.sum((ci.startTimeDecimal * 3600) + wd_unix),
+                                //     'endtime': mathjs.sum((ci.endTimeDecimal * 3600) + wd_unix)
+                                // }
+                                let att = await attendance(en);
+                                en.attendance = att || null;
+                                // let absence = await absences(en, timestamps);
+                            })();
+                        }
+                    }
+                } else {
+                    enrolcount[key] = 0;
+                }
+            });
+            let val = 0;
+            Object.keys(enrolcount).forEach(key => {
+                val += enrolcount[key] || 0;
+            });
+            enr_total.push(val);
 
             wda.push(wd.format('YYYY-MM-DD'));
             startd = startd.clone().add(7, 'days');
@@ -203,28 +214,63 @@ exports.classAvail = async function (options) {
         };
 
         let endmax = enr_total.lastIndexOf(classmax);
-        let nextactive = moment(wda[endmax + 1]) || 0;
-        if (nextactive.isBefore(moment()) && nextactive != 0) {
-            nextactive.add(7, 'd');
+        let nextactive = wda[endmax + 1] ? moment(wda[endmax + 1]) : null;
+        if (nextactive != 0 && nextactive != null) {
+            if (nextactive.isBefore(moment())) {
+                nextactive.add(7, 'd');
+            }
         }
         let pendclass = performance.now();
         process_time_array.push(((pendclass - pstartclass) / 1000));
         return {
             'process_time': (pendclass - pstartclass) / 1000,
-            'active': nextactive.format('YYYY-MM-DD') || 0,
+            'enrolcount': eca,
+            'active': nextactive ? nextactive.format('YYYY-MM-DD') : null,
             'makeup': mu_avail,
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
             'total': Math.max(...enr_total),
             'weekday': wd,
-            'enrolments': {
-                'active_enrols': active_enrols,
-                'makeup_enrols': makeup_enrols,
-                'trial_enrols': trial_enrols,
-                'casual_enrols': casual_enrols,
-                'waitlist': waitlisted
-            }
+            'enrolments': e
         };
+    }
+
+    async function waitlists(c) {
+        let ci = c;
+        // GET WAITLIST
+        let waitlisted = dbClientArray(await db.raw(`
+        SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family, s.uuid 
+        FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
+        WHERE (w.endtimedec >= ${ci.endTimeDecimal} 
+            AND w.starttimedec <= ${ci.startTimeDecimal} 
+            AND w.dayint = '${ci.day}' 
+            AND (w.instructor_uuid = '${ci.instructor_uuid}' 
+                OR w.instructor_uuid IS NULL) 
+            AND w.fulfil_date IS NULL 
+            AND (w.classlevel_uuid = '${ci.classlevel_uuid}'
+                OR w.classlevel_uuid IS NULL))
+        ORDER BY w.request_date`));
+
+        return waitlisted.length === 0 ? null : waitlisted;
+    }
+
+    async function attendance(e) {
+        let att = dbClientArray(await db.raw(`
+            SELECT *
+            FROM attendance a 
+            WHERE a.enrolment_uuid = '${e.uuid}'
+            ORDER BY attendance_date DESC
+            LIMIT 5
+        `));
+        return att;
+    }
+
+    async function absences(e, times) {
+        let a = dbClient(await db.raw(`
+        SELECT *
+        FROM absences a 
+        WHERE a.enrolment_uuid = '${e.uuid}'
+    `));
     }
 
     function dbClient(v) {
@@ -235,7 +281,7 @@ exports.classAvail = async function (options) {
         }
     }
 
-    function dbClientEnrols(v) {
+    function dbClientArray(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
             return v[0];
         } else if (db.client.config.client == 'postgres' || db.client.config.client == 'redshift') {

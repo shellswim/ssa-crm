@@ -16,5 +16,8 @@ module.exports = {
     },
     unstringify: function(val) {
         return JSON.parse(val);
+    },
+    stringify: function(val) {
+        return JSON.stringify(val);
     }
 }

@@ -227,7 +227,7 @@ exports.tuitioncalc = async function (options) {
                     'monthtocharge': mtp.format('YYYY-MM-DD'),
                     'monthlychargeexists': {
                         'exists': hascharge_monthly,
-                        'chargeid': findexistingcharge.length >= 2 ? 'Error: Multiple charges for this period exist. Error must be corrected before proceeding.' : hascharge_monthly ? findexistingcharge[0].id : null,
+                        'charge_uuid': findexistingcharge.length >= 2 ? 'Error: Multiple charges for this period exist. Error must be corrected before proceeding.' : hascharge_monthly ? findexistingcharge[0].uuid : null,
                         'status': findexistingcharge.length > 1 ? 409 : 200,
                         'created': findexistingcharge[0] ? findexistingcharge[0].created : null 
                     },
@@ -324,7 +324,7 @@ exports.tuitioncalc = async function (options) {
             let cd = dr_current.weekarr[i];
             enrols[cd.startofweek] = {};
             let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day AS classday, c.classType AS classType, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid
+            SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid
             FROM enrolments e 
                 LEFT JOIN students s ON e.student_uuid = s.uuid
                 LEFT JOIN classes c ON e.class_uuid = c.uuid 

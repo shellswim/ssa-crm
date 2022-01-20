@@ -11,7 +11,7 @@
       },
       {
         "type": "text",
-        "name": "familyid"
+        "name": "family_uuid"
       }
     ]
   },
@@ -44,18 +44,37 @@
                     "type": "date"
                   },
                   "operation": ">="
+                },
+                {
+                  "id": "charges_family.family_uuid",
+                  "field": "charges_family.family_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_PARAM.family_uuid}}",
+                  "data": {
+                    "table": "charges_family",
+                    "column": "family_uuid",
+                    "type": "number"
+                  },
+                  "operation": "="
                 }
               ],
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT *\nFROM charges_family\nWHERE chargeFor_monthly >= :P1 /* {{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}} */",
+            "query": "SELECT *\nFROM charges_family\nWHERE chargeFor_monthly >= :P1 /* {{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}} */ AND family_uuid = :P2 /* {{$_PARAM.family_uuid}} */",
             "params": [
               {
                 "operator": "greater_or_equal",
                 "type": "expression",
                 "name": ":P1",
                 "value": "{{$_PARAM.startdate.startMonth().formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_PARAM.family_uuid}}"
               }
             ],
             "orders": []
@@ -65,20 +84,24 @@
         "output": true,
         "meta": [
           {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
             "type": "number",
             "name": "id"
           },
           {
             "type": "number",
-            "name": "total"
+            "name": "family_uuid"
           },
           {
             "type": "number",
             "name": "family"
           },
           {
-            "type": "text",
-            "name": "description"
+            "type": "number",
+            "name": "total"
           },
           {
             "type": "text",
@@ -87,6 +110,10 @@
           {
             "type": "text",
             "name": "reference"
+          },
+          {
+            "type": "text",
+            "name": "description"
           },
           {
             "type": "date",
@@ -115,6 +142,10 @@
           {
             "type": "date",
             "name": "chargeDate"
+          },
+          {
+            "type": "object",
+            "name": "payments"
           },
           {
             "type": "date",
@@ -156,7 +187,7 @@
                       "module": "tuitioncalc",
                       "action": "tuitioncalc",
                       "options": {
-                        "familyid": "{{family}}",
+                        "familyid": "{{family_uuid}}",
                         "monthtoprocess": "{{chargeFor_monthly}}"
                       },
                       "meta": [
@@ -174,7 +205,7 @@
                         "exec": "families/ledger/tuitioncharge",
                         "params": {
                           "new": "{{recalcFutureCharges}}",
-                          "familyid": "{{$_PARAM.familyid}}",
+                          "familyid": "{{$_PARAM.family_uuid}}",
                           "charge": "{{recalcFutureCharges}}",
                           "userid": "{{$_PARAM.userid}}"
                         }
@@ -203,11 +234,15 @@
                   "type": "object"
                 },
                 {
+                  "name": "uuid",
+                  "type": "text"
+                },
+                {
                   "name": "id",
                   "type": "number"
                 },
                 {
-                  "name": "total",
+                  "name": "family_uuid",
                   "type": "number"
                 },
                 {
@@ -215,8 +250,8 @@
                   "type": "number"
                 },
                 {
-                  "name": "description",
-                  "type": "text"
+                  "name": "total",
+                  "type": "number"
                 },
                 {
                   "name": "title",
@@ -224,6 +259,10 @@
                 },
                 {
                   "name": "reference",
+                  "type": "text"
+                },
+                {
+                  "name": "description",
                   "type": "text"
                 },
                 {
@@ -253,6 +292,10 @@
                 {
                   "name": "chargeDate",
                   "type": "date"
+                },
+                {
+                  "name": "payments",
+                  "type": "object"
                 },
                 {
                   "name": "created",
@@ -350,6 +393,11 @@
                   {
                     "name": "$value",
                     "type": "object"
+                  },
+                  {
+                    "name": "exec_copy",
+                    "type": "text",
+                    "sub": []
                   }
                 ],
                 "outputType": "array"

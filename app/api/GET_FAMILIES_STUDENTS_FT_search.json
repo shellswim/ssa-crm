@@ -24,7 +24,7 @@
         "options": {
           "connection": "db",
           "sql": {
-            "query": "SELECT DISTINCT SUM(score) as score, data.family\n    FROM (\n                  SELECT g.family AS family,\n                         SUM((MATCH(g.firstName, g.lastName) AGAINST(:P1 IN BOOLEAN MODE)) +\n                         (MATCH(s.firstName, s.lastName) AGAINST(:P1 IN BOOLEAN MODE))) as score\n                  FROM guardians g join students s on g.family = s.family\n                    GROUP BY g.family\n              ) as data\nWHERE (score) > 0\nGROUP BY score, data.family\nORDER BY score DESC",
+            "query": "SELECT DISTINCT SUM(score) as score, d.family_uuid\n    FROM (\n                  SELECT g.family_uuid AS family_uuid,\n                         SUM((MATCH(g.firstName, g.lastName) AGAINST(:P1 IN BOOLEAN MODE)) +\n                         (MATCH(s.firstName, s.lastName) AGAINST(:P1 IN BOOLEAN MODE))) as score\n                  FROM guardians g join students s on g.family_uuid = s.family\n                    GROUP BY g.family_uuid\n              ) as d\nWHERE (score) > 0\nGROUP BY score, d.family_uuid\nORDER BY score DESC",
             "params": [
               {
                 "name": ":P1",
@@ -41,8 +41,8 @@
             "type": "number"
           },
           {
-            "name": "family",
-            "type": "number"
+            "name": "family_uuid",
+            "type": "text"
           }
         ],
         "outputType": "array"
@@ -66,17 +66,17 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT \nscore, MAX(score) as max_score, \ns.id, \ns.firstName, \ns.lastName, \ncl.name as level, \ns.family, \ns.gender, \ns.dob, \ns.id,\nCONCAT_WS(' ',\n        CONCAT(TIMESTAMPDIFF( YEAR, s.dob, now() ), 'y'),\n        CONCAT(TIMESTAMPDIFF( MONTH, s.dob, now() ) % 12, 'm')) AS age, \n:P1 as term\nFROM (\n    SELECT MATCH(firstName, lastName) AGAINST(:P1 IN BOOLEAN MODE) AS score, firstName, lastName, level, family, gender, dob, id\n    FROM students ) AS s join families f ON s.family = f.id join guardians g on f.id = g.family join classLevels cl on s.level = cl.id\nWHERE s.family = :P2\nGROUP BY score, s.id, s.firstName, s.lastName, s.level, s.family, s.gender, s.dob, s.id\nORDER BY score desc, s.firstName, s.lastName",
+                    "query": "SELECT DISTINCT score,\n                MAX(score) as max_score,\n                s.uuid,\n                s.firstName,\n                s.lastName,\n                cl.name    as level,\n                s.family,\n                s.gender,\n                s.dob,\n                s.age,\n                :P1        as term\nFROM (\n         SELECT MATCH(st.firstName, st.lastName) AGAINST(:P1 IN BOOLEAN MODE) AS score,\n                st.firstName,\n                st.lastName,\n                st.classlevel_uuid,\n                st.family,\n                st.gender,\n                st.dob,\n                st.uuid,\n                st.age\n         FROM students st) AS s\n         join families f ON s.family = f.uuid\n         join guardians g on f.uuid = g.family_uuid\n         join classLevels cl on s.classlevel_uuid = cl.uuid\nWHERE s.family = :P2\nGROUP BY score, s.uuid, s.firstName, s.lastName, s.classlevel_uuid, s.family, s.gender, s.dob, s.age\nORDER BY score desc, s.firstName, s.lastName;",
                     "params": [
                       {
                         "name": ":P1",
                         "value": "{{$_GET.searchtextfilter}}",
-                        "test": "tobias zelvis"
+                        "test": "zelvi*"
                       },
                       {
                         "name": ":P2",
-                        "value": "{{family}}",
-                        "test": "36"
+                        "value": "{{family_uuid}}",
+                        "test": "fam_a4eb27ec625211ecae3e0242ac160002"
                       }
                     ]
                   }
@@ -92,8 +92,8 @@
                     "type": "number"
                   },
                   {
-                    "name": "id",
-                    "type": "number"
+                    "name": "uuid",
+                    "type": "text"
                   },
                   {
                     "name": "firstName",
@@ -109,7 +109,7 @@
                   },
                   {
                     "name": "family",
-                    "type": "number"
+                    "type": "text"
                   },
                   {
                     "name": "gender",
@@ -177,48 +177,56 @@
                 "output": true,
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "text",
+                    "name": "uuid"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "dob",
-                    "type": "date"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "rollSheetComments",
-                    "type": "text"
+                    "type": "date",
+                    "name": "dob"
                   },
                   {
-                    "name": "rollSheetMedical",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "additionalMedical",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetComments"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "text",
+                    "name": "rollSheetMedical"
                   },
                   {
-                    "name": "gender",
-                    "type": "text"
+                    "type": "text",
+                    "name": "additionalMedical"
                   },
                   {
-                    "name": "level",
-                    "type": "text"
+                    "type": "text",
+                    "name": "gender"
                   },
                   {
-                    "name": "age",
-                    "type": "text"
+                    "type": "number",
+                    "name": "level"
+                  },
+                  {
+                    "type": "text",
+                    "name": "age"
+                  },
+                  {
+                    "type": "number",
+                    "name": "familyold"
                   }
                 ],
                 "outputType": "array",
@@ -241,15 +249,15 @@
                       "condition": "AND",
                       "rules": [
                         {
-                          "id": "guardians.family",
-                          "field": "guardians.family",
-                          "type": "string",
+                          "id": "guardians.family_uuid",
+                          "field": "guardians.family_uuid",
+                          "type": "double",
                           "operator": "equal",
-                          "value": "{{family}}",
+                          "value": "{{family_uuid}}",
                           "data": {
                             "table": "guardians",
-                            "column": "family",
-                            "type": "text"
+                            "column": "family_uuid",
+                            "type": "number"
                           },
                           "operation": "="
                         }
@@ -257,13 +265,13 @@
                       "conditional": null,
                       "valid": true
                     },
-                    "query": "SELECT *\nFROM guardians\nWHERE family = :P1 /* {{family}} */",
+                    "query": "SELECT *\nFROM guardians\nWHERE family_uuid = :P1 /* {{family_uuid}} */",
                     "params": [
                       {
                         "operator": "equal",
                         "type": "expression",
                         "name": ":P1",
-                        "value": "{{family}}"
+                        "value": "{{family_uuid}}"
                       }
                     ]
                   }
@@ -271,24 +279,40 @@
                 "output": true,
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "text",
+                    "name": "uuid"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "relationship",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
+                  },
+                  {
+                    "type": "number",
+                    "name": "relationship"
+                  },
+                  {
+                    "type": "number",
+                    "name": "family_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "default_email"
+                  },
+                  {
+                    "type": "number",
+                    "name": "default_phone"
                   }
                 ],
                 "outputType": "array"
@@ -352,15 +376,15 @@
                       "condition": "AND",
                       "rules": [
                         {
-                          "id": "families.id",
-                          "field": "families.id",
-                          "type": "double",
+                          "id": "families.uuid",
+                          "field": "families.uuid",
+                          "type": "string",
                           "operator": "equal",
-                          "value": "{{family}}",
+                          "value": "{{family_uuid}}",
                           "data": {
                             "table": "families",
-                            "column": "id",
-                            "type": "number"
+                            "column": "uuid",
+                            "type": "text"
                           },
                           "operation": "="
                         }
@@ -368,13 +392,13 @@
                       "conditional": null,
                       "valid": true
                     },
-                    "query": "SELECT guardians.id, guardians.firstName, guardians.lastName, guardians.family, guardians.relationship\nFROM guardians\nINNER JOIN families ON (families.primaryGuardian = guardians.id)\nWHERE families.id = :P1 /* {{family}} */",
+                    "query": "SELECT guardians.id, guardians.firstName, guardians.lastName, guardians.family, guardians.relationship\nFROM guardians\nINNER JOIN families ON (families.primaryGuardian = guardians.id)\nWHERE families.uuid = :P1 /* {{family_uuid}} */",
                     "params": [
                       {
                         "operator": "equal",
                         "type": "expression",
                         "name": ":P1",
-                        "value": "{{family}}"
+                        "value": "{{family_uuid}}"
                       }
                     ]
                   }
@@ -382,24 +406,24 @@
                 "output": true,
                 "meta": [
                   {
-                    "name": "id",
-                    "type": "text"
+                    "type": "number",
+                    "name": "id"
                   },
                   {
-                    "name": "firstName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "firstName"
                   },
                   {
-                    "name": "lastName",
-                    "type": "text"
+                    "type": "text",
+                    "name": "lastName"
                   },
                   {
-                    "name": "family",
-                    "type": "text"
+                    "type": "number",
+                    "name": "family"
                   },
                   {
-                    "name": "relationship",
-                    "type": "text"
+                    "type": "number",
+                    "name": "relationship"
                   }
                 ],
                 "outputType": "object"
@@ -430,8 +454,8 @@
             "type": "number"
           },
           {
-            "name": "family",
-            "type": "number"
+            "name": "family_uuid",
+            "type": "text"
           },
           {
             "name": "students",
@@ -446,8 +470,8 @@
                 "type": "number"
               },
               {
-                "name": "id",
-                "type": "number"
+                "name": "uuid",
+                "type": "text"
               },
               {
                 "name": "firstName",
@@ -463,7 +487,7 @@
               },
               {
                 "name": "family",
-                "type": "number"
+                "type": "text"
               },
               {
                 "name": "gender",
@@ -482,16 +506,24 @@
                 "type": "text"
               },
               {
-                "name": "rollSheetComments",
-                "type": "text"
+                "type": "number",
+                "name": "id"
               },
               {
-                "name": "rollSheetMedical",
-                "type": "text"
+                "type": "text",
+                "name": "rollSheetComments"
               },
               {
-                "name": "additionalMedical",
-                "type": "text"
+                "type": "text",
+                "name": "rollSheetMedical"
+              },
+              {
+                "type": "text",
+                "name": "additionalMedical"
+              },
+              {
+                "type": "number",
+                "name": "familyold"
               }
             ]
           },
@@ -500,24 +532,40 @@
             "type": "array",
             "sub": [
               {
-                "name": "id",
-                "type": "text"
+                "type": "text",
+                "name": "uuid"
               },
               {
-                "name": "firstName",
-                "type": "text"
+                "type": "number",
+                "name": "id"
               },
               {
-                "name": "lastName",
-                "type": "text"
+                "type": "text",
+                "name": "firstName"
               },
               {
-                "name": "family",
-                "type": "text"
+                "type": "text",
+                "name": "lastName"
               },
               {
-                "name": "relationship",
-                "type": "text"
+                "type": "number",
+                "name": "family"
+              },
+              {
+                "type": "number",
+                "name": "relationship"
+              },
+              {
+                "type": "number",
+                "name": "family_uuid"
+              },
+              {
+                "type": "number",
+                "name": "default_email"
+              },
+              {
+                "type": "number",
+                "name": "default_phone"
               }
             ]
           },
@@ -526,24 +574,24 @@
             "type": "object",
             "sub": [
               {
-                "name": "id",
-                "type": "text"
+                "type": "number",
+                "name": "id"
               },
               {
-                "name": "firstName",
-                "type": "text"
+                "type": "text",
+                "name": "firstName"
               },
               {
-                "name": "lastName",
-                "type": "text"
+                "type": "text",
+                "name": "lastName"
               },
               {
-                "name": "family",
-                "type": "text"
+                "type": "number",
+                "name": "family"
               },
               {
-                "name": "relationship",
-                "type": "text"
+                "type": "number",
+                "name": "relationship"
               }
             ]
           }

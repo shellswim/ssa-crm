@@ -9014,12 +9014,42 @@ dmx.config({
             "type": "object",
             "sub": [
               {
+                "name": "identity",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "times_formats",
+                "type": "text",
+                "sub": []
+              },
+              {
                 "name": "chargeahead",
                 "type": "text",
                 "sub": [
                   {
                     "name": "dates",
                     "type": "array"
+                  }
+                ]
+              },
+              {
+                "name": "query_checkforperiod",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "number",
+                    "name": "id"
+                  }
+                ]
+              },
+              {
+                "name": "exists",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "id",
+                    "type": "number"
                   }
                 ]
               },
