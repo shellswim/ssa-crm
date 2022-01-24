@@ -2,19 +2,10 @@ const mathjs = require('mathjs');
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const moment = require('moment-timezone');
+const crypto = require('crypto');
+const pud = require('./puddle/puddle-unixtime');
 
 exports.absenceRequest = async function (options) {
-
-    options = this.parse(options);
-    let settings = {
-        "timezone": dbClient(await db.raw(`
-            SELECT value
-            FROM settings
-            WHERE name = 'timezone'
-        `)).value
-    }
-    
-    let current_time = moment.utc().tz(settings.timezone);
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -24,52 +15,96 @@ exports.absenceRequest = async function (options) {
     if (!db) throw new Error(`Connection "${connection}" doesn't exist.`);
     //////////// End database connection //////////
 
+    options = this.parse(options);
 
-    let abs_start = Number(moment.tz(options.absence_start, settings.timezone).format('X')),
-        abs_end = Number(moment.tz(options.absence_end, settings.timezone).format('X')),
-        mu_eligible = !!Number(options.makeup_eligible),
-        absencearray = [],
-        enrolments = classes(dbClientArray(db.raw(`
-        SELECT e.uuid, e.student_uuid, e.class_uuid
-        FROM enrolments e
-        WHERE student_uuid = '${options.student_uuid}'
-    `)));
-
-    // Get classes and weekday of those classes.
-    async function classes(e) {
-
-        // e = enrolments
-        for(let i=0;i<e.length;i++) {
-            let e = e[i], estart = Number(moment(e.startDate).format('X')), eend = e.dropDate === null ? null : Number(moment(e.dropDate).format('X'));
-            let start = moment(abs_start), end = moment(abs_end);
-            while(start < end) {
-                if(estart <= end && (eend >= start || eend === null)) {
-                    let c = dbClient(db.raw(`
-                        SELECT c.uuid, e.student_uuid, c.startTimeDecimal, c.endTimeDecimal, c.day AS dayint
-                        FROM 
-                            classes c 
-                            JOIN enrolments e 
-                                ON c.uuid = e.class_uuid
-                        WHERE   
-                            e.uuid = '${e.uuid}'
-                    `));
-                    let cweekdate = moment(start).add(c.dayint,'d');
-                    if(cweekdate >= start && cweekdate <= end) {
-                        absencearray.push({
-                            "enrolment_uuid": e.uuid,
-                            "class_uuid": c.uuid,
-                            "absence_date": Number(cweekdate.format('X')),
-                            "excused": mu_eligible,
-                            "makeup_token_uuid": 'mut_' + self.crypto.randomUUID().replaceAll('-')
-                        });
-                    }
-                }
-                start.add(1, 'week');
-            }
-        }
+    let settings = {
+        "timezone": dbClient(await db.raw(`
+            SELECT value
+            FROM settings
+            WHERE name = 'timezone'
+        `)).value
     }
 
+    let current_time = Number(moment.utc().tz(settings.timezone).format('X'));
 
+
+    // abs_start IS absolute absence start time
+    // abs_end IS absolute absence end time
+
+    let abs_start = Number(moment(options.absence_start).format('X')),
+        abs_end = Number(moment(options.absence_end).format('X')),
+        mu_eligible = !!Number(options.makeup_eligible),
+        enrolments = dbClientArray(await db.raw(`
+        SELECT e.uuid, e.student_uuid, e.class_uuid, e.startDate, e.dropDate
+        FROM enrolments e
+        WHERE student_uuid = '${options.student_uuid}' AND e.isValid = 1
+        `)),
+        absences = await generate_absences(enrolments);
+
+    async function generate_absences(e) {
+        // check e (enrolments) is not undefined.
+        if (e === undefined) {
+            throw 'Error: No enrolment array found.'
+        };
+
+        // Get times in static unix format.
+        // abs_start copy, abs_end copy
+        let absence_array = [];
+
+        // Loop through enrolments
+        for(let i=0;i<e.length;i++) {
+            let en = e[i];
+            let absence_date_array = [],
+                enrol_start = Number(moment(en.startDate).format('X')),
+                enrol_drop = en.dropDate === null ? null : Number(moment(en.dropDate).format('X'));
+
+            // Check for date adjustment requirements (start date after absence start, drop date not null and before absence end)
+            let start = enrol_start > abs_start ? enrol_start : abs_start;
+            let end = !enrol_drop ? abs_end : enrol_drop < abs_end ? enrol_drop : abs_end;
+
+            // Generate absence date array
+            while (start <= end) {
+                absence_date_array.push(start);
+                start += pud.timeadd(1, 'd');
+            }
+
+            // Get class attached to enrolment
+            let c = await classfromenrolment(en);
+
+            // Filter date array for dates class falls on by day integer.
+            absence_date_array = _.filter(absence_date_array, function (arr) {
+                return moment.unix(arr).day() === c.dayint;
+            });
+
+            // Generate array of absences.
+            for(let j=0;j<absence_date_array.length; j++) {
+                let ab = absence_date_array[j];
+                absence_array.push({
+                    'absence_date': ab,
+                    'class': c.uuid,
+                    'student': en.student_uuid,
+                    'makeup_eligible': mu_eligible,
+                    'enrolment': en.uuid,
+                    'mu_uuid': 'mup_' + (crypto.randomUUID()).replaceAll('-','')
+                });
+            }
+        }
+       return absence_array;
+    }
+
+    async function classfromenrolment(e) {
+
+        return dbClient(await db.raw(`
+        SELECT c.uuid, e.student_uuid, c.startTimeDecimal, c.endTimeDecimal, (c.day - 1) AS dayint
+        FROM
+            classes c
+            JOIN enrolments e
+                ON c.uuid = e.class_uuid
+        WHERE
+            e.uuid = '${e.uuid}' AND isValid = 1;
+        `));
+
+    }
 
     // PROCESS MYSQL QUERIES
     // --- dbClient returns flat, single result query.
@@ -82,7 +117,7 @@ exports.absenceRequest = async function (options) {
             return v = v.rows;
         }
     }
-    
+
     function dbClientArray(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
             return v[0];
@@ -94,9 +129,11 @@ exports.absenceRequest = async function (options) {
 
     // *****************************************************************************
     // RETURN OBJECT *************************************************************//
-    return {
-        "absences": absencearray,
-        "currenttime": current_time,
-        "enrolments": enrolments
-    }
+    let returnobj = {
+        "currenttime": current_time || null,
+        "enrolments": enrolments,
+        "absences": absences,
+        "students_uuid": options.student_uuid
+    };
+    return returnobj;
 }
