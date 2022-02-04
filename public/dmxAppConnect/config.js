@@ -2890,11 +2890,11 @@ dmx.config({
     "guardianDetail": {
       "meta": [
         {
-          "name": "id",
-          "type": "number"
+          "name": "uuid",
+          "type": "text"
         },
         {
-          "name": "primaryGuardian",
+          "name": "id",
           "type": "number"
         },
         {
@@ -2906,60 +2906,56 @@ dmx.config({
           "type": "text"
         },
         {
+          "name": "family",
+          "type": "number"
+        },
+        {
           "name": "relationship",
           "type": "number"
         },
         {
-          "name": "phoneNumbers",
-          "type": "text"
+          "name": "family_uuid",
+          "type": "number"
         },
         {
-          "name": "emailAddresses",
-          "type": "text"
+          "name": "default_email",
+          "type": "number"
         },
         {
-          "name": "phoneNumbersArray",
+          "name": "default_phone",
+          "type": "number"
+        },
+        {
+          "name": "phones",
           "type": "array",
           "sub": [
             {
-              "name": "id",
-              "type": "text"
-            },
-            {
-              "name": "phone",
-              "type": "text"
-            },
-            {
-              "name": "guardianId",
-              "type": "text"
+              "name": "number",
+              "type": "text",
+              "sub": []
             },
             {
               "name": "type",
-              "type": "text"
+              "type": "text",
+              "sub": []
             }
           ]
         },
         {
-          "name": "emailAddressesArray",
+          "name": "emails",
           "type": "array",
           "sub": [
-            {
-              "name": "id",
-              "type": "text"
-            },
             {
               "name": "address",
-              "type": "text"
-            },
-            {
-              "name": "guardianId",
-              "type": "text"
-            },
-            {
-              "name": "type",
-              "type": "text"
+              "type": "text",
+              "sub": []
             }
           ]
+        },
+        {
+          "name": "primary",
+          "type": "text",
+          "sub": []
         }
       ],
       "outputType": "array"
@@ -3419,7 +3415,32 @@ dmx.config({
       "outputType": "array"
     },
     "repeat1": {
-      "meta": null,
+      "meta": [
+        {
+          "name": "absence_date",
+          "type": "date"
+        },
+        {
+          "name": "absence_date_unix",
+          "type": "number"
+        },
+        {
+          "name": "enrolment",
+          "type": "text"
+        },
+        {
+          "name": "makeup_eligible",
+          "type": "boolean"
+        },
+        {
+          "name": "makeuptoken_uuid",
+          "type": "text"
+        },
+        {
+          "name": "student",
+          "type": "text"
+        }
+      ],
       "outputType": "array"
     },
     "familyChargesRepeat": {
@@ -6477,11 +6498,11 @@ dmx.config({
     "dd_guardianDetails": {
       "meta": [
         {
-          "name": "id",
-          "type": "number"
+          "name": "uuid",
+          "type": "text"
         },
         {
-          "name": "primaryGuardian",
+          "name": "id",
           "type": "number"
         },
         {
@@ -6493,64 +6514,51 @@ dmx.config({
           "type": "text"
         },
         {
+          "name": "family",
+          "type": "number"
+        },
+        {
           "name": "relationship",
           "type": "number"
         },
         {
-          "name": "phoneNumbers",
-          "type": "text"
+          "name": "family_uuid",
+          "type": "number"
         },
         {
-          "name": "email",
-          "type": "text"
+          "name": "default_email",
+          "type": "number"
         },
         {
-          "name": "emailAddresses",
-          "type": "text"
+          "name": "default_phone",
+          "type": "number"
         },
         {
-          "name": "phoneNumbersArray",
+          "name": "phones",
           "type": "array",
           "sub": [
             {
-              "type": "number",
-              "name": "id"
-            },
-            {
+              "name": "number",
               "type": "text",
-              "name": "phone"
-            },
-            {
-              "type": "number",
-              "name": "guardianId"
-            },
-            {
-              "type": "number",
-              "name": "type"
+              "sub": []
             }
           ]
         },
         {
-          "name": "emailAddressesArray",
+          "name": "emails",
           "type": "array",
           "sub": [
             {
-              "type": "number",
-              "name": "id"
-            },
-            {
+              "name": "address",
               "type": "text",
-              "name": "address"
-            },
-            {
-              "type": "number",
-              "name": "guardianId"
-            },
-            {
-              "type": "number",
-              "name": "type"
+              "sub": []
             }
           ]
+        },
+        {
+          "name": "primary",
+          "type": "text",
+          "sub": []
         }
       ],
       "outputType": "array"
@@ -7476,6 +7484,439 @@ dmx.config({
               "name": "payment_uuid"
             }
           ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_studentDetails": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "dob",
+          "type": "date"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "rollSheetComments",
+          "type": "text"
+        },
+        {
+          "name": "rollSheetMedical",
+          "type": "text"
+        },
+        {
+          "name": "additionalMedical",
+          "type": "text"
+        },
+        {
+          "name": "gender",
+          "type": "text"
+        },
+        {
+          "name": "level",
+          "type": "number"
+        },
+        {
+          "name": "age",
+          "type": "text"
+        },
+        {
+          "name": "familyold",
+          "type": "number"
+        },
+        {
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "student_notes",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "content"
+            },
+            {
+              "type": "number",
+              "name": "student"
+            },
+            {
+              "type": "text",
+              "name": "student_uuid"
+            },
+            {
+              "type": "number",
+              "name": "priority"
+            },
+            {
+              "type": "text",
+              "name": "subject"
+            },
+            {
+              "type": "text",
+              "name": "status"
+            },
+            {
+              "type": "date",
+              "name": "date_created"
+            },
+            {
+              "type": "date",
+              "name": "date_closed"
+            },
+            {
+              "type": "number",
+              "name": "staff_created"
+            },
+            {
+              "type": "number",
+              "name": "staff_closed"
+            }
+          ]
+        },
+        {
+          "name": "note_count",
+          "type": "array",
+          "sub": [
+            {
+              "name": "uuid",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "content",
+              "type": "text"
+            },
+            {
+              "name": "student",
+              "type": "number"
+            },
+            {
+              "name": "student_uuid",
+              "type": "text"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "subject",
+              "type": "text"
+            },
+            {
+              "name": "status",
+              "type": "text"
+            },
+            {
+              "name": "date_created",
+              "type": "date"
+            },
+            {
+              "name": "date_closed",
+              "type": "date"
+            },
+            {
+              "name": "staff_created",
+              "type": "number"
+            },
+            {
+              "name": "staff_closed",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "grouped_priorities",
+          "type": "array",
+          "sub": [
+            {
+              "name": "note_count",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "priority_name",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_absence_generated_details": {
+      "meta": [
+        {
+          "name": "absence_date",
+          "type": "date"
+        },
+        {
+          "name": "absence_date_unix",
+          "type": "number"
+        },
+        {
+          "name": "enrolment",
+          "type": "text"
+        },
+        {
+          "name": "makeup_eligible",
+          "type": "boolean"
+        },
+        {
+          "name": "makeuptoken_uuid",
+          "type": "text"
+        },
+        {
+          "name": "student",
+          "type": "text"
+        },
+        {
+          "name": "class",
+          "type": "object",
+          "sub": [
+            {
+              "name": "classlevel_uuid",
+              "type": "text"
+            },
+            {
+              "name": "day",
+              "type": "number"
+            },
+            {
+              "name": "instructor",
+              "type": "text"
+            },
+            {
+              "name": "starttime",
+              "type": "text"
+            },
+            {
+              "name": "uuid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "tr_studentabsences": {
+      "meta": [
+        {
+          "name": "absence_date",
+          "type": "date"
+        },
+        {
+          "name": "absence_date_unix",
+          "type": "number"
+        },
+        {
+          "name": "enrolment",
+          "type": "text"
+        },
+        {
+          "name": "makeup_eligible",
+          "type": "boolean"
+        },
+        {
+          "name": "makeuptoken_uuid",
+          "type": "text"
+        },
+        {
+          "name": "student",
+          "type": "text"
+        },
+        {
+          "name": "class",
+          "type": "object",
+          "sub": [
+            {
+              "name": "classlevel_uuid",
+              "type": "text"
+            },
+            {
+              "name": "day",
+              "type": "number"
+            },
+            {
+              "name": "instructor",
+              "type": "text"
+            },
+            {
+              "name": "starttime",
+              "type": "text"
+            },
+            {
+              "name": "uuid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_absences_submit_inputs": {
+      "meta": [
+        {
+          "name": "absences",
+          "type": "array",
+          "sub": [
+            {
+              "name": "absence_date",
+              "type": "date"
+            },
+            {
+              "name": "absence_date_unix",
+              "type": "number"
+            },
+            {
+              "name": "enrolment",
+              "type": "text"
+            },
+            {
+              "name": "makeup_eligible",
+              "type": "boolean"
+            },
+            {
+              "name": "makeuptoken_uuid",
+              "type": "text"
+            },
+            {
+              "name": "student",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "class_details",
+          "type": "object",
+          "sub": [
+            {
+              "name": "classlevel_uuid",
+              "type": "text"
+            },
+            {
+              "name": "day",
+              "type": "number"
+            },
+            {
+              "name": "instructor",
+              "type": "text"
+            },
+            {
+              "name": "starttime",
+              "type": "text"
+            },
+            {
+              "name": "starttime_decimal",
+              "type": "number"
+            },
+            {
+              "name": "uuid",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_phones1": {
+      "meta": [
+        {
+          "name": "address",
+          "type": "text",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_student_absences_list": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "enrolment_uuid",
+          "type": "number"
+        },
+        {
+          "name": "absence_date",
+          "type": "number"
+        },
+        {
+          "name": "makeup_eligible",
+          "type": "boolean"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "dayint",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "instructor_uuid",
+          "type": "text"
+        },
+        {
+          "name": "query_makeup_token",
+          "type": "object",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_tb_guardian_emails": {
+      "meta": [
+        {
+          "name": "number",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "type",
+          "type": "text",
+          "sub": []
         }
       ],
       "outputType": "array"

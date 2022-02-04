@@ -1,0 +1,351 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "absence_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "options": {
+          "comment": "Find absence & check status."
+        }
+      },
+      {
+        "name": "query_absence",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "absences"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "absences.uuid",
+                  "field": "absences.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.absence_uuid}}",
+                  "data": {
+                    "table": "absences",
+                    "column": "uuid",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM absences\nWHERE uuid = :P1 /* {{$_POST.absence_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.absence_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "enrolment_uuid"
+          },
+          {
+            "type": "number",
+            "name": "absence_date"
+          },
+          {
+            "type": "boolean",
+            "name": "makeup_eligible"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "absence_status",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{query_absence.status}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "options": {
+          "comment": "If absence status is active."
+        }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_absence.status === 'active'}}",
+          "then": {
+            "steps": [
+              {
+                "name": "",
+                "options": {
+                  "comment": "Find any makeups attached to absence."
+                }
+              },
+              {
+                "name": "query_makeup_tokens",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "makeup_tokens"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "makeup_tokens.absence_uuid",
+                          "field": "makeup_tokens.absence_uuid",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{$_POST.absence_uuid}}",
+                          "data": {
+                            "table": "makeup_tokens",
+                            "column": "absence_uuid",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM makeup_tokens\nWHERE absence_uuid = :P1 /* {{$_POST.absence_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{$_POST.absence_uuid}}"
+                      }
+                    ]
+                  },
+                  "connection": "db"
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "absence_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolment_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "expiry_date"
+                  },
+                  {
+                    "type": "number",
+                    "name": "created_date"
+                  },
+                  {
+                    "type": "number",
+                    "name": "created_by"
+                  },
+                  {
+                    "type": "number",
+                    "name": "updated_date"
+                  },
+                  {
+                    "type": "text",
+                    "name": "updated_by"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_absence.status === 'cancelled'}}",
+          "then": {
+            "steps": [
+              {
+                "name": "",
+                "options": {
+                  "comment": "If absence status is cancelled."
+                }
+              },
+              {
+                "name": "already_cancelled",
+                "module": "core",
+                "action": "response",
+                "options": {
+                  "status": 500,
+                  "data": "This absence has already been cancelled. If there is a makeup token still valid for this absence, you can manually expire the token."
+                }
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{query_absence.status === 'completed'}}",
+          "then": {
+            "steps": [
+              {
+                "name": "",
+                "options": {
+                  "comment": "If absence status is completed."
+                }
+              },
+              {
+                "name": "query_makeup_tokens",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "makeup_tokens"
+                    },
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "makeup_tokens.absence_uuid",
+                          "field": "makeup_tokens.absence_uuid",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{$_POST.absence_uuid}}",
+                          "data": {
+                            "table": "makeup_tokens",
+                            "column": "absence_uuid",
+                            "type": "number"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM makeup_tokens\nWHERE absence_uuid = :P1 /* {{$_POST.absence_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{$_POST.absence_uuid}}"
+                      }
+                    ]
+                  },
+                  "connection": "db"
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "absence_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolment_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "expiry_date"
+                  },
+                  {
+                    "type": "number",
+                    "name": "created_date"
+                  },
+                  {
+                    "type": "number",
+                    "name": "created_by"
+                  },
+                  {
+                    "type": "number",
+                    "name": "updated_date"
+                  },
+                  {
+                    "type": "text",
+                    "name": "updated_by"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

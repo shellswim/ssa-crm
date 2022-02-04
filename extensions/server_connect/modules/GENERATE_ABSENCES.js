@@ -32,14 +32,13 @@ exports.absenceRequest = async function (options) {
     // abs_end IS absolute absence end time
 
     let abs_start = Number(moment(options.absence_start).format('X')),
-        abs_end = Number(moment(options.absence_end).format('X')),
+        abs_end = !options.absence_end ? abs_start : Number(moment(options.absence_end).format('X')),
         mu_eligible = !!Number(options.makeup_eligible),
         enrolments = dbClientArray(await db.raw(`
         SELECT e.uuid, e.student_uuid, e.class_uuid, e.startDate, e.dropDate
         FROM enrolments e
         WHERE student_uuid = '${options.student_uuid}' AND e.isValid = 1
-        `)),
-        absences = await generate_absences(enrolments);
+        `));
 
     async function generate_absences(e) {
         // check e (enrolments) is not undefined.
@@ -49,11 +48,11 @@ exports.absenceRequest = async function (options) {
 
         // Get times in static unix format.
         // abs_start copy, abs_end copy
-        let absence_array = [];
-
+        let enrol_array = [];
         // Loop through enrolments
         for(let i=0;i<e.length;i++) {
             let en = e[i];
+            let absence_array = [];
             let absence_date_array = [],
                 enrol_start = Number(moment(en.startDate).format('X')),
                 enrol_drop = en.dropDate === null ? null : Number(moment(en.dropDate).format('X'));
@@ -80,28 +79,47 @@ exports.absenceRequest = async function (options) {
             for(let j=0;j<absence_date_array.length; j++) {
                 let ab = absence_date_array[j];
                 absence_array.push({
-                    'absence_date': ab,
-                    'class': c.uuid,
+                    'absence_date_unix': ab,
+                    'absence_date': moment.unix(ab).format('YYYY-MM-DD'),
                     'student': en.student_uuid,
                     'makeup_eligible': mu_eligible,
                     'enrolment': en.uuid,
-                    'mu_uuid': 'mup_' + (crypto.randomUUID()).replaceAll('-','')
+                    'mutoken_uuid': 'mut_' + (crypto.randomUUID()).replaceAll('-','')
+                });
+            }
+            if(absence_array.length > 0) {
+                enrol_array.push({
+                    "absences": absence_array,
+                    'class_details': {
+                        'uuid': c.uuid,
+                        'classlevel_uuid': c.classlevel_uuid,
+                        'day': c.dayint + 1,
+                        'instructor': c.instructor_uuid,
+                        'starttime': c.startTimeDisplay,
+                        'starttime_decimal': c.startTimeDecimal
+                    },
+                    "enroluuid": en.uuid
                 });
             }
         }
-       return absence_array;
+        let final_enrol_array = _(enrol_array).chain().sortBy(function(enrol) {
+                                    return enrol.class_details.starttime_decimal
+                                }).sortBy(function(enrol) {
+                                    return enrol.class_details.dayint
+                                }).value();
+       return final_enrol_array;
     }
 
     async function classfromenrolment(e) {
 
         return dbClient(await db.raw(`
-        SELECT c.uuid, e.student_uuid, c.startTimeDecimal, c.endTimeDecimal, (c.day - 1) AS dayint
-        FROM
-            classes c
-            JOIN enrolments e
-                ON c.uuid = e.class_uuid
-        WHERE
-            e.uuid = '${e.uuid}' AND isValid = 1;
+            SELECT c.uuid, e.student_uuid, c.startTimeDecimal, c.endTimeDecimal, (c.day - 1) AS dayint, c.instructor_uuid, c.startTimeDisplay, c.classlevel_uuid
+            FROM
+                classes c
+                JOIN enrolments e
+                    ON c.uuid = e.class_uuid
+            WHERE
+                e.uuid = '${e.uuid}' AND isValid = 1;
         `));
 
     }
@@ -132,8 +150,8 @@ exports.absenceRequest = async function (options) {
     let returnobj = {
         "currenttime": current_time || null,
         "enrolments": enrolments,
-        "absences": absences,
-        "students_uuid": options.student_uuid
+        "absence_enrolments": await generate_absences(enrolments),
+        "student_uuid": options.student_uuid
     };
     return returnobj;
 }

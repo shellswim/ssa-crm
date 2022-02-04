@@ -74,10 +74,9 @@ exports.classAvail = async function (options) {
 
             for (let i = 0; i < c.details.enrolments.length; i++) {
                 let e = c.details.enrolments[i];
-                let att = await attendance(e);
-                e.attendance = att || null;
+                // let att = await attendance(e);
+                // e.attendance = att || null;
             }
-
         }
         let pend = performance.now();
 
@@ -110,7 +109,7 @@ exports.classAvail = async function (options) {
         // wd = Weekday, wda = Weekday Array
         let ci = classinfo,
             e = JSON.parse(ci.enrolments),
-            wd = wed.clone(),
+            wd = moment(wed),
             wd_unix = moment(wd).unix(),
             enr_total = [],
             wda = [],
@@ -142,17 +141,11 @@ exports.classAvail = async function (options) {
                         if (estart.isSameOrBefore(endd) && (!en.dropDate || edrop.isSameOrAfter(startd))) {
                             enrolcount[key] += 1;
 
-                            // WHILE IN AVAILABILITIES, GET ATTENDANCE RECORDS AND GET ABSENCES FOR CURRENT WEEK.
-                            (async () => {
-                                // let timestamps = {
-                                //     'weekday': wd_unix,
-                                //     'starttime': mathjs.sum((ci.startTimeDecimal * 3600) + wd_unix),
-                                //     'endtime': mathjs.sum((ci.endTimeDecimal * 3600) + wd_unix)
-                                // }
-                                let att = await attendance(en);
-                                en.attendance = att || null;
-                                // let absence = await absences(en, timestamps);
-                            })();
+                            // // WHILE IN AVAILABILITIES, GET ATTENDANCE RECORDS AND GET ABSENCES FOR CURRENT WEEK.
+                            // (async () => {
+                            //     let att = await attendance(en);
+                            //     en.attendance = att || null;
+                            // })();
                         }
                     }
                 } else {
@@ -230,7 +223,7 @@ exports.classAvail = async function (options) {
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
             'total': Math.max(...enr_total),
-            'weekday': wd,
+            'weekday': wed,
             'enrolments': e
         };
     }

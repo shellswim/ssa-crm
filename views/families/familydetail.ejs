@@ -79,11 +79,12 @@
 <dmx-value id="topPriorityNotes" dmx-bind:value="familyDetails.data.familyNotes[0].maxPriority == 5 ? 'Has Critical Note/s' : familyDetails.data.familyNotes[0].maxPriority == 4 ? 'Has High Priority Note/s' : familyDetails.data.familyNotes[0].maxPriority == 3 ? 'Has Medium Note/s' : 'Has Notes';">
 </dmx-value>
 <dmx-notifications id="successNotifies" position="bottom" closable="true" opacity="0.95" timeout="3500" extended-timeout="300" align="full"></dmx-notifications>
+<div class="section overlay" dmx-class:overlay-show="editGuardian.value === 1"></div>
 <dmx-query-manager id="getFamilyID"></dmx-query-manager>
 
 
 
-<div class="section overlay" dmx-class:overlay-show="editGuardian.value === 1"></div>
+
 <dmx-value id="editGuardian" dmx-bind:value="0"></dmx-value>
 <div class="modal" id="address_createOrEdit" is="dmx-bs5-modal" tabindex="-1">
     <div class="modal-dialog" role="document">
@@ -696,56 +697,66 @@
         </div>
     </div>
 </div>
-<div class="modal" id="getGuardianDetailsModal" is="dmx-bs5-modal" tabindex="-1">
+<div class="modal fade" id="getGuardianDetailsModal" is="dmx-bs5-modal" tabindex="-1">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-info">
+            <div class="modal-header border-bottom text-white bg-secondary">
                 <i class="bi-person-circle me-2 fs-4"></i>
                 <h5 class="modal-title" dmx-text="getGuardianDetailsModal.dd_guardianDetails.data.firstName+' '+getGuardianDetailsModal.dd_guardianDetails.data.lastName">John Doe</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <dmx-data-detail id="dd_guardianDetails" dmx-bind:data="familyDetails.data.getGuardiansWContacts" key="id"></dmx-data-detail>
-                <div class="row">
-                    <div class="col-12">
-                        <p class="small text-muted mb-0">Primary Guardian</p>
-                        <p dmx-text="dd_guardianDetails.data.primaryGuardian === dd_guardianDetails.data.id ? 'Yes' : 'No. Edit this guardian to make them primary.'">Yes</p>
+                <dmx-data-detail id="dd_guardianDetails" dmx-bind:data="familyDetails.data.guardians" key="uuid"></dmx-data-detail>
 
-                    </div>
-                    <div class="col-12">
-                        <p class="small mb-1 text-muted">Phone Numbers</p>
-                        <div id="rp_guardianPhones" is="dmx-repeat" dmx-bind:repeat="dd_guardianDetails.data.phoneNumbersArray">
-                            <div class="row g-1">
+
+                <div class="row">
+                    <div class="col mb-4">
+                        <p class="mb-1 pb-1 border-bottom text-muted fw-450">Phone Numbers</p>
+                        <div id="rp_guardianPhones" is="dmx-repeat" dmx-bind:repeat="dd_guardianDetails.data.phones">
+                            <div class="row g-0 py-1 align-items-center">
                                 <div class="col-auto">
-                                    <p class="me-1 text-black-50 mb-1" dmx-text="appSettings.contactTypes[type].type">Type:</p>
+                                    <p class="me-2 text-black-50 mb-0" dmx-text="appSettings.contactTypes[type].type">Type:</p>
 
                                 </div>
                                 <div class="col">
-                                    <p dmx-text="phone" class="mb-1">0123 456 789</p>
+                                    <p dmx-text="number" class="mb-0">0123 456 789</p>
 
                                 </div>
                             </div>
                         </div>
 
                     </div>
-                    <div class="col-12 mt-3">
-                        <p class="small mb-1 text-muted">Email Addresses</p>
-                        <div id="rp_guardianEmails" is="dmx-repeat" dmx-bind:repeat="dd_guardianDetails.data.emailAddressesArray">
-                            <div class="row g-0">
+                </div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <p class="mb-1 pb-1 border-bottom text-muted fw-450">Email Addresses</p>
+                        <div id="rp_guardianEmails" is="dmx-repeat" dmx-bind:repeat="dd_guardianDetails.data.emails">
+                            <div class="row g-0 py-1">
                                 <div class="col">
-                                    <p dmx-text="address" class="mb-0">qwerty@gmail.com</p>
-                                </div>
-                                <div class="col d-flex align-items-center justify-content-end">
-
-                                    <button id="sendEmailBtn" class="btn btn-sm btn-link"><i class="bi-chat-right-text me-1"></i>Send Email
-                                    </button>
+                                    <a class="d-flex flex-row align-items-center text-decoration-none" href="javascript:void(0);">
+                                        <i class="fas p-1 ps-0 fa-paper-plane me-2 text-decoration-none"></i>
+                                        <p dmx-text="address" class="mb-0 text-decoration-underline lh-lg">qwerty@gmail.com</p>
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="row row-cols-1">
+                    <div class="col">
+                        <p class="mb-2 pb-1 border-bottom text-muted fw-450">Primary Guardian</p>
+
+
+                    </div>
+                    <div class="col d-flex flex-row align-items-center">
+                        <i class="fas fa-check-circle me-2 fa-fw" dmx-class:text-success="dd_guardianDetails.data.primary" dmx-class:text-danger="!dd_guardianDetails.data.primary" dmx-class:fa-check-circle="dd_guardianDetails.data.primary" dmx-class:fa-times-circle="!dd_guardianDetails.data.primary"></i>
+                        <p dmx-text="dd_guardianDetails.data.primary === true ? 'Yes' : 'No. Edit this guardian to make them primary.'" class="mb-0">Yes</p>
+                    </div>
+
+
+                </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer border-top">
                 <div class="d-flex justify-content-between w-100"><button type="button" class="btn btn-outline-primary" dmx-on:click="updateGuardianModal.guardianDetail.select(getGuardianDetailsModal.dd_guardianDetails.data.id);updateGuardianModal.show()"><i class="bi-pencil me-2"></i>Edit
                     </button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
 
@@ -754,7 +765,7 @@
         </div>
     </div>
 </div>
-<div class="modal" id="updateGuardianModal" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+<div class="modal fade" id="updateGuardianModal" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
     <div class="modal-dialog modal-fullscreen-lg-down modal-dialog-scrollable modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header text-white bg-secondary">
@@ -762,7 +773,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <dmx-data-detail dmx-bind:data="familyDetails.data.getGuardiansWContacts" id="guardianDetail" key="id">
+                <dmx-data-detail dmx-bind:data="familyDetails.data.guardians" id="guardianDetail" key="uuid">
                     <h6 class="fw-bold">General Information</h6>
                     <form action="/api/families/guardians/updateGuardian" dmx-form-type="vertical" dmx-generator="bootstrap5" dmx-param:guardianid="updateGuardianModal.guardianDetail.data.id" id="guardianDetails" is="dmx-serverconnect-form" method="post" class="mb-3 pb-3 border-bottom" dmx-on:success="run([{run:{action:`familyDetails.load({familyid: query.familyid})`}},{wait:{delay:500}},{run:{action:`notifies1.success(\'Guardian \'+updateGuardianModal.guardianDetail.data.firstName+\' \'+updateGuardianModal.guardianDetail.data.lastName+\' has been successfully updated.\');updateGuardianModal.guardianDetail.guardianDetails.upd_guardSubmit_toggle.uncheck()`}}])" dmx-on:submit="upd_guardSubmit_toggle.check()" dmx-on:error="upd_guardSubmit_toggle.uncheck();notifies1.danger('Error: '+updateGuardianModal.guardianDetail.guardianDetails.lastError.status+' '+updateGuardianModal.guardianDetail.guardianDetails.lastError.message+' '+updateGuardianModal.guardianDetail.guardianDetails.lastError.response)">
                         <div class="row small">
@@ -1775,6 +1786,148 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="CREATE_ABSENCE" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="form_GENERATE_ABSENCE_records.reset()">
+    <dmx-data-detail id="dd_studentDetails" dmx-bind:data="familyDetails.data.students" key="uuid"></dmx-data-detail>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title"><i class="far fa-calendar-times me-2 fs-4 fa-fw"></i>Create Absence:&nbsp; {{dd_studentDetails.data.firstName+' '+dd_studentDetails.data.lastName}}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form_GENERATE_ABSENCE_records" method="post" is="dmx-serverconnect-form" action="/api/families/student/absences/GENERATE_ABSENCE" dmx-on:reset="run([{runJS:{function:'clearformdata',args:['form_GENERATE_ABSENCE_records']}},{run:{action:`CREATE_ABSENCE.form_GENERATE_ABSENCE_records.inp_absence_start.setValue(null)`}}])">
+                    <div class="row align-items-center mb-3 pb-3 border-bottom">
+                        <div class="col">
+                            <p class="fw-400 fs-6 mb-0">Does this absence span multiple days?</p>
+                        </div>
+                        <div class="col">
+                            <input id="check_absence_multiple_yes" class="btn-check" type="checkbox" name="absence_multiple">
+                            <label class="btn btn-outline-secondary py-2 w-100" for="check_absence_multiple_yes">Yes</label>
+                        </div>
+
+                    </div>
+                    <p class="fw-500"><i class="far fa-calendar-times fa-fw me-2"></i>Absence Dates:
+                    </p>
+
+                    <div class="row mb-3 pb-3 border-bottom">
+                        <div class="col">
+                            <div>
+                                <label for="inp_absence_start" class="form-label col-form-label" dmx-text="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.check_absence_multiple_yes.checked ? 'Start Date:' : 'Absence Date:'">Start Date</label>
+                                <input type="text" class="form-control clickable" dmx-bind:format="familyDetails.data.times_formats.date_format" id="inp_absence_start" name="start" aria-describedby="input1_help" placeholder="Start Date" is="dmx-date-picker">
+                            </div>
+
+                        </div>
+                        <div class="col">
+                            <div class="row g-0" dmx-bind:condition="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.check_absence_multiple_yes.checked" is="dmx-if" id="cr_absence_dateend">
+                                <label for="inp_absence_end" class="form-label col-form-label">End Date:</label>
+                                <input type="text" class="form-control clickable" dmx-bind:format="familyDetails.data.times_formats.date_format" id="inp_absence_end" name="end_date" aria-describedby="input1_help" placeholder="End Date" is="dmx-date-picker">
+
+                            </div>
+                        </div>
+                    </div>
+                    <p class="fw-500"><i class="fas fa-arrow-alt-circle-up me-2 text-makeup fa-fw"></i>Makeup Details:
+                    </p>
+                    <div class="row align-items-center mb-3 pb-3 border-bottom">
+                        <div class="col">
+                            <p class="mb-0 fw-400 fs-6 mb-1">Is this absence eligible for a makeup?</p>
+                            <p class="small text-muted">If marked YES, submitting absence will autmatically create makeup tokens for all absences listed below.</p>
+                        </div>
+                        <div class="col">
+                            <input id="makeup_eligible" class="btn-check" type="checkbox" name="makeup_eligible">
+                            <label class="btn btn-outline-secondary py-2 w-100" for="makeup_eligible">Yes</label>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <input id="hd_inp_absence_studentuuid" name="student_uuid" type="hidden" class="form-control" dmx-bind:value="CREATE_ABSENCE.dd_studentDetails.data.uuid">
+                            <input id="hd_inp_absence_end" name="end" type="hidden" class="form-control" dmx-bind:value="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.cr_absence_dateend.inp_absence_end.value">
+                            <input id="hd_inp_absence_makeup_eligible" name="makeup_eligible" type="hidden" class="form-control" dmx-bind:value="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.makeup_eligible.checked ? 1 : 0">
+
+                            <button id="btn_GENERATE_ABSENCE_records" class="btn btn-outline-primary" type="submit" dmx-bind:disabled="!CREATE_ABSENCE.form_GENERATE_ABSENCE_records.inp_absence_start.value"><i class="fas fa-redo me-2"></i>Generate Absence Record(s)
+                            </button>
+                            <button id="btn_GENERATE_ABSENCE_records1" class="btn btn-outline-primary" type="reset" dmx-bind:disabled="!CREATE_ABSENCE.form_GENERATE_ABSENCE_records.inp_absence_start.value"><i class="fas fa-redo me-2"></i>RESET FORM</button>
+                            <div class="row mt-3" is="dmx-if" id="cr_absence_table_noformdata" dmx-bind:condition="form_GENERATE_ABSENCE_records.data.absences.absence_enrolments.length > 0">
+                                <div class="col">
+                                    <div class="table-responsive">
+                                        <table class="table big-small table-bordered" id="generated_absence_table">
+                                            <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                <tr>
+                                                    <th style="width: 40%;">Class:</th>
+                                                    <th style="width: 60%;">Absences:</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.data.absences.absence_enrolments" id="tr_studentabsences">
+                                                <tr>
+                                                    <td dmx-html="'<strong>'+appSettings.days_array[class_details.day] +'</strong><br>'+class_details.starttime +' '+appSettings.classLevelsByID[class_details.classlevel_uuid].name +'<br>'+appSettings.instructorsById[class_details.instructor].trunc_name" class="align-middle" style="white-space: nowrap;"></td>
+                                                    <td class="align-middle">
+                                                        <div class="container-fluid p-0" is="dmx-if" id="cr_hasAbsences" dmx-bind:condition="absences.length > 0">
+                                                            <div class="row border-bottom ms-2">
+                                                                <div class="col">
+                                                                    <p class="m-0 fw-450 text-muted lh-lg">Date:</p>
+                                                                </div>
+                                                                <div class="col">
+
+                                                                    <p class="m-0 fw-450 text-muted lh-lg">Makeup Eligible:</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row row-cols-2 align-items-center ms-2" is="dmx-repeat" id="rp_absence_generated_details" dmx-bind:repeat="absences">
+                                                                <div class="col align-self-center py-2 border-bottom">
+                                                                    <p class="m-0" dmx-text="absence_date.formatDate(appSettings.localization_puddle_dateformat)">21/01/2022</p>
+                                                                </div>
+                                                                <div class="col py-2 align-self-center border-bottom"><i class="fas fa-check-circle fa-lg fa-fw" dmx-class:fa-check-circle="makeup_eligible === true" dmx-class:text-danger="makeup_eligible !== true" dmx-class:fa-times-circle="makeup_eligible !== true" dmx-class:text-success="makeup_eligible === true"></i></div>
+                                                            </div>
+                                                        </div>
+
+
+
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-0" is="dmx-if" id="cr_absence_table_noabsences" dmx-bind:condition="form_GENERATE_ABSENCE_records.data.absences.absence_enrolments.length === 0">
+                                <div class="col p-4 border rounded-3">
+                                    <p class="text-danger mb-0 fw-430 text-center fs-6">This student has no enrolments that align with requested absence dates.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+                <div id="submit_absences" class="row">
+                    <div class="col">
+                        <form id="form_SUBMIT_ABSENCES" method="post" is="dmx-serverconnect-form" action="/api/families/student/absences/SUMBIT_ABSENCE">
+                            <input id="inp_hdn_absence_submit_studentuuid" name="student_uuid" type="text" class="form-control" dmx-bind:value="CREATE_ABSENCE.dd_studentDetails.data.uuid">
+                            <div class="row" is="dmx-repeat" id="rp_absences_submit_enrolments" dmx-bind:repeat="CREATE_ABSENCE.form_GENERATE_ABSENCE_records.data.absences.absence_enrolments">
+                                <div class="col">
+                                    <input id="inp_hdn_absencesubmit_enrols_enroluuid" name="" type="text" class="form-control" dmx-bind:name="'enrols[' + $index + '][enroluuid]'" dmx-bind:value="enroluuid">
+                                    <dmx-value id="var_enrolsindex" dmx-bind:value="$index"></dmx-value>
+                                    <div class="row row-cols-1" is="dmx-repeat" id="rp_absences_perenrol" dmx-bind:repeat="absences">
+                                        <div class="col">
+                                            <input id="inp_hdn_absencesubmit_absencedate" name="" type="text" class="form-control" dmx-bind:name="'enrols['+ var_enrolsindex.value + '][absences]['+$index+'][absence_date]'" dmx-bind:value="absence_date">
+                                            <input id="inp_hdn_absencesubmit_makeup_token_uuid" name="" type="text" class="form-control" dmx-bind:name="'enrols['+ var_enrolsindex.value + '][absences]['+$index+'][makeup_token_uuid]'" dmx-bind:value="mutoken_uuid">
+                                            <input id="inp_hdn_absencesubmit_makeup_eligible" name="" type="text" class="form-control" dmx-bind:name="'enrols['+ var_enrolsindex.value + '][absences]['+$index+'][makeup_eligible]'" dmx-bind:value="makeup_eligible">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top justify-content-between">
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="form_SUBMIT_ABSENCES" class="btn btn-primary">Submit Absence</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
@@ -1849,7 +2002,7 @@
                 <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
                     <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-2"></i>Family Overview</a>
+                            <a class="nav-link py-3 px-4 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-2"></i>Family Overview</a>
                         </li>
                         <li class="nav-item col-auto">
                             <a class="nav-link py-3 px-4" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-2"></i>Ledger
@@ -1890,7 +2043,7 @@
         </div>
     </div>
 </section>
-<main class="d-flex flex-grow-1 flex-column p-4 position-relative">
+<main class="d-flex flex-grow-1 flex-column p-4 pb-5 mb-5 position-relative">
 
 
     <div class="row d-flex flex-grow-1">
@@ -1899,7 +2052,7 @@
 
             <!-- <a class="badge rounded-1 text-end clickable" dmx-class:pri-5-solid="familyDetails.data.familyNotes[0].maxPriority === 5" dmx-class:pri-4-solid="familyDetails.data.familyNotes[0].maxPriority === 4" dmx-class:pri-3-solid="familyDetails.data.familyNotes[0].maxPriority === 3" dmx-class:pri-2-solid="familyDetails.data.familyNotes[0].maxPriority === 2" dmx-class:pri-1-solid="familyDetails.data.familyNotes[0].maxPriority === 1" dmx-hide="familyDetails.data.familyNotes.length === 0" data-bs-toggle="tab" data-bs-target="#navTabs1_4" href="#"><i class="bi-sticky-fill me-2"></i>{{topPriorityNotes.value}}</a> -->
             <div class="tab-content" id="navTabs1_content">
-                <div class="tab-pane fade show" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
+                <div class="tab-pane fade show active" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
                     <div class="row gx-2">
                         <div class="col-auto">
                             <div class="d-flex p-3 pt-2 bg-white border rounded-3 text-body d-flex flex-column">
@@ -1933,7 +2086,7 @@
                     </div>
                     <div class="row">
                         <div class="col " is="dmx-if" id="cr_noaddress" dmx-bind:condition="familyDetails.data.addresses.length == 0" dmx-text="">
-                            <p class="border rounded-3 text-light bg-danger text-start mt-3 mb-0 pt-2 pb-2 ps-2 pe-2"><i class="bi-exclamation-diamond me-2"></i>No address for this family found. Addresses are used in receipts and other documents sent to the family.</p>
+                            <p class="border rounded-3 bg-danger text-start mt-3 mb-0 pt-2 pb-2 ps-2 pe-2 text-white"><i class="bi-exclamation-diamond me-2"></i>No address for this family found. Addresses are used in receipts and other documents sent to the family.</p>
                         </div>
                     </div>
 
@@ -1951,23 +2104,23 @@
                                     </div>
                                     <div class="row">
                                         <div class="col">
-
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
                                                     <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
                                                         <tr>
                                                             <th scope="row" style="width: 1%; white-space: nowrap;"></th>
-                                                            <th style="white-space: nowrap; width: 1%;">name</th>
+                                                            <th style="">name</th>
                                                             <th style="">Relationship</th>
                                                             <th scope="row">Phones</th>
+                                                            <th scope="row">Emails</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.guardians" id="guardianTableRepeat" class="table-white">
                                                         <tr>
                                                             <td class="text-center align-middle">
-                                                                <div class="pg-badge clickable user-select-none" dmx-hide="primaryGuardian !== id" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover">P</div>
+                                                                <div class="pg-badge clickable user-select-none" dmx-hide="primary === false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover">P</div>
                                                             </td>
-                                                            <td style="white-space: nowrap;" dmx-on:click="getGuardianDetailsModal.dd_guardianDetails.select(id);getGuardianDetailsModal.show()" class="clickable">
+                                                            <td style="white-space: nowrap;" dmx-on:click="oc_GET_GUARDIAN_details.dd_guardianDetails.select(uuid);oc_GET_GUARDIAN_details.show()" class="clickable">
                                                                 <p class="mb-0 text-decoration-underline">{{firstName + ' ' + lastName}}</p>
                                                             </td>
                                                             <td dmx-text="appSettings.relationships[relationship].name">Father</td>
@@ -1977,10 +2130,113 @@
                                                                     </div>
                                                                 </div>
                                                             </td>
+                                                            <td>
+                                                                <div class="row">
+                                                                    <div class="col-auto" style="letter-spacing: 0.8px;">
+                                                                        <p dmx-text="address" class="my-1" dmx-repeat:rp_emails="emails">test@example.com</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            <div class="offcanvas offcanvas-end" id="oc_GET_GUARDIAN_details" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset()" scroll="false" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
+                                                <div class="offcanvas-header border-bottom">
+                                                    <h4 class="offcanvas-title fw-450"><i class="far fa-user fa-fw me-2"></i>View/Edit Guardian Details</h4>
+                                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                                </div>
+                                                <div class="offcanvas-header border-bottom">
+                                                    <h5 class="offcanvas-title fw-500" dmx-text="oc_GET_GUARDIAN_details.dd_guardianDetails.data.firstName+' '+oc_GET_GUARDIAN_details.dd_guardianDetails.data.lastName">Michael Doe</h5>
+                                                </div>
+                                                <div class="offcanvas-body">
+                                                    <dmx-data-detail id="dd_guardianDetails" dmx-bind:data="familyDetails.data.guardians" key="uuid"></dmx-data-detail>
+
+
+                                                    <div class="row row-cols-1 mb-4 pb-2 border-bottom gx-0">
+                                                        <div class="col">
+                                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">Primary Guardian</p>
+
+
+                                                        </div>
+                                                        <div class="col d-flex flex-row align-items-center">
+                                                            <i class="fas fa-check-circle me-2 fa-fw" dmx-class:text-success="dd_guardianDetails.data.primary" dmx-class:text-danger="!dd_guardianDetails.data.primary" dmx-class:fa-check-circle="dd_guardianDetails.data.primary" dmx-class:fa-times-circle="!dd_guardianDetails.data.primary"></i>
+                                                            <p dmx-text="dd_guardianDetails.data.primary === true ? 'Yes, ' +dd_guardianDetails.data.firstName +' '+dd_guardianDetails.data.lastName +' is the primary guardian for this family.' : 'No. Edit this guardian to make them primary.'" class="mb-0">Yes, Michael Doe is the primary guardian for this family.</p>
+                                                        </div>
+
+
+                                                    </div>
+                                                    <div class="row gx-0">
+                                                        <div class="col mb-4 pb-2 border-bottom">
+                                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">Phone Numbers</p>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-bordered align-middle mb-0">
+                                                                    <thead class="text-muted fw-450 text-capitalize">
+                                                                        <tr class="small">
+                                                                            <th class="collapse-cell">SMS</th>
+                                                                            <th class="collapse-cell">Type</th>
+                                                                            <th>Number</th>
+                                                                            <th class="collapse-cell"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="oc_GET_GUARDIAN_details.dd_guardianDetails.data.phones" id="rp_tb_guardian_phones">
+                                                                        <tr>
+                                                                            <td class="text-nowrap">
+
+                                                                                <p class="mb-0 clickable user-select-none"><i class="fas fa-comment-dots me-1 fa-fw text-primary"></i>Send</p>
+                                                                            </td>
+                                                                            <td dmx-text="appSettings.contactTypes[type].type"></td>
+                                                                            <td dmx-text="number"></td>
+                                                                            <td class="text-nowrap">
+                                                                                <p class="mb-0 fw-500 text-secondary clickable user-select-none small"><i class="fas fa-pen me-1 fa-sm fa-fw"></i>EDIT
+                                                                                </p>
+
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="row gx-0">
+                                                        <div class="col mb-4 pb-2 border-bottom">
+
+                                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">Email Addresses</p>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-bordered align-middle mb-0">
+                                                                    <thead class="text-muted fw-450 text-capitalize">
+                                                                        <tr class="small">
+                                                                            <th class="collapse-cell">EMAIL</th>
+                                                                            <th class="collapse-cell">Type</th>
+                                                                            <th>Address</th>
+                                                                            <th class="collapse-cell"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="oc_GET_GUARDIAN_details.dd_guardianDetails.data.emails" id="rp_tb_guardian_emails">
+                                                                        <tr>
+                                                                            <td class="text-nowrap">
+
+                                                                                <p class="mb-0 clickable user-select-none"><i class="fas fa-paper-plane me-1 fa-fw text-primary"></i>Send</p>
+                                                                            </td>
+                                                                            <td dmx-text="appSettings.contactTypes[type].type"></td>
+                                                                            <td dmx-text="address"></td>
+                                                                            <td class="text-nowrap">
+                                                                                <p class="mb-0 fw-500 text-secondary clickable user-select-none small"><i class="fas fa-pen me-1 fa-sm fa-fw"></i>EDIT
+                                                                                </p>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
                                         </div>
                                     </div>
                                 </div>
@@ -1990,6 +2246,63 @@
                         <div class="col">
                             <div class="row g-0">
                                 <div class="col bg-white p-4 border rounded-3 mb-2 ">
+                                    <div class="offcanvas offcanvas-end" id="oc_student_absences" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset();sel_absence_types_filter.setValue('active');var_studentuuid_absenceview.setValue(null)" data-bs-scroll="false" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
+                                        <div class="offcanvas-header border-bottom">
+                                            <h4 class="offcanvas-title fw-450"><i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit Absences
+                                            </h4>
+                                            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                        </div>
+                                        <div class="offcanvas-header border-bottom">
+                                            <h5 class="offcanvas-title fw-500" dmx-text="oc_student_absences.GET_ABSENCES.data.query_student_name.firstName +' '+oc_student_absences.GET_ABSENCES.data.query_student_name.lastName">Johnathan Doe</h5>
+                                            <div class="d-flex flex-row w-auto justify-content-end"><select id="sel_absence_types_filter" class="form-select form-control-lg" dmx-bind:options="appSettings.absence_status" optiontext="$value.capitalize()" optionvalue="$value" dmx-on:updated.debounce:150="GET_ABSENCES.load({},true)" dmx-bind:value="'active'">
+                                                    <option value="all">All</option>
+                                                </select></div>
+
+
+                                        </div>
+                                        <div class="offcanvas-body">
+                                            <dmx-value id="var_studentuuid_absenceview"></dmx-value>
+                                            <dmx-serverconnect id="GET_ABSENCES" noload url="/api/families/student/absences/GET_ABSENCES" dmx-param:status_filter="oc_student_absences.sel_absence_types_filter.value" dmx-param:student_uuid="oc_student_absences.var_studentuuid_absenceview.value"></dmx-serverconnect>
+                                            <p class="fs-6 fw-450 text-muted mb-2 pb-1 border-bottom" dmx-text="oc_student_absences.sel_absence_types_filter.value.capitalize() +' Absences:'">Current Absences:</p>
+                                            <div class="row gx-0" is="dmx-if" id="cr_hasAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length > 0">
+                                                <div class="col">
+                                                    <div class="table-responsive">
+                                                        <table class="table big-small table-hover table-bordered">
+                                                            <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                                <tr>
+                                                                    <th scope="row" style="" class="collapse-cell"></th>
+                                                                    <th scope="col" class="collapse-cell">Status</th>
+                                                                    <th scope="col">Date</th>
+                                                                    <th scope="col">Class</th>
+                                                                    <th scope="col">Makeup Token</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody is="dmx-repeat" id="rp_student_absences_list" dmx-bind:repeat="oc_student_absences.GET_ABSENCES.data.rp_absences" class="align-middle">
+                                                                <tr>
+                                                                    <th scope="row">
+                                                                        <button id="btn_edit_absence" class="btn btn-sm fw-500 text-primary">EDIT</button>
+                                                                    </th>
+                                                                    <td dmx-text="status.capitalize()">
+                                                                        Active<br></td>
+                                                                    <td dmx-text="absence_date.toDate().formatDate(appSettings.localization_puddle_dateformat)">21/01/2022<br></td>
+                                                                    <td dmx-text="appSettings.days_array[dayint].trunc('3', 'true', '.') +' - '+startTimeDisplay +' '+appSettings.classLevelsByID[classlevel_uuid].name +' - '+appSettings.instructorsById[instructor_uuid].trunc_name">Sun. - 10:30 AM Duckling - Rhonda J</td>
+                                                                    <td dmx-html="query_makeup_token.uuid ? ((query_makeup_token.status == 'active' ? '<i class=&quot;fas fa-dot-circle text-makeup me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'used' ? '<i class=&quot;fas fa-dot-circle text-muted me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'expired' ? '<i class=&quot;fas fa-times-circle text-muted me-1 fa-fw&quot;></i>' : '<i class=&quot;fas fa-dot-circle text-danger me-1 fa-fw&quot;></i>') + query_makeup_token.status.capitalize()) : '<i class=&quot;fas fa-times-circle text-danger me-1 fa-fw&quot;></i> Not Issued'">Active</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row gx-0" is="dmx-if" id="cr_noAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length == 0">
+                                                <div class="col border rounded-3 d-flex align-items-center justify-content-center p-4 flex-column">
+                                                    <p class="mb-0 fw-500 text-danger" dmx-text="'There are no '+(oc_student_absences.sel_absence_types_filter.value === 'all' ? '' : oc_student_absences.sel_absence_types_filter.value +' ') +'absences for this student.'">There are no current absences for this student.</p>
+                                                    <p class="mb-0">To view other absences, please select from the dropdown.</p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
                                     <div class="row pb-4 align-items-center">
                                         <div class="col align-self-center">
                                             <h5 class="mb-0">Students</h5>
@@ -2001,21 +2314,46 @@
                                                 <table class="table align-middle table-hover big-small">
                                                     <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
                                                         <tr>
-                                                            <th style="width: 1%; white-space: nowrap;">Abs.</th>
-                                                            <th style="width: 1%; white-space: nowrap;">ID</th>
+                                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                                            <th style="">ID</th>
                                                             <th style="">Student</th>
                                                             <th>Age</th>
-                                                            <th>Level</th>
-                                                            <th>Notes</th>
+                                                            <th>Class Level</th>
+                                                            <th>Student Notes</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.students" id="studentTableRepeat" class="table-white">
                                                         <tr>
-                                                            <td class="p-0"><button id="btn_absence" class="btn" wappler-empty="Editable" wappler-command="editContent" dmx-on:click="run({serverConnect:{url:'/api/families/student/absences/GENERATE_ABSENCE',site:'SSA-CRM',params:{student_uuid:`uuid`,makeup_eligible:1,absence_start:'2022-01-20',absence_end:'2022-02-27'},name:'sc'}})"><i class="far fa-calendar-times"></i></button></td>
+                                                            <td class="p-0">
+                                                                <div class="dropdown">
+                                                                    <button id="drd_students" class="btn dropdown-toggle change-chevron border bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="fas fa-ellipsis-v fa-xs"></i>
+                                                                    </button>
+                                                                    <div class="dropdown-menu dropup" aria-labelledby="drd_students">
+                                                                        <h6 class="dropdown-header">Student Information</h6>
+                                                                        <a class="dropdown-item clickable user-select-none" dmx-bind:href="'/families/familydetail/'+query.familyid+'/studentdetail/'+uuid"><i class="fas fa-child me-2 fa-fw"></i>View Student Details<i class="fas fa-external-link-alt fa-xs fa-fw ms-2 text-muted"></i></a>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <h6 class="dropdown-header">Enrolments</h6>
+                                                                        <div class="dropdown-item clickable user-select-none"><i class="fas fa-calendar-plus fa-fw me-2"></i>Create Enrolment</div>
+
+                                                                        <div class="dropdown-item clickable user-select-none"><i class="far fa-calendar-check fa-fw me-2"></i>View Enrolments</div>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <h6 class="dropdown-header">Absences</h6>
+
+                                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="run({run:{action:`CREATE_ABSENCE.dd_studentDetails.select(uuid);CREATE_ABSENCE.show()`}})" href="javascript:void(0);"><i class="far fa-calendar-times me-2 fa-fw"></i>Create Absence</div>
+                                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="oc_student_absences.var_studentuuid_absenceview.setValue(uuid);oc_student_absences.GET_ABSENCES.load({});oc_student_absences.show()"><i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit Absences</div>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <h6 class="dropdown-header">Makeups</h6>
+                                                                        <div class="dropdown-item clickable user-select-none" href="#"><i class="fas fa-dot-circle me-2 fa-fw"></i>
+                                                                            View/Edit Tokens</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
                                                             <td dmx-text="id">15466</td>
-                                                            <td dmx-text="firstName+' '+lastName" class="text-decoration-underline clickable" dmx-on:click="browser1.goto('/families/familydetail/'+query.familyid+'/studentdetail/'+uuid)">Jeffrey Doe</td>
+                                                            <td dmx-text="firstName+' '+lastName">
+                                                            </td>
                                                             <td dmx-text="age">3y 4m</td>
-                                                            <td dmx-text="appSettings.classLevelsByID[level].name">Duckling</td>
+                                                            <td dmx-text="appSettings.classLevelsByID[classlevel_uuid].name">Duckling</td>
                                                             <td dmx-text="note_count" class="text-decoration-underline clickable">1 Note</td>
                                                         </tr>
                                                     </tbody>

@@ -1,0 +1,543 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "status_filter"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_absences",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "a",
+                "column": "*"
+              },
+              {
+                "table": "c",
+                "column": "day",
+                "alias": "dayint"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "c",
+                "column": "classlevel_uuid"
+              },
+              {
+                "table": "c",
+                "column": "instructor_uuid"
+              },
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "absences",
+              "alias": "a"
+            },
+            "joins": [
+              {
+                "table": "enrolments",
+                "column": "*",
+                "alias": "e",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "e",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "a",
+                        "column": "enrolment_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "classes",
+                "column": "*",
+                "alias": "c",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "c",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "class_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "s.uuid",
+                  "field": "s.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "s",
+                    "column": "uuid",
+                    "type": "text"
+                  },
+                  "operation": "="
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "a.status",
+                      "field": "a.status",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.status_filter}}",
+                      "data": {
+                        "table": "a",
+                        "column": "status",
+                        "type": "text"
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.status_filter !== 'all'}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "orders": [
+              {
+                "table": "a",
+                "column": "absence_date",
+                "direction": "ASC",
+                "recid": 1
+              },
+              {
+                "table": "c",
+                "column": "day",
+                "direction": "ASC",
+                "recid": 2
+              },
+              {
+                "table": "c",
+                "column": "startTimeDecimal",
+                "direction": "ASC",
+                "recid": 3
+              }
+            ],
+            "query": "SELECT a.*, c.day AS dayint, c.startTimeDisplay, c.classlevel_uuid, c.instructor_uuid, s.firstName, s.lastName\nFROM absences AS a\nLEFT JOIN enrolments AS e ON (e.uuid = a.enrolment_uuid) LEFT JOIN students AS s ON (s.uuid = e.student_uuid) LEFT JOIN classes AS c ON (c.uuid = e.class_uuid)\nWHERE s.uuid = :P1 /* {{$_GET.student_uuid}} */ AND (a.status = :P2 /* {{$_GET.status_filter}} */)\nORDER BY a.absence_date ASC, c.day ASC, c.startTimeDecimal ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.student_uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.status_filter}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "enrolment_uuid"
+          },
+          {
+            "type": "number",
+            "name": "absence_date"
+          },
+          {
+            "type": "boolean",
+            "name": "makeup_eligible"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "number",
+            "name": "dayint"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "text",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "query_student_name",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "students"
+            },
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.uuid",
+                  "field": "students.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "uuid",
+                    "type": "text"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT firstName, lastName\nFROM students\nWHERE uuid = :P1 /* {{$_GET.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "rp_absences",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_absences}}",
+          "outputFields": [
+            "uuid",
+            "enrolment_uuid",
+            "absence_date",
+            "makeup_eligible",
+            "status",
+            "dayint",
+            "startTimeDisplay",
+            "classlevel_uuid",
+            "instructor_uuid"
+          ],
+          "exec": {
+            "steps": {
+              "name": "query_makeup_token",
+              "module": "dbconnector",
+              "action": "single",
+              "options": {
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [
+                    {
+                      "table": "makeup_tokens",
+                      "column": "*"
+                    }
+                  ],
+                  "table": {
+                    "name": "makeup_tokens"
+                  },
+                  "joins": [],
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "makeup_tokens.absence_uuid",
+                        "field": "makeup_tokens.absence_uuid",
+                        "type": "double",
+                        "operator": "equal",
+                        "value": "{{uuid}}",
+                        "data": {
+                          "table": "makeup_tokens",
+                          "column": "absence_uuid",
+                          "type": "number"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "SELECT *\nFROM makeup_tokens\nWHERE absence_uuid = :P1 /* {{uuid}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{uuid}}"
+                    }
+                  ]
+                },
+                "connection": "db"
+              },
+              "output": true,
+              "meta": [
+                {
+                  "type": "text",
+                  "name": "uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "absence_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolment_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "student_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "expiry_date"
+                },
+                {
+                  "type": "number",
+                  "name": "created_date"
+                },
+                {
+                  "type": "number",
+                  "name": "created_by"
+                },
+                {
+                  "type": "number",
+                  "name": "updated_date"
+                },
+                {
+                  "type": "text",
+                  "name": "updated_by"
+                }
+              ],
+              "type": "dbconnector_single",
+              "outputType": "object"
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "enrolment_uuid",
+            "type": "number"
+          },
+          {
+            "name": "absence_date",
+            "type": "number"
+          },
+          {
+            "name": "makeup_eligible",
+            "type": "boolean"
+          },
+          {
+            "name": "status",
+            "type": "text"
+          },
+          {
+            "name": "dayint",
+            "type": "number"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "classlevel_uuid",
+            "type": "text"
+          },
+          {
+            "name": "instructor_uuid",
+            "type": "text"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "query_makeup_token",
+            "type": "object",
+            "sub": [
+              {
+                "type": "text",
+                "name": "uuid"
+              },
+              {
+                "type": "number",
+                "name": "absence_uuid"
+              },
+              {
+                "type": "number",
+                "name": "enrolment_uuid"
+              },
+              {
+                "type": "number",
+                "name": "student_uuid"
+              },
+              {
+                "type": "number",
+                "name": "expiry_date"
+              },
+              {
+                "type": "number",
+                "name": "created_date"
+              },
+              {
+                "type": "number",
+                "name": "created_by"
+              },
+              {
+                "type": "number",
+                "name": "updated_date"
+              },
+              {
+                "type": "text",
+                "name": "updated_by"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

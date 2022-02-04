@@ -5,6 +5,7 @@ function appSettingsObject() {
         rl = dmx.parse('appSettings.data.query_relationships'),
         ct = dmx.parse('appSettings.data.query_contacttypes'),
         ins = dmx.parse('appSettings.data.query_instructors'),
+        ab = dmx.parse('appSettings.data.absence_types'),
         s = {},
         mn,
         mx,
@@ -23,7 +24,8 @@ function appSettingsObject() {
         ect = [],
         etarr = [],
         etid = {},
-        pct = [];
+        pct = []
+        abt = [];
 
     for (i = 0; i < l.length; i++) {
         var n = l[i].name, v = l[i].value;
@@ -61,6 +63,12 @@ function appSettingsObject() {
         cla[n] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevels"] = cla;
+    // Absence Types / Statuses
+    // Array
+    for (let i = 0; i < ab.length; i++) {
+        abt.push(ab[i]);
+    }
+    s["absence_status"] = abt;
 
     // Levels by ID
     for (let i = 0; i < cl.length; i++) {

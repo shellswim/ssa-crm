@@ -1,0 +1,724 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "array",
+        "name": "enrols",
+        "sub": [
+          {
+            "type": "text",
+            "name": "enroluuid"
+          },
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "array",
+            "name": "absences",
+            "sub": [
+              {
+                "type": "text",
+                "name": "absence_date"
+              },
+              {
+                "type": "text",
+                "name": "makeup_eligible"
+              },
+              {
+                "type": "text",
+                "name": "makeup_token_uuid"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "array",
+        "name": "record",
+        "sub": [
+          {
+            "type": "number",
+            "name": "enroluuid"
+          },
+          {
+            "type": "number",
+            "name": "absence_date"
+          },
+          {
+            "type": "boolean",
+            "name": "(makeup_eligible"
+          },
+          {
+            "type": "text",
+            "name": "absence_uuid_gen"
+          }
+        ]
+      },
+      {
+        "type": "number",
+        "name": "student_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "rp_enrols",
+      "module": "core",
+      "action": "repeat",
+      "options": {
+        "repeat": "{{$_POST.enrols}}",
+        "outputFields": [
+          "classdetails",
+          "enroluuid",
+          "absences"
+        ],
+        "exec": {
+          "steps": {
+            "name": "rp_absencerecords",
+            "module": "core",
+            "action": "repeat",
+            "options": {
+              "repeat": "{{absences}}",
+              "outputFields": [],
+              "exec": {
+                "steps": [
+                  {
+                    "name": "absence_uuid_gen",
+                    "module": "core",
+                    "action": "setvalue",
+                    "options": {
+                      "value": "abs_{{UUID.replace('-', '')}}"
+                    },
+                    "meta": [],
+                    "outputType": "text"
+                  },
+                  {
+                    "name": "insert_absence",
+                    "module": "dbupdater",
+                    "action": "insert",
+                    "options": {
+                      "connection": "db",
+                      "sql": {
+                        "type": "insert",
+                        "values": [
+                          {
+                            "table": "absences",
+                            "column": "enrolment_uuid",
+                            "type": "number",
+                            "value": "{{enroluuid}}"
+                          },
+                          {
+                            "table": "absences",
+                            "column": "absence_date",
+                            "type": "number",
+                            "value": "{{absence_date.toTimestamp()}}"
+                          },
+                          {
+                            "table": "absences",
+                            "column": "makeup_eligible",
+                            "type": "boolean",
+                            "value": "{{(makeup_eligible === true || makeup_eligible === 'true') ? 1 : 0}}"
+                          },
+                          {
+                            "table": "absences",
+                            "column": "uuid",
+                            "type": "text",
+                            "value": "{{absence_uuid_gen}}"
+                          }
+                        ],
+                        "table": "absences",
+                        "returning": "uuid",
+                        "query": "INSERT INTO absences\n(enrolment_uuid, absence_date, makeup_eligible, uuid) VALUES (:P1 /* {{enroluuid}} */, :P2 /* {{absence_date.toTimestamp()}} */, :P3 /* {{(makeup_eligible === true || makeup_eligible === 'true') ? 1 : 0}} */, :P4 /* {{absence_uuid_gen}} */)",
+                        "params": [
+                          {
+                            "name": ":P1",
+                            "type": "expression",
+                            "value": "{{enroluuid}}"
+                          },
+                          {
+                            "name": ":P2",
+                            "type": "expression",
+                            "value": "{{absence_date.toTimestamp()}}"
+                          },
+                          {
+                            "name": ":P3",
+                            "type": "expression",
+                            "value": "{{(makeup_eligible === true || makeup_eligible === 'true') ? 1 : 0}}"
+                          },
+                          {
+                            "name": ":P4",
+                            "type": "expression",
+                            "value": "{{absence_uuid_gen}}"
+                          }
+                        ]
+                      }
+                    },
+                    "meta": [
+                      {
+                        "name": "identity",
+                        "type": "text"
+                      },
+                      {
+                        "name": "affected",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "",
+                    "module": "core",
+                    "action": "condition",
+                    "options": {
+                      "if": "{{makeup_eligible === true || makeup_eligible === 'true'}}",
+                      "then": {
+                        "steps": [
+                          {
+                            "name": "query_makeup_enabled",
+                            "module": "dbconnector",
+                            "action": "single",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "SELECT",
+                                "columns": [
+                                  {
+                                    "table": "settings",
+                                    "column": "value"
+                                  }
+                                ],
+                                "table": {
+                                  "name": "settings"
+                                },
+                                "joins": [],
+                                "wheres": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "id": "settings.name",
+                                      "field": "settings.name",
+                                      "type": "string",
+                                      "operator": "equal",
+                                      "value": "makeup_tokens_enabled",
+                                      "data": {
+                                        "table": "settings",
+                                        "column": "name",
+                                        "type": "text"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ],
+                                  "conditional": null,
+                                  "valid": true
+                                },
+                                "query": "SELECT value\nFROM settings\nWHERE name = 'makeup_tokens_enabled'",
+                                "params": []
+                              }
+                            },
+                            "output": true,
+                            "meta": [
+                              {
+                                "type": "text",
+                                "name": "value"
+                              }
+                            ],
+                            "outputType": "object"
+                          },
+                          {
+                            "name": "",
+                            "module": "core",
+                            "action": "condition",
+                            "options": {
+                              "if": "{{query_makeup_enabled.value == 1}}",
+                              "then": {
+                                "steps": [
+                                  {
+                                    "name": "insert_makeup",
+                                    "module": "dbupdater",
+                                    "action": "insert",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "insert",
+                                        "values": [
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "absence_uuid",
+                                            "type": "number",
+                                            "value": "{{absence_uuid_gen}}"
+                                          },
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "enrolment_uuid",
+                                            "type": "number",
+                                            "value": "{{enroluuid}}"
+                                          },
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "student_uuid",
+                                            "type": "number",
+                                            "value": "{{$_POST.student_uuid}}"
+                                          },
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "uuid",
+                                            "type": "text",
+                                            "value": "{{makeup_token_uuid}}"
+                                          },
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "created_date",
+                                            "type": "number",
+                                            "value": "{{TIMESTAMP}}"
+                                          },
+                                          {
+                                            "table": "makeup_tokens",
+                                            "column": "created_by",
+                                            "type": "number",
+                                            "value": "{{identity}}"
+                                          }
+                                        ],
+                                        "table": "makeup_tokens",
+                                        "returning": "uuid",
+                                        "query": "INSERT INTO makeup_tokens\n(absence_uuid, enrolment_uuid, student_uuid, uuid, created_date, created_by) VALUES (:P1 /* {{absence_uuid_gen}} */, :P2 /* {{enroluuid}} */, :P3 /* {{$_POST.student_uuid}} */, :P4 /* {{makeup_token_uuid}} */, :P5 /* {{TIMESTAMP}} */, :P6 /* {{identity}} */)",
+                                        "params": [
+                                          {
+                                            "name": ":P1",
+                                            "type": "expression",
+                                            "value": "{{absence_uuid_gen}}"
+                                          },
+                                          {
+                                            "name": ":P2",
+                                            "type": "expression",
+                                            "value": "{{enroluuid}}"
+                                          },
+                                          {
+                                            "name": ":P3",
+                                            "type": "expression",
+                                            "value": "{{$_POST.student_uuid}}"
+                                          },
+                                          {
+                                            "name": ":P4",
+                                            "type": "expression",
+                                            "value": "{{makeup_token_uuid}}"
+                                          },
+                                          {
+                                            "name": ":P5",
+                                            "type": "expression",
+                                            "value": "{{TIMESTAMP}}"
+                                          },
+                                          {
+                                            "name": ":P6",
+                                            "type": "expression",
+                                            "value": "{{identity}}"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "meta": [
+                                      {
+                                        "name": "identity",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "affected",
+                                        "type": "number"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "name": "query_makeup_expiry",
+                                    "module": "dbconnector",
+                                    "action": "single",
+                                    "options": {
+                                      "sql": {
+                                        "type": "SELECT",
+                                        "columns": [
+                                          {
+                                            "table": "settings",
+                                            "column": "value"
+                                          }
+                                        ],
+                                        "table": {
+                                          "name": "settings"
+                                        },
+                                        "joins": [],
+                                        "wheres": {
+                                          "condition": "AND",
+                                          "rules": [
+                                            {
+                                              "id": "settings.name",
+                                              "field": "settings.name",
+                                              "type": "string",
+                                              "operator": "equal",
+                                              "value": "makeup_tokens_expiry_enabled",
+                                              "data": {
+                                                "table": "settings",
+                                                "column": "name",
+                                                "type": "text"
+                                              },
+                                              "operation": "="
+                                            }
+                                          ],
+                                          "conditional": null,
+                                          "valid": true
+                                        },
+                                        "query": "SELECT value\nFROM settings\nWHERE name = 'makeup_tokens_expiry_enabled'",
+                                        "params": []
+                                      },
+                                      "connection": "db"
+                                    },
+                                    "output": true,
+                                    "meta": [
+                                      {
+                                        "type": "text",
+                                        "name": "value"
+                                      }
+                                    ],
+                                    "outputType": "object",
+                                    "type": "dbconnector_single"
+                                  },
+                                  {
+                                    "name": "",
+                                    "module": "core",
+                                    "action": "condition",
+                                    "options": {
+                                      "if": "{{query_makeup_expiry.value == 1}}",
+                                      "then": {
+                                        "steps": [
+                                          {
+                                            "name": "query_makeup_expiry_length",
+                                            "module": "dbconnector",
+                                            "action": "single",
+                                            "options": {
+                                              "connection": "db",
+                                              "sql": {
+                                                "type": "SELECT",
+                                                "columns": [
+                                                  {
+                                                    "table": "settings",
+                                                    "column": "value"
+                                                  }
+                                                ],
+                                                "table": {
+                                                  "name": "settings"
+                                                },
+                                                "joins": [],
+                                                "wheres": {
+                                                  "condition": "AND",
+                                                  "rules": [
+                                                    {
+                                                      "id": "settings.name",
+                                                      "field": "settings.name",
+                                                      "type": "string",
+                                                      "operator": "equal",
+                                                      "value": "makeup_tokens_expiry_length",
+                                                      "data": {
+                                                        "table": "settings",
+                                                        "column": "name",
+                                                        "type": "text"
+                                                      },
+                                                      "operation": "="
+                                                    }
+                                                  ],
+                                                  "conditional": null,
+                                                  "valid": true
+                                                },
+                                                "query": "SELECT value\nFROM settings\nWHERE name = 'makeup_tokens_expiry_length'",
+                                                "params": []
+                                              }
+                                            },
+                                            "output": true,
+                                            "meta": [
+                                              {
+                                                "type": "text",
+                                                "name": "value"
+                                              }
+                                            ],
+                                            "outputType": "object"
+                                          },
+                                          {
+                                            "name": "query_makeup_expiry_from_classdate",
+                                            "module": "dbconnector",
+                                            "action": "single",
+                                            "options": {
+                                              "connection": "db",
+                                              "sql": {
+                                                "type": "SELECT",
+                                                "columns": [
+                                                  {
+                                                    "table": "settings",
+                                                    "column": "value"
+                                                  }
+                                                ],
+                                                "table": {
+                                                  "name": "settings"
+                                                },
+                                                "joins": [],
+                                                "wheres": {
+                                                  "condition": "AND",
+                                                  "rules": [
+                                                    {
+                                                      "id": "settings.name",
+                                                      "field": "settings.name",
+                                                      "type": "string",
+                                                      "operator": "equal",
+                                                      "value": "makeup_tokens_expiry_from_classdate",
+                                                      "data": {
+                                                        "table": "settings",
+                                                        "column": "name",
+                                                        "type": "text"
+                                                      },
+                                                      "operation": "="
+                                                    }
+                                                  ],
+                                                  "conditional": null,
+                                                  "valid": true
+                                                },
+                                                "query": "SELECT value\nFROM settings\nWHERE name = 'makeup_tokens_expiry_from_classdate'",
+                                                "params": []
+                                              }
+                                            },
+                                            "output": true,
+                                            "meta": [
+                                              {
+                                                "type": "text",
+                                                "name": "value"
+                                              }
+                                            ],
+                                            "outputType": "object"
+                                          },
+                                          {
+                                            "name": "",
+                                            "module": "core",
+                                            "action": "condition",
+                                            "options": {
+                                              "if": "{{query_makeup_expiry_from_classdate.value == 1}}",
+                                              "then": {
+                                                "steps": {
+                                                  "name": "update_makeup_token",
+                                                  "module": "dbupdater",
+                                                  "action": "update",
+                                                  "options": {
+                                                    "connection": "db",
+                                                    "sql": {
+                                                      "type": "update",
+                                                      "values": [
+                                                        {
+                                                          "table": "makeup_tokens",
+                                                          "column": "expiry_date",
+                                                          "type": "number",
+                                                          "value": "{{absence_date.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}}"
+                                                        }
+                                                      ],
+                                                      "table": "makeup_tokens",
+                                                      "wheres": {
+                                                        "condition": "AND",
+                                                        "rules": [
+                                                          {
+                                                            "id": "uuid",
+                                                            "field": "uuid",
+                                                            "type": "string",
+                                                            "operator": "equal",
+                                                            "value": "{{makeup_token_uuid}}",
+                                                            "data": {
+                                                              "column": "uuid"
+                                                            },
+                                                            "operation": "="
+                                                          }
+                                                        ],
+                                                        "conditional": null,
+                                                        "valid": true
+                                                      },
+                                                      "query": "UPDATE makeup_tokens\nSET expiry_date = :P1 /* {{absence_date.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}} */\nWHERE uuid = :P2 /* {{makeup_token_uuid}} */",
+                                                      "params": [
+                                                        {
+                                                          "name": ":P1",
+                                                          "type": "expression",
+                                                          "value": "{{absence_date.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}}"
+                                                        },
+                                                        {
+                                                          "operator": "equal",
+                                                          "type": "expression",
+                                                          "name": ":P2",
+                                                          "value": "{{makeup_token_uuid}}"
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  "meta": [
+                                                    {
+                                                      "name": "affected",
+                                                      "type": "number"
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "else": {
+                                                "steps": {
+                                                  "name": "update_makeup_token",
+                                                  "module": "dbupdater",
+                                                  "action": "update",
+                                                  "options": {
+                                                    "connection": "db",
+                                                    "sql": {
+                                                      "type": "update",
+                                                      "values": [
+                                                        {
+                                                          "table": "makeup_tokens",
+                                                          "column": "expiry_date",
+                                                          "type": "number",
+                                                          "value": "{{NOW_UTC.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}}"
+                                                        }
+                                                      ],
+                                                      "table": "makeup_tokens",
+                                                      "wheres": {
+                                                        "condition": "AND",
+                                                        "rules": [
+                                                          {
+                                                            "id": "uuid",
+                                                            "field": "uuid",
+                                                            "type": "string",
+                                                            "operator": "equal",
+                                                            "value": "{{makeup_token_uuid}}",
+                                                            "data": {
+                                                              "column": "uuid"
+                                                            },
+                                                            "operation": "="
+                                                          }
+                                                        ],
+                                                        "conditional": null,
+                                                        "valid": true
+                                                      },
+                                                      "query": "UPDATE makeup_tokens\nSET expiry_date = :P1 /* {{NOW_UTC.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}} */\nWHERE uuid = :P2 /* {{makeup_token_uuid}} */",
+                                                      "params": [
+                                                        {
+                                                          "name": ":P1",
+                                                          "type": "expression",
+                                                          "value": "{{NOW_UTC.dateAdd('days', query_makeup_expiry_length.value.toNumber()).toTimestamp()}}"
+                                                        },
+                                                        {
+                                                          "operator": "equal",
+                                                          "type": "expression",
+                                                          "name": ":P2",
+                                                          "value": "{{makeup_token_uuid}}"
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  "meta": [
+                                                    {
+                                                      "name": "affected",
+                                                      "type": "number"
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            },
+                                            "outputType": "boolean"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "outputType": "boolean"
+                                  }
+                                ]
+                              }
+                            },
+                            "outputType": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "outputType": "boolean"
+                  }
+                ]
+              }
+            },
+            "output": true,
+            "meta": [
+              {
+                "name": "$index",
+                "type": "number"
+              },
+              {
+                "name": "$number",
+                "type": "number"
+              },
+              {
+                "name": "$name",
+                "type": "text"
+              },
+              {
+                "name": "$value",
+                "type": "object"
+              }
+            ],
+            "outputType": "array"
+          }
+        }
+      },
+      "output": true,
+      "meta": [
+        {
+          "name": "$index",
+          "type": "number"
+        },
+        {
+          "name": "$number",
+          "type": "number"
+        },
+        {
+          "name": "$name",
+          "type": "text"
+        },
+        {
+          "name": "$value",
+          "type": "object"
+        },
+        {
+          "name": "enroluuid",
+          "type": "text"
+        },
+        {
+          "name": "student_uuid",
+          "type": "text"
+        },
+        {
+          "name": "absences",
+          "type": "array",
+          "sub": [
+            {
+              "name": "absence_date",
+              "type": "text"
+            },
+            {
+              "name": "makeup_eligible",
+              "type": "text"
+            },
+            {
+              "name": "makeup_token_uuid",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "rp_absencerecords",
+          "type": "array",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    }
+  }
+}
