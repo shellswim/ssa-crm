@@ -33,7 +33,7 @@ exports.absenceRequest = async function (options) {
 
     let abs_start = Number(moment(options.absence_start).format('X')),
         abs_end = !options.absence_end ? abs_start : Number(moment(options.absence_end).format('X')),
-        mu_eligible = !!Number(options.makeup_eligible),
+        mu_eligible = options.makeup_eligible,
         enrolments = dbClientArray(await db.raw(`
         SELECT e.uuid, e.student_uuid, e.class_uuid, e.startDate, e.dropDate
         FROM enrolments e
@@ -82,7 +82,8 @@ exports.absenceRequest = async function (options) {
                     'absence_date_unix': ab,
                     'absence_date': moment.unix(ab).format('YYYY-MM-DD'),
                     'student': en.student_uuid,
-                    'makeup_eligible': mu_eligible,
+                    'makeup_eligible': mu_eligible == 'mu' ? true : false,
+                    'holdingfee_eligible': mu_eligible == 'hf' ? true : false,
                     'enrolment': en.uuid,
                     'mutoken_uuid': 'mut_' + (crypto.randomUUID()).replaceAll('-','')
                 });
