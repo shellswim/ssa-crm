@@ -1178,6 +1178,10 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "rp_familylist_placeholder": {
+      "meta": null,
+      "outputType": "object"
     }
   },
   "index layoutMain": {
@@ -9592,6 +9596,10 @@ dmx.config({
         }
       ],
       "outputType": "text"
+    },
+    "rp_tabs_placeholder": {
+      "meta": null,
+      "outputType": "object"
     }
   },
   "_classFilterSidebar": {

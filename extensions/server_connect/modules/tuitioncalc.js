@@ -3,10 +3,6 @@ const moment = require('moment-timezone');
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const { evaluate, sum, chain: mathchain, round } = require('mathjs');
-const {
-    raw
-} = require('mysql');
-const e = require('express');
 
 exports.tuitioncalc = async function (options) {
 
@@ -29,10 +25,6 @@ exports.tuitioncalc = async function (options) {
             obj[item[keyfield]] = item;
             return obj;
         }, {});
-
-    function moneyround(x, d) {
-        return Number(parseFloat(x).toFixed(d));
-    }
     /////////// End utilities ///////////
 
     options = this.parse(options);
@@ -51,7 +43,6 @@ exports.tuitioncalc = async function (options) {
         "start": mtp.clone().startOf('month'),
         "end": mtp.clone().endOf('month')
     };
-    let mtp_next = moment(mtp).month();
 
     /////Enrolment Discount Types - Bulk means classes will be discounted from the settings at the total weekly enrolments. Perenrol works down the discount settings and attached discounts depending on the class number for that week.
     let enr_disc_enable = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name = 'endiscount_enable'`)).value == 1 ? true : false;
@@ -93,8 +84,6 @@ exports.tuitioncalc = async function (options) {
     let familyprocessed = await familyProcess(studentsprocessed);
 
 
-    /*/*/
-    /*/*/
     /*/*/ // FUNCTIONS START
 
     ///// Students Process
@@ -279,7 +268,6 @@ exports.tuitioncalc = async function (options) {
                     t.enrolsdisctotal.push(weektotals.en_disc_total);
                     t.familydisctotal.push(weektotals.familydisctotal);
                     
-                    
                     fweek[st.student] = {
                         'enrolments': st.enrolments,
                         'weektotals': weektotals,
@@ -287,7 +275,6 @@ exports.tuitioncalc = async function (options) {
                         'startofweek': weeks
                     };
                 }
-                
                 
                 // Student total breakdowns
             }
@@ -464,35 +451,6 @@ exports.tuitioncalc = async function (options) {
 
         }
     }
-
-
-    // ///// Setup Billing Cycle
-    // let bcycle = dbClientFlat(await db.raw(`SELECT bc.* FROM billingCycles bc JOIN (SELECT * FROM settings WHERE name = 'billing_cycle') AS setting ON bc.id = setting.value`)).value;
-    // let bcycle_ahead = Boolean(dbClientFlat(Number(await db.raw("SELECT value FROM settings WHERE name = 'billing_cycle_charge_ahead'"))).value);
-
-    // // Start 'Monthly' & 'Force 4 Week Month' billing cycle setup
-    // if(bcycle == 2 || bcycle == 3) {
-    //     let tmstart = moment().startOf('month');
-    //     let tmend = moment().endOf('month');
-    //     if(bcycle_ahead) {
-    //         let tmstart_ahead = moment().add(1, 'month').startOf('month');
-    //         let tmend_ahead = moment().add(1, 'month').endOf('month');
-    //     }
-    // }
-
-    // // Get class types and their prices
-    // let class_types = dbClient(await db.raw(`SELECT * FROM classTypes`));
-
-    // // Get students
-    // let students = dbClient(await db.raw(`SELECT * from students WHERE family = ${fid}`));
-
-    // let std_enrol_arr = {};
-
-    // // Loop through students & get enrolments
-    // for(let i=0;i<students.length;i++) {
-    //     std_enrol_arr[students[i].id] = dbClient(await db.raw(`SELECT * FROM enrolments WHERE student = ${students[i].id} AND isValid = 1`));
-    // }
-
 
     ///// DB Query Processor
     function dbClientFlat(v) {

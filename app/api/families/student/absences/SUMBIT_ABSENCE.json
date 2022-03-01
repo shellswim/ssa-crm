@@ -173,14 +173,26 @@
                         "name": "affected",
                         "type": "number"
                       }
-                    ]
+                    ],
+                    "disabled": true
+                  },
+                  {
+                    "name": "mu_eligible",
+                    "module": "core",
+                    "action": "setvalue",
+                    "options": {
+                      "value": "{{makeup_eligible}}"
+                    },
+                    "meta": [],
+                    "outputType": "text",
+                    "output": true
                   },
                   {
                     "name": "",
                     "module": "core",
                     "action": "condition",
                     "options": {
-                      "if": "{{makeup_eligible === true || makeup_eligible === 'true'}}",
+                      "if": "{{makeup_eligible == 'mu'}}",
                       "then": {
                         "steps": [
                           {
@@ -232,7 +244,8 @@
                                 "name": "value"
                               }
                             ],
-                            "outputType": "object"
+                            "outputType": "object",
+                            "disabled": true
                           },
                           {
                             "name": "",
@@ -334,7 +347,8 @@
                                         "name": "affected",
                                         "type": "number"
                                       }
-                                    ]
+                                    ],
+                                    "disabled": true
                                   },
                                   {
                                     "name": "query_makeup_expiry",
@@ -386,7 +400,8 @@
                                       }
                                     ],
                                     "outputType": "object",
-                                    "type": "dbconnector_single"
+                                    "type": "dbconnector_single",
+                                    "disabled": true
                                   },
                                   {
                                     "name": "",
@@ -445,7 +460,8 @@
                                                 "name": "value"
                                               }
                                             ],
-                                            "outputType": "object"
+                                            "outputType": "object",
+                                            "disabled": true
                                           },
                                           {
                                             "name": "query_makeup_expiry_from_classdate",
@@ -496,7 +512,8 @@
                                                 "name": "value"
                                               }
                                             ],
-                                            "outputType": "object"
+                                            "outputType": "object",
+                                            "disabled": true
                                           },
                                           {
                                             "name": "",
@@ -561,7 +578,8 @@
                                                       "name": "affected",
                                                       "type": "number"
                                                     }
-                                                  ]
+                                                  ],
+                                                  "disabled": true
                                                 }
                                               },
                                               "else": {
@@ -621,7 +639,8 @@
                                                       "name": "affected",
                                                       "type": "number"
                                                     }
-                                                  ]
+                                                  ],
+                                                  "disabled": true
                                                 }
                                               }
                                             },
@@ -636,6 +655,265 @@
                               }
                             },
                             "outputType": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "outputType": "boolean"
+                  },
+                  {
+                    "name": "",
+                    "module": "core",
+                    "action": "condition",
+                    "options": {
+                      "if": "{{makeup_eligible == 'hf'}}",
+                      "then": {
+                        "steps": [
+                          {
+                            "name": "mu_eligible",
+                            "module": "core",
+                            "action": "setvalue",
+                            "options": {
+                              "value": "{{makeup_eligible}}"
+                            },
+                            "meta": [],
+                            "outputType": "text",
+                            "output": true
+                          },
+                          {
+                            "name": "query_hf_value",
+                            "module": "dbconnector",
+                            "action": "single",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "SELECT",
+                                "columns": [
+                                  {
+                                    "table": "settings",
+                                    "column": "value"
+                                  }
+                                ],
+                                "table": {
+                                  "name": "settings"
+                                },
+                                "joins": [],
+                                "wheres": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "id": "settings.name",
+                                      "field": "settings.name",
+                                      "type": "string",
+                                      "operator": "equal",
+                                      "value": "holding_fees_value",
+                                      "data": {
+                                        "table": "settings",
+                                        "column": "name",
+                                        "type": "text"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ],
+                                  "conditional": null,
+                                  "valid": true
+                                },
+                                "query": "SELECT value\nFROM settings\nWHERE name = 'holding_fees_value'",
+                                "params": []
+                              }
+                            },
+                            "output": true,
+                            "meta": [
+                              {
+                                "type": "text",
+                                "name": "value"
+                              }
+                            ],
+                            "outputType": "object"
+                          },
+                          {
+                            "name": "query_enrolcharge",
+                            "module": "dbconnector",
+                            "action": "single",
+                            "options": {
+                              "connection": "db",
+                              "sql": {
+                                "type": "SELECT",
+                                "columns": [],
+                                "table": {
+                                  "name": "charges_enrolments"
+                                },
+                                "joins": [],
+                                "wheres": {
+                                  "condition": "AND",
+                                  "rules": [
+                                    {
+                                      "id": "charges_enrolments.classDate",
+                                      "field": "charges_enrolments.classDate",
+                                      "type": "date",
+                                      "operator": "equal",
+                                      "value": "{{absence_date.formatDate('yyyy-MM-dd')}}",
+                                      "data": {
+                                        "table": "charges_enrolments",
+                                        "column": "classDate",
+                                        "type": "date"
+                                      },
+                                      "operation": "="
+                                    },
+                                    {
+                                      "id": "charges_enrolments.enrolment_uuid",
+                                      "field": "charges_enrolments.enrolment_uuid",
+                                      "type": "double",
+                                      "operator": "equal",
+                                      "value": "{{enroluuid}}",
+                                      "data": {
+                                        "table": "charges_enrolments",
+                                        "column": "enrolment_uuid",
+                                        "type": "number"
+                                      },
+                                      "operation": "="
+                                    }
+                                  ],
+                                  "conditional": null,
+                                  "valid": true
+                                },
+                                "query": "SELECT *\nFROM charges_enrolments\nWHERE classDate = :P1 /* {{absence_date.formatDate('yyyy-MM-dd')}} */ AND enrolment_uuid = :P2 /* {{enroluuid}} */",
+                                "params": [
+                                  {
+                                    "operator": "equal",
+                                    "type": "expression",
+                                    "name": ":P1",
+                                    "value": "{{absence_date.formatDate('yyyy-MM-dd')}}"
+                                  },
+                                  {
+                                    "operator": "equal",
+                                    "type": "expression",
+                                    "name": ":P2",
+                                    "value": "{{enroluuid}}"
+                                  }
+                                ]
+                              }
+                            },
+                            "output": true,
+                            "meta": [
+                              {
+                                "type": "text",
+                                "name": "uuid"
+                              },
+                              {
+                                "type": "number",
+                                "name": "id"
+                              },
+                              {
+                                "type": "date",
+                                "name": "startofweek"
+                              },
+                              {
+                                "type": "number",
+                                "name": "classId"
+                              },
+                              {
+                                "type": "text",
+                                "name": "class_uuid"
+                              },
+                              {
+                                "type": "number",
+                                "name": "studentid"
+                              },
+                              {
+                                "type": "number",
+                                "name": "student_uuid"
+                              },
+                              {
+                                "type": "text",
+                                "name": "classtype_uuid"
+                              },
+                              {
+                                "type": "number",
+                                "name": "classTypeId"
+                              },
+                              {
+                                "type": "number",
+                                "name": "enrolid"
+                              },
+                              {
+                                "type": "number",
+                                "name": "enrolment_uuid"
+                              },
+                              {
+                                "type": "date",
+                                "name": "classDate"
+                              },
+                              {
+                                "type": "number",
+                                "name": "baseRate"
+                              },
+                              {
+                                "type": "number",
+                                "name": "endisc"
+                              },
+                              {
+                                "type": "text",
+                                "name": "ennetrate"
+                              },
+                              {
+                                "type": "text",
+                                "name": "endiscdescription"
+                              },
+                              {
+                                "type": "text",
+                                "name": "endiscrate"
+                              },
+                              {
+                                "type": "text",
+                                "name": "familydiscountdesc"
+                              },
+                              {
+                                "type": "text",
+                                "name": "familydiscountrate"
+                              },
+                              {
+                                "type": "number",
+                                "name": "familydiscounttotal"
+                              },
+                              {
+                                "type": "number",
+                                "name": "enrolGrandTotal"
+                              },
+                              {
+                                "type": "number",
+                                "name": "chargeId"
+                              },
+                              {
+                                "type": "number",
+                                "name": "charge_uuid"
+                              },
+                              {
+                                "type": "text",
+                                "name": "lineInvNumber"
+                              },
+                              {
+                                "type": "number",
+                                "name": "isvalid"
+                              },
+                              {
+                                "type": "text",
+                                "name": "debuggerstatus"
+                              }
+                            ],
+                            "outputType": "object"
+                          },
+                          {
+                            "name": "holdingfee",
+                            "module": "core",
+                            "action": "setvalue",
+                            "options": {
+                              "key": "holdingfee",
+                              "value": "{{query_enrolcharge.enrolGrandTotal - (query_enrolcharge.enrolGrandTotal * query_hf_value.value / 100).evaluate()}}"
+                            },
+                            "meta": [],
+                            "outputType": "text",
+                            "output": true
                           }
                         ]
                       }
@@ -662,6 +940,176 @@
               {
                 "name": "$value",
                 "type": "object"
+              },
+              {
+                "name": "mu_eligible",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "query_makeup_enabled",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_makeup_expiry",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_makeup_expiry_length",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_makeup_expiry_from_classdate",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_hf_value",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_enrolcharge",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startofweek"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classId"
+                  },
+                  {
+                    "type": "text",
+                    "name": "class_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "studentid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student_uuid"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classtype_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classTypeId"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolment_uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "classDate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "baseRate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endisc"
+                  },
+                  {
+                    "type": "text",
+                    "name": "ennetrate"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endiscdescription"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endiscrate"
+                  },
+                  {
+                    "type": "text",
+                    "name": "familydiscountdesc"
+                  },
+                  {
+                    "type": "text",
+                    "name": "familydiscountrate"
+                  },
+                  {
+                    "type": "number",
+                    "name": "familydiscounttotal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolGrandTotal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "chargeId"
+                  },
+                  {
+                    "type": "number",
+                    "name": "charge_uuid"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lineInvNumber"
+                  },
+                  {
+                    "type": "number",
+                    "name": "isvalid"
+                  },
+                  {
+                    "type": "text",
+                    "name": "debuggerstatus"
+                  }
+                ]
+              },
+              {
+                "name": "holdingfee",
+                "type": "text",
+                "sub": []
               }
             ],
             "outputType": "array"
@@ -715,7 +1163,178 @@
         {
           "name": "rp_absencerecords",
           "type": "array",
-          "sub": []
+          "sub": [
+            {
+              "name": "mu_eligible",
+              "type": "text",
+              "sub": []
+            },
+            {
+              "name": "query_makeup_enabled",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "name": "query_makeup_expiry",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "name": "query_makeup_expiry_length",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "name": "query_makeup_expiry_from_classdate",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "name": "query_hf_value",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "name": "query_enrolcharge",
+              "type": "object",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "id"
+                },
+                {
+                  "type": "date",
+                  "name": "startofweek"
+                },
+                {
+                  "type": "number",
+                  "name": "classId"
+                },
+                {
+                  "type": "text",
+                  "name": "class_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "studentid"
+                },
+                {
+                  "type": "number",
+                  "name": "student_uuid"
+                },
+                {
+                  "type": "text",
+                  "name": "classtype_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "classTypeId"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolid"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolment_uuid"
+                },
+                {
+                  "type": "date",
+                  "name": "classDate"
+                },
+                {
+                  "type": "number",
+                  "name": "baseRate"
+                },
+                {
+                  "type": "number",
+                  "name": "endisc"
+                },
+                {
+                  "type": "text",
+                  "name": "ennetrate"
+                },
+                {
+                  "type": "text",
+                  "name": "endiscdescription"
+                },
+                {
+                  "type": "text",
+                  "name": "endiscrate"
+                },
+                {
+                  "type": "text",
+                  "name": "familydiscountdesc"
+                },
+                {
+                  "type": "text",
+                  "name": "familydiscountrate"
+                },
+                {
+                  "type": "number",
+                  "name": "familydiscounttotal"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolGrandTotal"
+                },
+                {
+                  "type": "number",
+                  "name": "chargeId"
+                },
+                {
+                  "type": "number",
+                  "name": "charge_uuid"
+                },
+                {
+                  "type": "text",
+                  "name": "lineInvNumber"
+                },
+                {
+                  "type": "number",
+                  "name": "isvalid"
+                },
+                {
+                  "type": "text",
+                  "name": "debuggerstatus"
+                }
+              ]
+            },
+            {
+              "name": "holdingfee",
+              "type": "text",
+              "sub": []
+            }
+          ]
         }
       ],
       "outputType": "array"
