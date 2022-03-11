@@ -15,6 +15,7 @@ function appSettingsObject() {
         da = [],
         cla = {},
         claid = {},
+        claa = [],
         instructors = {},
         instructors_array = [],
         ra = {},
@@ -63,12 +64,6 @@ function appSettingsObject() {
         cla[n] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevels"] = cla;
-    // Absence Types / Statuses
-    // Array
-    for (let i = 0; i < ab.length; i++) {
-        abt.push(ab[i]);
-    }
-    s["absence_status"] = abt;
 
     // Levels by ID
     for (let i = 0; i < cl.length; i++) {
@@ -77,6 +72,18 @@ function appSettingsObject() {
         claid[id] = { "name": n, "colour": c, "textcolour": tc, "id": id, "order": o, "valid": v, "classType": t, "classType_longName": ln, "classType_shortName": sn };
     }
     s["classLevelsByID"] = claid;
+    // Levels Array
+    for (let i = 0; i < cl.length; i++) {
+        let l = cl[i];
+        claa.push(l);
+    }
+    s['classLevels_array'] = claa;
+    // Absence Types / Statuses
+    // Array
+    for (let i = 0; i < ab.length; i++) {
+        abt.push(ab[i]);
+    }
+    s["absence_status"] = abt;
     // Enrolment Types by Id and Array
     for (let i = 0; i < et.length; i++) {
         let e = et[i];

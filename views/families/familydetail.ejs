@@ -1,4 +1,4 @@
-<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})" sockets="true" dmx-param:familyuuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})" sockets="true" dmx-param:familyuuid="query.familyid" dmx-on:success="toggle_loadingplaceholders.uncheck()" dmx-on:start="toggle_loadingplaceholders.check()"></dmx-serverconnect>
 <dmx-serverconnect id="familyLedger" url="/api/families/ledger/GET_LEDGER_details" dmx-param:familyid="" dmx-param:family_uuid="query.familyid" dmx-on:start="absolutePreloader.show()" dmx-on:done="absolutePreloader.hide()"></dmx-serverconnect><!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="fl_findRelationshipName.run()" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
 <script is="dmx-flow" id="checkEmailArray" type="text/dmx-flow">{
   meta: {
@@ -243,7 +243,7 @@
                         </div>
                         <div class="col-12">
                             <label for="fam_noteContentTextArea" class="form-label col-form-label">Note Content<span class="fw-bold text-danger">*</span></label>
-                            <textarea id="fam_summernoteContent" name="content" is="dmx-summernote" dmx-bind:toolbar="[['style',['style']],['font',['bold','underline','clear']],['fontname',['fontname']],['color',['color']],['para',['ul','ol','paragraph']],['table',['table']],['insert',['link','picture','video']],['view',['fullscreen','codeview','help']]]" required="" height="300"></textarea>
+                            <textarea id="fam_summernoteContent" name="content" is="dmx-summernote" dmx-bind:toolbar="[['style',['style']],['font',['bold','underline','clear']],['fontname',['fontname']],['color',['color']],['para',['ol','ul','paragraph','hr']],['table',['table']],['insert',['link','imageFile']],['view',['fullscreen','codeview','help']]]" required="" height="300" dmx-plugin:file="{imageUrl:'/api/baseActions/summernote/UPLOAD_IMAGE_paste',url:'/api/baseActions/summernote/UPLOAD_IMAGE_paste'}"></textarea>
                         </div>
 
 
@@ -1981,25 +1981,27 @@
 
 <dmx-datetime id="currentDateVariable"></dmx-datetime>
 
-<section class="bg-white px-3 pt-2 border-bottom">
+<section class="bg-white p-5 pb-0 border-bottom">
     <div class="row">
         <div class="col d-flex flex-column">
-            <div class="row g-0">
-                <div class="col">
+            <div class="row g-0 align-items-stretch">
+                <div class="col align-self-stretch d-flex">
                     <div class="row row-cols-1">
-                        <div class="col d-flex justify-content-between ps-4">
-                            <a href="/families" class="btn text-body px-0 mb-2"><i class="bi-arrow-left-circle me-1"></i>Back to Families List</a>
+                        <div class="col d-flex flex-row align-items-start justify-content-start">
+                            <a href="/families" class="btn btn-primary pdl-button-shadow d-flex align-items-center mb-5"><i class="fas fa-arrow-alt-circle-left me-2 fa-fw"></i>Back to Families List
+                            </a>
 
 
 
 
                         </div>
-                        <div class="col px-4">
-                            <h1 class="fw-500 mb-1" dmx-html="'Family:<span style=&quot;font-weight: normal;&quot;> '+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+' </span>'">Family:<span style="font-weight: normal;"> </span></h1>
+                        <div class="col placeholder-glow d-flex flex-row justify-content-start align-items-end">
+                            <h2 class="mb-0 me-3 fw-500" dmx-html="'<i class=&quot;bi-people me-2&quot;></i><span class=&quot;me-3&quot;>Family:</span>'+familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName+''"><i class="bi-people me-2"></i>Family:</h2>
+                            <h2 class="mb-0 fw-500 placeholder" is="dmx-if" id="ch_familyname_placeholder" dmx-bind:condition="toggle_loadingplaceholders.checked">Family: Family Name</h2>
                         </div>
                     </div>
                 </div>
-                <div class="col-auto align-self-end">
+                <div class="col-auto align-self-end d-flex flex-column align-items-end justify-content-start" is="dmx-if" id="cr_address" dmx-bind:condition="!toggle_loadingplaceholders.checked">
                     <p class="mb-1 fw-500 text-end">Default Address</p>
 
                     <p dmx-text="familyDetails.data.default_address.unit" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null" class="mb-0 text-end">Unit/Suite</p>
@@ -2007,6 +2009,11 @@
                     <p dmx-text="familyDetails.data.default_address.street2" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null" class="mb-0 text-end">Street 2</p>
                     <p dmx-text="familyDetails.data.default_address.suburb" class="mb-0 text-end">Suburb</p>
                     <p dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-end">State, ZIP Postal Code, Country</p>
+                </div>
+                <div class="col-auto align-self-end d-flex flex-column justify-content-start align-items-stretch" is="dmx-if" id="cr_address_placeholder" dmx-bind:condition="toggle_loadingplaceholders.checked">
+                    <p class="mb-1 fw-500 text-end">Default Address</p>
+
+                    <p dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-end placeholder">State, ZIP Postal Code, Country</p>
                 </div>
 
 
@@ -2017,35 +2024,35 @@
                 <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
                     <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 text-body" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-2"></i>Family Overview</a>
+                            <a class="nav-link py-3 px-3" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians"><i class="bi-people me-2"></i>Family Overview</a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-2"></i>Ledger
+                            <a class="nav-link py-3 px-3" id="navTabs1_2_tab" href="#ledger" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger"><i class="bi-credit-card me-2"></i>Ledger
 
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_6_tab" href="#paymentinfo" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#paymentinfo"><i class="fas fa-coins me-2"></i>Payment Information
+                            <a class="nav-link py-3 px-3" id="navTabs1_6_tab" href="#paymentinfo" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#paymentinfo"><i class="fas fa-coins me-2"></i>Payment Information
                             </a>
 
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-2"></i>Emails
+                            <a class="nav-link py-3 px-3" id="navTabs1_3_tab" href="#emails" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-2"></i>Emails
                             </a>
                         </li>
 
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="far fa-sticky-note me-2"></i>Notes
+                            <a class="nav-link py-3 px-3" id="navTabs1_4_tab" href="#notes" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes"><i class="far fa-sticky-note me-2"></i>Notes
                             </a>
 
                         </li>
 
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_5_tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-2"></i>Logs
+                            <a class="nav-link py-3 px-3" id="navTabs1_5_tab" href="#logs" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi-list me-2"></i>Logs
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-4" id="navTabs1_7_tab" href="#advanced" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#advanced_tab"><i class="fas fa-user-cog me-2"></i>Advanced
+                            <a class="nav-link py-3 px-3" id="navTabs1_7_tab" href="#advanced" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#advanced_tab"><i class="fas fa-user-cog me-2"></i>Advanced
 
                             </a>
                         </li>
@@ -2058,7 +2065,7 @@
         </div>
     </div>
 </section>
-<main class="d-flex flex-grow-1 flex-column p-4 pb-5 mb-5 position-relative">
+<main class="d-flex flex-grow-1 flex-column p-5 pt-4 pb-5 mb-5 position-relative">
 
 
     <div class="row d-flex flex-grow-1">
@@ -2067,7 +2074,7 @@
 
             <!-- <a class="badge rounded-1 text-end clickable" dmx-class:pri-5-solid="familyDetails.data.familyNotes[0].maxPriority === 5" dmx-class:pri-4-solid="familyDetails.data.familyNotes[0].maxPriority === 4" dmx-class:pri-3-solid="familyDetails.data.familyNotes[0].maxPriority === 3" dmx-class:pri-2-solid="familyDetails.data.familyNotes[0].maxPriority === 2" dmx-class:pri-1-solid="familyDetails.data.familyNotes[0].maxPriority === 1" dmx-hide="familyDetails.data.familyNotes.length === 0" data-bs-toggle="tab" data-bs-target="#navTabs1_4" href="#"><i class="bi-sticky-fill me-2"></i>{{topPriorityNotes.value}}</a> -->
             <div class="tab-content" id="navTabs1_content">
-                <div class="tab-pane fade show active" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
+                <div class="tab-pane fade show" id="guardians" role="tabpanel" aria-labelledby="navTabs1_1_tab">
                     <div class="row gx-5 mb-3">
                         <div class="col-auto">
                             <div class="d-flex bg-white text-body d-flex flex-column">
@@ -2075,8 +2082,8 @@
 
 
                                 <div class="row g-2">
-                                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end pdl-surface-shadow d-flex align-items-center btn-primary" data-bs-toggle="modal" data-bs-target="#createGuardianModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Guardian</button></div>
-                                    <div class="col-auto"><button id="createStudentButton" class="btn align-self-end pdl-surface-shadow d-flex align-items-center btn-primary" data-bs-toggle="modal" data-bs-target="#createStudentModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Student</button>
+                                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#createGuardianModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Guardian</button></div>
+                                    <div class="col-auto"><button id="createStudentButton" class="btn align-self-end pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#createStudentModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Student</button>
                                     </div>
                                 </div>
                             </div>
@@ -2086,10 +2093,10 @@
                                 <p class="mt-1 text-muted">Modify</p>
                                 <div class="row g-2">
                                     <div class="col-auto">
-                                        <button id="btn_addresses" class="btn pdl-surface-shadow btn-primary  d-flex align-items-center" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="far fa-map fa-xs me-2"></i>Add/Edit Address</button>
+                                        <button id="btn_addresses" class="btn pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="far fa-map fa-xs me-2"></i>Add/Edit Address</button>
 
                                     </div>
-                                    <div class="col-auto"><button id="btn_discounts" class="btn pdl-surface-shadow btn-primary d-flex align-items-center"><i class="fas fa-tags fa-xs me-2"></i>Special Discounts</button></div>
+                                    <div class="col-auto"><button id="btn_discounts" class="btn pdl-button-shadow d-flex align-items-center btn-secondary"><i class="fas fa-tags fa-xs me-2"></i>Special Discounts</button></div>
                                 </div>
                             </div>
 
@@ -2102,7 +2109,9 @@
                     <div class="row gx-0">
                         <div class="col " is="dmx-if" id="cr_noaddress" dmx-bind:condition="familyDetails.data.addresses.length == 0" dmx-text="">
 
-                            <p class="border rounded-3 bg-danger text-start mt-3 mb-3 pt-2 pb-2 ps-2 pe-2 text-white d-flex align-items-center pdl-surface-shadow"><i class="fas fa-exclamation-circle fa-fw me-2"></i>No address for this family found. Addresses are used in receipts and other documents sent to the family.</p>
+                            <p class="border rounded-3 bg-danger text-start mt-3 mb-3 pt-2 pb-2 ps-2 pe-2 text-white d-flex align-items-center pdl-surface-shadow"><i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                                <i class="far fa-map  fa-fw me-2"></i>No address for this family found. Addresses are used in receipts and other documents sent to the family.
+                            </p>
                         </div>
                     </div>
 
@@ -2114,11 +2123,12 @@
                                 <div class="col p-4 d-flex flex-column mb-4 bg-white rounded-3 pdl-surface-shadow">
                                     <div class="row pb-3">
                                         <div class="col align-self-start">
-                                            <h5 class="mb-0">Guardians</h5>
+                                            <h5 class="mb-0"><i class="far fa-user me-2 text-primary fa-sm"></i>Guardians
+                                            </h5>
 
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row" is="dmx-if" id="cr_guardianslist" dmx-bind:condition="!toggle_loadingplaceholders.checked">
                                         <div class="col">
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
@@ -2133,8 +2143,9 @@
                                                     </thead>
                                                     <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyDetails.data.guardians" id="guardianTableRepeat" class="table-white">
                                                         <tr>
-                                                            <td class="text-center align-middle">
-                                                                <i class="fas fa-award fa-2x clickable user-select-none" dmx-hide="primary === false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover"></i>
+                                                            <td class="text-center align-middle text-primary-main">
+                                                                <i class="fas fa-award clickable user-select-none fa-lg" dmx-hide="primary === false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover"></i>
+
                                                             </td>
                                                             <td style="white-space: nowrap;" dmx-on:click="oc_GET_GUARDIAN_details.dd_guardianDetails.select(uuid);oc_GET_GUARDIAN_details.show()" class="clickable">
                                                                 <p class="mb-0 text-decoration-underline">{{firstName + ' ' + lastName}}</p>
@@ -2255,6 +2266,52 @@
 
                                         </div>
                                     </div>
+                                    <div class="row placeholder-glow" is="dmx-if" id="cr_guardianslist_placeholder" dmx-bind:condition="toggle_loadingplaceholders.checked">
+                                        <div class="col">
+                                            <div class="table-responsive">
+                                                <table class="table align-middle table-hover big-small">
+                                                    <thead class="table-white fw-700 text-black-50 border-bottom text-capitalize">
+                                                        <tr>
+                                                            <th scope="row" style="width: 1%; white-space: nowrap;"></th>
+                                                            <th style="">name</th>
+                                                            <th style="">Relationship</th>
+                                                            <th scope="row">Phones</th>
+                                                            <th scope="row">Emails</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody dmx-generator="bs5table" class="table-white">
+                                                        <tr dmx-hide="!toggle_loadingplaceholders.checked">
+                                                            <td class="text-center align-middle text-primary-main">
+                                                                <i class="fas fa-award clickable user-select-none placeholder fa-fw"></i>
+                                                            </td>
+                                                            <td style="white-space: nowrap;" class="clickable align-middle">
+                                                                <p class="mb-0 text-decoration-underline placeholder">Family Name</p>
+
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <p class="mb-0 text-decoration-underline placeholder" wappler-command="editContent">Relationship</p>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <div class="row " is="dmx-repeat" id="rp_phones2" dmx-bind:repeat="phones">
+                                                                    <div class="col-auto placeholder" dmx-text="number" style="">0400 000 000
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <div class="row">
+                                                                    <div class="col-auto" style="letter-spacing: 0.8px;">
+                                                                        <p class="mb-0 placeholder">test@example.com</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -2321,10 +2378,11 @@
 
                                     <div class="row pb-4 align-items-center">
                                         <div class="col align-self-center">
-                                            <h5 class="mb-0">Students</h5>
+                                            <h5 class="mb-0"><i class="fas fa-child me-2 text-primary fa-sm"></i>Students
+                                            </h5>
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row" is="dmx-if" id="cr_studentlist" dmx-bind:condition="!toggle_loadingplaceholders.checked">
                                         <div class="col">
                                             <div class="table-responsive">
                                                 <table class="table align-middle table-hover big-small">
@@ -2377,6 +2435,51 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row placeholder-glow" is="dmx-if" id="cr_student_placeholder" dmx-bind:condition="toggle_loadingplaceholders.checked">
+                                        <div class="col">
+                                            <div class="table-responsive">
+                                                <table class="table align-middle table-hover big-small">
+                                                    <thead class="table-white fw-700 text-black-50 border-bottom text-capitalize">
+                                                        <tr>
+                                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                                            <th style="">ID</th>
+                                                            <th style="">Student</th>
+                                                            <th>Age</th>
+                                                            <th>Class Level</th>
+                                                            <th>Student Notes</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody dmx-generator="bs5table" class="table-white">
+                                                        <tr>
+                                                            <td class="p-0">
+                                                                <div class="dropdown">
+                                                                    <button class="btn dropdown-toggle change-chevron p-2 bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="fas fa-ellipsis-v placeholder fa-fw"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <p class="mb-0 placeholder">123456789</p>
+
+                                                            </td>
+                                                            <td>
+                                                                <p class="mb-0 placeholder">John Doe</p>
+                                                            </td>
+                                                            <td>
+                                                                <p class="mb-0 placeholder" wappler-command="editContent">John Doe</p>
+                                                            </td>
+                                                            <td>
+                                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                                            </td>
+                                                            <td class="text-decoration-underline clickable">
+                                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2396,8 +2499,8 @@
                     <div class="row">
                         <div class="col">
                             <div class="row row-cols-1 g-0">
-                                <div class="col p-3 pt-2 border rounded-3 mb-3 bg-white">
-                                    <h6 class="fw-500 text-uppercase text-black-50 mt-1 small">Create</h6>
+                                <div class="col mb-3">
+                                    <p class="mt-1 text-muted">Create</p>
                                     <div class="row row-cols-6">
                                         <div class="col-auto"><a id="btn4" class="btn border btn-secondary" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment'" dmx-on:click="selectedChargesStore.clear()"><i class="bi-credit-card-2-back me-2"></i>New Payment
                                             </a></div>
@@ -2417,46 +2520,53 @@
                             <div class="row row-cols-1 gy-3">
                                 <div class="col">
                                     <div class="row g-0">
-                                        <div class="p-3 border rounded-3 bg-white col" id="paymentsCol">
+                                        <div class="p-4 pdl-surface-shadow rounded-3 bg-white col" id="paymentsCol">
                                             <h5 class="mb-3 fw-450"><i class="bi-credit-card-2-back me-2"></i>Payments
                                             </h5>
+                                            <div class="row" is="dmx-if" id="cr_payments_yes" dmx-bind:condition="familyLedger.data.payments_familycharges.hasItems()">
+                                                <div class="col">
 
-                                            <div class="table-responsive">
-                                                <table class="table align-middle table-hover big-small">
-                                                    <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
-                                                        <tr>
-                                                            <th>ID</th>
-                                                            <th>Title</th>
-                                                            <th>Amount</th>
-                                                            <th>Date &amp; Time</th>
-                                                            <th>Type</th>
-                                                            <th>Ref</th>
+                                                    <div class="table-responsive">
+                                                        <table class="table align-middle table-hover big-small">
+                                                            <thead class="table-white fw-700 text-black-50 border-bottom text-capitalize">
+                                                                <tr>
+                                                                    <th class="collapse-cell">ID</th>
+                                                                    <th>Title</th>
+                                                                    <th>Amount</th>
+                                                                    <th>Date &amp; Time</th>
+                                                                    <th>Type</th>
+                                                                    <th>Ref</th>
 
-                                                            <th>Notes</th>
-
-
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyLedger.data.payments_familycharges" id="tableRepeat2">
-                                                        <tr>
-                                                            <td dmx-text="id">1835</td>
-                                                            <td dmx-text="title" class="text-decoration-underline clickable">Tuition Payment</td>
-                                                            <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</td>
-                                                            <td dmx-text="paymentdate.formatDate(familyLedger.data.times_formats.puddle_date_format + ' ' + familyLedger.data.times_formats.time_format)">01/01/2022 12:53 PM</td>
-                                                            <td>
-                                                                <p class="mb-0" dmx-hide="stripe_payment == 1">External Credit</p>
-                                                                <i class="fab fa-stripe fa-fw stripe-blurple-text fa-2x" dmx-show="stripe_payment == 1" dmx-bs-tooltip="'Click to view Stripe receipt.'" data-bs-trigger="hover" data-bs-placement="right"></i>
-                                                            </td>
-                                                            <td dmx-text="payref || '-'">-</td>
-
-                                                            <td dmx-text="notes || '-'">-</td>
+                                                                    <th>Notes</th>
 
 
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="familyLedger.data.payments_familycharges" id="tableRepeat2">
+                                                                <tr>
+                                                                    <td dmx-text="id">1835</td>
+                                                                    <td dmx-text="title" class="text-decoration-underline clickable">Tuition Payment</td>
+                                                                    <td dmx-text="amount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$75.54</td>
+                                                                    <td dmx-text="paymentdate.formatDate(familyLedger.data.times_formats.puddle_date_format + ' ' + familyLedger.data.times_formats.time_format)">01/01/2022 12:53 PM</td>
+                                                                    <td>
+                                                                        <p class="mb-0" dmx-hide="stripe_payment == 1">External Credit</p>
+                                                                        <i class="fab fa-stripe fa-fw stripe-blurple-text fa-2x" dmx-show="stripe_payment == 1" dmx-bs-tooltip="'Click to view Stripe receipt.'" data-bs-trigger="hover" data-bs-placement="right"></i>
+                                                                    </td>
+                                                                    <td dmx-text="payref || '-'">-</td>
+
+                                                                    <td dmx-text="notes || '-'">-</td>
+
+
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" dmx-show="!familyLedger.data.payments_familycharges.hasItems()">
+
+
+
+                                            <div class="row row-cols-1 p-3 border rounded-1 position-relative bg-white g-0" is="dmx-if" id="cr_payments_no" dmx-bind:condition="!familyLedger.data.payments_familycharges.hasItems()">
                                                 <div class="col align-self-center">
 
                                                     <h6 class="mb-0 text-center text-danger">No payment information.</h6>
@@ -2468,7 +2578,7 @@
                                 </div>
                                 <div class="col">
                                     <div class="row g-0">
-                                        <div class="p-3 border rounded-3 bg-white col-12">
+                                        <div class="p-4 pdl-surface-shadow rounded-3 bg-white col-12">
                                             <h5 class="mb-3 fw-450"><i class="bi-lightning-charge-fill me-2"></i>Charges
                                             </h5>
                                             <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="familyLedger.data.charges_family">
@@ -2521,8 +2631,8 @@
                                                                     Payments for this charge.
                                                                 </h5>
                                                                 <small class="text-muted fw-light small d-block">Click payment for more information.</small>
-                                                                <table class="table table-bordered table-hover mt-3 align-middle">
-                                                                    <thead class="small fw-bold table-light">
+                                                                <table class="table align-middle table-hover big-small mt-3">
+                                                                    <thead class="table-white fw-700 text-black-50 border-bottom text-capitalize">
                                                                         <tr>
                                                                             <th scope="row" style="width: 1%; /* white-space: nowrap */" class="text-center"></th>
                                                                             <th>ID:</th>
@@ -2989,7 +3099,7 @@
                             <div class="row mb-3">
                                 <div class="col">
                                     <h6 class="fw-450 mb-1">Universally Unique Identifier (UUID)</h6>
-                                    <p class="mb-0" dmx-text="familyDetails.data.familyDetails.uuid">adsa323r-32fs-342g-jdsq-ggjtos87admc</p>
+                                    <p class="mb-0" dmx-text="familyDetails.data.familyDetails.family_uuid">adsa323r-32fs-342g-jdsq-ggjtos87admc</p>
                                 </div>
                             </div>
                             <div class="row">

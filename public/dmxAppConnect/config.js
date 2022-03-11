@@ -2047,6 +2047,54 @@ dmx.config({
       {
         "type": "boolean",
         "name": "webhook_processing"
+      },
+      {
+        "type": "text",
+        "name": "pdl_loginip"
+      },
+      {
+        "type": "text",
+        "name": "pdl_loginuser"
+      }
+    ],
+    "api1": [
+      {
+        "type": "text",
+        "name": "data"
+      },
+      {
+        "type": "object",
+        "name": "headers",
+        "sub": [
+          {
+            "type": "text",
+            "name": "connection"
+          },
+          {
+            "type": "text",
+            "name": "content-length"
+          },
+          {
+            "type": "text",
+            "name": "content-type"
+          },
+          {
+            "type": "text",
+            "name": "date"
+          },
+          {
+            "type": "text",
+            "name": "server"
+          },
+          {
+            "type": "text",
+            "name": "vary"
+          },
+          {
+            "type": "text",
+            "name": "via"
+          }
+        ]
       }
     ]
   },
@@ -11306,5 +11354,25 @@ dmx.config({
       ],
       "outputType": "text"
     }
+  },
+  "www": {
+    "sessionStorage": [
+      {
+        "type": "array",
+        "name": "filter_days"
+      },
+      {
+        "type": "array",
+        "name": "filter_levels"
+      },
+      {
+        "type": "array",
+        "name": "filter_times"
+      },
+      {
+        "type": "array",
+        "name": "filter_instructors"
+      }
+    ]
   }
 });

@@ -19,7 +19,15 @@ exports.classAvail = async function (options) {
         dates_arr = [],
         weekday_arr = [],
         filtered_classes,
-        process_time_array = [];
+        process_time_array = [],
+        filters = {
+            "day_filter": this.parse(options.day_filter) == ''  ? [] : this.parse(options.day_filter).map((i) => { return Number(i)}),
+            "time_filter": this.parse(options.time_filter) == ''  ? [] : this.parse(options.time_filter).map((i) => { return Number(i)}),
+            "instructor_filter": this.parse(options.instructor_filter) == ''  ? [] : this.parse(options.instructor_filter).map((i) => { return `'`+i+`'`}),
+            "level_filter": this.parse(options.level_filter) == ''  ? [] : this.parse(options.level_filter).map((i) => { return `'`+i+`'`})
+        }
+        filters_applied = filters.day_filter.length > 0 || filters.instructor_filter.length > 0 || filters.level_filter.length > 0 || filters.time_filter.length > 0 ? true : false,
+        filtered_availabilities = options.avail_type ? true : false;
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -47,14 +55,183 @@ exports.classAvail = async function (options) {
     ////////// Start Calendar Type Calculations //////////
     else if (options.data_type == 'calendar' || options.data_type == 'list') {
 
-        let cd = options.classdump;
+        let tc = dbClient(await db.raw(`
+            SELECT COUNT(*) as t
+            FROM classes c
+            WHERE isactive = true ${filters_applied ? `AND` : ``}
+            ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
+            ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
+            ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
+            ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
+            ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
+        `)).t;
+
+        // Create paging variables for Bootstrap Pagination
+        let limit = this.parse(options.limit),
+        total = tc,
+        offset = this.parse(options.offset);
+        last_offset = (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
+        page = {
+                "total": Math.ceil((total / limit)),
+                "current": ((offset + limit)/limit),
+                "offset": {
+                    "first": 0,
+                    "last": (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
+                    "next": (offset + limit) > total ? last_offset : (offset + limit),
+                    "prev": (offset - limit) <= 0 ? 0 : (offset - limit)
+                }
+            },
+        next = (offset + limit) > total ? last_offset : (offset + limit),
+        prev = (offset - limit) <= 0 ? 0 : (offset - limit);
+
+        let jscd = dbClientArray(await db.raw(`
+        SELECT c.uuid,
+            c.id,
+            c.startTimeDecimal,
+            c.endTimeDecimal,
+            c.instructor_uuid,
+            c.classlevel_uuid,
+            c.day,
+            c.startTimeDisplay,
+            c.endTimeDisplay,
+            c.max,
+            c.classtype_uuid,
+            JSON_OBJECT(
+                    'active_enrols',
+                    (
+                        SELECT JSON_ARRAYAGG(
+                                        JSON_OBJECT(
+                                                'age', s.age,
+                                                'class_uuid', e.class_uuid,
+                                                'dob', s.dob,
+                                                'dropDate', e.dropDate,
+                                                'enrolmentType', e.enrolmentType,
+                                                'family', s.family,
+                                                'firstName', s.firstName,
+                                                'isTransferIn', e.isTransferIn,
+                                                'isTransferOut', e.isTransferOut,
+                                                'lastName', s.lastName,
+                                                'startDate', e.startDate,
+                                                'student_uuid', s.uuid,
+                                                'transferToStart', e.transferToStart,
+                                                'uuid', e.uuid
+                                            )
+                                    )
+                        FROM enrolments e
+                                    LEFT JOIN students s ON e.student_uuid = s.uuid
+                        WHERE e.enrolmentType = 1
+                            AND e.isValid = 1
+                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
+                            AND e.class_uuid = c.uuid
+                    ),
+                    'makeup_enrols',
+                    (
+                        SELECT JSON_ARRAYAGG(
+                                        JSON_OBJECT(
+                                                'age', s.age,
+                                                'class_uuid', e.class_uuid,
+                                                'dob', s.dob,
+                                                'dropDate', e.dropDate,
+                                                'enrolmentType', e.enrolmentType,
+                                                'family', s.family,
+                                                'firstName', s.firstName,
+                                                'isTransferIn', e.isTransferIn,
+                                                'isTransferOut', e.isTransferOut,
+                                                'lastName', s.lastName,
+                                                'startDate', e.startDate,
+                                                'student_uuid', s.uuid,
+                                                'transferToStart', e.transferToStart,
+                                                'uuid', e.uuid
+                                            )
+                                    )
+                        FROM enrolments e
+                                    LEFT JOIN students s ON e.student_uuid = s.uuid
+                        WHERE e.enrolmentType = 3
+                            AND e.isValid = 1
+                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
+                            AND e.class_uuid = c.uuid
+                    ),
+                    'trial_enrols',
+                    (
+                        SELECT JSON_ARRAYAGG(
+                                        JSON_OBJECT(
+                                                'age', s.age,
+                                                'class_uuid', e.class_uuid,
+                                                'dob', s.dob,
+                                                'dropDate', e.dropDate,
+                                                'enrolmentType', e.enrolmentType,
+                                                'family', s.family,
+                                                'firstName', s.firstName,
+                                                'isTransferIn', e.isTransferIn,
+                                                'isTransferOut', e.isTransferOut,
+                                                'lastName', s.lastName,
+                                                'startDate', e.startDate,
+                                                'student_uuid', s.uuid,
+                                                'transferToStart', e.transferToStart,
+                                                'uuid', e.uuid
+                                            )
+                                    )
+                        FROM enrolments e
+                                    LEFT JOIN students s ON e.student_uuid = s.uuid
+                        WHERE e.enrolmentType = 3
+                            AND e.isValid = 1
+                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
+                            AND e.class_uuid = c.uuid
+                    ),
+                    'casual_enrols',
+                    (
+                        SELECT JSON_ARRAYAGG(
+                                        JSON_OBJECT(
+                                                'age', s.age,
+                                                'class_uuid', e.class_uuid,
+                                                'dob', s.dob,
+                                                'dropDate', e.dropDate,
+                                                'enrolmentType', e.enrolmentType,
+                                                'family', s.family,
+                                                'firstName', s.firstName,
+                                                'isTransferIn', e.isTransferIn,
+                                                'isTransferOut', e.isTransferOut,
+                                                'lastName', s.lastName,
+                                                'startDate', e.startDate,
+                                                'student_uuid', s.uuid,
+                                                'transferToStart', e.transferToStart,
+                                                'uuid', e.uuid
+                                            )
+                                    )
+                        FROM enrolments e
+                                    LEFT JOIN students s ON e.student_uuid = s.uuid
+                        WHERE e.enrolmentType = 5
+                            AND e.isValid = 1
+                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
+                            AND e.class_uuid = c.uuid
+                    )
+                ) AS enrolments
+        FROM classes c
+        ${filters_applied ? `WHERE` : ``}
+        ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
+        ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+        ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
+        ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+        ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
+        ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
+        ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
+        GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
+                c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
+        ORDER BY c.day, c.startTimeDecimal
+        ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
+        `));
+
+        // let cd = options.classdump;
+        let cd = jscd;
         // Set class times slots for calendar
         let mintime, maxtime, calint, stt, ts_arr = [];
         calint = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value);
         mintime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value);
         maxtime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
         stt = mintime;
-
+        // Create Timeslot Array
         while (stt < maxtime) {
             ts_arr.push(stt);
             stt += calint;
@@ -85,7 +262,8 @@ exports.classAvail = async function (options) {
         if (options.avail_type) {
             if (options.avail_type == 'permanent') {
                 filtered_classes = _.filter(cd, function (o) {
-                    return (Number(o.max) - Number(o.details.total)) >= options.avail_amount;
+                    let fc = (Number(o.max) - Number(o.details.total)) >= options.avail_amount;
+                    return fc;
                 });
             } else if (options.avail_type == 'temporary') {
                 filtered_classes = _.filter(cd, function (o) {
@@ -93,12 +271,30 @@ exports.classAvail = async function (options) {
                 });
             }
         }
+
+        if(filtered_classes) {
+            page.total = Math.ceil((filtered_classes.length / limit));
+        }
+
         let classresponse = {
             'process_times': process_time_array,
             "timesarray": ts_arr,
+            "filters": {
+                "day": filters.day_filter,
+                "time": filters.time_filter,
+                "instructor": filters.instructor_filter,
+                "level": filters.level_filter
+            },
             "availarray": avail_array,
-            "classes": filtered_classes || cd,
-            "perclassaverage_perf": ((pend - pstart) / 1000)
+            "classes": filtered_classes ? filtered_classes.slice(offset, (offset + limit)) : cd,
+            "limit": limit,
+            "offset": offset,
+            "page": page,
+            "last_offset": last_offset,
+            "prev": prev,
+            "next": next,
+            "total": total,
+            "perclassaverage_perf": ((pend - pstart) / 1000) / process_time_array.length
         }
 
         return classresponse;
@@ -116,6 +312,8 @@ exports.classAvail = async function (options) {
             eca = [],
             att = [],
             absence = [];
+
+        delete ci.enrolments;
 
         let startd = moment(options.startdate),
             endd = moment(options.enddate);
