@@ -23,11 +23,17 @@
         "type": "number",
         "name": "family"
       }
+    ],
+    "$_SESSION": [
+      {
+        "type": "text",
+        "name": "user_uuid"
+      }
     ]
   },
   "exec": {
     "steps": {
-      "name": "insertFamilyNote",
+      "name": "insert",
       "module": "dbupdater",
       "action": "insert",
       "options": {
@@ -57,18 +63,30 @@
               "table": "family_notes",
               "column": "family_uuid",
               "type": "number",
-              "value": "{{$_POST.family}}"
+              "value": "{{$_GET.familyid}}"
             },
             {
               "table": "family_notes",
               "column": "uuid",
               "type": "text",
               "value": "{{'fno_' + UUID.replace('-', '')}}"
+            },
+            {
+              "table": "family_notes",
+              "column": "created_timestamp",
+              "type": "number",
+              "value": "{{NOW_UTC.toTimestamp()}}"
+            },
+            {
+              "table": "family_notes",
+              "column": "created_by",
+              "type": "text",
+              "value": "{{$_SESSION.user_uuid}}"
             }
           ],
           "table": "family_notes",
           "returning": "uuid",
-          "query": "INSERT INTO family_notes\n(content, priority, subject, family_uuid, uuid) VALUES (:P1 /* {{$_POST.content}} */, :P2 /* {{$_POST.priority}} */, :P3 /* {{$_POST.subject}} */, :P4 /* {{$_POST.family}} */, :P5 /* {{'fno_' + UUID.replace('-', '')}} */)",
+          "query": "INSERT INTO family_notes\n(content, priority, subject, family_uuid, uuid, created_timestamp, created_by) VALUES (:P1 /* {{$_POST.content}} */, :P2 /* {{$_POST.priority}} */, :P3 /* {{$_POST.subject}} */, :P4 /* {{$_GET.familyid}} */, :P5 /* {{'fno_' + UUID.replace('-', '')}} */, :P6 /* {{NOW_UTC.toTimestamp()}} */, :P7 /* {{$_SESSION.user_uuid}} */)",
           "params": [
             {
               "name": ":P1",
@@ -88,12 +106,22 @@
             {
               "name": ":P4",
               "type": "expression",
-              "value": "{{$_POST.family}}"
+              "value": "{{$_GET.familyid}}"
             },
             {
               "name": ":P5",
               "type": "expression",
               "value": "{{'fno_' + UUID.replace('-', '')}}"
+            },
+            {
+              "name": ":P6",
+              "type": "expression",
+              "value": "{{NOW_UTC.toTimestamp()}}"
+            },
+            {
+              "name": ":P7",
+              "type": "expression",
+              "value": "{{$_SESSION.user_uuid}}"
             }
           ]
         }

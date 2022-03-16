@@ -44,29 +44,7 @@
         ]
       },
       {
-        "type": "array",
-        "name": "record",
-        "sub": [
-          {
-            "type": "number",
-            "name": "enroluuid"
-          },
-          {
-            "type": "number",
-            "name": "absence_date"
-          },
-          {
-            "type": "boolean",
-            "name": "(makeup_eligible"
-          },
-          {
-            "type": "text",
-            "name": "absence_uuid_gen"
-          }
-        ]
-      },
-      {
-        "type": "number",
+        "type": "text",
         "name": "student_uuid"
       }
     ]
@@ -79,9 +57,9 @@
       "options": {
         "repeat": "{{$_POST.enrols}}",
         "outputFields": [
-          "classdetails",
           "enroluuid",
-          "absences"
+          "absences",
+          "student_uuid"
         ],
         "exec": {
           "steps": {
@@ -90,7 +68,11 @@
             "action": "repeat",
             "options": {
               "repeat": "{{absences}}",
-              "outputFields": [],
+              "outputFields": [
+                "absence_date",
+                "makeup_eligible",
+                "makeup_token_uuid"
+              ],
               "exec": {
                 "steps": [
                   {
@@ -173,8 +155,7 @@
                         "name": "affected",
                         "type": "number"
                       }
-                    ],
-                    "disabled": true
+                    ]
                   },
                   {
                     "name": "mu_eligible",
@@ -244,8 +225,7 @@
                                 "name": "value"
                               }
                             ],
-                            "outputType": "object",
-                            "disabled": true
+                            "outputType": "object"
                           },
                           {
                             "name": "",
@@ -347,8 +327,7 @@
                                         "name": "affected",
                                         "type": "number"
                                       }
-                                    ],
-                                    "disabled": true
+                                    ]
                                   },
                                   {
                                     "name": "query_makeup_expiry",
@@ -400,8 +379,7 @@
                                       }
                                     ],
                                     "outputType": "object",
-                                    "type": "dbconnector_single",
-                                    "disabled": true
+                                    "type": "dbconnector_single"
                                   },
                                   {
                                     "name": "",
@@ -460,8 +438,7 @@
                                                 "name": "value"
                                               }
                                             ],
-                                            "outputType": "object",
-                                            "disabled": true
+                                            "outputType": "object"
                                           },
                                           {
                                             "name": "query_makeup_expiry_from_classdate",
@@ -512,8 +489,7 @@
                                                 "name": "value"
                                               }
                                             ],
-                                            "outputType": "object",
-                                            "disabled": true
+                                            "outputType": "object"
                                           },
                                           {
                                             "name": "",
@@ -578,8 +554,7 @@
                                                       "name": "affected",
                                                       "type": "number"
                                                     }
-                                                  ],
-                                                  "disabled": true
+                                                  ]
                                                 }
                                               },
                                               "else": {
@@ -639,8 +614,7 @@
                                                       "name": "affected",
                                                       "type": "number"
                                                     }
-                                                  ],
-                                                  "disabled": true
+                                                  ]
                                                 }
                                               }
                                             },
@@ -670,18 +644,7 @@
                       "then": {
                         "steps": [
                           {
-                            "name": "mu_eligible",
-                            "module": "core",
-                            "action": "setvalue",
-                            "options": {
-                              "value": "{{makeup_eligible}}"
-                            },
-                            "meta": [],
-                            "outputType": "text",
-                            "output": true
-                          },
-                          {
-                            "name": "query_hf_value",
+                            "name": "query_hf_enabled",
                             "module": "dbconnector",
                             "action": "single",
                             "options": {
@@ -706,7 +669,7 @@
                                       "field": "settings.name",
                                       "type": "string",
                                       "operator": "equal",
-                                      "value": "holding_fees_value",
+                                      "value": "holding_fees_enabled",
                                       "data": {
                                         "table": "settings",
                                         "column": "name",
@@ -718,7 +681,7 @@
                                   "conditional": null,
                                   "valid": true
                                 },
-                                "query": "SELECT value\nFROM settings\nWHERE name = 'holding_fees_value'",
+                                "query": "SELECT value\nFROM settings\nWHERE name = 'holding_fees_enabled'",
                                 "params": []
                               }
                             },
@@ -732,188 +695,440 @@
                             "outputType": "object"
                           },
                           {
-                            "name": "query_enrolcharge",
-                            "module": "dbconnector",
-                            "action": "single",
+                            "name": "",
+                            "module": "core",
+                            "action": "condition",
                             "options": {
-                              "connection": "db",
-                              "sql": {
-                                "type": "SELECT",
-                                "columns": [],
-                                "table": {
-                                  "name": "charges_enrolments"
-                                },
-                                "joins": [],
-                                "wheres": {
-                                  "condition": "AND",
-                                  "rules": [
-                                    {
-                                      "id": "charges_enrolments.classDate",
-                                      "field": "charges_enrolments.classDate",
-                                      "type": "date",
-                                      "operator": "equal",
-                                      "value": "{{absence_date.formatDate('yyyy-MM-dd')}}",
-                                      "data": {
-                                        "table": "charges_enrolments",
-                                        "column": "classDate",
-                                        "type": "date"
-                                      },
-                                      "operation": "="
-                                    },
-                                    {
-                                      "id": "charges_enrolments.enrolment_uuid",
-                                      "field": "charges_enrolments.enrolment_uuid",
-                                      "type": "double",
-                                      "operator": "equal",
-                                      "value": "{{enroluuid}}",
-                                      "data": {
-                                        "table": "charges_enrolments",
-                                        "column": "enrolment_uuid",
-                                        "type": "number"
-                                      },
-                                      "operation": "="
-                                    }
-                                  ],
-                                  "conditional": null,
-                                  "valid": true
-                                },
-                                "query": "SELECT *\nFROM charges_enrolments\nWHERE classDate = :P1 /* {{absence_date.formatDate('yyyy-MM-dd')}} */ AND enrolment_uuid = :P2 /* {{enroluuid}} */",
-                                "params": [
+                              "if": "{{query_hf_enabled.value==1}}",
+                              "then": {
+                                "steps": [
                                   {
-                                    "operator": "equal",
-                                    "type": "expression",
-                                    "name": ":P1",
-                                    "value": "{{absence_date.formatDate('yyyy-MM-dd')}}"
+                                    "name": "",
+                                    "options": {
+                                      "comment": "Get Holding Fee Settings"
+                                    }
                                   },
                                   {
-                                    "operator": "equal",
-                                    "type": "expression",
-                                    "name": ":P2",
-                                    "value": "{{enroluuid}}"
+                                    "name": "query_hf_type",
+                                    "module": "dbconnector",
+                                    "action": "single",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "SELECT",
+                                        "columns": [
+                                          {
+                                            "table": "settings",
+                                            "column": "value"
+                                          }
+                                        ],
+                                        "table": {
+                                          "name": "settings"
+                                        },
+                                        "joins": [],
+                                        "wheres": {
+                                          "condition": "AND",
+                                          "rules": [
+                                            {
+                                              "id": "settings.name",
+                                              "field": "settings.name",
+                                              "type": "string",
+                                              "operator": "equal",
+                                              "value": "holding_fees_type",
+                                              "data": {
+                                                "table": "settings",
+                                                "column": "name",
+                                                "type": "text"
+                                              },
+                                              "operation": "="
+                                            }
+                                          ],
+                                          "conditional": null,
+                                          "valid": true
+                                        },
+                                        "query": "SELECT value\nFROM settings\nWHERE name = 'holding_fees_type'",
+                                        "params": []
+                                      }
+                                    },
+                                    "output": true,
+                                    "meta": [
+                                      {
+                                        "type": "text",
+                                        "name": "value"
+                                      }
+                                    ],
+                                    "outputType": "object"
+                                  },
+                                  {
+                                    "name": "query_hf_value",
+                                    "module": "dbconnector",
+                                    "action": "single",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "SELECT",
+                                        "columns": [
+                                          {
+                                            "table": "settings",
+                                            "column": "value"
+                                          }
+                                        ],
+                                        "table": {
+                                          "name": "settings"
+                                        },
+                                        "joins": [],
+                                        "wheres": {
+                                          "condition": "AND",
+                                          "rules": [
+                                            {
+                                              "id": "settings.name",
+                                              "field": "settings.name",
+                                              "type": "string",
+                                              "operator": "equal",
+                                              "value": "holding_fees_value",
+                                              "data": {
+                                                "table": "settings",
+                                                "column": "name",
+                                                "type": "text"
+                                              },
+                                              "operation": "="
+                                            }
+                                          ],
+                                          "conditional": null,
+                                          "valid": true
+                                        },
+                                        "query": "SELECT value\nFROM settings\nWHERE name = 'holding_fees_value'",
+                                        "params": []
+                                      }
+                                    },
+                                    "output": true,
+                                    "meta": [
+                                      {
+                                        "type": "text",
+                                        "name": "value"
+                                      }
+                                    ],
+                                    "outputType": "object"
+                                  },
+                                  {
+                                    "name": "query_enrolcharge",
+                                    "module": "dbconnector",
+                                    "action": "single",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "SELECT",
+                                        "columns": [
+                                          {
+                                            "table": "ec",
+                                            "column": "uuid",
+                                            "alias": "enrolcharge_uuid"
+                                          },
+                                          {
+                                            "table": "fc",
+                                            "column": "uuid",
+                                            "alias": "familycharge_uuid",
+                                            "aggregate": ""
+                                          },
+                                          {
+                                            "table": "ec",
+                                            "column": "enrolGrandTotal"
+                                          }
+                                        ],
+                                        "table": {
+                                          "name": "charges_enrolments",
+                                          "alias": "ec"
+                                        },
+                                        "joins": [
+                                          {
+                                            "table": "charges_family",
+                                            "column": "*",
+                                            "alias": "fc",
+                                            "type": "LEFT",
+                                            "clauses": {
+                                              "condition": "AND",
+                                              "rules": [
+                                                {
+                                                  "table": "fc",
+                                                  "column": "uuid",
+                                                  "operator": "equal",
+                                                  "value": {
+                                                    "table": "ec",
+                                                    "column": "charge_uuid"
+                                                  },
+                                                  "operation": "="
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ],
+                                        "wheres": {
+                                          "condition": "AND",
+                                          "rules": [
+                                            {
+                                              "id": "ec.classDate",
+                                              "field": "ec.classDate",
+                                              "type": "date",
+                                              "operator": "equal",
+                                              "value": "{{absence_date.formatDate('yyyy-MM-dd')}}",
+                                              "data": {
+                                                "table": "ec",
+                                                "column": "classDate",
+                                                "type": "date"
+                                              },
+                                              "operation": "="
+                                            },
+                                            {
+                                              "id": "ec.enrolment_uuid",
+                                              "field": "ec.enrolment_uuid",
+                                              "type": "double",
+                                              "operator": "equal",
+                                              "value": "{{enroluuid}}",
+                                              "data": {
+                                                "table": "ec",
+                                                "column": "enrolment_uuid",
+                                                "type": "number"
+                                              },
+                                              "operation": "="
+                                            }
+                                          ],
+                                          "conditional": null,
+                                          "valid": true
+                                        },
+                                        "query": "SELECT ec.uuid AS enrolcharge_uuid, fc.uuid AS familycharge_uuid, ec.enrolGrandTotal\nFROM charges_enrolments AS ec\nLEFT JOIN charges_family AS fc ON (fc.uuid = ec.charge_uuid)\nWHERE ec.classDate = :P1 /* {{absence_date.formatDate('yyyy-MM-dd')}} */ AND ec.enrolment_uuid = :P2 /* {{enroluuid}} */",
+                                        "params": [
+                                          {
+                                            "operator": "equal",
+                                            "type": "expression",
+                                            "name": ":P1",
+                                            "value": "{{absence_date.formatDate('yyyy-MM-dd')}}"
+                                          },
+                                          {
+                                            "operator": "equal",
+                                            "type": "expression",
+                                            "name": ":P2",
+                                            "value": "{{enroluuid}}"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "output": true,
+                                    "meta": [
+                                      {
+                                        "type": "text",
+                                        "name": "enrolcharge_uuid"
+                                      },
+                                      {
+                                        "type": "text",
+                                        "name": "familycharge_uuid"
+                                      },
+                                      {
+                                        "type": "number",
+                                        "name": "enrolGrandTotal"
+                                      }
+                                    ],
+                                    "outputType": "object"
+                                  },
+                                  {
+                                    "name": "",
+                                    "options": {
+                                      "comment": "Run Holding Fee Calcs"
+                                    },
+                                    "disabled": true
+                                  },
+                                  {
+                                    "name": "",
+                                    "module": "core",
+                                    "action": "condition",
+                                    "options": {
+                                      "if": "{{query_hf_type.value=='percentage'}}",
+                                      "then": {
+                                        "steps": {
+                                          "name": "holdingfee",
+                                          "module": "core",
+                                          "action": "setvalue",
+                                          "options": {
+                                            "key": "holdingfee",
+                                            "value": "{{query_enrolcharge.enrolGrandTotal - (query_enrolcharge.enrolGrandTotal * query_hf_value.value / 100).evaluate()}}"
+                                          },
+                                          "meta": [
+                                            {
+                                              "name": "enrolcharge_uuid",
+                                              "type": "text"
+                                            },
+                                            {
+                                              "name": "familycharge_uuid",
+                                              "type": "text"
+                                            },
+                                            {
+                                              "name": "enrolGrandTotal",
+                                              "type": "number"
+                                            }
+                                          ],
+                                          "outputType": "text",
+                                          "output": true,
+                                          "disabled": true
+                                        }
+                                      },
+                                      "else": {
+                                        "steps": {
+                                          "name": "holdingfee",
+                                          "module": "core",
+                                          "action": "setvalue",
+                                          "options": {
+                                            "key": "holdingfee",
+                                            "value": "{{query_enrolcharge.enrolGrandTotal-query_hf_value.value}}"
+                                          },
+                                          "meta": [
+                                            {
+                                              "name": "enrolcharge_uuid",
+                                              "type": "text"
+                                            },
+                                            {
+                                              "name": "familycharge_uuid",
+                                              "type": "text"
+                                            },
+                                            {
+                                              "name": "enrolGrandTotal",
+                                              "type": "number"
+                                            }
+                                          ],
+                                          "outputType": "text",
+                                          "output": true,
+                                          "disabled": true
+                                        }
+                                      }
+                                    },
+                                    "outputType": "boolean",
+                                    "disabled": true
+                                  },
+                                  {
+                                    "name": "insert_holding_fee",
+                                    "module": "dbupdater",
+                                    "action": "insert",
+                                    "options": {
+                                      "connection": "db",
+                                      "sql": {
+                                        "type": "insert",
+                                        "values": [
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "uuid",
+                                            "type": "text",
+                                            "value": "{{'hf_'+UUID.replace('-', '')}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "enrolment_uuid",
+                                            "type": "text",
+                                            "value": "{{enroluuid}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "student_uuid",
+                                            "type": "text",
+                                            "value": "{{$_POST.student_uuid}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "holding_fee",
+                                            "type": "number",
+                                            "value": "{{query_hf_value.value}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "holding_fee_type",
+                                            "type": "text",
+                                            "value": "{{query_hf_type.value}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "status",
+                                            "type": "text",
+                                            "value": "1"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "absence_date",
+                                            "type": "number",
+                                            "value": "{{absence_date.toTimestamp()}}"
+                                          },
+                                          {
+                                            "table": "holding_fees",
+                                            "column": "absence_uuid",
+                                            "type": "text",
+                                            "value": "{{absence_uuid_gen}}"
+                                          }
+                                        ],
+                                        "table": "holding_fees",
+                                        "returning": "uuid",
+                                        "query": "INSERT INTO holding_fees\n(uuid, enrolment_uuid, student_uuid, holding_fee, holding_fee_type, status, absence_date, absence_uuid) VALUES (:P1 /* {{'hf_'+UUID.replace('-', '')}} */, :P2 /* {{enroluuid}} */, :P3 /* {{$_POST.student_uuid}} */, :P4 /* {{query_hf_value.value}} */, :P5 /* {{query_hf_type.value}} */, '1', :P6 /* {{absence_date.toTimestamp()}} */, :P7 /* {{absence_uuid_gen}} */)",
+                                        "params": [
+                                          {
+                                            "name": ":P1",
+                                            "type": "expression",
+                                            "value": "{{'hf_'+UUID.replace('-', '')}}"
+                                          },
+                                          {
+                                            "name": ":P2",
+                                            "type": "expression",
+                                            "value": "{{enroluuid}}"
+                                          },
+                                          {
+                                            "name": ":P3",
+                                            "type": "expression",
+                                            "value": "{{$_POST.student_uuid}}"
+                                          },
+                                          {
+                                            "name": ":P4",
+                                            "type": "expression",
+                                            "value": "{{query_hf_value.value}}"
+                                          },
+                                          {
+                                            "name": ":P5",
+                                            "type": "expression",
+                                            "value": "{{query_hf_type.value}}"
+                                          },
+                                          {
+                                            "name": ":P6",
+                                            "type": "expression",
+                                            "value": "{{absence_date.toTimestamp()}}"
+                                          },
+                                          {
+                                            "name": ":P7",
+                                            "type": "expression",
+                                            "value": "{{absence_uuid_gen}}"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "meta": [
+                                      {
+                                        "name": "identity",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "affected",
+                                        "type": "number"
+                                      }
+                                    ]
                                   }
                                 ]
+                              },
+                              "else": {
+                                "steps": {
+                                  "name": "",
+                                  "module": "core",
+                                  "action": "response",
+                                  "options": {
+                                    "status": 500,
+                                    "data": "Could not continue. Holding Fees are not enabled in your settings."
+                                  },
+                                  "output": true
+                                }
                               }
                             },
-                            "output": true,
-                            "meta": [
-                              {
-                                "type": "text",
-                                "name": "uuid"
-                              },
-                              {
-                                "type": "number",
-                                "name": "id"
-                              },
-                              {
-                                "type": "date",
-                                "name": "startofweek"
-                              },
-                              {
-                                "type": "number",
-                                "name": "classId"
-                              },
-                              {
-                                "type": "text",
-                                "name": "class_uuid"
-                              },
-                              {
-                                "type": "number",
-                                "name": "studentid"
-                              },
-                              {
-                                "type": "number",
-                                "name": "student_uuid"
-                              },
-                              {
-                                "type": "text",
-                                "name": "classtype_uuid"
-                              },
-                              {
-                                "type": "number",
-                                "name": "classTypeId"
-                              },
-                              {
-                                "type": "number",
-                                "name": "enrolid"
-                              },
-                              {
-                                "type": "number",
-                                "name": "enrolment_uuid"
-                              },
-                              {
-                                "type": "date",
-                                "name": "classDate"
-                              },
-                              {
-                                "type": "number",
-                                "name": "baseRate"
-                              },
-                              {
-                                "type": "number",
-                                "name": "endisc"
-                              },
-                              {
-                                "type": "text",
-                                "name": "ennetrate"
-                              },
-                              {
-                                "type": "text",
-                                "name": "endiscdescription"
-                              },
-                              {
-                                "type": "text",
-                                "name": "endiscrate"
-                              },
-                              {
-                                "type": "text",
-                                "name": "familydiscountdesc"
-                              },
-                              {
-                                "type": "text",
-                                "name": "familydiscountrate"
-                              },
-                              {
-                                "type": "number",
-                                "name": "familydiscounttotal"
-                              },
-                              {
-                                "type": "number",
-                                "name": "enrolGrandTotal"
-                              },
-                              {
-                                "type": "number",
-                                "name": "chargeId"
-                              },
-                              {
-                                "type": "number",
-                                "name": "charge_uuid"
-                              },
-                              {
-                                "type": "text",
-                                "name": "lineInvNumber"
-                              },
-                              {
-                                "type": "number",
-                                "name": "isvalid"
-                              },
-                              {
-                                "type": "text",
-                                "name": "debuggerstatus"
-                              }
-                            ],
-                            "outputType": "object"
-                          },
-                          {
-                            "name": "holdingfee",
-                            "module": "core",
-                            "action": "setvalue",
-                            "options": {
-                              "key": "holdingfee",
-                              "value": "{{query_enrolcharge.enrolGrandTotal - (query_enrolcharge.enrolGrandTotal * query_hf_value.value / 100).evaluate()}}"
-                            },
-                            "meta": [],
-                            "outputType": "text",
-                            "output": true
+                            "outputType": "boolean"
                           }
                         ]
                       }
@@ -923,7 +1138,7 @@
                 ]
               }
             },
-            "output": true,
+            "output": false,
             "meta": [
               {
                 "name": "$index",
@@ -987,6 +1202,26 @@
                 ]
               },
               {
+                "name": "query_hf_enabled",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
+                "name": "query_hf_type",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "value"
+                  }
+                ]
+              },
+              {
                 "name": "query_hf_value",
                 "type": "object",
                 "sub": [
@@ -1002,114 +1237,39 @@
                 "sub": [
                   {
                     "type": "text",
-                    "name": "uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startofweek"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classId"
+                    "name": "enrolcharge_uuid"
                   },
                   {
                     "type": "text",
-                    "name": "class_uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "studentid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "student_uuid"
-                  },
-                  {
-                    "type": "text",
-                    "name": "classtype_uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classTypeId"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "enrolment_uuid"
-                  },
-                  {
-                    "type": "date",
-                    "name": "classDate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "baseRate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "endisc"
-                  },
-                  {
-                    "type": "text",
-                    "name": "ennetrate"
-                  },
-                  {
-                    "type": "text",
-                    "name": "endiscdescription"
-                  },
-                  {
-                    "type": "text",
-                    "name": "endiscrate"
-                  },
-                  {
-                    "type": "text",
-                    "name": "familydiscountdesc"
-                  },
-                  {
-                    "type": "text",
-                    "name": "familydiscountrate"
-                  },
-                  {
-                    "type": "number",
-                    "name": "familydiscounttotal"
+                    "name": "familycharge_uuid"
                   },
                   {
                     "type": "number",
                     "name": "enrolGrandTotal"
                   },
                   {
-                    "type": "number",
-                    "name": "chargeId"
-                  },
-                  {
-                    "type": "number",
-                    "name": "charge_uuid"
-                  },
-                  {
                     "type": "text",
-                    "name": "lineInvNumber"
-                  },
-                  {
-                    "type": "number",
-                    "name": "isvalid"
-                  },
-                  {
-                    "type": "text",
-                    "name": "debuggerstatus"
+                    "name": "uuid"
                   }
                 ]
               },
               {
                 "name": "holdingfee",
                 "type": "text",
-                "sub": []
+                "sub": [
+                  {
+                    "name": "enrolcharge_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "familycharge_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolGrandTotal",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "outputType": "array"
@@ -1157,182 +1317,6 @@
             {
               "name": "makeup_token_uuid",
               "type": "text"
-            }
-          ]
-        },
-        {
-          "name": "rp_absencerecords",
-          "type": "array",
-          "sub": [
-            {
-              "name": "mu_eligible",
-              "type": "text",
-              "sub": []
-            },
-            {
-              "name": "query_makeup_enabled",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "value"
-                }
-              ]
-            },
-            {
-              "name": "query_makeup_expiry",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "value"
-                }
-              ]
-            },
-            {
-              "name": "query_makeup_expiry_length",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "value"
-                }
-              ]
-            },
-            {
-              "name": "query_makeup_expiry_from_classdate",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "value"
-                }
-              ]
-            },
-            {
-              "name": "query_hf_value",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "value"
-                }
-              ]
-            },
-            {
-              "name": "query_enrolcharge",
-              "type": "object",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "id"
-                },
-                {
-                  "type": "date",
-                  "name": "startofweek"
-                },
-                {
-                  "type": "number",
-                  "name": "classId"
-                },
-                {
-                  "type": "text",
-                  "name": "class_uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "studentid"
-                },
-                {
-                  "type": "number",
-                  "name": "student_uuid"
-                },
-                {
-                  "type": "text",
-                  "name": "classtype_uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "classTypeId"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolid"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolment_uuid"
-                },
-                {
-                  "type": "date",
-                  "name": "classDate"
-                },
-                {
-                  "type": "number",
-                  "name": "baseRate"
-                },
-                {
-                  "type": "number",
-                  "name": "endisc"
-                },
-                {
-                  "type": "text",
-                  "name": "ennetrate"
-                },
-                {
-                  "type": "text",
-                  "name": "endiscdescription"
-                },
-                {
-                  "type": "text",
-                  "name": "endiscrate"
-                },
-                {
-                  "type": "text",
-                  "name": "familydiscountdesc"
-                },
-                {
-                  "type": "text",
-                  "name": "familydiscountrate"
-                },
-                {
-                  "type": "number",
-                  "name": "familydiscounttotal"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolGrandTotal"
-                },
-                {
-                  "type": "number",
-                  "name": "chargeId"
-                },
-                {
-                  "type": "number",
-                  "name": "charge_uuid"
-                },
-                {
-                  "type": "text",
-                  "name": "lineInvNumber"
-                },
-                {
-                  "type": "number",
-                  "name": "isvalid"
-                },
-                {
-                  "type": "text",
-                  "name": "debuggerstatus"
-                }
-              ]
-            },
-            {
-              "name": "holdingfee",
-              "type": "text",
-              "sub": []
             }
           ]
         }

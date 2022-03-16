@@ -10,16 +10,18 @@
   },
   "schema": {
     "tables": {
-      "absences": {
+      "holding_fees": {
         "db": {
           "engine": "InnoDB",
           "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
+          "collation": "utf8mb4_0900_ai_ci",
+          "comment": "used to attach to enrolment charges to discount the fees"
         },
         "columns": {
           "uuid": {
             "db": {
               "type": "string",
+              "default": "'concat(_utf8mb4\\\\\\'hf_\\\\\\',convert(replace(uuid(),_utf8mb4\\\\\\'-\\\\\\',_utf8mb4\\\\\\'\\\\\\') using utf8mb4))'",
               "maxLength": 50,
               "primary": true,
               "nullable": false
@@ -27,27 +29,46 @@
           },
           "enrolment_uuid": {
             "db": {
-              "type": "reference",
+              "type": "string",
               "maxLength": 50,
-              "primary": false,
-              "nullable": false,
-              "references": "uuid",
-              "inTable": "enrolments",
-              "onUpdate": "CASCADE",
-              "onDelete": "NO ACTION"
-            }
-          },
-          "absence_date": {
-            "db": {
-              "type": "bigInteger",
               "primary": false,
               "nullable": false
             }
           },
-          "makeup_eligible": {
+          "student_uuid": {
             "db": {
-              "type": "boolean",
-              "default": "'0'",
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "absence_date": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "holding_fee": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "holding_fee_type": {
+            "db": {
+              "type": "enum",
+              "maxLength": 10,
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "absence_uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
               "primary": false,
               "nullable": false
             }
@@ -55,6 +76,7 @@
           "status": {
             "db": {
               "type": "enum",
+              "default": "'active'",
               "maxLength": 9,
               "primary": false,
               "nullable": false
@@ -150,6 +172,440 @@
             "db": {
               "type": "string",
               "maxLength": 50,
+              "primary": false,
+              "nullable": true
+            }
+          }
+        }
+      },
+      "absences": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "enrolment_uuid": {
+            "db": {
+              "type": "reference",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false,
+              "references": "uuid",
+              "inTable": "enrolments",
+              "onUpdate": "CASCADE",
+              "onDelete": "NO ACTION"
+            }
+          },
+          "absence_date": {
+            "db": {
+              "type": "bigInteger",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "makeup_eligible": {
+            "db": {
+              "type": "boolean",
+              "default": "'0'",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "status": {
+            "db": {
+              "type": "enum",
+              "maxLength": 9,
+              "primary": false,
+              "nullable": false
+            }
+          }
+        }
+      },
+      "family_notes": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "id": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "content": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "priority": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "comment": "Range between 1-5. 1 being low and 5 being critical.",
+              "nullable": true
+            }
+          },
+          "family": {
+            "db": {
+              "type": "reference",
+              "primary": false,
+              "nullable": true,
+              "references": "id",
+              "inTable": "families",
+              "onUpdate": "NO ACTION",
+              "onDelete": "NO ACTION"
+            }
+          },
+          "subject": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "family_uuid": {
+            "db": {
+              "type": "reference",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": true,
+              "references": "uuid",
+              "inTable": "families",
+              "onUpdate": "CASCADE",
+              "onDelete": "CASCADE"
+            }
+          },
+          "created_timestamp": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "updated_timestamp": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "created_by": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "updated_by": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": true
+            }
+          }
+        }
+      },
+      "db_users": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "username": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "password": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "firstName": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "lastName": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false
+            }
+          }
+        }
+      },
+      "charges_enrolments": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "id": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "startofweek": {
+            "db": {
+              "type": "date",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "classId": {
+            "db": {
+              "type": "integer",
+              "default": "'0'",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "class_uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "studentid": {
+            "db": {
+              "type": "integer",
+              "default": "'0'",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "student_uuid": {
+            "db": {
+              "type": "reference",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": true,
+              "references": "uuid",
+              "inTable": "students",
+              "onUpdate": "CASCADE",
+              "onDelete": "CASCADE"
+            }
+          },
+          "classtype_uuid": {
+            "db": {
+              "type": "string",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "classTypeId": {
+            "db": {
+              "type": "integer",
+              "default": "'0'",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "enrolid": {
+            "db": {
+              "type": "integer",
+              "default": "'0'",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "enrolment_uuid": {
+            "db": {
+              "type": "reference",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": true,
+              "references": "uuid",
+              "inTable": "enrolments",
+              "onUpdate": "CASCADE",
+              "onDelete": "CASCADE"
+            }
+          },
+          "classDate": {
+            "db": {
+              "type": "date",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "baseRate": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "endisc": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "ennetrate": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "endiscdescription": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "endiscrate": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "familydiscountdesc": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "familydiscountrate": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "familydiscounttotal": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "enrolGrandTotal": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "chargeId": {
+            "db": {
+              "type": "reference",
+              "primary": false,
+              "nullable": false,
+              "references": "id",
+              "inTable": "charges_family",
+              "onUpdate": "NO ACTION",
+              "onDelete": "CASCADE"
+            }
+          },
+          "charge_uuid": {
+            "db": {
+              "type": "reference",
+              "maxLength": 50,
+              "primary": false,
+              "nullable": false,
+              "references": "uuid",
+              "inTable": "charges_family",
+              "onUpdate": "CASCADE",
+              "onDelete": "CASCADE"
+            }
+          },
+          "lineInvNumber": {
+            "db": {
+              "type": "string",
+              "maxLength": 100,
+              "primary": false,
+              "nullable": false,
+              "default": "'inv-number-not-provided'"
+            }
+          },
+          "isvalid": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "debuggerstatus": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
               "primary": false,
               "nullable": true
             }
@@ -550,231 +1006,6 @@
           "updatedby": {
             "db": {
               "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          }
-        }
-      },
-      "charges_enrolments": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "uuid": {
-            "db": {
-              "type": "string",
-              "maxLength": 50,
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "id": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "startofweek": {
-            "db": {
-              "type": "date",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "classId": {
-            "db": {
-              "type": "integer",
-              "default": "'0'",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "class_uuid": {
-            "db": {
-              "type": "string",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "studentid": {
-            "db": {
-              "type": "integer",
-              "default": "'0'",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "student_uuid": {
-            "db": {
-              "type": "reference",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": true,
-              "references": "uuid",
-              "inTable": "students",
-              "onUpdate": "CASCADE",
-              "onDelete": "CASCADE"
-            }
-          },
-          "classtype_uuid": {
-            "db": {
-              "type": "string",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "classTypeId": {
-            "db": {
-              "type": "integer",
-              "default": "'0'",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "enrolid": {
-            "db": {
-              "type": "integer",
-              "default": "'0'",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "enrolment_uuid": {
-            "db": {
-              "type": "reference",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": true,
-              "references": "uuid",
-              "inTable": "enrolments",
-              "onUpdate": "CASCADE",
-              "onDelete": "CASCADE"
-            }
-          },
-          "classDate": {
-            "db": {
-              "type": "date",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "baseRate": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "endisc": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "ennetrate": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "endiscdescription": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "endiscrate": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "familydiscountdesc": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "familydiscountrate": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "familydiscounttotal": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "enrolGrandTotal": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "chargeId": {
-            "db": {
-              "type": "reference",
-              "primary": false,
-              "nullable": false,
-              "references": "id",
-              "inTable": "charges_family",
-              "onUpdate": "NO ACTION",
-              "onDelete": "CASCADE"
-            }
-          },
-          "charge_uuid": {
-            "db": {
-              "type": "reference",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": false,
-              "references": "uuid",
-              "inTable": "charges_family",
-              "onUpdate": "CASCADE",
-              "onDelete": "CASCADE"
-            }
-          },
-          "lineInvNumber": {
-            "db": {
-              "type": "string",
-              "maxLength": 100,
-              "primary": false,
-              "nullable": false,
-              "default": "'inv-number-not-provided'"
-            }
-          },
-          "isvalid": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "debuggerstatus": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
               "primary": false,
               "nullable": true
             }
@@ -2057,77 +2288,6 @@
           }
         }
       },
-      "family_notes": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "uuid": {
-            "db": {
-              "type": "string",
-              "maxLength": 50,
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "id": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "content": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "priority": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "comment": "Range between 1-5. 1 being low and 5 being critical.",
-              "nullable": true
-            }
-          },
-          "family": {
-            "db": {
-              "type": "reference",
-              "primary": false,
-              "nullable": true,
-              "references": "id",
-              "inTable": "families",
-              "onUpdate": "NO ACTION",
-              "onDelete": "NO ACTION"
-            }
-          },
-          "subject": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "family_uuid": {
-            "db": {
-              "type": "reference",
-              "maxLength": 50,
-              "primary": false,
-              "nullable": true,
-              "references": "uuid",
-              "inTable": "families",
-              "onUpdate": "CASCADE",
-              "onDelete": "CASCADE"
-            }
-          }
-        }
-      },
       "addresses": {
         "db": {
           "engine": "InnoDB",
@@ -2265,176 +2425,19 @@
           }
         }
       },
-      "relationships": {
+      "stopwords": {
         "db": {
           "engine": "InnoDB",
           "schema": "ssa-crm",
           "collation": "utf8mb4_0900_ai_ci"
         },
         "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "type": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          }
-        }
-      },
-      "sessions": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        }
-      },
-      "settings": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "name": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": true,
-              "nullable": false
-            }
-          },
           "value": {
             "db": {
               "type": "string",
-              "maxLength": 1000,
-              "primary": false,
-              "nullable": false
-            }
-          }
-        }
-      },
-      "specialDiscounts": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "name": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "discountType": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "discountAmt": {
-            "db": {
-              "type": "integer",
-              "default": "0",
-              "primary": false,
-              "nullable": false
-            }
-          }
-        }
-      },
-      "staffTypes": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "name": {
-            "db": {
-              "type": "string",
               "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "isactive": {
-            "db": {
-              "type": "boolean",
-              "primary": false,
-              "nullable": true
-            }
-          }
-        }
-      },
-      "perStudentDiscounts": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
               "primary": true,
               "nullable": false
-            }
-          },
-          "enrolmentCount": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "discountType": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "discountAmount": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": false
-            }
-          },
-          "classType": {
-            "db": {
-              "type": "reference",
-              "primary": false,
-              "nullable": false,
-              "references": "id",
-              "inTable": "classTypes",
-              "onUpdate": "NO ACTION",
-              "onDelete": "NO ACTION"
             }
           }
         }
@@ -2543,19 +2546,128 @@
           }
         }
       },
-      "stopwords": {
+      "staffTypes": {
         "db": {
           "engine": "InnoDB",
           "schema": "ssa-crm",
           "collation": "utf8mb4_0900_ai_ci"
         },
         "columns": {
-          "value": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "name": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "isactive": {
+            "db": {
+              "type": "boolean",
+              "primary": false,
+              "nullable": true
+            }
+          }
+        }
+      },
+      "specialDiscounts": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "name": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "discountType": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "discountAmt": {
+            "db": {
+              "type": "integer",
+              "default": "0",
+              "primary": false,
+              "nullable": false
+            }
+          }
+        }
+      },
+      "settings": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "name": {
             "db": {
               "type": "string",
               "maxLength": 255,
               "primary": true,
               "nullable": false
+            }
+          },
+          "value": {
+            "db": {
+              "type": "string",
+              "maxLength": 1000,
+              "primary": false,
+              "nullable": false
+            }
+          }
+        }
+      },
+      "sessions": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        }
+      },
+      "relationships": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "type": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
             }
           }
         }
@@ -2593,6 +2705,54 @@
               "type": "decimal",
               "primary": false,
               "nullable": false
+            }
+          }
+        }
+      },
+      "perStudentDiscounts": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "enrolmentCount": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "discountType": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "discountAmount": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": false
+            }
+          },
+          "classType": {
+            "db": {
+              "type": "reference",
+              "primary": false,
+              "nullable": false,
+              "references": "id",
+              "inTable": "classTypes",
+              "onUpdate": "NO ACTION",
+              "onDelete": "NO ACTION"
             }
           }
         }
@@ -2808,6 +2968,109 @@
           }
         }
       },
+      "enrolmentsHoldingTable": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "classLevel": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "day": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "startTimeDisplay": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "startTimeDecimal": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "endTimeDisplay": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "endTimeDecimal": {
+            "db": {
+              "type": "decimal",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "instructor": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "student": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "studentId": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "startDate": {
+            "db": {
+              "type": "date",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "dropDate": {
+            "db": {
+              "type": "date",
+              "primary": false,
+              "nullable": true
+            }
+          },
+          "classId": {
+            "db": {
+              "type": "integer",
+              "primary": false,
+              "nullable": true
+            }
+          }
+        }
+      },
       "locations": {
         "db": {
           "engine": "InnoDB",
@@ -2921,110 +3184,7 @@
           }
         }
       },
-      "enrolmentsHoldingTable": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "classLevel": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "day": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "startTimeDisplay": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "startTimeDecimal": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "endTimeDisplay": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "endTimeDecimal": {
-            "db": {
-              "type": "decimal",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "instructor": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "student": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "studentId": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "startDate": {
-            "db": {
-              "type": "date",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "dropDate": {
-            "db": {
-              "type": "date",
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "classId": {
-            "db": {
-              "type": "integer",
-              "primary": false,
-              "nullable": true
-            }
-          }
-        }
-      },
-      "enrolmentTypes": {
+      "contactTypes": {
         "db": {
           "engine": "InnoDB",
           "schema": "ssa-crm",
@@ -3041,103 +3201,25 @@
           "type": {
             "db": {
               "type": "string",
-              "maxLength": 20,
+              "maxLength": 255,
               "primary": false,
               "nullable": true
             }
-          }
-        }
-      },
-      "discountTypes": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
+          },
+          "match": {
             "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
+              "type": "string",
+              "default": "'all'",
+              "maxLength": 255,
+              "primary": false,
+              "comment": "Can be phone, email, all.",
+              "nullable": true
             }
           },
-          "name": {
+          "abbr": {
             "db": {
               "type": "text",
               "maxLength": 65535,
-              "primary": false,
-              "nullable": false
-            }
-          }
-        }
-      },
-      "db_users": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "username": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "password": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "firstName": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "lastName": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          }
-        }
-      },
-      "days": {
-        "db": {
-          "engine": "InnoDB",
-          "schema": "ssa-crm",
-          "collation": "utf8mb4_0900_ai_ci"
-        },
-        "columns": {
-          "id": {
-            "db": {
-              "type": "increments",
-              "primary": true,
-              "nullable": false
-            }
-          },
-          "name": {
-            "db": {
-              "type": "string",
-              "maxLength": 255,
               "primary": false,
               "nullable": true
             }
@@ -3326,7 +3408,55 @@
           }
         }
       },
-      "contactTypes": {
+      "days": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "name": {
+            "db": {
+              "type": "string",
+              "maxLength": 255,
+              "primary": false,
+              "nullable": true
+            }
+          }
+        }
+      },
+      "discountTypes": {
+        "db": {
+          "engine": "InnoDB",
+          "schema": "ssa-crm",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        "columns": {
+          "id": {
+            "db": {
+              "type": "increments",
+              "primary": true,
+              "nullable": false
+            }
+          },
+          "name": {
+            "db": {
+              "type": "text",
+              "maxLength": 65535,
+              "primary": false,
+              "nullable": false
+            }
+          }
+        }
+      },
+      "enrolmentTypes": {
         "db": {
           "engine": "InnoDB",
           "schema": "ssa-crm",
@@ -3343,25 +3473,7 @@
           "type": {
             "db": {
               "type": "string",
-              "maxLength": 255,
-              "primary": false,
-              "nullable": true
-            }
-          },
-          "match": {
-            "db": {
-              "type": "string",
-              "default": "'all'",
-              "maxLength": 255,
-              "primary": false,
-              "comment": "Can be phone, email, all.",
-              "nullable": true
-            }
-          },
-          "abbr": {
-            "db": {
-              "type": "text",
-              "maxLength": 65535,
+              "maxLength": 20,
               "primary": false,
               "nullable": true
             }

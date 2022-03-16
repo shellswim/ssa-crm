@@ -197,6 +197,7 @@ exports.tuitioncalc = async function (options) {
                         e.familydiscountrate = matrix[order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`;
                         e.familydiscountdesc = matrix[order].description || '-';
                         e.enrolGrandTotal = round(sum(e.enNetRate - e.familydiscounttotal),2);
+                        e.holdingfee = await process_holding_fees(w.enrolments[enrol]);
                     }
                     w.familydiscounttotal = round(sum(w.grossweekprice * (matrix[order].discountAmount / 100)),4); // Total discount applied.
                     w.familydiscountrate = matrix[w.order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`; // Discount rate applied.
@@ -204,7 +205,7 @@ exports.tuitioncalc = async function (options) {
                 }
             }
             finalcharges = formatFinalCharges(enrolarray);
-
+            // finalcharges.holding_fee = process_holding_fees(finalcharges.enrolments);
             // Bulk family discounts  
         } else {
 
@@ -291,15 +292,7 @@ exports.tuitioncalc = async function (options) {
 
         }
 
-        let processed = {
-            // 'enrolarray': enrolarray,
-            // 'enrolsfinal': enrolfinal,
-            'finalcharges': finalcharges,
-            // 'chargefor': dr_current.descriptor,
-            // 'familychargetotal': familytotal,
-            // 'remaining': remaining,
-            // 'familychargetotalreduced': round(sum(familytotal),2)
-        }
+
 
         return finalcharges;
     }
@@ -450,6 +443,26 @@ exports.tuitioncalc = async function (options) {
         } else {
 
         }
+    }
+
+    ///// Holding Fee Processor
+    async function process_holding_fees(enrolments) {
+        let hf_return;
+        let en = enrolments;
+        let en_uuid = en.uuid, classdate = moment(en.classdate).unix();
+
+        let holdingfee = dbClientFlat(await db.raw(`
+            SELECT hf.*
+            FROM holding_fees hf
+            WHERE hf.enrolment_uuid = '${en_uuid}' AND hf.absence_date = ${classdate}
+        `));
+        // let holdingfee = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='endiscount_enable'`)).value;
+        if(!holdingfee) {
+            hf_return = 'No holding fees found.'
+        } else {
+            hf_return = `Holding fee found. The type is ${holdingfee.holding_fee_type}. The value is ${holdingfee.holding_fee}.`
+        }
+        return hf_return;
     }
 
     ///// DB Query Processor

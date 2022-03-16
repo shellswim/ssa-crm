@@ -18,6 +18,17 @@
   "exec": {
     "steps": [
       {
+        "name": "family_uuid_sv",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_GET.familyuuid}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
         "name": "familyDetails",
         "module": "dbconnector",
         "action": "single",
@@ -828,6 +839,11 @@
                     "name": "number",
                     "type": "text",
                     "sub": []
+                  },
+                  {
+                    "name": "type",
+                    "type": "text",
+                    "sub": []
                   }
                 ],
                 "outputType": "array"
@@ -930,6 +946,10 @@
                   },
                   {
                     "name": "address",
+                    "type": "text"
+                  },
+                  {
+                    "name": "address",
                     "type": "text",
                     "sub": []
                   }
@@ -1028,7 +1048,8 @@
               },
               {
                 "name": "type",
-                "type": "number"
+                "type": "number",
+                "sub": []
               },
               {
                 "name": "guardian_uuid",
@@ -1038,6 +1059,11 @@
                 "name": "number",
                 "type": "text",
                 "sub": []
+              },
+              {
+                "name": "type",
+                "type": "text",
+                "sub": []
               }
             ]
           },
@@ -1045,6 +1071,11 @@
             "name": "emails",
             "type": "array",
             "sub": [
+              {
+                "name": "address",
+                "type": "text",
+                "sub": []
+              },
               {
                 "name": "address",
                 "type": "text",
@@ -1160,15 +1191,80 @@
             "type": "SELECT",
             "columns": [
               {
-                "table": "family_notes",
+                "table": "fn",
                 "column": "*"
+              },
+              {
+                "table": "user_create",
+                "column": "firstName",
+                "alias": "created_by_first"
+              },
+              {
+                "table": "user_create",
+                "column": "lastName",
+                "alias": "created_by_last",
+                "aggregate": ""
+              },
+              {
+                "table": "user_update",
+                "column": "firstName",
+                "alias": "updated_by_first"
+              },
+              {
+                "table": "user_update",
+                "column": "lastName",
+                "alias": "updated_by_last"
               }
             ],
             "table": {
-              "name": "family_notes"
+              "name": "family_notes",
+              "alias": "fn"
             },
-            "joins": [],
-            "query": "SELECT *\nFROM family_notes\nWHERE family_uuid = :P1 /* {{$_GET.familyuuid}} */\nORDER BY priority ASC",
+            "joins": [
+              {
+                "table": "db_users",
+                "column": "*",
+                "alias": "user_create",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "user_create",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "fn",
+                        "column": "created_by"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              },
+              {
+                "table": "db_users",
+                "column": "*",
+                "alias": "user_update",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "user_update",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "fn",
+                        "column": "updated_by"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                }
+              }
+            ],
+            "query": "SELECT fn.*, user_create.firstName AS created_by_first, user_create.lastName AS created_by_last, user_update.firstName AS updated_by_first, user_update.lastName AS updated_by_last\nFROM family_notes AS fn\nLEFT JOIN db_users AS user_create ON (user_create.uuid = fn.created_by) LEFT JOIN db_users AS user_update ON (user_update.uuid = fn.updated_by)\nWHERE fn.family_uuid = :P1 /* {{$_GET.familyuuid}} */\nORDER BY fn.priority DESC",
             "params": [
               {
                 "operator": "equal",
@@ -1179,22 +1275,23 @@
             ],
             "orders": [
               {
-                "table": "family_notes",
+                "table": "fn",
                 "column": "priority",
-                "direction": "ASC"
+                "direction": "DESC",
+                "recid": 1
               }
             ],
             "wheres": {
               "condition": "AND",
               "rules": [
                 {
-                  "id": "family_notes.family_uuid",
-                  "field": "family_notes.family_uuid",
+                  "id": "fn.family_uuid",
+                  "field": "fn.family_uuid",
                   "type": "double",
                   "operator": "equal",
                   "value": "{{$_GET.familyuuid}}",
                   "data": {
-                    "table": "family_notes",
+                    "table": "fn",
                     "column": "family_uuid",
                     "type": "number"
                   },
@@ -1235,6 +1332,38 @@
           {
             "type": "number",
             "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "created_timestamp"
+          },
+          {
+            "type": "number",
+            "name": "updated_timestamp"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          },
+          {
+            "type": "text",
+            "name": "created_by_first"
+          },
+          {
+            "type": "text",
+            "name": "created_by_last"
+          },
+          {
+            "type": "text",
+            "name": "updated_by_first"
+          },
+          {
+            "type": "text",
+            "name": "updated_by_last"
           }
         ],
         "outputType": "array"
