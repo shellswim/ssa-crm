@@ -89,7 +89,7 @@
                         "type": "number"
                     },
                     {
-                        "name": "discountotal",
+                        "name": "discounttotal",
                         "type": "number"
                     },
                     {
@@ -147,7 +147,7 @@
                         "chargeType",
                         "chargeFor_session",
                         "basetotal",
-                        "discountotal",
+                        "discounttotal",
                         "chargeDate",
                         "payments",
                         "created",
@@ -166,7 +166,7 @@
                                 "options": {
                                     "connection": "db",
                                     "sql": {
-                                        "query": "SELECT DISTINCT sl.student_uuid as student_uuid, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.student_uuid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\n    WHERE\n        (pe.uuid IS NULL OR pe.amount < ec.enrolGrandTotal)\n        AND ec.charge_uuid = :P1\n        AND IFNULL((ec.enrolGrandTotal - (\n               SELECT SUM(pe.amount)\n               FROM payments_enrolcharges pe\n                   JOIN charges_enrolments ec2\n                    ON pe.enrolcharge_uuid = ec.uuid\n               WHERE ec2.uuid = ec.uuid\n               )),ec.enrolGrandTotal) > 0\n    GROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolGrandTotal, ec.enrolment_uuid, ec.classDate\n    ORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid\n         ) AS sl JOIN students s ON sl.student_uuid = s.uuid\n;",
+                                        "query": "SELECT DISTINCT sl.student_uuid as student_uuid, s.firstName, s.lastName, s.family, s.level\nFROM (\n    SELECT\n        ec.student_uuid\n    FROM charges_enrolments ec\n        LEFT OUTER JOIN\n        payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\n    WHERE\n        (pe.uuid IS NULL OR pe.amount < ec.enrolsubtotal)\n        AND ec.charge_uuid = :P1\n        AND IFNULL((ec.enrolsubtotal - (\n               SELECT SUM(pe.amount)\n               FROM payments_enrolcharges pe\n                   JOIN charges_enrolments ec2\n                    ON pe.enrolcharge_uuid = ec.uuid\n               WHERE ec2.uuid = ec.uuid\n               )),ec.enrolsubtotal) > 0\n    GROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolsubtotal, ec.enrolment_uuid, ec.classDate\n    ORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid\n         ) AS sl JOIN students s ON sl.student_uuid = s.uuid\n;",
                                         "params": [
                                             {
                                                 "name": ":P1",
@@ -232,7 +232,7 @@
                                                 "options": {
                                                     "connection": "db",
                                                     "sql": {
-                                                        "query": "SELECT\n   ec.uuid as enrolcharge_uuid,\n   ec.student_uuid,\n   ec.startofweek,\n   ec.enrolGrandTotal,\n   ec.enrolment_uuid,\n   ec.classDate,\n   IFNULL((ec.enrolGrandTotal - (\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges pe\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       )),ec.enrolGrandTotal) AS remaining,\n   IFNULL((\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges tl\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\nWHERE\n    (pe.uuid IS NULL OR pe.amount < ec.enrolGrandTotal)\n    AND ec.charge_uuid = :P1 AND ec.student_uuid = :P2\n    AND IFNULL((ec.enrolGrandTotal - (\n           SELECT SUM(pe.amount)\n           FROM payments_enrolcharges pe\n               JOIN charges_enrolments ce\n      \t\t\tON pe.enrolcharge_uuid = ce.uuid\n           WHERE ce.uuid = ec.uuid\n           )),ec.enrolGrandTotal) > 0\nGROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolGrandTotal, ec.enrolment_uuid, ec.classDate\nORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid;",
+                                                        "query": "SELECT\n   ec.uuid as enrolcharge_uuid,\n   ec.student_uuid,\n   ec.startofweek,\n   ec.enrolsubtotal,\n   ec.enrolment_uuid,\n   ec.classDate,\n   IFNULL((ec.enrolsubtotal - (\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges pe\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       )),ec.enrolsubtotal) AS remaining,\n   IFNULL((\n       SELECT SUM(pe.amount)\n       FROM payments_enrolcharges tl\n           JOIN charges_enrolments ce ON pe.enrolcharge_uuid = ce.uuid\n       WHERE ce.uuid = ec.uuid\n       ),0.00) AS totalPaid\nFROM charges_enrolments ec\n    LEFT OUTER JOIN\n    payments_enrolcharges pe on pe.enrolcharge_uuid = ec.uuid\nWHERE\n    (pe.uuid IS NULL OR pe.amount < ec.enrolsubtotal)\n    AND ec.charge_uuid = :P1 AND ec.student_uuid = :P2\n    AND IFNULL((ec.enrolsubtotal - (\n           SELECT SUM(pe.amount)\n           FROM payments_enrolcharges pe\n               JOIN charges_enrolments ce\n      \t\t\tON pe.enrolcharge_uuid = ce.uuid\n           WHERE ce.uuid = ec.uuid\n           )),ec.enrolsubtotal) > 0\nGROUP BY ec.uuid, ec.student_uuid, ec.startofweek, ec.enrolsubtotal, ec.enrolment_uuid, ec.classDate\nORDER BY ec.student_uuid, ec.startofweek, ec.enrolment_uuid;",
                                                         "params": [
                                                             {
                                                                 "name": ":P1",
@@ -262,7 +262,7 @@
                                                         "type": "text"
                                                     },
                                                     {
-                                                        "name": "enrolGrandTotal",
+                                                        "name": "enrolsubtotal",
                                                         "type": "number"
                                                     },
                                                     {
@@ -293,7 +293,7 @@
                                                     "outputFields": [
                                                         "student_uuid",
                                                         "startofweek",
-                                                        "enrolGrandTotal",
+                                                        "enrolsubtotal",
                                                         "enrolment_uuid",
                                                         "classDate",
                                                         "remaining",
@@ -511,7 +511,7 @@
                                                         "type": "text"
                                                     },
                                                     {
-                                                        "name": "enrolGrandTotal",
+                                                        "name": "enrolsubtotal",
                                                         "type": "number"
                                                     },
                                                     {
@@ -617,7 +617,7 @@
                                                 "type": "text"
                                             },
                                             {
-                                                "name": "enrolGrandTotal",
+                                                "name": "enrolsubtotal",
                                                 "type": "number"
                                             },
                                             {
@@ -741,7 +741,7 @@
                         "type": "number"
                     },
                     {
-                        "name": "discountotal",
+                        "name": "discounttotal",
                         "type": "number"
                     },
                     {
@@ -817,7 +817,7 @@
                                         "type": "text"
                                     },
                                     {
-                                        "name": "enrolGrandTotal",
+                                        "name": "enrolsubtotal",
                                         "type": "number"
                                     },
                                     {

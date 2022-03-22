@@ -42,7 +42,6 @@ function pdl_image_upload_handler(blobInfo, success, failure, progress) {
 };
 
 function pdl_tinymce_reset(editor) {
-    debugger;
     tinymce.get(editor).setContent('');
 }
 function pdl_tinymce_destroy(editor) {

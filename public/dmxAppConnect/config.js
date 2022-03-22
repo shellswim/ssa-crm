@@ -3969,27 +3969,7 @@ dmx.config({
     "rp_chargeStudents": {
       "meta": [
         {
-          "name": "id",
-          "type": "number"
-        },
-        {
-          "name": "firstName",
-          "type": "text"
-        },
-        {
-          "name": "lastName",
-          "type": "text"
-        },
-        {
-          "name": "enrolmentsCount",
-          "type": "number"
-        },
-        {
-          "name": "enrolmentsTotal",
-          "type": "number"
-        },
-        {
-          "name": "allEnrolmentCharges",
+          "name": "enrolments",
           "type": "array",
           "sub": [
             {
@@ -3998,6 +3978,22 @@ dmx.config({
             },
             {
               "name": "enrolid",
+              "type": "number"
+            },
+            {
+              "name": "charge_enrolment_uuid",
+              "type": "text"
+            },
+            {
+              "name": "charge_uuid",
+              "type": "number"
+            },
+            {
+              "name": "enrolment_uuid",
+              "type": "text"
+            },
+            {
+              "name": "student",
               "type": "number"
             },
             {
@@ -4037,116 +4033,108 @@ dmx.config({
               "type": "number"
             },
             {
-              "name": "enrolmentCharges",
+              "name": "enrolment_charges",
               "type": "array",
               "sub": [
                 {
-                  "name": "id",
-                  "type": "text"
+                  "type": "text",
+                  "name": "uuid"
                 },
                 {
-                  "name": "startofweek",
-                  "type": "date"
+                  "type": "number",
+                  "name": "id"
                 },
                 {
-                  "name": "classId",
-                  "type": "number"
+                  "type": "date",
+                  "name": "startofweek"
                 },
                 {
-                  "name": "studentid",
-                  "type": "number"
+                  "type": "number",
+                  "name": "classId"
                 },
                 {
-                  "name": "classTypeId",
-                  "type": "number"
+                  "type": "text",
+                  "name": "class_uuid"
                 },
                 {
-                  "name": "enrolid",
-                  "type": "number"
+                  "type": "number",
+                  "name": "studentid"
                 },
                 {
-                  "name": "classDate",
-                  "type": "date"
+                  "type": "number",
+                  "name": "student_uuid"
                 },
                 {
-                  "name": "enrolCount",
-                  "type": "text"
+                  "type": "number",
+                  "name": "classTypeId"
                 },
                 {
-                  "name": "baseRate",
-                  "type": "number"
+                  "type": "number",
+                  "name": "enrolid"
                 },
                 {
-                  "name": "discAmt",
-                  "type": "number"
+                  "type": "number",
+                  "name": "enrolment_uuid"
                 },
                 {
-                  "name": "netAmt",
-                  "type": "number"
+                  "type": "date",
+                  "name": "classDate"
                 },
                 {
-                  "name": "enrolNumber",
-                  "type": "number"
+                  "type": "number",
+                  "name": "baseRate"
                 },
                 {
-                  "name": "discType",
-                  "type": "text"
+                  "type": "number",
+                  "name": "endisc"
                 },
                 {
-                  "name": "discVal",
-                  "type": "number"
+                  "type": "text",
+                  "name": "ennetrate"
                 },
                 {
-                  "name": "_procedure",
-                  "type": "text"
+                  "type": "text",
+                  "name": "endiscdescription"
                 },
                 {
-                  "name": "fd_sum_before",
-                  "type": "number"
+                  "type": "text",
+                  "name": "endiscrate"
                 },
                 {
-                  "name": "fd_type",
-                  "type": "text"
+                  "type": "text",
+                  "name": "familydiscountdesc"
                 },
                 {
-                  "name": "fd_value",
-                  "type": "number"
+                  "type": "text",
+                  "name": "familydiscountrate"
                 },
                 {
-                  "name": "fd_amt",
-                  "type": "number"
+                  "type": "number",
+                  "name": "familydiscounttotal"
                 },
                 {
-                  "name": "fd_procedure",
-                  "type": "text"
+                  "type": "number",
+                  "name": "enrolsubtotal"
                 },
                 {
-                  "name": "netAmt_total",
-                  "type": "number"
+                  "type": "number",
+                  "name": "chargeId"
                 },
                 {
-                  "name": "enr_grandTotal",
-                  "type": "number"
+                  "type": "number",
+                  "name": "charge_uuid"
                 },
                 {
-                  "name": "net_grandTotal",
-                  "type": "number"
+                  "type": "text",
+                  "name": "lineInvNumber"
                 },
                 {
-                  "name": "discDir",
-                  "type": "text"
+                  "type": "number",
+                  "name": "isvalid"
                 },
                 {
-                  "name": "chargeId",
-                  "type": "text"
-                },
-                {
-                  "name": "lineInvNumber",
-                  "type": "text"
-                },
-                {
-                  "name": "status",
-                  "type": "text"
+                  "type": "text",
+                  "name": "debuggerstatus"
                 }
               ]
             }

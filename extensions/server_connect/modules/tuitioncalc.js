@@ -196,8 +196,9 @@ exports.tuitioncalc = async function (options) {
                         e.familydiscounttotal = round(sum(e.enNetRate * (matrix[order].discountAmount / 100)),4);
                         e.familydiscountrate = matrix[order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`;
                         e.familydiscountdesc = matrix[order].description || '-';
-                        e.enrolGrandTotal = round(sum(e.enNetRate - e.familydiscounttotal),2);
+                        e.enrolsubtotal = round(sum(e.enNetRate - e.familydiscounttotal),2);
                         e.holdingfee = await process_holding_fees(w.enrolments[enrol]);
+                        e.enrolgrandtotal = evaluate(`${e.enrolsubtotal} - ${e.holdingfee}`);
                     }
                     w.familydiscounttotal = round(sum(w.grossweekprice * (matrix[order].discountAmount / 100)),4); // Total discount applied.
                     w.familydiscountrate = matrix[w.order].discountAmount + `${matrix[order].discountType == 1 ? '%' : ' Flat Rate'}`; // Discount rate applied.
@@ -215,6 +216,7 @@ exports.tuitioncalc = async function (options) {
             var final = {
                     'chargefor': dr_current.descriptor,
                     'monthtocharge': mtp.format('YYYY-MM-DD'),
+                    'family_uuid': fid,
                     'monthlychargeexists': {
                         'exists': hascharge_monthly,
                         'charge_uuid': findexistingcharge.length >= 2 ? 'Error: Multiple charges for this period exist. Error must be corrected before proceeding.' : hascharge_monthly ? findexistingcharge[0].uuid : null,
@@ -232,7 +234,9 @@ exports.tuitioncalc = async function (options) {
                         'enrolsdisctotal': [],
                         'familydisctotal': [],
                         'disctotal': [],
-                        'familygrandtotal': []
+                        'familygrandtotal': [],
+                        'enrolsgrand': [],
+                        'holdingfee_totals': []
                     }
             };
 
@@ -249,25 +253,31 @@ exports.tuitioncalc = async function (options) {
                         'baseRate': [],
                         'enNetRate': [],
                         'en_disc_total': 0,
-                        'familydisctotal': []
+                        'familydisctotal': [],
+                        'holdingfee_totals': []
                     }
                     for(enrols in st.enrolments) {
                         let en = st.enrolments[enrols];
                         weektotals.baseRate.push(en.pricing.baseRate);
                         weektotals.enNetRate.push(en.pricing.enNetRate);
                         weektotals.familydisctotal.push(en.pricing.familydiscounttotal);
+                        weektotals.holdingfee_totals.push(en.pricing.holdingfee);
                         final.enrolments.push(en);
                     }
                     weektotals.baseRate = mathchain(weektotals.baseRate).sum().round(2).done();
                     weektotals.enNetRate = mathchain(weektotals.enNetRate).sum().round(2).done();
                     weektotals.familydisctotal = mathchain(weektotals.familydisctotal).sum().round(2).done();
                     weektotals.en_disc_total = mathchain(weektotals.baseRate - weektotals.enNetRate).sum().round(2).done();
+                    weektotals.holdingfee_totals = mathchain(weektotals.holdingfee_totals).sum().round(2).done();
+                    weektotals.enrolgrandtotal = evaluate(`${weektotals.enNetRate} - ${weektotals.holdingfee_totals}`);
 
                     // Start adding totals to period totals array
                     t.baseRate.push(weektotals.baseRate);
                     t.enrolsnet.push(weektotals.enNetRate);
+                    t.enrolsgrand.push(weektotals.enrolgrandtotal || 0);
                     t.enrolsdisctotal.push(weektotals.en_disc_total);
                     t.familydisctotal.push(weektotals.familydisctotal);
+                    t.holdingfee_totals.push(weektotals.holdingfee_totals || 0);
                     
                     fweek[st.student] = {
                         'enrolments': st.enrolments,
@@ -284,8 +294,10 @@ exports.tuitioncalc = async function (options) {
             t.baseRate = mathchain(t.baseRate).sum().round(2).done();
             t.enrolsnet = mathchain(t.enrolsnet).sum().round(2).done();
             t.enrolsdisctotal = round(sum(t.baseRate - t.enrolsnet),2);
+            t.enrolsgrand = mathchain(t.enrolsgrand).sum().round(2).done();
             t.familydisctotal = mathchain(t.familydisctotal).sum().round(2).done();
-            t.disctotal = round(sum(t.familydisctotal + t.enrolsdisctotal),2);
+            t.holdingfee_totals = mathchain(t.holdingfee_totals).sum().round(2).done();
+            t.disctotal = round(sum(t.familydisctotal + t.enrolsdisctotal + t.holdingfee_totals),2);
             t.familygrandtotal = mathchain(t.enrolsnet - t.familydisctotal).sum().round(2).done();
 
             return final;
@@ -304,7 +316,7 @@ exports.tuitioncalc = async function (options) {
             let cd = dr_current.weekarr[i];
             enrols[cd.startofweek] = {};
             let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid
+            SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid, c.startTimeDisplay
             FROM enrolments e 
                 LEFT JOIN students s ON e.student_uuid = s.uuid
                 LEFT JOIN classes c ON e.class_uuid = c.uuid 
@@ -451,16 +463,20 @@ exports.tuitioncalc = async function (options) {
         let en = enrolments;
         let en_uuid = en.uuid, classdate = moment(en.classdate).unix();
 
-        let holdingfee = dbClientFlat(await db.raw(`
+        let hf = dbClientFlat(await db.raw(`
             SELECT hf.*
             FROM holding_fees hf
             WHERE hf.enrolment_uuid = '${en_uuid}' AND hf.absence_date = ${classdate}
         `));
         // let holdingfee = dbClientFlat(await db.raw(`SELECT value FROM settings WHERE name ='endiscount_enable'`)).value;
-        if(!holdingfee) {
-            hf_return = 'No holding fees found.'
+        if(!hf) {
+            hf_return = 0.00;
         } else {
-            hf_return = `Holding fee found. The type is ${holdingfee.holding_fee_type}. The value is ${holdingfee.holding_fee}.`
+            if(hf.holding_fee_type == 'percentage') {
+                hf_return = evaluate(`${en.pricing.enrolsubtotal} - (${en.pricing.enrolsubtotal} * (${hf.holding_fee} / 100))`);
+            } else {
+                hf_return = evaluate(`${en.enrolsubtotal} - ${hf.holding_fee}`);
+            }
         }
         return hf_return;
     }
