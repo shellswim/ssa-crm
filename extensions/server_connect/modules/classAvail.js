@@ -218,8 +218,14 @@ exports.classAvail = async function (options) {
         ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
         ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
         GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
-                c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
-        ORDER BY c.day, c.startTimeDecimal
+                 c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
+        ORDER BY
+        (CASE (SELECT value FROM settings WHERE name = 'weekstart')
+            WHEN 'Sunday' THEN
+                FIELD(day, 7, 1, 2, 3, 4, 5, 6)
+            WHEN 'Monday' THEN
+                c.day
+        END),c.startTimeDecimal
         ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
         `));
 

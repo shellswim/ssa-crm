@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "number",
+        "name": "enrolmentType"
+      },
+      {
+        "type": "date",
+        "name": "dropDate"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "date",
+        "name": "startDate"
+      },
+      {
+        "type": "number",
+        "name": "class_uuid"
+      },
+      {
+        "type": "text",
+        "name": "dropReason"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "number",
+        "name": "enrolmentType"
+      },
+      {
+        "type": "date",
+        "name": "dropDate"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "date",
+        "name": "startDate"
+      },
+      {
+        "type": "number",
+        "name": "class_uuid"
+      },
+      {
+        "type": "text",
+        "name": "dropReason"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "exec_monthsgen",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "families/ledger/charges/GENERATE_TUITION_months",
+          "params": {
+            "family_uuid": "{{$_GET.family_uuid}}",
+            "enrolment_startdate": "2022-03-23"
+          }
+        },
+        "output": true
+      },
+      {
+        "name": "repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{exec_monthsgen.generate}}",
+          "outputFields": [],
+          "exec": {
+            "steps": [
+              {
+                "name": "exec_tuitioncalc",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "families/ledger/charges/CALCULATE_TUITION_charge",
+                  "params": {
+                    "family_uuid": "{{$_GET.family_uuid}}",
+                    "months": "{{$value.formatDate('yyyy-MM-dd')}}"
+                  }
+                },
+                "output": false
+              },
+              {
+                "name": "chargesoutput",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{exec_tuitioncalc.calculate_charges}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "chargesoutput",
+            "type": "text",
+            "sub": []
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

@@ -130,22 +130,22 @@ function appSettingsObject() {
 
     // Days array & Object
     s['days_array'] = {
-        1: 'Sunday',
-        2: 'Monday',
-        3: 'Tuesday',
-        4: 'Wednesday',
-        5: 'Thursday',
-        6: 'Friday',
-        7: 'Saturday'
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+        7: 'Sunday'
     }
     s['days_obj'] = [
-        { 'dayint': 1, 'dayname': 'Sunday' },
-        { 'dayint': 2, 'dayname': 'Monday' },
-        { 'dayint': 3, 'dayname': 'Tuesday' },
-        { 'dayint': 4, 'dayname': 'Wednesday' },
-        { 'dayint': 5, 'dayname': 'Thursday' },
-        { 'dayint': 6, 'dayname': 'Friday' },
-        { 'dayint': 7, 'dayname': 'Saturday' }
+        { 'dayint': 1, 'dayname': 'Monday' },
+        { 'dayint': 2, 'dayname': 'Tuesday' },
+        { 'dayint': 3, 'dayname': 'Wednesday' },
+        { 'dayint': 4, 'dayname': 'Thursday' },
+        { 'dayint': 5, 'dayname': 'Friday' },
+        { 'dayint': 6, 'dayname': 'Saturday' },
+        { 'dayint': 7, 'dayname': 'Sunday' }
     ]
 
     //Set appSettings

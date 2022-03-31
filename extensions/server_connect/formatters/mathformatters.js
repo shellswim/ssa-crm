@@ -5,7 +5,7 @@ module.exports = {
          return round(val,2);
     },
     evaluate: function(val) {
-        return evaluate(`${val}`);
+        return evaluate(val);
     }
 }
  

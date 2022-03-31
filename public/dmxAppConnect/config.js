@@ -3969,67 +3969,47 @@ dmx.config({
     "rp_chargeStudents": {
       "meta": [
         {
-          "name": "enrolments",
+          "name": "student_uuid",
+          "type": "text"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "student_total",
+          "type": "number"
+        },
+        {
+          "name": "enrol_count",
+          "type": "number"
+        },
+        {
+          "name": "enrolment_charges",
           "type": "array",
           "sub": [
             {
-              "name": "classTotal",
-              "type": "number"
-            },
-            {
-              "name": "enrolid",
-              "type": "number"
-            },
-            {
-              "name": "charge_enrolment_uuid",
-              "type": "text"
-            },
-            {
-              "name": "charge_uuid",
-              "type": "number"
-            },
-            {
               "name": "enrolment_uuid",
-              "type": "text"
-            },
-            {
-              "name": "student",
               "type": "number"
             },
             {
-              "name": "startDate",
-              "type": "date"
-            },
-            {
-              "name": "dropDate",
-              "type": "date"
-            },
-            {
-              "name": "classStartTime",
+              "name": "startTimeDisplay",
               "type": "text"
             },
             {
-              "name": "classEndTime",
+              "name": "classlevel_uuid",
               "type": "text"
             },
             {
-              "name": "classLevelName",
+              "name": "instructor_uuid",
               "type": "text"
             },
             {
-              "name": "classDay",
-              "type": "text"
-            },
-            {
-              "name": "instructorFirst",
-              "type": "text"
-            },
-            {
-              "name": "instructorLast",
-              "type": "text"
-            },
-            {
-              "name": "classId",
+              "name": "day",
               "type": "number"
             },
             {
@@ -4063,6 +4043,10 @@ dmx.config({
                 {
                   "type": "number",
                   "name": "student_uuid"
+                },
+                {
+                  "type": "text",
+                  "name": "classtype_uuid"
                 },
                 {
                   "type": "number",
@@ -4117,6 +4101,18 @@ dmx.config({
                   "name": "enrolsubtotal"
                 },
                 {
+                  "type": "boolean",
+                  "name": "holding_fee"
+                },
+                {
+                  "type": "number",
+                  "name": "holding_fee_discount"
+                },
+                {
+                  "type": "number",
+                  "name": "enrolgrandtotal"
+                },
+                {
                   "type": "number",
                   "name": "chargeId"
                 },
@@ -4125,16 +4121,28 @@ dmx.config({
                   "name": "charge_uuid"
                 },
                 {
-                  "type": "text",
-                  "name": "lineInvNumber"
-                },
-                {
                   "type": "number",
                   "name": "isvalid"
                 },
                 {
                   "type": "text",
                   "name": "debuggerstatus"
+                },
+                {
+                  "type": "number",
+                  "name": "created"
+                },
+                {
+                  "type": "number",
+                  "name": "updated"
+                },
+                {
+                  "type": "number",
+                  "name": "classDate2"
+                },
+                {
+                  "type": "number",
+                  "name": "startofweek2"
                 }
               ]
             }
@@ -7957,6 +7965,165 @@ dmx.config({
           "name": "type",
           "type": "text",
           "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_chargeenrolments": {
+      "meta": [
+        {
+          "name": "enrolment_uuid",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "instructor_uuid",
+          "type": "text"
+        },
+        {
+          "name": "day",
+          "type": "number"
+        },
+        {
+          "name": "enrolment_charges",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "date",
+              "name": "startofweek"
+            },
+            {
+              "type": "number",
+              "name": "classId"
+            },
+            {
+              "type": "text",
+              "name": "class_uuid"
+            },
+            {
+              "type": "number",
+              "name": "studentid"
+            },
+            {
+              "type": "number",
+              "name": "student_uuid"
+            },
+            {
+              "type": "text",
+              "name": "classtype_uuid"
+            },
+            {
+              "type": "number",
+              "name": "classTypeId"
+            },
+            {
+              "type": "number",
+              "name": "enrolid"
+            },
+            {
+              "type": "number",
+              "name": "enrolment_uuid"
+            },
+            {
+              "type": "date",
+              "name": "classDate"
+            },
+            {
+              "type": "number",
+              "name": "baseRate"
+            },
+            {
+              "type": "number",
+              "name": "endisc"
+            },
+            {
+              "type": "text",
+              "name": "ennetrate"
+            },
+            {
+              "type": "text",
+              "name": "endiscdescription"
+            },
+            {
+              "type": "text",
+              "name": "endiscrate"
+            },
+            {
+              "type": "text",
+              "name": "familydiscountdesc"
+            },
+            {
+              "type": "text",
+              "name": "familydiscountrate"
+            },
+            {
+              "type": "number",
+              "name": "familydiscounttotal"
+            },
+            {
+              "type": "number",
+              "name": "enrolsubtotal"
+            },
+            {
+              "type": "boolean",
+              "name": "holding_fee"
+            },
+            {
+              "type": "number",
+              "name": "holding_fee_discount"
+            },
+            {
+              "type": "number",
+              "name": "enrolgrandtotal"
+            },
+            {
+              "type": "number",
+              "name": "chargeId"
+            },
+            {
+              "type": "number",
+              "name": "charge_uuid"
+            },
+            {
+              "type": "number",
+              "name": "isvalid"
+            },
+            {
+              "type": "text",
+              "name": "debuggerstatus"
+            },
+            {
+              "type": "number",
+              "name": "created"
+            },
+            {
+              "type": "number",
+              "name": "updated"
+            },
+            {
+              "type": "number",
+              "name": "classDate2"
+            },
+            {
+              "type": "number",
+              "name": "startofweek2"
+            }
+          ]
         }
       ],
       "outputType": "array"

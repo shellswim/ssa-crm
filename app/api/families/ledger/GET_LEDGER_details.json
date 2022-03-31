@@ -862,7 +862,7 @@
                         },
                         "meta": [],
                         "outputType": "text",
-                        "output": true
+                        "output": false
                       },
                       {
                         "name": "query_enrolments",
@@ -887,6 +887,10 @@
                               },
                               {
                                 "table": "charges_enrolments",
+                                "column": "enrolment_uuid"
+                              },
+                              {
+                                "table": "charges_enrolments",
                                 "column": "enrolid"
                               },
                               {
@@ -902,7 +906,8 @@
                               {
                                 "table": "enrolments",
                                 "column": "uuid",
-                                "alias": "enrolment_uuid"
+                                "alias": "enrolment_uuid",
+                                "aggregate": ""
                               },
                               {
                                 "table": "enrolments",
@@ -957,6 +962,10 @@
                               {
                                 "table": "charges_enrolments",
                                 "column": "classDate2"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "student_uuid"
                               }
                             ],
                             "table": {
@@ -981,7 +990,8 @@
                                       "operation": "="
                                     }
                                   ]
-                                }
+                                },
+                                "primary": "uuid"
                               },
                               {
                                 "table": "classes",
@@ -1001,7 +1011,8 @@
                                       "operation": "="
                                     }
                                   ]
-                                }
+                                },
+                                "primary": "uuid"
                               },
                               {
                                 "table": "classLevels",
@@ -1021,7 +1032,8 @@
                                       "operation": "="
                                     }
                                   ]
-                                }
+                                },
+                                "primary": "uuid"
                               },
                               {
                                 "table": "days",
@@ -1041,7 +1053,8 @@
                                       "operation": "="
                                     }
                                   ]
-                                }
+                                },
+                                "primary": "id"
                               },
                               {
                                 "table": "staff",
@@ -1061,7 +1074,8 @@
                                       "operation": "="
                                     }
                                   ]
-                                }
+                                },
+                                "primary": "uuid"
                               }
                             ],
                             "wheres": {
@@ -1072,11 +1086,22 @@
                                   "field": "charges_enrolments.charge_uuid",
                                   "type": "double",
                                   "operator": "equal",
-                                  "value": "{{chargeuuid}}",
+                                  "value": "{{cfuuid}}",
                                   "data": {
                                     "table": "charges_enrolments",
                                     "column": "charge_uuid",
-                                    "type": "number"
+                                    "type": "number",
+                                    "columnObj": {
+                                      "type": "reference",
+                                      "maxLength": 50,
+                                      "primary": false,
+                                      "nullable": false,
+                                      "references": "uuid",
+                                      "inTable": "charges_family",
+                                      "onUpdate": "CASCADE",
+                                      "onDelete": "CASCADE",
+                                      "name": "charge_uuid"
+                                    }
                                   },
                                   "operation": "="
                                 },
@@ -1089,7 +1114,18 @@
                                   "data": {
                                     "table": "charges_enrolments",
                                     "column": "student_uuid",
-                                    "type": "number"
+                                    "type": "number",
+                                    "columnObj": {
+                                      "type": "reference",
+                                      "maxLength": 50,
+                                      "primary": false,
+                                      "nullable": true,
+                                      "references": "uuid",
+                                      "inTable": "students",
+                                      "onUpdate": "CASCADE",
+                                      "onDelete": "CASCADE",
+                                      "name": "student_uuid"
+                                    }
                                   },
                                   "operation": "="
                                 }
@@ -1097,13 +1133,13 @@
                               "conditional": null,
                               "valid": true
                             },
-                            "query": "SELECT DISTINCT SUM(charges_enrolments.enrolgrandtotal) AS enrolTotal, SUM(charges_enrolments.enrolsubtotal) AS classTotal, charges_enrolments.enrolid, charges_enrolments.uuid AS charge_enrolment_uuid, charges_enrolments.charge_uuid AS charge_uuid, enrolments.uuid AS enrolment_uuid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay AS classStartTime, classes.endTimeDisplay AS classEndTime, classLevels.name AS classLevelName, days.name AS classDay, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, charges_enrolments.classId, charges_enrolments.classDate, charges_enrolments.classDate2\nFROM charges_enrolments\nLEFT JOIN enrolments ON (enrolments.id = charges_enrolments.enrolid) INNER JOIN classes ON (classes.id = charges_enrolments.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor)\nWHERE charges_enrolments.charge_uuid = :P1 /* {{chargeuuid}} */ AND charges_enrolments.student_uuid = :P2 /* {{student_uuid}} */\nGROUP BY charges_enrolments.enrolid, charges_enrolments.uuid, charges_enrolments.charge_uuid, enrolments.uuid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay, classes.endTimeDisplay, classLevels.name, days.name, staff.firstName, staff.lastName, charges_enrolments.classId, charges_enrolments.classDate, charges_enrolments.classDate2",
+                            "query": "SELECT DISTINCT SUM(charges_enrolments.enrolgrandtotal) AS enrolTotal, SUM(charges_enrolments.enrolsubtotal) AS classTotal, charges_enrolments.enrolment_uuid, charges_enrolments.enrolid, charges_enrolments.uuid AS charge_enrolment_uuid, charges_enrolments.charge_uuid AS charge_uuid, enrolments.uuid AS enrolment_uuid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay AS classStartTime, classes.endTimeDisplay AS classEndTime, classLevels.name AS classLevelName, days.name AS classDay, staff.firstName AS instructorFirst, staff.lastName AS instructorLast, charges_enrolments.classId, charges_enrolments.classDate, charges_enrolments.classDate2, enrolments.student_uuid\nFROM charges_enrolments\nLEFT JOIN enrolments ON (enrolments.id = charges_enrolments.enrolid) INNER JOIN classes ON (classes.id = charges_enrolments.classId) INNER JOIN classLevels ON (classLevels.id = classes.classLevel) INNER JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor)\nWHERE charges_enrolments.charge_uuid = :P1 /* {{cfuuid}} */ AND charges_enrolments.student_uuid = :P2 /* {{student_uuid}} */\nGROUP BY charges_enrolments.enrolment_uuid, charges_enrolments.enrolid, charges_enrolments.uuid, charges_enrolments.charge_uuid, enrolments.uuid, enrolments.student, enrolments.startDate, enrolments.dropDate, classes.startTimeDisplay, classes.endTimeDisplay, classLevels.name, days.name, staff.firstName, staff.lastName, charges_enrolments.classId, charges_enrolments.classDate, charges_enrolments.classDate2, enrolments.student_uuid\nORDER BY charges_enrolments.classDate2 ASC, classes.startTimeDecimal ASC",
                             "params": [
                               {
                                 "operator": "equal",
                                 "type": "expression",
                                 "name": ":P1",
-                                "value": "{{chargeuuid}}"
+                                "value": "{{cfuuid}}"
                               },
                               {
                                 "operator": "equal",
@@ -1113,8 +1149,23 @@
                               }
                             ],
                             "distinct": true,
-                            "orders": [],
+                            "orders": [
+                              {
+                                "table": "charges_enrolments",
+                                "column": "classDate2",
+                                "direction": "ASC"
+                              },
+                              {
+                                "table": "classes",
+                                "column": "startTimeDecimal",
+                                "direction": "ASC"
+                              }
+                            ],
                             "groupBy": [
+                              {
+                                "table": "charges_enrolments",
+                                "column": "enrolment_uuid"
+                              },
                               {
                                 "table": "charges_enrolments",
                                 "column": "enrolid"
@@ -1178,11 +1229,16 @@
                               {
                                 "table": "charges_enrolments",
                                 "column": "classDate2"
+                              },
+                              {
+                                "table": "enrolments",
+                                "column": "student_uuid"
                               }
-                            ]
+                            ],
+                            "primary": "uuid"
                           }
                         },
-                        "output": true,
+                        "output": false,
                         "meta": [
                           {
                             "type": "number",
@@ -1191,6 +1247,10 @@
                           {
                             "type": "number",
                             "name": "classTotal"
+                          },
+                          {
+                            "type": "text",
+                            "name": "enrolment_uuid"
                           },
                           {
                             "type": "number",
@@ -1203,10 +1263,6 @@
                           {
                             "type": "number",
                             "name": "charge_uuid"
-                          },
-                          {
-                            "type": "text",
-                            "name": "enrolment_uuid"
                           },
                           {
                             "type": "number",
@@ -1255,6 +1311,10 @@
                           {
                             "type": "number",
                             "name": "classDate2"
+                          },
+                          {
+                            "type": "number",
+                            "name": "student_uuid"
                           }
                         ],
                         "outputType": "array"
@@ -1266,8 +1326,12 @@
                         "options": {
                           "repeat": "{{query_enrolments}}",
                           "outputFields": [
+                            "enrolTotal",
                             "classTotal",
+                            "enrolment_uuid",
                             "enrolid",
+                            "charge_enrolment_uuid",
+                            "charge_uuid",
                             "student",
                             "startDate",
                             "dropDate",
@@ -1278,9 +1342,9 @@
                             "instructorFirst",
                             "instructorLast",
                             "classId",
-                            "charge_enrolment_uuid",
-                            "charge_uuid",
-                            "enrolment_uuid"
+                            "classDate",
+                            "classDate2",
+                            "student_uuid"
                           ],
                           "exec": {
                             "steps": {
@@ -1334,7 +1398,7 @@
                                     "conditional": null,
                                     "valid": true
                                   },
-                                  "query": "SELECT DISTINCT *\nFROM charges_enrolments\nWHERE charge_uuid = :P1 /* {{chargeuuid}} */ AND enrolment_uuid = :P2 /* {{enrolment_uuid}} */",
+                                  "query": "SELECT DISTINCT *\nFROM charges_enrolments\nWHERE charge_uuid = :P1 /* {{chargeuuid}} */ AND enrolment_uuid = :P2 /* {{enrolment_uuid}} */\nORDER BY classDate2 ASC",
                                   "params": [
                                     {
                                       "operator": "equal",
@@ -1350,7 +1414,14 @@
                                     }
                                   ],
                                   "distinct": true,
-                                  "orders": []
+                                  "orders": [
+                                    {
+                                      "table": "charges_enrolments",
+                                      "column": "classDate2",
+                                      "direction": "ASC"
+                                    }
+                                  ],
+                                  "primary": "uuid"
                                 }
                               },
                               "output": true,
@@ -1515,6 +1586,10 @@
                             "type": "number"
                           },
                           {
+                            "name": "enrolment_uuid",
+                            "type": "text"
+                          },
+                          {
                             "name": "enrolid",
                             "type": "number"
                           },
@@ -1525,10 +1600,6 @@
                           {
                             "name": "charge_uuid",
                             "type": "number"
-                          },
-                          {
-                            "name": "enrolment_uuid",
-                            "type": "text"
                           },
                           {
                             "name": "student",
@@ -1576,6 +1647,10 @@
                           },
                           {
                             "name": "classDate2",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student_uuid",
                             "type": "number"
                           },
                           {
@@ -1757,84 +1832,6 @@
                     "type": "number"
                   },
                   {
-                    "name": "query_enrolments",
-                    "type": "array",
-                    "sub": [
-                      {
-                        "type": "number",
-                        "name": "enrolTotal"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classTotal"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrolid"
-                      },
-                      {
-                        "type": "text",
-                        "name": "charge_enrolment_uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "charge_uuid"
-                      },
-                      {
-                        "type": "text",
-                        "name": "enrolment_uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "student"
-                      },
-                      {
-                        "type": "date",
-                        "name": "startDate"
-                      },
-                      {
-                        "type": "date",
-                        "name": "dropDate"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classStartTime"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classEndTime"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classLevelName"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classDay"
-                      },
-                      {
-                        "type": "text",
-                        "name": "instructorFirst"
-                      },
-                      {
-                        "type": "text",
-                        "name": "instructorLast"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classId"
-                      },
-                      {
-                        "type": "date",
-                        "name": "classDate"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classDate2"
-                      }
-                    ]
-                  },
-                  {
                     "name": "enrolments",
                     "type": "array",
                     "sub": [
@@ -1847,6 +1844,10 @@
                         "type": "number"
                       },
                       {
+                        "name": "enrolment_uuid",
+                        "type": "text"
+                      },
+                      {
                         "name": "enrolid",
                         "type": "number"
                       },
@@ -1857,10 +1858,6 @@
                       {
                         "name": "charge_uuid",
                         "type": "number"
-                      },
-                      {
-                        "name": "enrolment_uuid",
-                        "type": "text"
                       },
                       {
                         "name": "student",
@@ -1908,6 +1905,10 @@
                       },
                       {
                         "name": "classDate2",
+                        "type": "number"
+                      },
+                      {
+                        "name": "student_uuid",
                         "type": "number"
                       },
                       {
@@ -2310,6 +2311,11 @@
                 "type": "number"
               },
               {
+                "name": "cfuuid",
+                "type": "text",
+                "sub": []
+              },
+              {
                 "name": "query_enrolments",
                 "type": "array",
                 "sub": [
@@ -2322,6 +2328,10 @@
                     "name": "classTotal"
                   },
                   {
+                    "type": "text",
+                    "name": "enrolment_uuid"
+                  },
+                  {
                     "type": "number",
                     "name": "enrolid"
                   },
@@ -2332,10 +2342,6 @@
                   {
                     "type": "number",
                     "name": "charge_uuid"
-                  },
-                  {
-                    "type": "text",
-                    "name": "enrolment_uuid"
                   },
                   {
                     "type": "number",
@@ -2384,6 +2390,10 @@
                   {
                     "type": "number",
                     "name": "classDate2"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student_uuid"
                   }
                 ]
               },
@@ -2400,6 +2410,10 @@
                     "type": "number"
                   },
                   {
+                    "name": "enrolment_uuid",
+                    "type": "text"
+                  },
+                  {
                     "name": "enrolid",
                     "type": "number"
                   },
@@ -2410,10 +2424,6 @@
                   {
                     "name": "charge_uuid",
                     "type": "number"
-                  },
-                  {
-                    "name": "enrolment_uuid",
-                    "type": "text"
                   },
                   {
                     "name": "student",
@@ -2461,6 +2471,10 @@
                   },
                   {
                     "name": "classDate2",
+                    "type": "number"
+                  },
+                  {
+                    "name": "student_uuid",
                     "type": "number"
                   },
                   {

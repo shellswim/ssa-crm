@@ -4,7 +4,7 @@ const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const { evaluate, sum, chain: mathchain, round } = require('mathjs');
 
-exports.tuitioncalc = async function (options) {
+exports.tuitioncalc_old = async function (options) {
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -13,6 +13,7 @@ exports.tuitioncalc = async function (options) {
     // throw error if connection not found
     if (!db) throw new Error(`Connection "${connection}" doesn't exist.`);
     //////////// End database connection //////////
+
     //////////// Utilities ////////////
     function isObjectEmpty(value) {
         return (
@@ -329,12 +330,21 @@ exports.tuitioncalc = async function (options) {
                 AND (e.startDate <= '${cd.endofweek}' OR e.startDate BETWEEN '${cd.startofweek}' AND '${cd.endofweek}')
                 AND c.day IN(${cd.dayint})
                 ORDER BY c.day ASC, c.startTimeDecimal ASC
-                `)) || null;
+                `));
+            if(options.dummyEnrolEnabled) {
+                if(options.dummyEnrolJSON.student_uuid == sid) {
+                    if(!Array.isArray(enrolments)) {
+                        enrolments = [];
+                    }
+                    enrolments.push(JSON.parse(options.dummyEnrolJSON));
+                }
+            }
             // Get pricing - Raw & Discounted - Add class meeting date.
             if (enrolments.length > 0) {
                 
                 for (let i = 0; i < enrolments.length; i++) {
                     let eid = enrolments[i].id;
+
                     // Count occurances of each enrolment per month & discount on "Force 4 Week Month"
                     if(bc == 3) {
                         if(enrolcount.hasOwnProperty(eid)) {
@@ -368,6 +378,9 @@ exports.tuitioncalc = async function (options) {
         }
         return enrols;
     }
+
+    // Dummy Enrols
+
 
     ///// Billing Calculations
     /* e = enrolment, c = loop count, ec = enrolment count */
