@@ -31,6 +31,27 @@ exports.tuitioncalc = async function (options) {
     /** Family, discounts and setup */
     let family_uuid = options.family_uuid;
     let _discounts = await discountmatrix();
+
+    /** Check if charge exists for current month */
+    let multipleChargeExists, chargeexists;
+    let find_chargeexists = dbClient(await db.raw(`
+        SELECT cf.uuid
+        FROM charges_family cf
+        WHERE cf.chargeFor_monthly = '${DateTime.fromISO(options.monthtoprocess).startOf('month').toFormat('yyyy-MM-dd')}' AND cf.family_uuid = '${family_uuid}'
+    `)) || [];
+
+    switch (true) {
+        case (find_chargeexists.length = 1):
+            chargeexists = true;
+            multipleChargeExists = false;
+            break;
+        case (find_chargeexists.length > 1):
+            chargeexists = true;
+            multipleChargeExists = true;
+            break;
+
+    }
+
     /** Students and Enrolments Setup */
     let dummyenrol = options.dummyEnrolEnabled;
     let dummyJSON = this.parse(options.dummyEnrolJSON);
@@ -38,7 +59,7 @@ exports.tuitioncalc = async function (options) {
     students.map(s => {
         s.enrolments = array_clone(timespan);
         return s;
-    })
+    });
 
     for (let i = 0; i < students.length; i++) {
         let student = students[i];
@@ -117,8 +138,9 @@ exports.tuitioncalc = async function (options) {
                 // Process and add family discounts to item pricing object.
                 let familydiscounts = process_familyDiscounts(s, item);
                 object_merge(item.pricing, familydiscounts);
+
                 // Math merge family discounts into weekly total.
-                object_mathMerge(e.tuitiontotals, familydiscounts,'familydiscount_description');
+                object_mathMerge(e.tuitiontotals, familydiscounts, 'familydiscount_description');
 
                 /** Holding Fee */
                 let holding_fee = await holdingFee(item);
@@ -138,8 +160,10 @@ exports.tuitioncalc = async function (options) {
                 object_mathMerge(e.tuitiontotals, fees_object);
 
                 // math merge all new familydiscount, holding_fee and enrolgrandtotal objects to final_fees_object for student total pricing.
-                object_mathMerge(final_fees_object, [familydiscounts, fees_object],'familydiscount_description');
+                object_mathMerge(final_fees_object, [familydiscounts, fees_object], 'familydiscount_description');
             }
+
+            delete e.days;
         }
 
         object_mathMerge(s.tuitiontotals, final_fees_object);
@@ -300,6 +324,7 @@ exports.tuitioncalc = async function (options) {
                     OR e.dropDate BETWEEN '${start}' AND '${end}') 
                 AND (e.startDate <= '${end}' OR e.startDate BETWEEN '${start}' AND '${end}')
                 AND c.day IN(${dayint})
+                ORDER BY c.day, c.startTimeDecimal
         `));
         enrolments.map(e => {
             let add_days = dayint - 1;
@@ -511,6 +536,12 @@ exports.tuitioncalc = async function (options) {
                 object_mathMerge(totals, s.tuitiontotals);
             });
             return totals;
+        },
+        'chargefor': DateTime.fromISO(options.monthtoprocess).toFormat('MMM yyyy'),
+        'existingcharge': {
+            'chargeexists': chargeexists,
+            'multiplecharges': multipleChargeExists,
+            'details': find_chargeexists
         }
     };
 }
