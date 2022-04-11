@@ -1,0 +1,409 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "class_uuid"
+      },
+      {
+        "type": "text",
+        "name": "student_firstname"
+      },
+      {
+        "type": "text",
+        "name": "student_lastname"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/login",
+          "forbiddenUrl": "/login"
+        }
+      },
+      {
+        "name": "query",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "c",
+                "column": "day",
+                "alias": "classday"
+              },
+              {
+                "table": "c",
+                "column": "classlevel_uuid",
+                "alias": "classlevel"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "c",
+                "column": "endTimeDisplay"
+              },
+              {
+                "table": "c",
+                "column": "instructor_uuid",
+                "alias": "instructor"
+              },
+              {
+                "table": "e",
+                "column": "startDate"
+              },
+              {
+                "table": "e",
+                "column": "dropDate"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
+              },
+              {
+                "table": "i",
+                "column": "firstName",
+                "alias": "instructor_first"
+              },
+              {
+                "table": "i",
+                "column": "lastName",
+                "alias": "instructor_last"
+              },
+              {
+                "table": "cl",
+                "column": "name",
+                "alias": "classlevel"
+              }
+            ],
+            "table": {
+              "name": "classes",
+              "alias": "c"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "enrolments",
+                "column": "*",
+                "alias": "e",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "e",
+                      "column": "class_uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "dayint",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "alias": "i",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "i",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "alias": "cl",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "cl",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "c.uuid",
+                  "field": "c.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.class_uuid}}",
+                  "data": {
+                    "table": "c",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "id": "e.student_uuid",
+                  "field": "e.student_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "e",
+                    "column": "student_uuid",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "students",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "student_uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "condition": "OR",
+                  "rules": [
+                    {
+                      "id": "e.dropDate",
+                      "field": "e.dropDate",
+                      "type": "date",
+                      "operator": "greater_or_equal",
+                      "value": "{{now_string.formatDate('yyyy-MM-dd')}}",
+                      "data": {
+                        "table": "e",
+                        "column": "dropDate",
+                        "type": "date",
+                        "columnObj": {
+                          "type": "date",
+                          "primary": false,
+                          "nullable": true,
+                          "name": "dropDate"
+                        }
+                      },
+                      "operation": ">="
+                    },
+                    {
+                      "id": "e.dropDate",
+                      "field": "e.dropDate",
+                      "type": "date",
+                      "operator": "is_null",
+                      "value": null,
+                      "data": {
+                        "table": "e",
+                        "column": "dropDate",
+                        "type": "date",
+                        "columnObj": {
+                          "type": "date",
+                          "primary": false,
+                          "nullable": true,
+                          "name": "dropDate"
+                        }
+                      },
+                      "operation": "IS NULL"
+                    }
+                  ],
+                  "conditional": null
+                },
+                {
+                  "id": "e.isValid",
+                  "field": "e.isValid",
+                  "type": "boolean",
+                  "operator": "equal",
+                  "value": "{{1}}",
+                  "data": {
+                    "table": "e",
+                    "column": "isValid",
+                    "type": "boolean",
+                    "columnObj": {
+                      "type": "boolean",
+                      "primary": false,
+                      "nullable": true,
+                      "name": "isValid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT c.day AS classday, c.classlevel_uuid AS classlevel, c.startTimeDisplay, c.endTimeDisplay, c.instructor_uuid AS instructor, e.startDate, e.dropDate, days.dayname, i.firstName AS instructor_first, i.lastName AS instructor_last, cl.name AS classlevel\nFROM classes AS c\nLEFT JOIN enrolments AS e ON (e.class_uuid = c.uuid) LEFT JOIN days ON (days.dayint = c.day) LEFT JOIN staff AS i ON (i.uuid = c.instructor_uuid) LEFT JOIN classLevels AS cl ON (cl.uuid = c.classlevel_uuid)\nWHERE c.uuid = :P1 /* {{$_GET.class_uuid}} */ AND e.student_uuid = :P2 /* {{$_GET.student_uuid}} */ AND (e.dropDate >= :P3 /* {{now_string.formatDate('yyyy-MM-dd')}} */ OR e.dropDate IS NULL) AND e.isValid = :P4 /* {{1}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.class_uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.student_uuid}}"
+              },
+              {
+                "operator": "greater_or_equal",
+                "type": "expression",
+                "name": ":P3",
+                "value": "{{now_string.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P4",
+                "value": "{{1}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "classday"
+          },
+          {
+            "type": "text",
+            "name": "classlevel"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "endTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "instructor"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "text",
+            "name": "instructor_first"
+          },
+          {
+            "type": "text",
+            "name": "instructor_last"
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_single"
+      },
+      {
+        "name": "exists",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{(query.startDate) ? true : false}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "html_response",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "<p>{{$_GET.student_firstname}} {{$_GET.student_lastname}} is already booked into this class.</p>\n<table class=\"table small align-middle table-bordered\">\n  <thead>\n    <tr>\n    \t<th colspan=\"2\"><strong>Enrolment:</strong> {{query.dayname}} - {{query.startTimeDisplay}} {{query.classlevel}} - {{query.instructor_first+' '+query.instructor_last.trunc(1, true, '.').uppercase()}}</th>\n    </tr>\n    <tr>\n      <th><strong>Start Date:</strong></th>\n      <th><strong>Drop Date:</strong></th>\n  </thead>\n  <tbody>\n    <tr>\n      <td>{{query.startDate.formatDate(times_formats.puddle_date_format)}}</td>\n      <td>{{query.dropDate ? query.dropDate.formatDate(times_formats.puddle_date_format) : 'No drop date.'}}</td>\n    </tr>\n  </tbody> \n</table>"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      }
+    ]
+  }
+}

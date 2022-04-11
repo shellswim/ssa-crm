@@ -24,6 +24,16 @@ exports.tuitioncalc = async function (options) {
     /** Dates variables setup */
     let startofmonth = DateTime.fromISO(options.monthtoprocess).startOf('month').startOf('week');
     let endofmonth = DateTime.fromISO(options.monthtoprocess).endOf('month').endOf('week');
+    let weekstart = dbClientFlat(await db.raw(`
+        SELECT s.value
+        FROM settings s
+        WHERE name = 'weekstart'
+    `)).value;
+
+    if(weekstart.toLowerCase() == 'sunday') {
+        startofmonth = startofmonth.minus({days: 1});
+        endofmonth = endofmonth.minus({days: 1});
+    }
     let generateweeks = generateWeeks(startofmonth, endofmonth);
     let timespan = generateweeks.daysarr;
     let daysinmonth = generateweeks.daysinmonth;
@@ -54,7 +64,7 @@ exports.tuitioncalc = async function (options) {
 
     /** Students and Enrolments Setup */
     let dummyenrol = options.dummyEnrolEnabled;
-    let dummyJSON = this.parse(options.dummyEnrolJSON);
+    let dummyJSON = options.dummyEnrolJSON ? JSON.parse(this.parse(options.dummyEnrolJSON)) : null;
     let students = await getStudents();
     students.map(s => {
         s.enrolments = array_clone(timespan);
@@ -79,7 +89,7 @@ exports.tuitioncalc = async function (options) {
             se.items = _.flatten(se.items);
 
             // Set total enrolments for week.
-            se.total_enrolments = await getEnrolmentCalWeekCount(student.uuid, se.start, se.end);
+            se.total_enrolments = se.items.length; // await getEnrolmentCalWeekCount(student.uuid, se.start, se.end);
             student.total_enrolments += se.items.length;
         }
     }
@@ -339,7 +349,7 @@ exports.tuitioncalc = async function (options) {
         if (!Array.isArray(enrolments)) {
             enrolments = [];
         }
-        if (options.dummyEnrolEnabled && dummyJSON.student_uuid == studentid) {
+        if (dummyenrol && dummyJSON.student_uuid == studentid && dummyJSON.classday == dayint) {
             enrolments.push({
                 "classday": dummyJSON.classday,
                 "classType": dummyJSON.classType,
@@ -365,7 +375,7 @@ exports.tuitioncalc = async function (options) {
     // Holding Fee Processor
     async function holdingFee(enrolment) {
         if (enrolment.class_uuid == 'dummy') {
-            return;
+            return 0.00;
         }
         let hf_return;
         let en = enrolment;
@@ -542,6 +552,12 @@ exports.tuitioncalc = async function (options) {
             'chargeexists': chargeexists,
             'multiplecharges': multipleChargeExists,
             'details': find_chargeexists
-        }
+        },
+        'time': DateTime.fromObject({
+            year: 2022,
+            month: 02,
+            day: 28,
+            hour: 12
+        }).setZone('Australia/Sydney').toISOTime()
     };
 }

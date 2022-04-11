@@ -5,7 +5,7 @@ dmx.Attribute('bs-tooltip', 'mounted', function (node, attr) {
       trigger: node.getAttribute('data-bs-trigger') || 'hover',
       placement: function(node) {
         var pexpression = node.getAttribute('dmx-bs-placement') || '';
-        return dmx.parse(pexpression) || this._element.getAttribute('data-bs-placement') || 'auto';
+        return dmx.parse(pexpression) || node.getAttribute('data-bs-placement') || 'auto';
       },
       title: function() {
         var expression = this.getAttribute('dmx-bs-tooltip') || '';
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
     trigger: 'hover',
     placement: function(node) {
       var pexpression = node.getAttribute('dmx-bs-placement') || '';
-      return dmx.parse(pexpression) || this._element.getAttribute('data-bs-placement') || 'auto';
+      return dmx.parse(pexpression) || node.getAttribute('data-bs-placement') || 'auto';
     },
     title: function() {
       var expression = this.getAttribute('dmx-bs-tooltip') || '';

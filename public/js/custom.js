@@ -253,6 +253,10 @@ function findPropPaths(obj, predicate) {  // The function
     return results;
 }
 
+function consolelog(message) {
+    console.log(message);
+}
+
 // TinyMCE Bootstrap Dialog/Modal fix.
 // Prevent Bootstrap dialog from blocking focusin
 document.addEventListener('focusin', (e) => {

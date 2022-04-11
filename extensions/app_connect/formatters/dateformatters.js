@@ -13,11 +13,5 @@ module.exports = {
     },
     endWeek: function(val) {
         return DateTime.fromISO(val).endOf('week');
-    },
-    localtime: function(val,tz) {
-        return DateTime.fromISO(val).setZone(tz).toFormat('yyyy-MM-dd HH:MM:ss');
-    },
-    lux_toformat: function(val,format) {
-        return DateTime.fromISO(val).toFormat(format);
     }
 }

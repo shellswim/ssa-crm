@@ -9567,11 +9567,149 @@ dmx.config({
     "rp_tabs": {
       "meta": [
         {
-          "name": "dates",
-          "type": "array"
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "classtype_uuid",
+          "type": "text"
+        },
+        {
+          "name": "day",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "instructor_uuid",
+          "type": "text"
+        },
+        {
+          "name": "max",
+          "type": "number"
+        },
+        {
+          "name": "optsd",
+          "type": "text"
+        },
+        {
+          "name": "startTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "waitlists",
+          "type": "array",
+          "sub": [
+            {
+              "name": "age",
+              "type": "text"
+            },
+            {
+              "name": "classlevel",
+              "type": "number"
+            },
+            {
+              "name": "classlevel_uuid",
+              "type": "text"
+            },
+            {
+              "name": "dayint",
+              "type": "number"
+            },
+            {
+              "name": "dob",
+              "type": "date"
+            },
+            {
+              "name": "endTimeDecimal",
+              "type": "number"
+            },
+            {
+              "name": "family",
+              "type": "text"
+            },
+            {
+              "name": "firstName",
+              "type": "text"
+            },
+            {
+              "name": "fulfil_date",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "instructor",
+              "type": "number"
+            },
+            {
+              "name": "instructor_uuid",
+              "type": "text"
+            },
+            {
+              "name": "lastName",
+              "type": "text"
+            },
+            {
+              "name": "notes",
+              "type": "text"
+            },
+            {
+              "name": "request_date",
+              "type": "text"
+            },
+            {
+              "name": "starttimedec",
+              "type": "number"
+            },
+            {
+              "name": "student_uuid",
+              "type": "text"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "uuid",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "wed",
+          "type": "text"
+        },
+        {
+          "name": "baseRate",
+          "type": "number"
+        },
+        {
+          "name": "shortName",
+          "type": "text"
         }
       ],
-      "outputType": "text"
+      "outputType": "array"
     },
     "data_detail1": {
       "meta": [
@@ -10473,7 +10611,23 @@ dmx.config({
     "rp_tabs_placeholder": {
       "meta": null,
       "outputType": "object"
-    }
+    },
+    "flow_checkenrolmentexists": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "text",
+            "name": "class_uuid"
+          }
+        ]
+      }
+    ]
   },
   "_classFilterSidebar": {
     "rp_selectedTimes2": {
@@ -12199,5 +12353,11 @@ dmx.config({
         "name": "filter_instructors"
       }
     ]
+  },
+  "w": {
+    "var_weekrange_todaydate": {
+      "meta": null,
+      "outputType": "text"
+    }
   }
 });
