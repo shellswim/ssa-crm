@@ -10627,7 +10627,11 @@ dmx.config({
           }
         ]
       }
-    ]
+    ],
+    "tb_rp_familyCharge": {
+      "meta": null,
+      "outputType": "object"
+    }
   },
   "_classFilterSidebar": {
     "rp_selectedTimes2": {

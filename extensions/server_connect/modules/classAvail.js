@@ -487,7 +487,7 @@ exports.classAvail = async function (options) {
             'makeup_response': mu_unavail_response,
             'nextavailable_permanent': nextavailable_permanent ? nextavailable_permanent.toISODate() : false,
             'total': Math.max(...weekly_total_enrols),
-            'weekday': weekday,
+            'weekday': DateTime.fromISO(weekday).toISODate(),
             'weekday_arr': weekday_arr,
             'weekly_total_enrols': weekly_total_enrols,
             'enrolments': enrolments

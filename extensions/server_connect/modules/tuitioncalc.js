@@ -22,8 +22,10 @@ exports.tuitioncalc = async function (options) {
     //////////// End database connection //////////
 
     /** Dates variables setup */
-    let startofmonth = DateTime.fromISO(options.monthtoprocess).startOf('month').startOf('week');
-    let endofmonth = DateTime.fromISO(options.monthtoprocess).endOf('month').endOf('week');
+    let startofcalendarmonth = DateTime.fromISO(options.monthtoprocess).startOf('month').startOf('week');
+    let endofcalendarmonth = DateTime.fromISO(options.monthtoprocess).endOf('month').endOf('week');
+    let startofmonth = DateTime.fromISO(options.monthtoprocess).startOf('month');
+    let endofmonth = DateTime.fromISO(options.monthtoprocess).endOf('month');
     let weekstart = dbClientFlat(await db.raw(`
         SELECT s.value
         FROM settings s
@@ -31,27 +33,29 @@ exports.tuitioncalc = async function (options) {
     `)).value;
 
     if(weekstart.toLowerCase() == 'sunday') {
-        startofmonth = startofmonth.minus({days: 1});
-        endofmonth = endofmonth.minus({days: 1});
+        startofcalendarmonth = startofcalendarmonth.minus({days: 1});
+        endofcalendarmonth = endofcalendarmonth.minus({days: 1});
     }
-    let generateweeks = generateWeeks(startofmonth, endofmonth);
+    let generateweeks = generateWeeks(startofcalendarmonth, endofcalendarmonth);
     let timespan = generateweeks.daysarr;
     let daysinmonth = generateweeks.daysinmonth;
+
+    /** Global Arrays & Objects*/
+    let enrolment_counts = {};
 
     /** Family, discounts and setup */
     let family_uuid = options.family_uuid;
     let _discounts = await discountmatrix();
-
     /** Check if charge exists for current month */
-    let multipleChargeExists, chargeexists;
+    let multipleChargeExists = false, chargeexists = false;
     let find_chargeexists = dbClient(await db.raw(`
-        SELECT cf.uuid
+        SELECT cf.uuid, cf.chargeDate, cf.dueDate
         FROM charges_family cf
-        WHERE cf.chargeFor_monthly = '${DateTime.fromISO(options.monthtoprocess).startOf('month').toFormat('yyyy-MM-dd')}' AND cf.family_uuid = '${family_uuid}'
+        WHERE cf.chargeFor_monthly = '${DateTime.fromISO(options.monthtoprocess).startOf('month').toISODate('yyyy-MM-dd')}' AND cf.family_uuid = '${family_uuid}'
     `)) || [];
 
     switch (true) {
-        case (find_chargeexists.length = 1):
+        case (find_chargeexists.length == 1):
             chargeexists = true;
             multipleChargeExists = false;
             break;
@@ -59,12 +63,15 @@ exports.tuitioncalc = async function (options) {
             chargeexists = true;
             multipleChargeExists = true;
             break;
-
     }
 
     /** Students and Enrolments Setup */
     let dummyenrol = options.dummyEnrolEnabled;
     let dummyJSON = options.dummyEnrolJSON ? JSON.parse(this.parse(options.dummyEnrolJSON)) : null;
+    let discount_start_from_timestamp;
+    if(dummyenrol == true && dummyJSON.startDate) {
+        discount_start_from_timestamp = DateTime.fromISO(dummyJSON.startDate).toSeconds();
+    }
     let students = await getStudents();
     students.map(s => {
         s.enrolments = array_clone(timespan);
@@ -76,20 +83,49 @@ exports.tuitioncalc = async function (options) {
         let enrolments = students[i].enrolments;
         student.total_enrolments = 0;
 
+        // Set student key in enrolments count global object
+        enrolment_counts[student.uuid] = {};
+
         // Get enrolments for each week
         for (let j = 0; j < enrolments.length; j++) {
             let se = student.enrolments[j];
+            se.startofmonth = startofmonth.toISODate();
+            se.endofmonth = endofmonth.toSeconds();
             se.items = [];
+            se.dummyactive = false;
+            let totals = [];
 
             for (let k = 0; k < se.days.length; k++) {
-                dayint = se.days[k].dayint;
+                dayint = se.calendar_days[k].dayint;
                 let enrolquery = await getEnrolments(student.uuid, se.start, se.end, dayint);
-                se.items.push(enrolquery);
+                enrolquery.enrolments.map(e => {
+                    // Filter enrolments falling outside of current month.
+                    if(e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()) {
+                        se.items.push(e);
+                        // Set enrolment count for current enrolment in global enrolments count object.
+                        if(Object.hasOwn(enrolment_counts[student.uuid], e.uuid)) {
+                            enrolment_counts[student.uuid][e.uuid] += 1;
+                        } else {
+                            enrolment_counts[student.uuid][e.uuid] = 1;
+                        }
+                    }
+                    if(e.class_uuid == "dummy") {
+                        se.dummyactive = true;
+                    }
+
+                });
+                if(enrolquery.dummyactive) {
+                    dummyactive = true;
+                }
+                se.discount_start_from_timestamp = enrolquery.discount_start_from_timestamp;
+                totals.push(enrolquery.total_enrolments);
             }
             se.items = _.flatten(se.items);
 
             // Set total enrolments for week.
-            se.total_enrolments = se.items.length; // await getEnrolmentCalWeekCount(student.uuid, se.start, se.end);
+            se.total_enrolments = totals.reduce((a,b)=>{
+                return a+b;
+            });
             student.total_enrolments += se.items.length;
         }
     }
@@ -115,7 +151,7 @@ exports.tuitioncalc = async function (options) {
                 item.pricing = {
                     'baseRate': item.baseRate
                 };
-                object_merge(item.pricing, process_studentDiscounts(item, e.total_enrolments, (j + 1)));
+                object_merge(item.pricing, process_studentDiscounts(item, e.total_enrolments, (j + 1), e.dummyactive));
                 e.tuitiontotals = object_mathMerge(e.tuitiontotals, item.pricing, 'multienrol_discount_description');
                 s.tuitiontotals = object_mathMerge(s.tuitiontotals, item.pricing, 'multienrol_discount_description');
             }
@@ -240,19 +276,30 @@ exports.tuitioncalc = async function (options) {
         return _matrix;
     }
 
-    function process_studentDiscounts(item, total_enrolments, week) {
+    function process_studentDiscounts(item, total_enrolments, week, dummyactive) {
         let sd = _discounts.student;
         let discount = {};
+        let find_discount;
+        let te;
+        if(dummyactive && item.classdate_timestamp < discount_start_from_timestamp){
+            if(total_enrolments - 1 == 0) {
+                te = 1;
+            } else {
+                te = total_enrolments - 1;
+            }
+        } else {
+            te = total_enrolments;
+        }
         if (sd.type.toLowerCase() == 'bulk') {
-            if (_discounts.billing_cycle == 3 && week >= 5 && daysinmonth[item.classday] == 5) {
+            if (_discounts.billing_cycle == 3 && week >= 5 && enrolment_counts[item.student_uuid][item.uuid] == 5) {
                 discount = {
                     'multienrol_discount': item.baseRate,
                     'multienrol_subtotal': 0,
                     'multienrol_discount_description': '5th Week Free'
                 }
             } else {
-                let find_discount = sd.discounts.find(d => {
-                    return (d.count == total_enrolments && d.class_type == item.classtype_uuid);
+                find_discount = sd.discounts.find(d => {
+                    return (d.count == te && d.class_type == item.classtype_uuid);
                 });
                 if (!find_discount) {
                     discount = {
@@ -340,18 +387,22 @@ exports.tuitioncalc = async function (options) {
             let add_days = dayint - 1;
             e.classdate_timestamp = DateTime.fromISO(start).plus({
                 days: add_days
-            }).toSeconds()
+            }).toSeconds();
             e.classdate = DateTime.fromISO(start).plus({
                 days: add_days
             }).toISODate();
         });
-
-        if (!Array.isArray(enrolments)) {
-            enrolments = [];
-        }
-        if (dummyenrol && dummyJSON.student_uuid == studentid && dummyJSON.classday == dayint) {
+        if (dummyenrol && dummyJSON.student_uuid == studentid && dummyJSON.classday == dayint && DateTime.fromISO(dummyJSON.startDate).toSeconds() <= DateTime.fromISO(end).toSeconds()) {
             enrolments.push({
                 "classday": dummyJSON.classday,
+                "classdate_timestamp": 
+                    DateTime.fromISO(start).plus({
+                        days: dayint - 1
+                    }).toSeconds(),
+                "classdate": 
+                    DateTime.fromISO(start).plus({
+                        days: dayint - 1
+                    }).toISODate(),
                 "classType": dummyJSON.classType,
                 "classtype_uuid": dummyJSON.classtype_uuid,
                 "baseRate": dummyJSON.baseRate,
@@ -366,10 +417,15 @@ exports.tuitioncalc = async function (options) {
                 "isValid": dummyJSON.isValid,
                 "startDate": dummyJSON.startDate,
                 "student_uuid": dummyJSON.student_uuid,
-                "class_uuid": 'dummy'
+                "class_uuid": dummyJSON.class_uuid,
+                "uuid": 'dummy',
             });
+
         }
-        return enrolments;
+        return {
+            'enrolments': enrolments,
+            'total_enrolments': enrolments.length
+        };
     }
 
     // Holding Fee Processor
@@ -423,31 +479,63 @@ exports.tuitioncalc = async function (options) {
             let start = e.start,
                 end = e.end;
             e['days'] = [];
+            e['calendar_days'] = [];
             let cursor = start;
             while (cursor.ts >= start.ts && cursor.ts <= end.ts) {
-                if (cursor.ts < DateTime.fromISO(options.monthtoprocess).startOf('month').ts ||
-                    cursor.ts > DateTime.fromISO(options.monthtoprocess).endOf('month').ts) {
-                    // Do not add days to array. They are outside of monthly scope.
-                    cursor = cursor.plus({
-                        day: 1
-                    });
-                    continue;
+                // Add days to both 'days' & 'calendar_days' array.
+                e['days'].push({
+                    "date": cursor.toISODate(),
+                    "dayint": cursor.weekday,
+                    "day": cursor.weekdayShort
+                });
+                e['calendar_days'].push({
+                    "date": cursor.toISODate(),
+                    "dayint": cursor.weekday,
+                    "day": cursor.weekdayShort
+                });
+                if (!Object.hasOwn(daysinmonth, cursor.weekday)) {
+                    daysinmonth[cursor.weekday] = 1
                 } else {
-                    // Add days to array. They are inside monthly scope.
-                    e['days'].push({
-                        "date": cursor.toISODate(),
-                        "dayint": cursor.weekday,
-                        "day": cursor.weekdayShort
-                    });
-                    if (!Object.hasOwn(daysinmonth, cursor.weekday)) {
-                        daysinmonth[cursor.weekday] = 1
-                    } else {
-                        daysinmonth[cursor.weekday] += 1
-                    }
-                    cursor = cursor.plus({
-                        day: 1
-                    });
+                    daysinmonth[cursor.weekday] += 1
                 }
+                cursor = cursor.plus({
+                    day: 1
+                });
+                // if (cursor.ts < DateTime.fromISO(options.monthtoprocess).startOf('month').ts ||
+                //     cursor.ts > DateTime.fromISO(options.monthtoprocess).endOf('month').ts) {
+                //     // Do not add days to 'days' array. They are outside of monthly scope.
+                //     // Still add to 'calendar_days' array for correct enrolment discounts.
+                //     e['calendar_days'].push({
+                //         "date": cursor.toISODate(),
+                //         "dayint": cursor.weekday,
+                //         "day": cursor.weekdayShort
+                //     });
+                //     cursor = cursor.plus({
+                //         day: 1
+                //     });
+                //     continue;
+                // } else {
+
+                //     // Add days to both 'days' & 'calendar_days' array.
+                //     e['days'].push({
+                //         "date": cursor.toISODate(),
+                //         "dayint": cursor.weekday,
+                //         "day": cursor.weekdayShort
+                //     });
+                //     e['calendar_days'].push({
+                //         "date": cursor.toISODate(),
+                //         "dayint": cursor.weekday,
+                //         "day": cursor.weekdayShort
+                //     });
+                //     if (!Object.hasOwn(daysinmonth, cursor.weekday)) {
+                //         daysinmonth[cursor.weekday] = 1
+                //     } else {
+                //         daysinmonth[cursor.weekday] += 1
+                //     }
+                //     cursor = cursor.plus({
+                //         day: 1
+                //     });
+                // }
             }
             // Convert to ISO 'YYYY-MM-DD' format for array.
             e.start = e.start.toISODate();
@@ -548,16 +636,12 @@ exports.tuitioncalc = async function (options) {
             return totals;
         },
         'chargefor': DateTime.fromISO(options.monthtoprocess).toFormat('MMM yyyy'),
+        'discount_from_timestamp': discount_start_from_timestamp,
+        'enrolment_counts': enrolment_counts,
         'existingcharge': {
             'chargeexists': chargeexists,
             'multiplecharges': multipleChargeExists,
-            'details': find_chargeexists
-        },
-        'time': DateTime.fromObject({
-            year: 2022,
-            month: 02,
-            day: 28,
-            hour: 12
-        }).setZone('Australia/Sydney').toISOTime()
+            'details': find_chargeexists.length > 1 ? find_chargeexists : find_chargeexists[0],
+        }
     };
 }

@@ -24,6 +24,10 @@
       {
         "type": "text",
         "name": "student_lastname"
+      },
+      {
+        "type": "text",
+        "name": "startdate"
       }
     ]
   },
@@ -96,6 +100,11 @@
                 "table": "cl",
                 "column": "name",
                 "alias": "classlevel"
+              },
+              {
+                "table": "e",
+                "column": "uuid",
+                "alias": "enrolment_uuid"
               }
             ],
             "table": {
@@ -247,7 +256,7 @@
                       "field": "e.dropDate",
                       "type": "date",
                       "operator": "greater_or_equal",
-                      "value": "{{now_string.formatDate('yyyy-MM-dd')}}",
+                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
                       "data": {
                         "table": "e",
                         "column": "dropDate",
@@ -306,7 +315,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT c.day AS classday, c.classlevel_uuid AS classlevel, c.startTimeDisplay, c.endTimeDisplay, c.instructor_uuid AS instructor, e.startDate, e.dropDate, days.dayname, i.firstName AS instructor_first, i.lastName AS instructor_last, cl.name AS classlevel\nFROM classes AS c\nLEFT JOIN enrolments AS e ON (e.class_uuid = c.uuid) LEFT JOIN days ON (days.dayint = c.day) LEFT JOIN staff AS i ON (i.uuid = c.instructor_uuid) LEFT JOIN classLevels AS cl ON (cl.uuid = c.classlevel_uuid)\nWHERE c.uuid = :P1 /* {{$_GET.class_uuid}} */ AND e.student_uuid = :P2 /* {{$_GET.student_uuid}} */ AND (e.dropDate >= :P3 /* {{now_string.formatDate('yyyy-MM-dd')}} */ OR e.dropDate IS NULL) AND e.isValid = :P4 /* {{1}} */",
+            "query": "SELECT c.day AS classday, c.classlevel_uuid AS classlevel, c.startTimeDisplay, c.endTimeDisplay, c.instructor_uuid AS instructor, e.startDate, e.dropDate, days.dayname, i.firstName AS instructor_first, i.lastName AS instructor_last, cl.name AS classlevel, e.uuid AS enrolment_uuid\nFROM classes AS c\nLEFT JOIN enrolments AS e ON (e.class_uuid = c.uuid) LEFT JOIN days ON (days.dayint = c.day) LEFT JOIN staff AS i ON (i.uuid = c.instructor_uuid) LEFT JOIN classLevels AS cl ON (cl.uuid = c.classlevel_uuid)\nWHERE c.uuid = :P1 /* {{$_GET.class_uuid}} */ AND e.student_uuid = :P2 /* {{$_GET.student_uuid}} */ AND (e.dropDate >= :P3 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR e.dropDate IS NULL) AND e.isValid = :P4 /* {{1}} */",
             "params": [
               {
                 "operator": "equal",
@@ -324,7 +333,7 @@
                 "operator": "greater_or_equal",
                 "type": "expression",
                 "name": ":P3",
-                "value": "{{now_string.formatDate('yyyy-MM-dd')}}"
+                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
               },
               {
                 "operator": "equal",
@@ -377,6 +386,10 @@
           {
             "type": "text",
             "name": "instructor_last"
+          },
+          {
+            "type": "text",
+            "name": "enrolment_uuid"
           }
         ],
         "outputType": "object",
@@ -398,7 +411,7 @@
         "module": "core",
         "action": "setvalue",
         "options": {
-          "value": "<p>{{$_GET.student_firstname}} {{$_GET.student_lastname}} is already booked into this class.</p>\n<table class=\"table small align-middle table-bordered\">\n  <thead>\n    <tr>\n    \t<th colspan=\"2\"><strong>Enrolment:</strong> {{query.dayname}} - {{query.startTimeDisplay}} {{query.classlevel}} - {{query.instructor_first+' '+query.instructor_last.trunc(1, true, '.').uppercase()}}</th>\n    </tr>\n    <tr>\n      <th><strong>Start Date:</strong></th>\n      <th><strong>Drop Date:</strong></th>\n  </thead>\n  <tbody>\n    <tr>\n      <td>{{query.startDate.formatDate(times_formats.puddle_date_format)}}</td>\n      <td>{{query.dropDate ? query.dropDate.formatDate(times_formats.puddle_date_format) : 'No drop date.'}}</td>\n    </tr>\n  </tbody> \n</table>"
+          "value": "<p>{{$_GET.student_firstname}} {{$_GET.student_lastname}} is already booked into this class.</p>\n<table class=\"table small align-middle table-bordered\">\n  <thead>\n    <tr>\n    \t<th colspan=\"2\"><strong>Enrolment: </strong> {{query.dayname}} - {{query.startTimeDisplay}} {{query.classlevel}} - {{query.instructor_first+' '+query.instructor_last.trunc(1, true, '.').uppercase()}}</th>\n    </tr>\n    <tr>\n      <th><strong>Start Date:</strong></th>\n      <th><strong>Drop Date:</strong></th>\n  </thead>\n  <tbody>\n    <tr>\n      <td>{{query.startDate.formatDate(times_formats.puddle_date_format)}}</td>\n      <td>{{query.dropDate ? query.dropDate.formatDate(times_formats.puddle_date_format) : 'No drop date.'}}</td>\n    </tr>\n  </tbody> \n</table>\n{{query.dropDate === null ? '<p style=\"color: red; font-weight:600; line-height: 1\">There is no future drop date for this enrolment.<br> You cannot double book a student into the same class.</p>' : '<p style=\"color: red; font-weight:600;\">To proceed, please choose a start date <em>after</em> the current drop date.</p>'}}"
         },
         "meta": [],
         "outputType": "text",
