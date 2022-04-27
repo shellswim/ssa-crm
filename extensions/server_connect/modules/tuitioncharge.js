@@ -1,10 +1,11 @@
-//const  = require('moment');
-const moment = require('moment-timezone');
+const {DateTime} = require('luxon');
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const crypto = require('crypto');
 
 exports.tuitioncharge = async function (options) {
+
+    debugger; 
 
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -17,32 +18,33 @@ exports.tuitioncharge = async function (options) {
 
     // Parse Options
     options = this.parse(options);
-    let d = JSON.parse(options.details),
-        charge_date = options.charge_date,
-        due_date = options.due_date,
-        title = options.title,
-        reference = options.reference,
-        description = options.description,
-        user = options.user,
-        timestamp = moment().unix();
+    let charge_details = options.details;
+    let charge_date = options.charge_date;
+    let due_date = options.due_date;
+    let title = options.title;
+    let reference = options.reference || null;
+    let description = options.description || null;
+    let user = options.user;
+    let timestamp = DateTime.now().toSeconds();
+    
+    debugger; 
+    
+    if (charge_details.existingcharge.chargeexists) {
 
-    let charge_exists = d.monthlychargeexists.exists;
-
-    if (charge_exists) {
         // Update Family Charge
-        await familycharge_update(d.monthlychargeexists.charge_uuid, d);
+        await familycharge_update(charge_details.existingcharge.details.uuid, charge_details);
 
         // Match generated enrolment charges with existing charges. 
         // Update existing, Insert new and Delete unmatched.
-        await enrolcharge_match(d.enrolments, d.monthlychargeexists.charge_uuid);
+        await enrolcharge_match(charge_details.enrolments, charge_details.existingcharge.details.uuid);
 
     } else {
 
         // Insert Family Charge
-        let cuuid = await familycharge_insert(d);
+        let cuuid = await familycharge_insert(charge_details);
 
-        for (let i = 0; i < d.enrolments.length; i++) {
-            let e = d.enrolments[i];
+        for (let i = 0; i < charge_details.enrolments.length; i++) {
+            let e = charge_details.enrolments[i];
             await enrolcharge_insert(e, cuuid);
         }
     }
@@ -53,7 +55,7 @@ exports.tuitioncharge = async function (options) {
 
         for (let i = 0; i < enrolments.length; i++) {
             let e = enrolments[i];
-            let classdate = moment(e.classdate).format('YYYY-MM-DD');
+            let classdate = DateTime.fromSQL(e.classdate).toISODate();
             let ec = dbClientFlat(await db.raw(`
                 SELECT ce.uuid
                 FROM charges_enrolments ce
@@ -81,14 +83,13 @@ exports.tuitioncharge = async function (options) {
         let p = enrolment.pricing;
         let ceuuid = 'che_' + (crypto.randomUUID()).replaceAll('-', '');
 
-        await db('charges_enrolments').insert(
-            db.raw(`
-                    ( 
+        await db.raw(`
+                INSERT INTO charges_enrolments ( 
                         uuid, startofweek, class_uuid, student_uuid, classtype_uuid, enrolment_uuid, classDate, classDate2, baseRate, endisc, ennetrate, endiscdescription, endiscrate, familydiscountdesc, familydiscountrate, familydiscounttotal, enrolsubtotal, holding_fee, holding_fee_discount, enrolgrandtotal, charge_uuid, isvalid, debuggerstatus, created, created_by
                     )
-                VALUES ( '${ceuuid}', '${e.startofweek}', '${e.class_uuid}', '${e.student_uuid}', '${e.classtype_uuid}', '${e.uuid}', '${moment(e.classdate).format('YYYY-MM-DD')}', ${moment(e.classdate).unix()}, ${p.baseRate}, ${p.endisc}, ${p.enNetRate}, '${p.endiscdescription}', '${p.endiscrate}', '${p.familydiscountdesc}', '${p.familydiscountrate}', ${p.familydiscounttotal}, ${p.enrolsubtotal}, ${p.holdingfee > 0 ? 1 : 0}, ${p.holdingfee}, ${p.enrolgrandtotal}, '${charge_uuid}', ${e.isValid}, 'insert', ${timestamp}, '${user}'
+                VALUES ( '${ceuuid}', '${e.startofweek}', '${e.class_uuid}', '${e.student_uuid}', '${e.classtype_uuid}', '${e.uuid}', '${DateTime.fromSQL(e.classdate).toISODate()}', ${DateTime.fromSQL(e.classdate).toSeconds()}, ${p.baseRate}, ${p.multienrol_discount}, ${p.multienrol_subtotal}, '${p.multienrol_discount_description}', NULL, '${p.familydiscount_description}', NULL, ${p.family_discount}, ${p.familydiscount_subtotal}, ${p.holding_fee > 0 ? 1 : 0}, ${p.holding_fee}, ${p.enrolgrandtotal}, '${charge_uuid}', ${e.isValid}, 'insert', ${timestamp}, '${user}'
                 )
-            `)
+            `
         );
 
         return ceuuid;
@@ -102,7 +103,7 @@ exports.tuitioncharge = async function (options) {
         await db.raw(`
                 UPDATE charges_enrolments
                 SET 
-                    classDate = '${moment(enrolment.classdate).format('YYYY-MM-DD')}', classDate2 = ${moment(enrolment.classdate).unix()}, baseRate = ${p.baseRate}, endisc = ${p.endisc}, ennetrate = ${p.enNetRate}, endiscdescription = '${p.endiscdescription}', endiscrate = '${p.endiscrate}', familydiscountdesc = '${p.familydiscountdesc}', familydiscountrate = '${p.familydiscountrate}', familydiscounttotal = ${p.familydiscounttotal}, enrolsubtotal = ${p.enrolsubtotal}, enrolgrandtotal = ${p.enrolgrandtotal}, holding_fee = ${p.holdingfee > 0 ? 1 : 0}, holding_fee_discount = ${p.holdingfee}, debuggerstatus = 'updated', updated = ${timestamp}, updated_by = '${user}'
+                    classDate = '${DateTime.fromISO(enrolment.classdate).toISODate()}', classDate2 = ${DateTime.fromISO(enrolment.classdate).toSeconds()}, baseRate = ${p.baseRate}, endisc = ${p.multienrol_discount}, ennetrate = ${p.multienrol_subtotal}, endiscdescription = '${p.multienrol_discount_description}', endiscrate = NULL, familydiscountdesc = '${p.familydiscount_description}', familydiscountrate = NULL, familydiscounttotal = ${p.family_discount}, enrolsubtotal = ${p.familydiscount_subtotal}, enrolgrandtotal = ${p.enrolgrandtotal}, holding_fee = ${p.holding_fee > 0 ? 1 : 0}, holding_fee_discount = ${p.holding_fee}, debuggerstatus = 'updated', updated = ${timestamp}, updated_by = '${user}'
                 WHERE uuid = '${ecuuid}'
                 `
         );
@@ -131,17 +132,16 @@ exports.tuitioncharge = async function (options) {
         let uuid = 'chf_' + (crypto.randomUUID()).replaceAll('-', '');
 
         // Insert new family charge
-        await db('charges_family')
-                .insert(db.raw(`
-                (
+        await db.raw(`
+                INSERT INTO charges_family (
                     uuid, family_uuid, total, title, reference, description, chargeFor_monthly, dueDate, chargeType, basetotal, discounttotal, chargeDate, createdby, created
                 )
                 VALUES (
-                    '${uuid}', '${d.family_uuid}', ${d.totals.enrolsgrand}, '${title}', 
-                    ${description != undefined ? 'description = ' + description + ',' : ''} 
-                    ${reference != undefined ? 'reference = ' + reference + ',' : ''} , '${d.monthlycharge}', '${due_date}', 'tuition', ${d.totals.baseRate}, ${d.totals.disctotal}, '${charge_date}', '${user}', ${timestamp}
+                    '${uuid}', '${d.family_uuid}', ${d.tuitiontotals.enrolgrandtotal}, '${title}', 
+                    ${description ? description : 'NULL'}, 
+                    ${reference ? reference : 'NULL'}, '${d.chargefor_date}', '${due_date}', 'tuition', ${d.tuitiontotals.baseRate}, ${(d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2)}, '${charge_date}', '${user}', ${timestamp}
                 )
-        `));
+        `);
 
         return uuid;
     }
@@ -152,13 +152,13 @@ exports.tuitioncharge = async function (options) {
             UPDATE charges_family
             SET 
                 title = '${title}',
-                ${description != undefined ? 'description = ' + description + ',' : ''} 
-                ${reference != undefined ? 'reference = ' + reference + ',' : ''} 
+                ${description ? 'description = ' + description + ',' : ''}
+                ${reference ? 'reference = ' + reference + ',' : ''}
                 dueDate = '${due_date}', 
                 chargeDate = '${charge_date}', 
-                baseTotal = ${d.totals.baseRate}, 
-                discounttotal = ${d.totals.disctotal}, 
-                total = ${d.totals.enrolsgrand}
+                baseTotal = ${d.tuitiontotals.baseRate}, 
+                discounttotal = ${(d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2)}, 
+                total = ${d.tuitiontotals.enrolgrandtotal}
             WHERE uuid = '${fcuuid}'
         `);
     }

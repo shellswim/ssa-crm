@@ -1,6 +1,9 @@
 dmx.Formatter('object', 'jsonStringify', function (obj) {
     return JSON.stringify(obj);
 });
+dmx.Formatter('array', 'arrayStringify', function (arr) {
+    return JSON.stringify(arr);
+});
 dmx.Formatter('array', 'objectFromArray', function (arr) {
     let a = arr;
     let b = {};

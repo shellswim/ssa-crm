@@ -26,13 +26,12 @@ exports.tuitioncalc_monthgen = async function(options) {
         `)).value;
 
     let charges = await get_charges(startofmonth);
-    // return await get_charges(startofmonth);
 
     if(Array.isArray(charges) && charges.length > 0) {
         chargearray = create_monthsarray(charges);
     } else {
         let months = [startofmonth.toISODate()];
-        if(chargeahead) {
+        if(chargeahead && startofmonth.plus({months: 1}).month <= DateTime.now().plus({months: 1}).month) {
             months.push(startofmonth.plus({months: 1}).toISODate());
         }
         chargearray = months;

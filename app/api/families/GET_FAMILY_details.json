@@ -233,7 +233,7 @@
               },
               {
                 "table": "addresses",
-                "column": "id"
+                "column": "uuid"
               }
             ],
             "table": {
@@ -258,7 +258,8 @@
                       "operation": "="
                     }
                   ]
-                }
+                },
+                "primary": "id"
               },
               {
                 "table": "states",
@@ -278,7 +279,8 @@
                       "operation": "="
                     }
                   ]
-                }
+                },
+                "primary": "id"
               }
             ],
             "wheres": {
@@ -301,7 +303,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name, addresses.id\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.family_uuid = :P1 /* {{$_GET.familyuuid}} */",
+            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name, addresses.uuid\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.family_uuid = :P1 /* {{$_GET.familyuuid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -309,7 +311,9 @@
                 "name": ":P1",
                 "value": "{{$_GET.familyuuid}}"
               }
-            ]
+            ],
+            "primary": "uuid",
+            "orders": []
           }
         },
         "output": true,
@@ -347,8 +351,8 @@
             "name": "state_name"
           },
           {
-            "type": "number",
-            "name": "id"
+            "type": "text",
+            "name": "uuid"
           }
         ],
         "outputType": "array",
@@ -420,7 +424,8 @@
                       "operation": "="
                     }
                   ]
-                }
+                },
+                "primary": "id"
               },
               {
                 "table": "states",
@@ -440,7 +445,8 @@
                       "operation": "="
                     }
                   ]
-                }
+                },
+                "primary": "id"
               }
             ],
             "wheres": {
@@ -451,11 +457,18 @@
                   "field": "addresses.uuid",
                   "type": "string",
                   "operator": "equal",
-                  "value": "{{familyDetails.default_address}}",
+                  "value": "{{familyDetails.address}}",
                   "data": {
                     "table": "addresses",
                     "column": "uuid",
-                    "type": "text"
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
                   },
                   "operation": "="
                 }
@@ -463,15 +476,16 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.uuid = :P1 /* {{familyDetails.default_address}} */",
+            "query": "SELECT addresses.street1, addresses.street2, addresses.unit, addresses.suburb, addresses.postcode, addresses.state, countries.name AS country_name, states.name AS state_name\nFROM addresses\nLEFT JOIN countries ON (countries.id = addresses.country) INNER JOIN states ON (states.id = addresses.state)\nWHERE addresses.uuid = :P1 /* {{familyDetails.address}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{familyDetails.default_address}}"
+                "value": "{{familyDetails.address}}"
               }
-            ]
+            ],
+            "primary": "uuid"
           }
         },
         "output": true,

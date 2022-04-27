@@ -11,7 +11,7 @@ const {
 } = require('mathjs');
 
 exports.tuitioncalc = async function (options) {
-
+    
     options = this.parse(options);
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -38,10 +38,36 @@ exports.tuitioncalc = async function (options) {
     }
     let generateweeks = generateWeeks(startofcalendarmonth, endofcalendarmonth);
     let timespan = generateweeks.daysarr;
-    let daysinmonth = generateweeks.daysinmonth;
+
+    // Date / Days in month counter.
+    let dategen = (function dates_generator() {
+        let halting_variable = 1;
+        let obj_month = DateTime.fromISO(options.monthtoprocess), 
+            start = obj_month.startOf('month').startOf('week'), 
+            end = obj_month.endOf('month').endOf('week'), 
+            month = obj_month.month, 
+            cursor = start, 
+            date_obj = {}, 
+            day_obj = {1:0,2:0,3:0,4:0,5:0,6:0,7:0};
+        while(cursor.ts >= start.ts && cursor.ts <= end.ts && halting_variable <= 1000) {
+          if(cursor.month === month) {
+            day_obj[cursor.weekday] += 1;
+            date_obj[cursor.toISODate()] = day_obj[cursor.weekday];
+          }
+          cursor = cursor.plus({days: 1});
+          halting_variable += 1;
+          if(halting_variable === 1000) {
+              throw new Error('Infinite loop in DateGen detected. Check your *monthtoprocess* date input.')
+          }
+        }
+        return {
+          date_obj, day_obj
+        }
+      })();
 
     /** Global Arrays & Objects*/
     let enrolment_counts = {};
+    let family_enrolments = [];
 
     /** Family, discounts and setup */
     let family_uuid = options.family_uuid;
@@ -64,7 +90,7 @@ exports.tuitioncalc = async function (options) {
             multipleChargeExists = true;
             break;
     }
-
+    
     /** Students and Enrolments Setup */
     let dummyenrol = options.dummyEnrolEnabled;
     let dummyJSON = options.dummyEnrolJSON ? JSON.parse(this.parse(options.dummyEnrolJSON)) : null;
@@ -80,6 +106,7 @@ exports.tuitioncalc = async function (options) {
 
     for (let i = 0; i < students.length; i++) {
         let student = students[i];
+        student.all_enrolments = [];
         let enrolments = students[i].enrolments;
         student.total_enrolments = 0;
 
@@ -102,11 +129,15 @@ exports.tuitioncalc = async function (options) {
                     // Filter enrolments falling outside of current month.
                     if(e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()) {
                         se.items.push(e);
+                        student.all_enrolments.push(e);
                         // Set enrolment count for current enrolment in global enrolments count object.
                         if(Object.hasOwn(enrolment_counts[student.uuid], e.uuid)) {
-                            enrolment_counts[student.uuid][e.uuid] += 1;
+                            enrolment_counts[student.uuid][e.uuid].count += 1;
+                            enrolment_counts[student.uuid][e.uuid].classdate.push(e.classdate);
                         } else {
-                            enrolment_counts[student.uuid][e.uuid] = 1;
+                            enrolment_counts[student.uuid][e.uuid] = {};
+                            enrolment_counts[student.uuid][e.uuid].count = 1;
+                            enrolment_counts[student.uuid][e.uuid]['classdate'] = [e.classdate]
                         }
                     }
                     if(e.class_uuid == "dummy") {
@@ -129,7 +160,6 @@ exports.tuitioncalc = async function (options) {
             student.total_enrolments += se.items.length;
         }
     }
-
     /** Tuitions Calculations */
     // Filter out students who have no enrolments
     students = students.filter(s => {
@@ -157,7 +187,6 @@ exports.tuitioncalc = async function (options) {
             }
         }
     }
-
     // Sort students, then apply family discounts.
     students = _.sortBy(students, (o) => {
         return o.tuitiontotals.multienrol_subtotal
@@ -214,6 +243,11 @@ exports.tuitioncalc = async function (options) {
 
         object_mathMerge(s.tuitiontotals, final_fees_object);
     }
+
+    // Filter family_enrolments to this month.
+    family_enrolments = family_enrolments.filter((e) => {
+        return e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()
+    })
 
     /** Functions Start */
     // Discounts
@@ -291,7 +325,7 @@ exports.tuitioncalc = async function (options) {
             te = total_enrolments;
         }
         if (sd.type.toLowerCase() == 'bulk') {
-            if (_discounts.billing_cycle == 3 && week >= 5 && enrolment_counts[item.student_uuid][item.uuid] == 5) {
+            if (_discounts.billing_cycle == 3 && dategen.date_obj[DateTime.fromSQL(item.classdate).toISODate()] == 5 && enrolment_counts[item.student_uuid][item.uuid].count == 5) {
                 discount = {
                     'multienrol_discount': item.baseRate,
                     'multienrol_subtotal': 0,
@@ -369,13 +403,13 @@ exports.tuitioncalc = async function (options) {
 
     async function getEnrolments(studentid, start, end, dayint) {
         let enrolments = dbClient(await db.raw(`
-            SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.baseRate, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid, c.startTimeDisplay
+            SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid, c.startTimeDisplay, '${start}' AS startofweek 
             FROM enrolments e 
                 LEFT JOIN students s ON e.student_uuid = s.uuid
                 LEFT JOIN classes c ON e.class_uuid = c.uuid 
                 LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
                 WHERE e.student_uuid = '${studentid}' AND
-                e.enrolmentType = 1 
+                e.enrolmentType = 1
                 AND (e.dropDate IS NULL 
                     OR e.dropDate >= '${start}'
                     OR e.dropDate BETWEEN '${start}' AND '${end}') 
@@ -383,29 +417,38 @@ exports.tuitioncalc = async function (options) {
                 AND c.day IN(${dayint})
                 ORDER BY c.day, c.startTimeDecimal
         `));
-        enrolments.map(e => {
+        for(let i=0;i<enrolments.length;i++) {
+            let e = enrolments[i];
             let add_days = dayint - 1;
-            e.classdate_timestamp = DateTime.fromISO(start).plus({
-                days: add_days
-            }).toSeconds();
-            e.classdate = DateTime.fromISO(start).plus({
-                days: add_days
-            }).toISODate();
-        });
+            e.classdate_timestamp = DateTime.fromISO(start).plus({days: add_days}).toSeconds();
+            e.classdate = DateTime.fromISO(start).plus({days: add_days}).toISODate();
+            
+            // Add Base Rates
+            e.baseRate = dbClientSingleValue(await db.raw(`
+                SELECT cb.baserate
+                FROM charges_baserates cb
+                WHERE 
+                    '${e.classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
+                    AND cb.classlevel_uuid = '${e.classlevel_uuid}';
+            `),'baserate');
+        }
         if (dummyenrol && dummyJSON.student_uuid == studentid && dummyJSON.classday == dayint && DateTime.fromISO(dummyJSON.startDate).toSeconds() <= DateTime.fromISO(end).toSeconds()) {
+            let classdate_timestamp = DateTime.fromISO(start).plus({days: dayint - 1}).toSeconds();
+            let classdate = DateTime.fromISO(start).plus({days: dayint - 1}).toISODate();
+            let baserate = dbClientSingleValue(await db.raw(`
+            SELECT cb.baserate
+            FROM charges_baserates cb
+            WHERE 
+                '${classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
+                AND cb.classlevel_uuid = '${dummyJSON.classlevel_uuid}';
+            `),'baserate');
             enrolments.push({
                 "classday": dummyJSON.classday,
-                "classdate_timestamp": 
-                    DateTime.fromISO(start).plus({
-                        days: dayint - 1
-                    }).toSeconds(),
-                "classdate": 
-                    DateTime.fromISO(start).plus({
-                        days: dayint - 1
-                    }).toISODate(),
+                "classdate_timestamp": classdate_timestamp,
+                "classdate": classdate,
                 "classType": dummyJSON.classType,
                 "classtype_uuid": dummyJSON.classtype_uuid,
-                "baseRate": dummyJSON.baseRate,
+                "baseRate": baserate,
                 "shortName": dummyJSON.shortName,
                 "firstName": dummyJSON.firstName,
                 "lastName": dummyJSON.lastName,
@@ -418,9 +461,15 @@ exports.tuitioncalc = async function (options) {
                 "startDate": dummyJSON.startDate,
                 "student_uuid": dummyJSON.student_uuid,
                 "class_uuid": dummyJSON.class_uuid,
+                "startofweek": start,
                 "uuid": 'dummy',
             });
 
+        }
+        if(Array.isArray(enrolments) && enrolments.length > 0) {
+            enrolments.map(e => {
+                family_enrolments.push(e);
+            });
         }
         return {
             'enrolments': enrolments,
@@ -609,6 +658,13 @@ exports.tuitioncalc = async function (options) {
     }
 
     // DB Query Processor
+    function dbClientSingleValue(v,p) {
+        if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
+            return v[0][0][p];
+        } else if (db.client.config.client == 'postgres' || db.client.config.client == 'redshift') {
+            return v = v.rows;
+        }
+    }
     function dbClientFlat(v) {
         if (db.client.config.client == 'mysql' || db.client.config.client == 'mysql2') {
             return v[0][0];
@@ -627,6 +683,7 @@ exports.tuitioncalc = async function (options) {
 
 
     return {
+        "family_uuid": options.family_uuid,
         "students": students,
         get tuitiontotals() {
             let totals = {};
@@ -636,12 +693,14 @@ exports.tuitioncalc = async function (options) {
             return totals;
         },
         'chargefor': DateTime.fromISO(options.monthtoprocess).toFormat('MMM yyyy'),
+        'chargefor_date': DateTime.fromISO(options.monthtoprocess).toISODate(),
         'discount_from_timestamp': discount_start_from_timestamp,
         'enrolment_counts': enrolment_counts,
         'existingcharge': {
             'chargeexists': chargeexists,
             'multiplecharges': multipleChargeExists,
             'details': find_chargeexists.length > 1 ? find_chargeexists : find_chargeexists[0],
-        }
+        },
+        'enrolments': family_enrolments
     };
 }

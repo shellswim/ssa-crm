@@ -90,14 +90,14 @@
               },
               {
                 "table": "addresses",
-                "column": "family",
+                "column": "family_uuid",
                 "type": "number",
                 "value": "{{$_POST.family}}"
               }
             ],
             "table": "addresses",
-            "returning": "id",
-            "query": "INSERT INTO addresses\n(street1, street2, unit, suburb, postcode, country, state, family) VALUES (:P1 /* {{$_POST.street1}} */, :P2 /* {{$_POST.street2}} */, :P3 /* {{$_POST.unit}} */, :P4 /* {{$_POST.suburb}} */, :P5 /* {{$_POST.postcode}} */, :P6 /* {{$_POST.country}} */, :P7 /* {{$_POST.state}} */, :P8 /* {{$_POST.family}} */)",
+            "returning": "uuid",
+            "query": "INSERT INTO addresses\n(street1, street2, unit, suburb, postcode, country, state, family_uuid) VALUES (:P1 /* {{$_POST.street1}} */, :P2 /* {{$_POST.street2}} */, :P3 /* {{$_POST.unit}} */, :P4 /* {{$_POST.suburb}} */, :P5 /* {{$_POST.postcode}} */, :P6 /* {{$_POST.country}} */, :P7 /* {{$_POST.state}} */, :P8 /* {{$_POST.family}} */)",
             "params": [
               {
                 "name": ":P1",
@@ -175,15 +175,23 @@
               "condition": "AND",
               "rules": [
                 {
-                  "id": "families.id",
-                  "field": "families.id",
-                  "type": "double",
+                  "id": "families.uuid",
+                  "field": "families.uuid",
+                  "type": "string",
                   "operator": "equal",
                   "value": "{{$_POST.family}}",
                   "data": {
                     "table": "families",
-                    "column": "id",
-                    "type": "number"
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "comment": "families uuid column for later use",
+                      "name": "uuid"
+                    }
                   },
                   "operation": "="
                 }
@@ -191,7 +199,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT address\nFROM families\nWHERE id = :P1 /* {{$_POST.family}} */",
+            "query": "SELECT address\nFROM families\nWHERE uuid = :P1 /* {{$_POST.family}} */",
             "params": [
               {
                 "operator": "equal",
@@ -199,10 +207,11 @@
                 "name": ":P1",
                 "value": "{{$_POST.family}}"
               }
-            ]
+            ],
+            "primary": "uuid"
           }
         },
-        "output": true,
+        "output": false,
         "meta": [
           {
             "type": "number",
@@ -218,64 +227,132 @@
         "options": {
           "if": "{{!familyRecord.address || familyRecord.address == ''}}",
           "then": {
-            "steps": {
-              "name": "setDefaultAddress",
-              "module": "dbupdater",
-              "action": "update",
-              "options": {
-                "connection": "db",
-                "sql": {
-                  "type": "update",
-                  "values": [
-                    {
-                      "table": "families",
-                      "column": "address",
-                      "type": "number",
-                      "value": "{{insert.identity}}"
-                    }
-                  ],
-                  "table": "families",
-                  "wheres": {
-                    "condition": "AND",
-                    "rules": [
+            "steps": [
+              {
+                "name": "GET_NEW_ADDR_uuid",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
                       {
-                        "id": "id",
-                        "field": "id",
-                        "type": "double",
-                        "operator": "equal",
-                        "value": "{{$_POST.family}}",
-                        "data": {
-                          "column": "id"
-                        },
-                        "operation": "="
+                        "table": "addresses",
+                        "column": "uuid"
                       }
                     ],
-                    "conditional": null,
-                    "valid": true
-                  },
-                  "query": "UPDATE families\nSET address = :P1 /* {{insert.identity}} */\nWHERE id = :P2 /* {{$_POST.family}} */",
-                  "params": [
-                    {
-                      "name": ":P1",
-                      "type": "expression",
-                      "value": "{{insert.identity}}"
+                    "table": {
+                      "name": "addresses"
                     },
-                    {
-                      "operator": "equal",
-                      "type": "expression",
-                      "name": ":P2",
-                      "value": "{{$_POST.family}}"
+                    "primary": "uuid",
+                    "joins": [],
+                    "query": "SELECT uuid\nFROM addresses\nWHERE id = :P1 /* {{insert.identity}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{insert.identity}}"
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "addresses.id",
+                          "field": "addresses.id",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{insert.identity}}",
+                          "data": {
+                            "table": "addresses",
+                            "column": "id",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "integer",
+                              "primary": false,
+                              "nullable": false,
+                              "name": "id"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
                     }
-                  ]
-                }
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  }
+                ],
+                "outputType": "object"
               },
-              "meta": [
-                {
-                  "name": "affected",
-                  "type": "number"
-                }
-              ]
-            }
+              {
+                "name": "SET_DEFAULT_address",
+                "module": "dbupdater",
+                "action": "update",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "update",
+                    "values": [
+                      {
+                        "table": "families",
+                        "column": "address",
+                        "type": "number",
+                        "value": "{{GET_NEW_ADDR_uuid.uuid}}"
+                      }
+                    ],
+                    "table": "families",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{$_POST.family}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "UPDATE families\nSET address = :P1 /* {{GET_NEW_ADDR_uuid.uuid}} */\nWHERE uuid = :P2 /* {{$_POST.family}} */",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{GET_NEW_ADDR_uuid.uuid}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{$_POST.family}}"
+                      }
+                    ],
+                    "returning": "uuid"
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              }
+            ]
           }
         },
         "outputType": "boolean"

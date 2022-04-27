@@ -227,6 +227,10 @@
                   {
                     "type": "number",
                     "name": "familyold"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
                   }
                 ],
                 "outputType": "array",
@@ -360,16 +364,17 @@
                           "rules": [
                             {
                               "table": "families",
-                              "column": "primaryGuardian",
+                              "column": "guardian_uuid",
                               "operator": "equal",
                               "value": {
                                 "table": "guardians",
-                                "column": "id"
+                                "column": "uuid"
                               },
                               "operation": "="
                             }
                           ]
-                        }
+                        },
+                        "primary": "uuid"
                       }
                     ],
                     "wheres": {
@@ -392,7 +397,7 @@
                       "conditional": null,
                       "valid": true
                     },
-                    "query": "SELECT guardians.id, guardians.firstName, guardians.lastName, guardians.family, guardians.relationship\nFROM guardians\nINNER JOIN families ON (families.primaryGuardian = guardians.id)\nWHERE families.uuid = :P1 /* {{family_uuid}} */",
+                    "query": "SELECT guardians.id, guardians.firstName, guardians.lastName, guardians.family, guardians.relationship\nFROM guardians\nINNER JOIN families ON (families.guardian_uuid = guardians.uuid)\nWHERE families.uuid = :P1 /* {{family_uuid}} */",
                     "params": [
                       {
                         "operator": "equal",
@@ -400,7 +405,8 @@
                         "name": ":P1",
                         "value": "{{family_uuid}}"
                       }
-                    ]
+                    ],
+                    "primary": "uuid"
                   }
                 },
                 "output": true,
@@ -427,6 +433,31 @@
                   }
                 ],
                 "outputType": "object"
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{!primaryGuardian}}",
+                  "then": {
+                    "steps": {
+                      "name": "primaryGuardian",
+                      "module": "core",
+                      "action": "setvalue",
+                      "options": {
+                        "value": {
+                          "firstName": "Not found",
+                          "lastName": "Not found"
+                        }
+                      },
+                      "meta": [],
+                      "outputType": "text",
+                      "output": true
+                    }
+                  }
+                },
+                "outputType": "boolean"
               }
             ]
           }
@@ -524,6 +555,10 @@
               {
                 "type": "number",
                 "name": "familyold"
+              },
+              {
+                "type": "text",
+                "name": "classlevel_uuid"
               }
             ]
           },

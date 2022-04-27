@@ -1,4 +1,4 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="classes" appconnect="local" fontawesome_5="cdn" components="{dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootbox:{},dmxDataTraversal:{},dmxBootstrap4PagingGenerator:{},dmxBootstrap4Alert:{},dmxBootstrap4TableGenerator:{},dmxBootstrap4Collapse:{},dmxStateManagement:{},dmxPreloader:{},dmxDatePicker:{},dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5TableGenerator:{},dmxSockets:{},dmxBootstrap5Popovers:{},dmxBootstrap5Tooltips:{},dmxRouting:{}}" jquery_35="cdn" moment_2="local with locales" bootstrap5="local" dmx-on:load="classesQuery.set('limit',20);classesQuery.set('offset',0)" bootstrap_icons="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="classes" appconnect="local" fontawesome_5="cdn" components="{dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootbox:{},dmxDataTraversal:{},dmxBootstrap4PagingGenerator:{},dmxBootstrap4Alert:{},dmxBootstrap4TableGenerator:{},dmxBootstrap4Collapse:{},dmxStateManagement:{},dmxPreloader:{},dmxDatePicker:{},dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5TableGenerator:{},dmxSockets:{},dmxBootstrap5Popovers:{},dmxBootstrap5Tooltips:{},dmxRouting:{},dmxAnimateCSS:{},dmxFormRepeat:{},dmxBootstrap5Offcanvas:{}}" jquery_35="cdn" moment_2="local with locales" bootstrap5="local" dmx-on:load="classesQuery.set('limit',20);classesQuery.set('offset',0)" bootstrap_icons="cdn" -->
 <script is="dmx-flow" id="tuitioncharge_existsChargeAhead" type="text/dmx-flow">{
   meta: {
     $param: [ 
@@ -39,7 +39,7 @@
 <dmx-serverconnect id="checkClassTimeslot" noload url="/api/classes/checkClassTimeslot"></dmx-serverconnect>
 
 
-<dmx-serverconnect id="classesBase" url="/api/classes/classesBase" dmx-param:sort="classesQuery.data.sort" dmx-param:dir="classesQuery.data.dir" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:viewtype="'list'" dmx-param:filter_days="class_filter_store.data.filter_days || []" dmx-param:filter_times="class_filter_store.data.filter_times || []" dmx-param:filter_levels="class_filter_store.data.filter_levels || []" dmx-param:filter_instructors="class_filter_store.data.filter_instructors || []" dmx-param:avails_amount="class_filter_store.data.availabilities.amount" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-on:success="var_classlist_count.setValue(classesBase.data.nextavail.classes.length)" dmx-param:weekdate="weekrange_todaydate_picker.value" dmx-param:startofweek="appSettings.weekstart">
+<dmx-serverconnect id="classesBase" url="/api/classes/classesBase" dmx-param:sort="classesQuery.data.sort" dmx-param:dir="classesQuery.data.dir" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:viewtype="'list'" dmx-param:filter_days="class_filter_store.data.filter_days || []" dmx-param:filter_times="class_filter_store.data.filter_times || []" dmx-param:filter_levels="class_filter_store.data.filter_levels || []" dmx-param:filter_instructors="class_filter_store.data.filter_instructors || []" dmx-param:avails_amount="class_filter_store.data.availabilities.amount" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-on:success="var_classlist_count.setValue(classesBase.data.nextavail.classes.length)" dmx-param:weekdate="weekrange_todaydate_picker.value" dmx-param:startofweek="appSettings.weekstart" dmx-on:error="run({condition:{if:`classesBase.lastError.response.message.startsWith(\'Date Range Error\')`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Date Range Error',`classesBase.lastError.response.message`]}},{run:{action:`weekrange_todaydate_picker.setValue(dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}}]}}})">
 </dmx-serverconnect>
 
 
@@ -51,64 +51,84 @@
 
 <dmx-serverconnect id="getClassDetails" url="/api/classes/getClassDetails" noload></dmx-serverconnect>
 
-<div class="modal fade" id="enrolmentSearchModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true">
+<div class="modal fade" id="enrolmentSearchModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="inp_newEnrolDropDate.setValue(null);queryManager.remove('searchtextfilter')">
     <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-lg-down" role="document">
         <div class="modal-content">
 
-            <div class="modal-header bg-active" dmx-class:bg-active="dd_classdetails_searchenrol.var_enroltype.value === 'active'" dmx-class:bg-waitlist="dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'" dmx-class:bg-makeup="dd_classdetails_searchenrol.var_enroltype.value === 'makeup'" dmx-class:bg-trial="dd_classdetails_searchenrol.var_enroltype.value === 'trial'" dmx-class:bg-casual="dd_classdetails_searchenrol.var_enroltype.value === 'casual'">
-                <h5 class="modal-title" dmx-html="dd_classdetails_searchenrol.var_enroltype.value === 'waitlist' ? '<i class=&quot;fas fa-history fa-fw me-2&quot;></i> Create Waitlist' : dd_classdetails_searchenrol.var_enroltype.value === 'makeup' ? '<i class=&quot;fas fa-arrow-alt-circle-up fa-fw me-2&quot;></i> Create Makeup' : dd_classdetails_searchenrol.var_enroltype.value === 'trial' ? '<i class=&quot;fas fa-question-circle fa-fw me-2&quot;></i> Create Trial' : dd_classdetails_searchenrol.var_enroltype.value === 'casual' ? '<i class=&quot;fas fa-bookmark fa-fw me-2&quot;></i> Create Casual' : '<i class=&quot;fas fa-check-circle fa-fw me-2&quot;></i> Create Active'"><i class="fas fa-check-circle me-2 fa-fw"></i>Create Active
+            <div class="modal-header border-bottom">
 
-                </h5>
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2 fa-fw fa-sm"></i>Create New Enrolment</h5>
             </div>
-            <div class="modal-body">
+            <div class="modal-body light-blue-bg">
                 <dmx-data-detail id="dd_classdetails_searchenrol" dmx-bind:data="classesBase.data.nextavail.classes" key="uuid">
                     <dmx-value id="var_enroltype" dmx-bind:value="enrolmentSearchModal.active_enroltype_toggle.checked ? 'active' : enrolmentSearchModal.waitlist_enroltype_toggle.checked ? 'waitlist' : enrolmentSearchModal.trial_enroltype_toggle.checked ? 'trial' : enrolmentSearchModal.makeup_enroltype_toggle.checked ? 'makeup' : 'casual'"></dmx-value>
                 </dmx-data-detail>
-                <p class="d-flex align-items-center mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i> Class: '+appSettings.days_array[dd_classdetails_searchenrol.data.classday]+' - '+dd_classdetails_searchenrol.data.startTimeDisplay+' '+appSettings.classLevelsByID[dd_classdetails_searchenrol.data.classlevel_uuid].name+' - '+appSettings.instructorsById[dd_classdetails_searchenrol.data.instructor_uuid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class
+                <h5 class="d-flex align-items-center mb-2 pb-2 lh-1 fw-650" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i><strong>Class:&nbsp;</strong>  '+appSettings.days_array[dd_classdetails_searchenrol.data.classday]+' - '+dd_classdetails_searchenrol.data.startTimeDisplay+' '+appSettings.classLevelsByID[dd_classdetails_searchenrol.data.classlevel_uuid].name+' - '+appSettings.instructorsById[dd_classdetails_searchenrol.data.instructor_uuid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class
                     Details
-                </p>
-                <section class="pb-4">
-                    <div class="row">
-
-                        <div class="col">
-
-                            <label for="inp_searchModal" class="col-form-label">Search</label>
-                            <input id="inp_searchModal" name="inp_searchModal" type="text" class="form-control form-control" style="font-size: 0.9rem;" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:300="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])">
-                            <p class="mb-0 form-text">Start searching for families and students to show below.</p>
-                        </div>
-
-
-                        <div class="col">
-                            <dmx-value id="var_newenrol_startdate"></dmx-value>
-                            <label for="inp_searchModal" class="col-form-label">Start Date</label>
-                            <input id="inp_newEnrolStartDate" class="form-control" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="dateAndTime_days.datetime.addDays(-7)" step="7" dmx-bind:value="enrolmentSearchModal.var_newenrol_startdate.value||dateAndTime_days.datetime.formatDate('yyyy-MM-dd')">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col d-flex justify-content-start mt-3">
-
-                            <input type="radio" class="btn-check" name="btnradio" id="active_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'active'" value="standard">
-                            <label class="btn btn-sm me-2 btn-active-outline" for="active_enroltype_toggle">Active Enrolment</label>
-
-                            <input type="radio" class="btn-check" name="btnradio" id="trial_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'trial'" value="trial">
-                            <label class="btn btn-sm me-2 btn-trial-outline" for="trial_enroltype_toggle">Trial Enrolment</label>
-
-                            <input type="radio" class="btn-check" name="btnradio" id="makeup_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'makeup'" value="makeup" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
-                            <label class="btn btn-sm me-2 btn-makeup-outline" for="makeup_enroltype_toggle">Makeup</label>
-
-                            <input type="radio" class="btn-check" name="btnradio" id="casual_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'casual'" value="casual" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
-                            <label class="btn btn-sm me-2 btn-casual-outline" for="casual_enroltype_toggle">Casual</label>
-
-                            <input type="radio" class="btn-check" name="btnradio" id="waitlist_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'" value="waitlist">
-                            <label class="btn btn-sm me-2 btn-outline-dark" for="waitlist_enroltype_toggle">Waitlist</label>
-
-                        </div>
-                    </div>
-
-                </section>
+                </h5>
                 <section>
+                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+                            <h6>Choose Enrolment Type</h6>
+                            <div class="row">
+                                <div class="col d-flex justify-content-start">
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="active_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'active'" value="standard">
+                                    <label class="btn btn-sm me-2 btn-active-outline" for="active_enroltype_toggle">Active Enrolment</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="trial_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'trial'" value="trial">
+                                    <label class="btn btn-sm me-2 btn-trial-outline" for="trial_enroltype_toggle">Trial Enrolment</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="makeup_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'makeup'" value="makeup" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
+                                    <label class="btn btn-sm me-2 btn-makeup-outline" for="makeup_enroltype_toggle">Makeup</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="casual_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'casual'" value="casual" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
+                                    <label class="btn btn-sm me-2 btn-casual-outline" for="casual_enroltype_toggle">Casual</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="waitlist_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'" value="waitlist">
+                                    <label class="btn btn-sm me-2 btn-outline-dark" for="waitlist_enroltype_toggle">Waitlist</label>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+                            <h6>Enrolment Dates</h6>
+                            <div class="row">
+                                <div class="col">
+                                    <dmx-value id="var_newenrol_startdate"></dmx-value>
+                                    <label for="inp_searchModal" class="col-form-label">Start Date</label>
+                                    <input id="inp_newEnrolStartDate" class="form-control" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="dateAndTime_days.datetime.addDays(-7)" step="7" dmx-bind:value="enrolmentSearchModal.var_newenrol_startdate.value||dateAndTime_days.datetime.formatDate('yyyy-MM-dd')">
+                                </div>
+                                <div class="col">
+                                    <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
+                                    <p class="small text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)" dmx-hide="!inp_newEnrolDropDate.value"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
+                                    <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="enrolmentSearchModal.inp_newEnrolStartDate.value" step="7">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6>Family Search</h6>
+                                    <div class="input-group">
+
+                                        <span class="input-group-text bg-dark text-white"><i class="fas fa-search"></i></span>
+                                        <input id="inp_searchModal" name="inp_searchModal" type="text" class="form-control form-control-lg" style="" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:500="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])" placeholder="Search for families or students">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="mb-3 p-3 bg-white rounded-3 pdl-surface-shadow" dmx-show="GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies.length > 0">
                     <div class="row row-cols-1 gx-0" id="rp_families" is="dmx-repeat" dmx-bind:repeat="GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies">
-                        <div class="col mb-3">
+                        <div class="col mb-3 ">
                             <div class="row gx-0">
 
                                 <div class="col">
@@ -118,7 +138,7 @@
                                                 <i class="fas fa-users"></i>
                                             </a></div>
                                         <div class="col d-flex flex-column align-items-start justify-content-center">
-                                            <h5 class="mb-0">{{primaryGuardian.firstName+' '+primaryGuardian.lastName}}<br></h5>
+                                            <h5 class="mb-0" dmx-text="(primaryGuardian) ? primaryGuardian.firstName+' '+primaryGuardian.lastName : 'No primary guardian found.'">Jane Doe</h5>
                                             <p class="mb-0 mt-1 small text-muted" style="">{{guardians.values(`' ' + firstName +' '+lastName`)}}</p>
 
 
@@ -145,14 +165,15 @@
                                                             <dmx-serverconnect id="sc_quote2" url="/api/classes/enrolments/GENERATE_QUOTE_enrolment" dmx-param:enrolmentType="1" dmx-param:student_uuid="uuid.formatDate('yyyy-MM-dd')" dmx-param:startdate="enrolmentSearchModal.inp_newEnrolStartDate.value" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" dmx-param:enabledummyenrol="1" noload></dmx-serverconnect>
 
                                                             <dmx-serverconnect id="sc_checkenrolexists" url="/api/classes/enrolments/CHECK_ENROLMENT_exists" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid" dmx-param:startdate="2022-03-23" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" noload=""></dmx-serverconnect>
-                                                            <button id="addActive" class="btn btn-sm btn-active-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(dd_classdetails_searchenrol.data.details.nextavailable_permanent)`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(1)`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, null,&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.weekday,&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: weekday})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="fas fa-user-plus fa-sm me-1"></i>Add
+                                                            <button id="addActive" class="btn btn-sm btn-active-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(1);newEnrolmentModal.createEnrolmentForm.inp_hd_ne_dummyenrol_json.setValue([&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, null,&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify())`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, null,&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\')})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="fas fa-user-plus fa-sm me-1 fa-fw"></i>Add
 
                                                             </button>
 
-                                                            <button id="addTrial" class="btn btn-sm btn-trial-outline p-1 px-2" dmx-on:click="run([{runJS:{function:'nextStartDate',args:[`dateAndTime_days.datetime`,`enrolmentSearchModal.dd_classdetails_searchenrol.data`],name:'nextstartdate'}},{condition:{if:`enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active.formatDate(\'yyyy-MM-dd\') > nextstartdate.formatDate(\'yyyy-MM-dd\')`,then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.active);newEnrolmentModal.var_overbookingPotential.setValue(true)`}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(nextstartdate)`}}}}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(3)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'trial'"><i class="fas fa-question-circle fa-sm me-1"></i>Add
-                                                            </button><button id="addMakeup" class="btn btn-sm btn-makeup-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(2)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'makeup'"><i class="fas fa-arrow-alt-circle-up fa-sm me-1"></i>Add
-                                                            </button><button id="addCasual" class="btn btn-sm btn-casual-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(5)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'casual'"><i class="fas fa-bookmark fa-sm me-1"></i>Add
-                                                            </button><button id="addWaitlist" class="btn btn-sm btn-waitlist-outline p-1 px-2" dmx-on:click="run([{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newWaitlistModal.var_wl_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newWaitlistModal.var_wl_studentDetailsObject.setValue($value)`}},{run:{action:`newWaitlistModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'"><i class="fas fa-history fa-sm me-1"></i>Add
+                                                            <button id="addTrial" class="btn btn-sm btn-trial-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(3)`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'trial'"><i class="fas fa-question-circle fa-sm me-1 fa-fw"></i>Add
+                                                            </button>
+                                                            <button id="addMakeup" class="btn btn-sm btn-makeup-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(2)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'makeup'"><i class="fas fa-arrow-alt-circle-up fa-sm me-1 fa-fw"></i>Add
+                                                            </button><button id="addCasual" class="btn btn-sm btn-casual-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(5)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'casual'"><i class="fas fa-bookmark fa-sm me-1 fa-fw"></i>Add
+                                                            </button><button id="addWaitlist" class="btn btn-sm btn-waitlist-outline p-1 px-2" dmx-on:click="run([{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newWaitlistModal.var_wl_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newWaitlistModal.var_wl_studentDetailsObject.setValue($value)`}},{run:{action:`newWaitlistModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'"><i class="fas fa-history fa-sm me-1 fa-fw"></i>Add
                                                             </button>
 
 
@@ -184,225 +205,356 @@
         </div>
     </div>
 </div>
-<div class="modal fade" is="dmx-bs5-modal" tabindex="-1" role="dialog" id="newEnrolmentModal" nocloseonclick="true" dmx-on:hidden-bs-modal="run({run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue(null);newEnrolmentModal.var_classDetailsObject.setValue(null)`}})">
-    <dmx-serverconnect id="sc_quote" url="/api/classes/enrolments/GENERATE_QUOTE_enrolment" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid.formatDate('yyyy-MM-dd')" dmx-param:startdate="enrolmentSearchModal.inp_newEnrolStartDate.value" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" dmx-param:enabledummyenrol="1" noload=""></dmx-serverconnect>
+<div class="modal fade" is="dmx-bs5-modal" tabindex="-1" role="dialog" id="newEnrolmentModal" nocloseonclick="true" dmx-on:hidden-bs-modal="run({run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue(null);newEnrolmentModal.var_classDetailsObject.setValue(null);newEnrolmentModal.sc_quote.reset()`}})">
+    <dmx-serverconnect id="sc_quote" url="/api/classes/enrolments/GENERATE_QUOTE_enrolment" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid.formatDate('yyyy-MM-dd')" dmx-param:startdate="" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" dmx-param:enabledummyenrol="1" noload=""></dmx-serverconnect>
+    <div class="offcanvas offcanvas-end" id="oc_quoteDetails" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="run({run:{action:`newEnrolmentModal.oc_quoteDetails.sc_existingChargeDetails.reset();newEnrolmentModal.oc_quoteDetails.var_newChargeDetails.setValue(null)`}})" scroll="true" style="">
+        <div class="offcanvas-header border-bottom">
+            <h4 class="offcanvas-title fw-700"><i class="fas fa-hand-holding-usd me-2 text-primary"></i>Charge Details</h4>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body light-blue-bg overflow-scroll">
+            <dmx-serverconnect id="sc_existingChargeDetails" noload url="/api/families/ledger/charges/GET_CHARGE_detail"></dmx-serverconnect>
+            <dmx-value id="var_newChargeDetails"></dmx-value>
+            <section id="oc_sec_newChargeDetails" class="p-3 bg-white mb-4 pdl-surface-shadow rounded-3">
+                <h5 class="fw-700"><i class="fas fa-certificate me-2 fa-sm fa-fw"></i>New Charge Details
+                </h5>
+
+                <div class="row align-items-center my-2 py-2 border-top border-bottom">
+
+                    <div class="col">
+                        <p class="text-muted small">Charge Period</p>
+                        <p class="mb-0" dmx-text="var_newChargeDetails.value.chargefor">April - 2022</p>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small">Grand Total</p>
+
+                        <p class="mb-0 fw-700" dmx-text="var_newChargeDetails.value.tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$100.00</p>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small">Total Discounts</p>
+
+                        <p class="mb-0 text-ledger" dmx-text="((var_newChargeDetails.value.tuitiontotals.multienrol_discount + var_newChargeDetails.value.tuitiontotals.family_discount) + var_newChargeDetails.value.tuitiontotals.holding_fee).round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$20.00</p>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small">Base Rate</p>
+
+                        <p class="mb-0 text-muted" dmx-text="var_newChargeDetails.value.tuitiontotals.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$120.00</p>
+                    </div>
+                    <div class="col-auto align-self-center"><button id="btn_nc_details_show" class="btn btn-sm btn-link" dmx-on:click="collapse_chargeDetails.toggle()"><i class="fas fa-plus-circle me-1 fa-fw fa-sm"></i>Details
+                        </button></div>
+                </div>
+                <div class="collapse" id="collapse_chargeDetails" is="dmx-bs5-collapse">
+                    <div class="container p-0">
+                        <div class="row row-cols-1 g-0" id="rp_chargestudents" is="dmx-repeat" dmx-bind:repeat="var_newChargeDetails.value.students">
+                            <div class="col-12 pt-2 border-bottom">
+                                <div class="row g-0 mb-2">
+                                    <div class="col d-flex flex-row justify-content-start align-items-center">
+                                        <h5 class="mb-0 fw-550 text-primary" dmx-text="firstName+' '+lastName"><i class="fas fa-child me-2 fa-sm"></i>Student Name</h5>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle charge-details-table">
+                                        <thead>
+                                            <tr class="small fw-600">
+                                                <th scope="col">Week Of</th>
+                                                <th scope="col">Class Date</th>
+                                                <th scope="col">Enrolment</th>
+                                                <th scope="col">Base Rate</th>
+                                                <th scope="col">Discounts</th>
+                                                <th scope="col">Holding Fee</th>
+                                                <th scope="col">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" id="rp_studentenrolments" dmx-bind:repeat="all_enrolments">
+                                            <tr class="small user-select-none">
+                                                <td dmx-text="startofweek.formatDate('dd MMM')">21 March</td>
+                                                <td dmx-text="classdate.formatDate(appSettings.localization_puddle_dateformat)">21/03/2022</td>
+                                                <td dmx-text="appSettings.days_array[classday]+' - '+startTimeDisplay+' '+appSettings.classLevelsByID[classlevel_uuid].name+' - '+appSettings.instructorsById[instructor_uuid].trunc_name">Wed Duckling 9:30AM - Melanie M.</td>
+                                                <td dmx-text="pricing.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$18.88</td>
+                                                <td dmx-bs-popover="'<strong>Enrolment Discount:</strong> '+pricing.multienrol_discount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+(pricing.multienrol_discount > 0 ? '<br><strong>ED Description:</strong> ' + pricing.multienrol_discount_description : '')+'<br><strong>Family Discount:</strong> '+pricing.family_discount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+(pricing.family_discount> 0 ? '<br><strong>FD Description:</strong> ' + pricing.familydiscount_description : '')" dmx-bind:popover-title="'Discounts'" data-bs-html="true" data-bs-trigger="hover" data-bs-placement="left" dmx-text="((pricing.multienrol_discount+pricing.family_discount)===0)? '-' : (pricing.multienrol_discount + pricing.family_discount).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" class="clickable popover-enabled">$3.50</td>
+                                                <td dmx-text="(pricing.holding_fee===0)?'-':pricing.holding_fee.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$1.00</td>
+                                                <td dmx-text="pricing.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$14.38</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="fw-800">
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td>Totals:</td>
+                                                <td dmx-text="tuitiontotals.multienrol_discount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                                <td dmx-text="tuitiontotals.holding_fee.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                                <td dmx-text="tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+            <section id="oc_sec_oldChargeDetails" class="p-3 bg-white pdl-surface-shadow rounded-3">
+                <h5 class="fw-700"><i class="fas fa-money-bill-alt me-2 fa-sm"></i>Existing Charge Details</h5>
+                <div class="row" is="dmx-if" id="cr_nc_existingCharge" dmx-bind:condition="sc_existingChargeDetails.data.family_charge.uuid">
+                    <div class="col">
+                        <div class="row align-items-center my-2 py-2 border-top border-bottom">
+                            <div class="col">
+                                <p class="text-muted small">Charge Period</p>
+                                <p class="mb-0" dmx-text="sc_existingChargeDetails.data.family_charge.chargeFor_monthly.formatDate('MMMM - yyyy')">April - 2022</p>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted small">Grand Total</p>
+
+                                <p class="mb-0 fw-700" dmx-text="sc_existingChargeDetails.data.family_charge.total.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$100.00</p>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted small">Total Discounts</p>
+
+                                <p class="mb-0 text-ledger" dmx-text="sc_existingChargeDetails.data.family_charge.discounttotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$20.00</p>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted small">Base Rate</p>
+
+                                <p class="mb-0 text-muted" dmx-text="sc_existingChargeDetails.data.family_charge.basetotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$120.00</p>
+                            </div>
+                            <div class="col-auto align-self-center"><button id="btn_nc_details_show1" class="btn btn-sm btn-link" dmx-on:click="collapse_existingChargeDetails.toggle()"><i class="fas fa-plus-circle me-1 fa-fw fa-sm"></i>Details
+                                </button></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row align-items-center" is="dmx-if" id="cr_nc_noExistingCharge" dmx-bind:condition="!sc_existingChargeDetails.data.family_charge.uuid">
+
+                    <div class="col my-2 py-3 border-top border-bottom">
+                        <p class="mb-0 text-center">There is no existing charge for <i style="font-weight: bold;">{{var_newChargeDetails.value.chargefor}} </i>for this family.</p>
+                    </div>
+                </div>
+                <div class="collapse" id="collapse_existingChargeDetails" is="dmx-bs5-collapse">
+                    <div class="container p-0">
+                        <div class="row row-cols-1 g-0" id="rp_existingchargestudents" is="dmx-repeat" dmx-bind:repeat="sc_existingChargeDetails.data.students">
+                            <div class="col-12 pt-2 border-bottom">
+                                <div class="row g-0 mb-2">
+                                    <div class="col d-flex flex-row justify-content-start align-items-center">
+                                        <h5 class="mb-0 fw-550 text-primary" dmx-text="firstName+' '+lastName"><i class="fas fa-child me-2 fa-sm"></i>Student Name</h5>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle charge-details-table">
+                                        <thead>
+                                            <tr class="small fw-600">
+                                                <th scope="col">Week Of</th>
+                                                <th scope="col">Class Date</th>
+                                                <th scope="col">Enrolment</th>
+                                                <th scope="col">Base Rate</th>
+                                                <th scope="col">Discounts</th>
+                                                <th scope="col">Holding Fee</th>
+                                                <th scope="col">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" id="rp_ec_studentenrolments" dmx-bind:repeat="query_enrolment_charges">
+                                            <tr class="small user-select-none">
+                                                <td dmx-text="startofweek.formatDate('dd MMM')">21 March</td>
+                                                <td dmx-text="classDate.formatDate(appSettings.localization_puddle_dateformat)">21/03/2022</td>
+                                                <td dmx-text="appSettings.days_array[classday]+' - '+startTimeDisplay+' '+appSettings.classLevelsByID[classlevel_uuid].name+' - '+appSettings.instructorsById[instructor_uuid].trunc_name">Wed Duckling 9:30AM - Melanie M.</td>
+                                                <td dmx-text="baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$18.88</td>
+                                                <td dmx-bs-popover="'<strong>Enrolment Discount:</strong> '+endisc.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+((endisc > 0) ? '<br><strong>ED Description:</strong> ' + endiscdescription : '')+'<br><strong>Family Discount:</strong> '+familydiscounttotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+((familydiscounttotal> 0) ? '<br><strong>FD Description:</strong> ' + familydiscountdesc : '')" dmx-bind:popover-title="'Discounts'" data-bs-html="true" data-bs-trigger="hover" data-bs-placement="left" dmx-text="((endisc+familydiscounttotal)===0)? '-' : (endisc + familydiscounttotal).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" class="clickable popover-enabled">$3.50</td>
+                                                <td dmx-text="(holding_fee===0)?'-':holding_fee.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$1.00</td>
+                                                <td dmx-text="enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$14.38</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="fw-800">
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td>Totals:</td>
+                                                <td dmx-text="(query_enrolment_charges.sum('endisc') + query_enrolment_charges.sum('familydiscounttotal')).round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                                <td dmx-text="query_enrolment_charges.sum('holding_fee').round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                                <td dmx-text="query_enrolment_charges.sum('enrolgrandtotal').round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
     <dmx-value id="var_studentDetailsObject"></dmx-value>
     <dmx-value id="var_tuitionquote"></dmx-value>
     <dmx-value id="var_classDetailsObject"></dmx-value>
-    <div class="modal-dialog modal-fullscreen-lg-down modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl modal-fullscreen-xl-down" role="document">
         <div class="modal-content">
             <dmx-value id="var_chargeObject"></dmx-value>
             <dmx-value id="var_ne_enrolType"></dmx-value>
             <dmx-value id="var_overbookingPotential"></dmx-value>
 
-            <div class="modal-header bg-active" dmx-class:bg-active="var_ne_enrolType.value == 1" dmx-class:bg-trial="var_ne_enrolType.value == 3" dmx-class:bg-makeup="var_ne_enrolType.value == 2" dmx-class:bg-casual="var_ne_enrolType.value == 5">
-                <h5 class="modal-title fw-500" dmx-html="'New '+ appSettings.enrolTypesById[var_ne_enrolType.value].name+' Enrolment: <span class=&quot;fw-400&quot;>'+var_studentDetailsObject.value.firstName+' '+var_studentDetailsObject.value.lastName+'</span>'">Enrol: Jane Doe<br>
-                </h5>
+            <div class="modal-header">
+                <h5 class="modal-title fw-500"><i class="fas fa-user-plus me-2 fa-fw fa-sm"></i>Create New Enrolment</h5>
                 <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal">
                     <span aria-hidden="true" class="visually-hidden">&times;</span>
                 </button>
             </div>
-            <div class="modal-body border-top">
-                <form is="dmx-serverconnect-form" id="createEnrolmentForm" method="post" action="/api/classes/enrolments/createEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-param:isvalid="1" dmx-param:chargeahead="appSettings.billing_charge_ahead" dmx-param:family_uuid="var_studentDetailsObject.value.family" dmx-on:success="run([{run:{action:`notifies1.success(var_studentDetailsObject.value.getValueOrKey(\'fullName\')+\' enroled successfully to - \'+classHumanDetailsGlobal.data.classHumanDetails.day+\' \'+classHumanDetailsGlobal.data.classHumanDetails.level+\' - with \'+classHumanDetailsGlobal.data.classHumanDetails.instructor)`}},{run:{action:`createEnrolmentForm.reset()`}},{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`classesBase.load({days: classesQuery.data.days, times: classesQuery.data.times},true)`,disabled:true}},{run:{action:`enrolmentSearchModal.inp_searchModal.setValue(null);queryManager.remove(\'searchtextfilter\')`}}])" dmx-on:error="run({condition:{if:`newEnrolmentModal.createEnrolmentForm.lastError.status == 901`,then:{steps:{run:{action:`newEnrolEnterDueDate.var_chargeDates.setValue(inp_ne_startDate.value);newEnrolEnterDueDate.show()`}}}}})">
-                    <div class="row">
-                        <p class="d-flex align-items-center mb-4" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i> Class: '+var_classDetailsObject.value.day_name+' - '+var_classDetailsObject.value.startTimeDisplay+' '+appSettings.classLevelsByID[var_classDetailsObject.value.classLevel].name+' - '+appSettings.instructorsById[var_classDetailsObject.value.instructorid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class Details
-                        </p>
-
-                        <input type="hidden" class="form-control" id="inp_class_uuid" name="class_uuid" aria-describedby="inp_classId_help" placeholder="Enter Class" dmx-bind:value="newEnrolmentModal.var_classDetailsObject.value.uuid">
-                        <input type="hidden" class="form-control" id="inp_student" name="student_uuid" aria-describedby="inp_student_help" placeholder="Enter Student" dmx-bind:value="newEnrolmentModal.var_studentDetailsObject.value.uuid">
-                        <div class="row row-cols-3 gy-2 pb-3 border-bottom border-top mb-3">
-                            <div class="col">
-                                <label for="inp_enrolmentType" class="col-form-label form-label">Enrolment type</label>
-                                <select id="sel_enrolmentType" class="form-select" name="enrolmentType-sel" dmx-bind:options="appSettings.enrolTypesArray" optiontext="type" optionvalue="id" dmx-bind:value="newEnrolmentModal.var_ne_enrolType.value" dmx-on:changed="run({condition:{if:`sel_enrolmentType.value == 5 || sel_enrolmentType.value == 2`,then:{steps:{run:{action:`inp_ne_dropDate.setValue(inp_ne_startDate.value)`}}},else:{steps:{run:{action:`inp_ne_dropDate.setValue(null)`}}}}})" readonly="true" disabled="true"></select>
-                                <input id="inp_hd_enrolType" name="enrolmentType" type="hidden" class="form-control" dmx-bind:value="sel_enrolmentType.value">
-                            </div>
-                            <div class="col">
-
-                                <label for="inp_ne_startDate" class="col-form-label form-label">Start date: <span class="text-danger fw-700">*</span></label>
-
-                                <input step="7" is="dmx-date-picker" dmx-bind:mindate="dateAndTime_days.datetime.addDays(dateAndTime_days.datetime.getDate() + ((((var_classDetailsObject.value.day_int - 1) + 7 - dateAndTime_days.datetime.getDay()) % 7) || 7) - dateAndTime_days.datetime.getDate()).addWeeks(-2).formatDate('yyyy-MM-dd')" class="form-control" id="inp_ne_startDate" name="startDate" aria-describedby="inp_ne_startDate_help" placeholder="dd/mm/yyyy" dmx-on:changed="run({condition:{if:`!inp_ne_dropDate.value &amp;&amp; -inp_ne_dropDate.value.formatDate(\'yyyy-MM-dd\').toTimestring() < inp_ne_startDate.value.formatDate(\'yyyy-MM-dd\').toTimesting()`,then:{steps:{run:{action:`inp_ne_dropDate.setValue(null)`}}}}})" opens="left" format="DD/MM/YYYY" showdropdowns="true" onkeydown="return false">
-
-                            </div>
-                            <div class="col">
-
-                                <label for="inp_dropDate" class="col-form-label form-label">Drop date:&nbsp;</label>
-                                <input class="form-control" id="inp_ne_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="dd/mm/yyyy" type="text" is="dmx-date-picker" showdropdowns="true" format="DD/MM/YYYY">
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="row">
-                                <div class="col">
-                                    <div class="row pb-2 border-bottom g-0">
-                                        <div class="col">
-                                            <div class="row">
-                                                <div class="col align-self-end">
-                                                    <p class="mb-0 text-muted">Charge Period</p>
-
-
-
-                                                </div>
-                                                <div class="col">
-                                                    <p class="mb-0 text-muted">Grand Total</p>
-                                                </div>
-                                                <div class="col">
-                                                    <p class="mb-0 text-muted">Discounts<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'Includes enrolment, family and holding fee discounts.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'All Discounts'"></i></p>
-                                                </div>
-                                                <div class="col">
-                                                    <p class="mb-0 text-muted">Base Rate<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'The base rate is the price of all enrolments before enrolment discounts and family discounts have been applied.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'Base Rate'"></i></p>
-                                                </div>
-                                            </div>
-                                        </div>
+            <div class="modal-body border-top light-blue-bg">
+                <form is="dmx-serverconnect-form" id="createEnrolmentForm" method="post" action="/api/classes/enrolments/CREATE_enrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-param:isvalid="1" dmx-param:chargeahead="appSettings.billing_charge_ahead" dmx-param:family_uuid="var_studentDetailsObject.value.family" dmx-on:success="run([{runJS:{function:'swal_toast',args:['success','Enrolment Created',`var_studentDetailsObject.value.firstName+\' \'+var_studentDetailsObject.value.lastName+\'enrolled successfully to - \'+appSettings.days_array[var_classDetailsObject.value.classday]+\' - \'+var_classDetailsObject.value.startTimeDisplay+\' \'+appSettings.classLevelsByID[var_classDetailsObject.value.classlevel_uuid].name+\' - with \'+appSettings.instructorsById[var_classDetailsObject.value.instructor_uuid].trunc_name`,`true`,'5000',`true`,'']}},{run:{action:`classesBase.load({},true)`}},{run:{action:`createEnrolmentForm.reset()`}},{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`classesBase.load({days: classesQuery.data.days, times: classesQuery.data.times},true)`,disabled:true}},{run:{action:`enrolmentSearchModal.inp_searchModal.setValue(null);queryManager.remove(\'searchtextfilter\')`}}])" dmx-on:error="run({condition:{if:`newEnrolmentModal.createEnrolmentForm.lastError.status == 901`,then:{steps:{run:{action:`newEnrolEnterDueDate.var_chargeDates.setValue(inp_ne_startDate.value);newEnrolEnterDueDate.show()`}}}}})">
+                    <div class="row mb-3 align-items-stretch">
+                        <div class="col-auto d-flex align-items-stretch">
+                            <section class="p-3 bg-white rounded-3 pdl-surface-shadow d-flex">
+                                <div class="row g-0">
+                                    <div class="col align-self-center"><input type="hidden" class="form-control" id="inp_student" name="student_uuid" aria-describedby="inp_student_help" placeholder="Enter Student" dmx-bind:value="newEnrolmentModal.var_studentDetailsObject.value.uuid"><input type="hidden" class="form-control" id="inp_class_uuid" name="class_uuid" aria-describedby="inp_classId_help" placeholder="Enter Class" dmx-bind:value="newEnrolmentModal.var_classDetailsObject.value.uuid">
+                                        <h5 class="fw-700 text-uppercase text-primary" dmx-html="'<i class=&quot;fas fa-child me-2 fa-sm fa-fw&quot;></i>'+var_studentDetailsObject.value.firstName+' '+var_studentDetailsObject.value.lastName"><i class="fas fa-child me-1 fa-sm fa-fw"></i>Jeffery Doe
+                                        </h5>
+                                        <p class="mb-0" dmx-html="appSettings.days_array[var_classDetailsObject.value.classday]+' - '+var_classDetailsObject.value.startTimeDisplay+' '+appSettings.classLevelsByID[var_classDetailsObject.value.classlevel_uuid].name+' - '+appSettings.instructorsById[var_classDetailsObject.value.instructor_uuid].trunc_name">Monday - 9:30AM Duckling - Troy F.</p>
                                     </div>
-                                    <div class="row row-cols-1 g-0" is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="sc_quote.data.exec_tuitioncalc.repeat">
-                                        <div class="col py-2 border-bottom">
-                                            <div class="row align-items-center g-0">
-                                                <div class="col-12">
-                                                    <div class="row py-2 clickable user-select-none" dmx-on:click="dc_chargePeriodDetails.toggle()">
-                                                        <div class="col align-self-center">
-                                                            <p class="mb-0 fw-550" dmx-html="calculate_charges.chargefor+(calculate_charges.monthlychargeexists.exists == true &amp;&amp; calculate_charges.monthlychargeexists.status == 200 ? '<small class=&quot;fst-italic lh-1 text-danger fw-400&quot;>Monthly charge already exists. <br> Created: '+calculate_charges.monthlychargeexists.created.formatDate('yyyy-MM-dd')+'.</small>': calculate_charges.monthlychargeexists.exists == true &amp;&amp; calculate_charges.monthlychargeexists.status == 409 ? '<small class=&quot;lh-1 fst-italic text-danger fw-400&quot;><i class=&quot;bi-exclamation-octagon-fill text-danger me-2&quot;></i>'+calculate_charges.monthlychargeexists.chargeid+'</small>':'')">April 2022</p>
+                                </div>
+                            </section>
+                        </div>
 
-
-
-
-                                                        </div>
-                                                        <div class="col">
-                                                            <p class="mb-0 fw-550" dmx-text="calculate_charges.tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$77.50</p>
-                                                        </div>
-                                                        <div class="col">
-                                                            <p class="mb-0 fw-500 text-ledger" dmx-text="((calculate_charges.tuitiontotals.multienrol_discount + calculate_charges.tuitiontotals.family_discount) + calculate_charges.tuitiontotals.holding_fee).round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$22.50</p>
-                                                        </div>
-
-                                                        <div class="col">
-                                                            <p class="mb-0 text-muted" dmx-text="calculate_charges.tuitiontotals.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$100.00</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-
-
-
-                                                <div class="col-12 p-0">
-                                                    <div class="collapse" dmx-bind:id="dc_chargePeriodDetails_{{$index}}" id="dc_chargePeriodDetails" is="dmx-bs5-collapse" style="overflow-x: auto;">
-
-                                                        <div class="row row-cols-1 g-0 pt-2 mt-2 border-top" id="rp_chargestudents" is="dmx-repeat" dmx-bind:repeat="calculate_charges.students">
-                                                            <div class="col-12 mb-3">
-                                                                <div class="row g-0 mb-1">
-                                                                    <div class="col d-flex flex-row justify-content-start align-items-center">
-                                                                        <i class="fas fa-child text-primary me-1 fa-fw fa-sm"></i>
-                                                                        <p class="mb-0 fw-550 text-primary" dmx-text="firstName+' '+lastName">Student Name</p>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="row g-0 py-1 mt-2 border-bottom border-top small" id="rp_chargeweeks_header">
-                                                                    <div class="col-1 align-self-center p-1">
-                                                                        <p class="mb-0 fw-600">Week Of</p>
-                                                                    </div>
-                                                                    <div class="col">
-                                                                        <div class="row align-items-end g-0">
-                                                                            <div class="col-2 p-1">
-                                                                                <p class="mb-0 fw-600">Class Date</p>
-                                                                            </div>
-                                                                            <div class="col-4 p-1">
-                                                                                <p class="mb-0 fw-600">Enrolment</p>
-                                                                            </div>
-                                                                            <div class="col p-1">
-                                                                                <p class="mb-0 fw-600">Base Rate</p>
-                                                                            </div>
-                                                                            <div class="col p-1">
-                                                                                <p class="mb-0 fw-600">Discounts</p>
-                                                                            </div>
-                                                                            <div class="col p-1">
-                                                                                <p class="mb-0 fw-600">Holding Fee</p>
-                                                                            </div>
-                                                                            <div class="col p-1">
-                                                                                <p class="mb-0 fw-600">Total</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="row g-0 pb-1 border-bottom row-cols-1 user-select-none small fw-450" id="rp_chargeweeks" is="dmx-repeat" dmx-bind:repeat="enrolments">
-                                                                    <div class="col py-2 border-bottom light-grey-hover">
-                                                                        <div class="row g-0 align-items-stretch">
-                                                                            <div class="col-1 align-self-center p-1">
-                                                                                <p class="mb-0" dmx-text="start.formatDate('dd MMM')">21 March</p>
-                                                                            </div>
-                                                                            <div class="col">
-                                                                                <div class="row g-0 align-items-center row-cols-1" id="rp_chargeweeks_item" is="dmx-repeat" dmx-bind:repeat="items">
-                                                                                    <div class="col">
-                                                                                        <div class="row g-0">
-                                                                                            <hr class="table-divider" dmx-hide="$index == 0">
-                                                                                            <div class="col-2 p-1 align-self-center">
-                                                                                                <p class="mb-0" dmx-text="classdate.formatDate(appSettings.localization_puddle_dateformat)">21/03/2022</p>
-                                                                                            </div>
-                                                                                            <div class="col-4 p-1 align-self-center">
-                                                                                                <p class="mb-0 text-break" dmx-text="appSettings.days_array[classday]+' - '+startTimeDisplay+' '+appSettings.classLevelsByID[classlevel_uuid].name+' - '+appSettings.instructorsById[instructor_uuid].trunc_name">Wed Duckling 9:30AM - Melanie M.</p>
-                                                                                            </div>
-                                                                                            <div class="col p-1 align-self-center">
-                                                                                                <p class="mb-0" dmx-text="pricing.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$18.88</p>
-                                                                                            </div>
-                                                                                            <div class="col d-flex flex-row p-1 align-self-center">
-                                                                                                <i class="fas fa-question-circle me-2 fa-fw clickable" dmx-bs-popover="'<strong>Enrolment Discount:</strong> '+pricing.multienrol_discount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+(pricing.multienrol_discount > 0 ? '<br><strong>ED Description:</strong> ' + pricing.multienrol_discount_description : '')+'<br><strong>Family Discount:</strong> '+pricing.family_discount.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+(pricing.family_discount> 0 ? '<br><strong>FD Description:</strong> ' + pricing.familydiscount_description : '')" dmx-bind:popover-title="'Discounts'" data-bs-html="true" data-bs-trigger="hover" dmx-hide="(pricing.multienrol_discount + pricing.family_discount)===0" data-bs-placement="left"></i>
-                                                                                                <p class="mb-0" dmx-text="(pricing.multienrol_discount + pricing.family_discount).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$3.50</p>
-                                                                                            </div>
-                                                                                            <div class="col p-1 align-self-center">
-                                                                                                <p class="mb-0" dmx-text="pricing.holding_fee.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$1.00</p>
-                                                                                            </div>
-                                                                                            <div class="col p-1 align-self-center">
-                                                                                                <p class="mb-0" dmx-text="pricing.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$4.30</p>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="col-3 d-flex align-self-stretch flex-row align-items-stretch">
+                            <section class="w-100 p-3 bg-white rounded-3 pdl-surface-shadow">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col">
+                                        <label for="inp_enrolmentType" class="col-form-label form-label">Enrolment type</label>
+                                        <select id="sel_enrolmentType" class="form-select" name="enrolmentType-sel" dmx-bind:options="appSettings.enrolTypesArray" optiontext="type" optionvalue="id" dmx-bind:value="newEnrolmentModal.var_ne_enrolType.value" dmx-on:changed="run({condition:{if:`sel_enrolmentType.value == 5 || sel_enrolmentType.value == 2`,then:{steps:{run:{action:`inp_ne_dropDate.setValue(inp_ne_startDate.value)`}}},else:{steps:{run:{action:`inp_ne_dropDate.setValue(null)`}}}}})" readonly="true" disabled="true"></select>
+                                        <input id="inp_hd_enrolType" name="enrolmentType" type="hidden" class="form-control" dmx-bind:value="sel_enrolmentType.value">
                                     </div>
 
 
                                 </div>
-                            </div>
+                            </section>
+                        </div>
+                        <div class="align-self-stretch col-auto d-flex align-items-stretch flex-row">
+                            <section class="p-3 bg-white rounded-3 pdl-surface-shadow">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-auto">
+
+                                        <label for="inp_ne_startDate" class="col-form-label form-label ps-0">Start date:</label>
+
+                                        <input size="10" is="dmx-date-picker" dmx-bind:mindate="dateAndTime_days.datetime.addDays(dateAndTime_days.datetime.getDate() + ((((var_classDetailsObject.value.day_int - 1) + 7 - dateAndTime_days.datetime.getDay()) % 7) || 7) - dateAndTime_days.datetime.getDate()).addWeeks(-2).formatDate('yyyy-MM-dd')" class="form-control form-control-plaintext w-auto" id="inp_ne_startDate" name="startDate" aria-describedby="inp_ne_startDate_help" placeholder="dd/mm/yyyy" dmx-on:changed="run({condition:{if:`!inp_ne_dropDate.value &amp;&amp; -inp_ne_dropDate.value.formatDate(\'yyyy-MM-dd\').toTimestring() < inp_ne_startDate.value.formatDate(\'yyyy-MM-dd\').toTimesting()`,then:{steps:{run:{action:`inp_ne_dropDate.setValue(null)`}}}}})" opens="left" format="DD/MM/YYYY" showdropdowns="true" onkeydown="return false" readonly="true">
+
+                                    </div>
+                                    <div class="col-auto">
+
+                                        <label for="inp_dropDate" class="col-form-label form-label ps-0">Drop date:&nbsp;</label>
+                                        <input class="form-control form-control-plaintext" id="inp_ne_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="dd/mm/yyyy" type="text" is="dmx-date-picker" showdropdowns="true" format="DD/MM/YYYY" readonly="true" size="10">
+
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
-                    <div class="row row-cols-2 visually-hidden">
-                        <div class="col">
-                            <h5 class="fw-400" dmx-text="date.formatDate('MMMM yyyy')">December 2021</h5>
-                            <input id="inp_updcharge_monthtoprocess" name="monthtoprocess" type="hidden" class="form-control" dmx-bind:name="'charges['+$index+'][monthtoprocess]'" dmx-bind:value="date.formatDate('yyyy-MM-dd')">
-                        </div>
-                        <div class="col-break w-100"></div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_updcharge_chargedate" class="form-label col-form-label">Charge date: <span class="text-danger fw-700">*</span></label>
-                                <input type="text" class="form-control" id="inp_updcharge_chargedate" name="inp_updcharge_chargedate" aria-describedby="input1_help" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat.uppercase()" format="DD/MM/YYYY" placeholder="DD/MM/YYYY" dmx-bind:value="charge ? charge : dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" dmx-bind:readonly="charge ? true : false" required="" dmx-bind:name="'charges['+$index+'][chargedate]'">
-                                <small id="bs5-form-group-help2" class="form-text text-muted">Charge date prefilled with database value or today's date.</small>
-                            </div>
+                    <div class="row" is="dmx-if" id="cr_newQuoteDetails" dmx-bind:condition="var_ne_enrolType.value===1">
+                        <div class="col-12">
+                            <section class="p-3 bg-white rounded-3 pdl-surface-shadow">
+                                <h5>Charges for New Enrolment</h5>
+
+                                <div class="row g-0">
+                                    <div class="col">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col"></th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">Charge Period</p>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">Grand Total</p>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">Discounts<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'Includes enrolment, family and holding fee discounts.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'All Discounts'"></i></p>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">Base Rate<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'The base rate is the price of all enrolments before enrolment discounts and family discounts have been applied.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'Base Rate'"></i></p>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">* Charge Date:</p>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <p class="small mb-0 text-muted">* Due Date:</p>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr dmx-repeat:rp_ne_familycharges="sc_quote.data.exec_tuitioncalc.repeat" dmx-hide="newEnrolmentModal.sc_quote.state.executing">
+                                                        <td class="collapse-cell"><button id="btn_showQuoteDetails" class="btn btn-primary btn-sm text-nowrap" dmx-on:click="run([{condition:{if:`calculate_charges.existingcharge.chargeexists===true`,then:{steps:{run:{action:`newEnrolmentModal.oc_quoteDetails.sc_existingChargeDetails.load({charge_uuid: calculate_charges.existingcharge.details.uuid})`}}}}},{run:{action:`newEnrolmentModal.oc_quoteDetails.var_newChargeDetails.setValue(calculate_charges)`}},{run:{action:`newEnrolmentModal.oc_quoteDetails.show()`}}])" style="width: 95px !important;"><i class="fas fa-plus-circle fa-sm fa-fw me-1"></i>Details
+                                                            </button></td>
+                                                        <td>
+                                                            <p class="mb-0 fw-550" dmx-html="calculate_charges.chargefor+(calculate_charges.monthlychargeexists.exists == true &amp;&amp; calculate_charges.monthlychargeexists.status == 200 ? '<small class=&quot;fst-italic lh-1 text-danger fw-400&quot;>Monthly charge already exists. <br> Created: '+calculate_charges.monthlychargeexists.created.formatDate('yyyy-MM-dd')+'.</small>': calculate_charges.monthlychargeexists.exists == true &amp;&amp; calculate_charges.monthlychargeexists.status == 409 ? '<small class=&quot;lh-1 fst-italic text-danger fw-400&quot;><i class=&quot;bi-exclamation-octagon-fill text-danger me-2&quot;></i>'+calculate_charges.monthlychargeexists.chargeid+'</small>':'')">April 2022</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 fw-550" dmx-text="calculate_charges.tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$77.50</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 fw-500 text-ledger" dmx-text="((calculate_charges.tuitiontotals.multienrol_discount + calculate_charges.tuitiontotals.family_discount) + calculate_charges.tuitiontotals.holding_fee).round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$22.50</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 text-muted" dmx-text="calculate_charges.tuitiontotals.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$100.00</p>
+                                                        </td>
+                                                        <td><input id="inp_chargeDate" name="chargedate" type="text" class="form-control form-control-plaintext text-decoration-underline clickable" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:value="calculate_charges.existingcharge.chargeexists ? calculate_charges.existingcharge.details.chargeDate.formatDate('yyyy-MM-dd') : dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" placeholder="dd/MM/yyyy">
+                                                        </td>
+                                                        <td><input id="inp_dueDate" name="duedate" type="text" class="form-control form-control-plaintext text-decoration-underline clickable" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:value="calculate_charges.existingcharge.chargeexists ? calculate_charges.existingcharge.details.dueDate.formatDate('yyyy-MM-dd') : dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" placeholder="dd/mm/yyyy"></td>
+                                                    </tr>
+                                                    <tr dmx-show="newEnrolmentModal.sc_quote.state.executing" class="placeholder-glow">
+                                                        <td class="collapse-cell"><button class="btn btn-primary btn-sm text-nowrap placeholder disabled" style="width: 95px !important;"><i class="fas fa-plus-circle fa-sm fa-fw me-1"></i>Details
+                                                            </button></td>
+                                                        <td>
+                                                            <p class="mb-0 fw-550 placeholder w-100">April 2022</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 fw-550 placeholder w-100">$77.50</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 fw-500 text-ledger placeholder w-100">$22.50</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 text-muted placeholder w-100">$100.00</p>
+
+
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 text-muted placeholder w-100">$100.00</p>
+                                                        </td>
+                                                        <td>
+                                                            <p class="mb-0 text-muted placeholder w-100">$100.00</p>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="mt-1 text-muted fst-italic small">* Charge Date and Due Date automatically set from existing charges on family's account. Defaults to today if no existing charge found.<br>** <b>CLICK</b>&nbsp;dates to change.</p>
+                            </section>
 
                         </div>
+                    </div>
+                    <div class="row" id="newenrol_hiddeninputs">
                         <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_updcharge_duedate" class="form-label col-form-label">Due date: <span class="text-danger fw-700">*</span></label>
-                                <input type="text" class="form-control" id="inp_updcharge_duedate" name="inp_updcharge_duedate" aria-describedby="input1_help" dmx-bind:placeholder="appSettings.localization_dateformat" placeholder="DD/MM/YYYY" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat.uppercase()" format="DD/MM/YYYY" dmx-bind:value="due ? due : null" dmx-bind:name="'charges['+$index+'][duedate]'" required="">
+                            <input id="inp_hd_ne_dummyenrol_json" name="dummyenrol" type="hidden" class="form-control">
+                            <input id="inp_hd_ne_familyuuid" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="var_studentDetailsObject.value.family">
+                            <div class="row" id="rp_hiddeninput_percharge" is="dmx-repeat" dmx-bind:repeat="sc_quote.data.exec_tuitioncalc.repeat">
+                                <input id="inp_hd_ne_title" name="title" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][title]" dmx-bind:value="'Family Tuition Charge: '+calculate_charges.chargefor_date.formatDate('MMMM yyyy')">
+                                <input id="inp_hd_ne_monthtoprocess" name="monthtoprocess" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][monthtoprocess]" dmx-bind:value="calculate_charges.chargefor_date.formatDate('yyyy-MM-dd')">
+                                <input id="inp_hd_ne_charge_date" name="charge_date" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][charge_date]" dmx-bind:value="cr_newQuoteDetails.rp_ne_familycharges[$index].inp_chargeDate.value.formatDate('yyyy-MM-dd')">
+                                <input id="inp_hd_ne_due_date" name="due_date" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][due_date]" dmx-bind:value="cr_newQuoteDetails.rp_ne_familycharges[$index].inp_dueDate.value.formatDate('yyyy-MM-dd')">
                             </div>
-
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer d-flex justify-content-between border-top">
                 <button type="button" class="btn btn-outline-danger" dmx-on:click="run([{run:{action:`newEnrolmentModal.hide()`}},{run:{action:`enrolmentSearchModal.show()`}}])" data-bs-dismiss="modal">Back</button>
-                <button class="btn btn-primary" dmx-on:click="run({condition:{if:`newEnrolmentModal.var_overbookingPotential.value`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Change enrolment.'}},message:`'<p>The next availability for this class is <strong>'+newEnrolmentModal.var_classDetailsObject.value.details.active.formatDate('dd MMMM yyyy')+'</strong>.</p><p>The start date you have entered is <strong>'+newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.value.formatDate('dd MMMM yyyy')+'</strong>.</p>Would you like to overbook this class or change the enrolment?'`,title:'Overbook Warning',then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}})">Create Enrolment</button>
+                <button class="btn btn-primary" dmx-on:click="run({condition:{if:`newEnrolmentModal.var_overbookingPotential.value`,then:{steps:{'bootbox.confirm':{buttons:{confirm:{label:'OVERBOOK',className:'btn-danger'},cancel:{label:'Change enrolment.'}},message:`'<p>The next availability for this class is <strong>'+newEnrolmentModal.var_classDetailsObject.value.details.active.formatDate('dd MMMM yyyy')+'</strong>.</p><p>The start date you have entered is <strong>'+newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.value.formatDate('dd MMMM yyyy')+'</strong>.</p>Would you like to overbook this class or change the enrolment?'`,title:'Overbook Warning',then:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}}},else:{steps:{run:{action:`newEnrolmentModal.createEnrolmentForm.submit()`}}}}})" dmx-bind:disabled="sc_quote.state.executing">Create Enrolment</button>
             </div>
         </div>
     </div>
@@ -1643,7 +1795,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="row" is="dmx-if" id="cr_classlist_wrapper" dmx-bind:condition="!classesBase.state.executing">
+                                <div class="row" id="cr_classlist_wrapper" dmx-animate-leave.duration:1000.delay:50="fadeOut" dmx-animate-enter.duration:1000.delay:50="fadeIn" dmx-hide="classesBase.state.processing||classesBase.status!==200">
                                     <div class="col">
                                         <div id="rp_tabs" class="row row-cols-1 g-0" is="dmx-repeat" dmx-bind:repeat="classesBase.data.nextavail.classes" dmx-class:loading-block="content.classesBase.state.executing">
                                             <div class="col class-card border rounded-3 bg-white postition-relative mb-2 py-3 px-3" dmx-style:border-left-color.important="'#'+appSettings.classLevelsByID[classlevel_uuid].colour">
@@ -2618,10 +2770,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="rp_classlist_placeholder_wrapper" class="row row-cols-1 g-0 placeholder-glow" is="dmx-repeat" dmx-class:loading-block="content.classesBase.state.executing" dmx-bind:repeat="var_classlist_count.value">
-                                    <div class="col" is="dmx-if" id="cr_classlistplaceholder" dmx-bind:condition="classesBase.state.executing">
+                                <div id="rp_classlist_placeholder_wrapper" class="row row-cols-1 g-0 placeholder-glow" is="dmx-repeat" dmx-bind:repeat="var_classlist_count.value||10" dmx-animate-leave.duration:1000.delay:50="fadeOut" dmx-animate-enter.duration:1000.delay:50="fadeIn" dmx-show="classesBase.state.processing||classesBase.status!==200">
+                                    <div class="col" id="cr_classlistplaceholder">
                                         <div class="row row-cols-1 g-0">
-                                            <div class="col class-card border rounded-3 bg-white postition-relative mb-2 py-3 px-3 placeholder" dmx-style:border-left-color.important="'#'+appSettings.classLevelsByID[classlevel_uuid].colour">
+                                            <div class="col class-card border rounded-3 bg-white postition-relative mb-2 py-3 px-3 placeholder">
                                                 <div class="row row-cols-8 clickable g-0" dmx-on:click="enrolmentsCollapse.toggle()">
 
                                                     <div class="align-self-center col class-info d-flex flex-column justify-content-start align-items-start">
@@ -2652,17 +2804,15 @@
                                                     </div>
                                                     <div class="col align-self-center d-flex flex-column justify-content-center align-items-end">
                                                         <p class="text-center mb-1 text-muted placeholder">Makeup/Casual
-                                                            <i onclick="return false;" class="fas fa-question-circle-fill ms-1" dmx-bs-popover="'<p>Makeup/casual availabilities are automatically calculated by Puddle. The calculations are based off your Makeup Book Ahead settings.</p><p>Your current settings are set to allow Makeup/Casual enrolments to be booked <strong>'+appSettings.enrol_makeup_book_ahead_days+' days ahead.</strong></p><p class=&quot;mb-0&quot;>Casual enrolment availabilities are calculated the same as Makeup enrolments due to the temporary nature of both enrolment types.</p>'" dmx-bind:popover-title="'Makeup/Casual Availabilities'" data-bs-html="true" data-bs-trigger="hover"></i>
+                                                            <i class="fas fa-question-circle-fill ms-1"></i>
                                                         </p>
                                                         <p class="text-center mb-0 placeholder"><b>4</b> spots - 21 Nov</p>
-
-
                                                     </div>
 
                                                     <div class="col align-self-center d-flex flex-column justify-content-end align-items-end">
                                                         <p class="text-end mb-0 text-muted placeholder mb-1">Availability</p>
                                                         <p class="text-end mb-0 placeholder mb-1">4/4</p>
-                                                        <p class="text-end mb-0 placeholder" dmx-show="details.total == max" dmx-text="(details.active !== 0 &amp;&amp; details.active) ? 'Next Open: '+details.active.formatDate('dd MMM yyyy') : 'No availabilities.'">OPENING ON:&nbsp;</p>
+                                                        <p class="text-end mb-0 placeholder">OPENING ON:&nbsp;</p>
                                                     </div>
                                                 </div>
                                                 <div class="border-top-0 border-bottom-0">

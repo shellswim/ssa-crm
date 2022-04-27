@@ -55,6 +55,13 @@ exports.classAvail = async function (options) {
         weeks: _max_bookahead
     }).setZone(_timezone);
 
+    // Throw out of date range error if weekdate is greater than maximum enrolment date.
+    let outofrange = (Number(DateTime.fromSQL(options.weekdate).toSeconds()) > Number(enrolment_max_date.toSeconds()));
+    if(outofrange) {
+        throw new RangeError('Date Range Error: Your chosen weekdate is further in the future than allowed. Please choose another date.')
+        return
+    };
+
     /** Get calendar settings */
     let calendar_interval = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value);
     let calendar_starttime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value);
@@ -112,153 +119,6 @@ exports.classAvail = async function (options) {
         prev = (offset - limit) <= 0 ? 0 : (offset - limit);
 
     /** Classes */
-    // let classdump = dbClient(await db.raw(`
-    //     SELECT c.uuid,
-    //         c.id,
-    //         c.uuid,
-    //         c.startTimeDecimal,
-    //         c.endTimeDecimal,
-    //         c.instructor_uuid,
-    //         c.classlevel_uuid,
-    //         c.day AS classday,
-    //         c.startTimeDisplay,
-    //         c.endTimeDisplay,
-    //         c.max,
-    //         c.classtype_uuid,
-    //         c.classType,
-    //         ct.baseRate,
-    //         ct.shortName,
-
-    //         JSON_OBJECT(
-    //                 'active_enrols',
-    //                 (
-    //                     SELECT JSON_ARRAYAGG(
-    //                                     JSON_OBJECT(
-    //                                             'age', s.age,
-    //                                             'class_uuid', e.class_uuid,
-    //                                             'dob', s.dob,
-    //                                             'dropDate', e.dropDate,
-    //                                             'enrolmentType', e.enrolmentType,
-    //                                             'family', s.family,
-    //                                             'firstName', s.firstName,
-    //                                             'isTransferIn', e.isTransferIn,
-    //                                             'isTransferOut', e.isTransferOut,
-    //                                             'lastName', s.lastName,
-    //                                             'startDate', e.startDate,
-    //                                             'student_uuid', s.uuid,
-    //                                             'transferToStart', e.transferToStart,
-    //                                             'uuid', e.uuid
-    //                                         )
-    //                                 )
-    //                     FROM enrolments e
-    //                                 LEFT JOIN students s ON e.student_uuid = s.uuid
-    //                     WHERE e.enrolmentType = 1
-    //                         AND e.isValid = 1
-    //                         AND (e.dropDate >= '${startdate.toISODate()}' OR e.dropDate IS NULL)
-    //                         AND e.class_uuid = c.uuid
-    //                 ),
-    //                 'makeup_enrols',
-    //                 (
-    //                     SELECT JSON_ARRAYAGG(
-    //                                     JSON_OBJECT(
-    //                                             'age', s.age,
-    //                                             'class_uuid', e.class_uuid,
-    //                                             'dob', s.dob,
-    //                                             'dropDate', e.dropDate,
-    //                                             'enrolmentType', e.enrolmentType,
-    //                                             'family', s.family,
-    //                                             'firstName', s.firstName,
-    //                                             'isTransferIn', e.isTransferIn,
-    //                                             'isTransferOut', e.isTransferOut,
-    //                                             'lastName', s.lastName,
-    //                                             'startDate', e.startDate,
-    //                                             'student_uuid', s.uuid,
-    //                                             'transferToStart', e.transferToStart,
-    //                                             'uuid', e.uuid
-    //                                         )
-    //                                 )
-    //                     FROM enrolments e
-    //                                 LEFT JOIN students s ON e.student_uuid = s.uuid
-    //                     WHERE e.enrolmentType = 3
-    //                         AND e.isValid = 1
-    //                         AND (e.dropDate >= '${startdate.toISODate()}' OR e.dropDate IS NULL)
-    //                         AND e.class_uuid = c.uuid
-    //                 ),
-    //                 'trial_enrols',
-    //                 (
-    //                     SELECT JSON_ARRAYAGG(
-    //                                     JSON_OBJECT(
-    //                                             'age', s.age,
-    //                                             'class_uuid', e.class_uuid,
-    //                                             'dob', s.dob,
-    //                                             'dropDate', e.dropDate,
-    //                                             'enrolmentType', e.enrolmentType,
-    //                                             'family', s.family,
-    //                                             'firstName', s.firstName,
-    //                                             'isTransferIn', e.isTransferIn,
-    //                                             'isTransferOut', e.isTransferOut,
-    //                                             'lastName', s.lastName,
-    //                                             'startDate', e.startDate,
-    //                                             'student_uuid', s.uuid,
-    //                                             'transferToStart', e.transferToStart,
-    //                                             'uuid', e.uuid
-    //                                         )
-    //                                 )
-    //                     FROM enrolments e
-    //                                 LEFT JOIN students s ON e.student_uuid = s.uuid
-    //                     WHERE e.enrolmentType = 3
-    //                         AND e.isValid = 1
-    //                         AND (e.dropDate >= '${startdate.toISODate()}' OR e.dropDate IS NULL)
-    //                         AND e.class_uuid = c.uuid
-    //                 ),
-    //                 'casual_enrols',
-    //                 (
-    //                     SELECT JSON_ARRAYAGG(
-    //                                     JSON_OBJECT(
-    //                                             'age', s.age,
-    //                                             'class_uuid', e.class_uuid,
-    //                                             'dob', s.dob,
-    //                                             'dropDate', e.dropDate,
-    //                                             'enrolmentType', e.enrolmentType,
-    //                                             'family', s.family,
-    //                                             'firstName', s.firstName,
-    //                                             'isTransferIn', e.isTransferIn,
-    //                                             'isTransferOut', e.isTransferOut,
-    //                                             'lastName', s.lastName,
-    //                                             'startDate', e.startDate,
-    //                                             'student_uuid', s.uuid,
-    //                                             'transferToStart', e.transferToStart,
-    //                                             'uuid', e.uuid
-    //                                         )
-    //                                 )
-    //                     FROM enrolments e
-    //                                 LEFT JOIN students s ON e.student_uuid = s.uuid
-    //                     WHERE e.enrolmentType = 5
-    //                         AND e.isValid = 1
-    //                         AND (e.dropDate >= '${startdate.toISODate()}' OR e.dropDate IS NULL)
-    //                         AND e.class_uuid = c.uuid
-    //                 )
-    //             ) AS enrolments
-    //     FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
-    //     ${filters_applied ? `WHERE` : ``}
-    //     ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
-    //     ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-    //     ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
-    //     ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-    //     ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
-    //     ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
-    //     ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
-    //     GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
-    //              c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
-    //     ORDER BY
-    //     (CASE (SELECT value FROM settings WHERE name = 'weekstart')
-    //         WHEN 'Sunday' THEN
-    //             FIELD(day, 7, 1, 2, 3, 4, 5, 6)
-    //         WHEN 'Monday' THEN
-    //             c.day
-    //     END),c.startTimeDecimal
-    //     ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
-    //     `));
 
     let classdump = dbClient(await db.raw(`
     SELECT c.uuid,
@@ -274,7 +134,6 @@ exports.classAvail = async function (options) {
         c.max,
         c.classtype_uuid,
         c.classType,
-        ct.baseRate,
         ct.shortName
 
     FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
@@ -315,6 +174,15 @@ exports.classAvail = async function (options) {
                 days: (c.classday - 1)
             });
         }
+
+        c.baseRate = dbClientFlat(await db.raw(`
+            SELECT cb.baserate
+            FROM charges_baserates cb
+            WHERE 
+                '${c.weekday}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
+                AND cb.classlevel_uuid = '${c.classlevel_uuid}';
+        `)).baserate;
+
         c.details = {};
         let pstart = performance.now();
         c.details = await processClass(c.weekday, c.uuid, c.max, c);
@@ -348,6 +216,12 @@ exports.classAvail = async function (options) {
     }
 
     return {
+        'outofrange': {
+            'outofrange': outofrange,
+            'weekdate_seconds': Number(DateTime.fromISO(options.weekdate).toSeconds()),
+            'maxdate_seconds': Number(enrolment_max_date.toSeconds()),
+            'weekdate': options.weekdate
+        },
         "filters": {
             "day": filters.day_filter,
             "time": filters.time_filter,
@@ -366,7 +240,7 @@ exports.classAvail = async function (options) {
         'startofweek': startdate.toISODate(),
         'endofweek': enddate.toISODate(),
         'performance': performance_array,
-        'peformance_total': performance_array.reduce((a,b) => {return a + b})
+        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a,b) => {return a + b}) : []
     }
 
     /** Functions */
@@ -464,7 +338,7 @@ exports.classAvail = async function (options) {
         let last_max_week = weekly_total_enrols.lastIndexOf(classmax);
         let nextavailable_permanent;
         if(last_max_week == -1) {
-            if(weekday_arr[0].toSeconds() < DateTime.now().startOf('day').toSeconds()) {
+            if(weekday_arr.length > 0 && weekday_arr[0].toSeconds() < DateTime.now().startOf('day').toSeconds()) {
                 nextavailable_permanent = weekday_arr[1];
             } else {
                 nextavailable_permanent = weekday_arr[0];

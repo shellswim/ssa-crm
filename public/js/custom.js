@@ -143,8 +143,11 @@ function initMergeTable(el, exclude) {
     }
 
     function init(i, exclude) {
+        if(!Array.isArray.exclude) {
+            exclude = exclude.split(',');
+        }
         var ctable = $(`.clone-table-${i}`).rowMerge({
-            excludedColumns: exclude.split(','),
+            excludedColumns: exclude,
         });
         try {
             ctable.merge();
