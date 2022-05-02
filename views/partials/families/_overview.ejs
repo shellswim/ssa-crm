@@ -1,0 +1,481 @@
+<!-- Wappler include is="dmx-app" id="_overview" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDataTraversal:{},dmxBootstrap5Offcanvas:{},dmxPreloader:{},dmxAnimateCSS:{}}" head-page="layouts/layout2" -->
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,0.9)"></dmx-preloader>
+<dmx-serverconnect id="sc_GET_FAMILY_guardians" url="/api/families/guardians/GET_FAMILY_guardians" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="sc_GET_FAMILY_students" url="/api/families/student/GET_FAMILY_students" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<!-- New Wappler Page -->
+<section style="" class="standard-max-width">
+    <div class="row gx-5 mb-3">
+        <div class="col-auto">
+            <div class="d-flex text-body d-flex flex-column">
+                <p class="mt-1 text-muted fw-550">Create</p>
+                <div class="row g-2">
+                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#createGuardianModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Guardian</button></div>
+                    <div class="col-auto"><button id="createStudentButton" class="btn align-self-end pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#createStudentModal"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Student</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="d-flex text-body d-flex flex-column">
+                <p class="mt-1 text-muted fw-550">Modify</p>
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <button id="btn_addresses" class="btn pdl-button-shadow d-flex align-items-center btn-secondary" data-bs-target="#address_createModal" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`address_createOrEdit.show()`}}},else:{steps:{run:{action:`address_createModal.show()`}}}}})"><i class="far fa-map fa-xs me-2"></i>Add/Edit Address</button>
+                    </div>
+                    <div class="col-auto"><button id="btn_discounts" class="btn pdl-button-shadow d-flex align-items-center btn-secondary"><i class="fas fa-tags fa-xs me-2"></i>Special Discounts</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row gx-0">
+        <div class="col " is="dmx-if" id="cr_noaddress" dmx-bind:condition="familyDetails.data.addresses.length == 0" dmx-text="">
+            <p class="rounded-3 bg-danger text-start mt-3 mb-3 pt-2 pb-2 ps-2 pe-2 text-white d-flex align-items-center pdl-surface-shadow">
+                <i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                <i class="far fa-map  fa-fw me-2"></i>No address for this family found. Addresses are
+                used in receipts and other documents sent to the family.
+            </p>
+        </div>
+    </div>
+    <div class="row mt-3 row-cols-1" style="">
+        <div class="col" is="dmx-if" id="cr_guardians_list" dmx-bind:condition="!sc_GET_FAMILY_guardians.state.executing&amp;&amp;!sc_GET_FAMILY_guardians.state.processing" dmx-animate-enter.duration:500.delay:150="fadeInUp">
+            <div class="row row-cols-1 g-0">
+                <div class="col p-4 d-flex flex-column mb-4 bg-white rounded-3 pdl-surface-shadow">
+                    <div class="row pb-3">
+                        <div class="col align-self-start">
+                            <h3 class="mb-0 fw-700"><i class="far fa-user me-3 text-primary fa-sm"></i>Guardians
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="row" is="dmx-if" id="cr_guardianslist" dmx-bind:condition="!sc_GET_FAMILY_guardians.state.executing">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-hover big-small">
+                                    <thead class="table-white fw-700 border-bottom text-capitalize small">
+                                        <tr>
+                                            <th scope="row" style="width: 1%; white-space: nowrap;">
+                                            </th>
+                                            <th style="">name</th>
+                                            <th style="">Relationship</th>
+                                            <th scope="row">Phones</th>
+                                            <th scope="row">Emails</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_guardians.data.guardians" id="guardianTableRepeat" class="table-white">
+                                        <tr>
+                                            <td class="text-center align-middle text-primary-main">
+                                                <i class="fas fa-award clickable user-select-none fa-lg" dmx-hide="primary===false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover"></i>
+                                            </td>
+                                            <td style="white-space: nowrap;" dmx-on:click="oc_GET_GUARDIAN_details.dd_guardianDetails.select(uuid);oc_GET_GUARDIAN_details.show()" class="clickable">
+                                                <p class="mb-0 text-decoration-underline">
+                                                    {{firstName + ' ' + lastName}}</p>
+                                            </td>
+                                            <td dmx-text="appSettings.relationships[relationship].name">
+                                                Father</td>
+                                            <td dmx-text="phone">0430 000 000</td>
+                                            <td dmx-text="address">tester_email@testing.com</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="offcanvas offcanvas-end border-start-0 pdl-surface-shadow" id="oc_GET_GUARDIAN_details" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset()" scroll="true" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
+                                <div class="offcanvas-header border-bottom bg-secondary text-white">
+                                    <h5 class="offcanvas-title fw-300"><i class="far fa-user fa-fw me-2"></i>View/Edit Guardian
+                                        Details</h5>
+                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                </div>
+                                <div class="offcanvas-header border-bottom">
+                                    <h5 class="offcanvas-title fw-500" dmx-text="oc_GET_GUARDIAN_details.dd_guardianDetails.data.firstName+' '+oc_GET_GUARDIAN_details.dd_guardianDetails.data.lastName">
+                                        Michael Doe</h5>
+                                </div>
+                                <div class="offcanvas-body">
+                                    <dmx-data-detail id="dd_guardianDetails" dmx-bind:data="familyDetails.data.guardians" key="uuid">
+                                    </dmx-data-detail>
+                                    <div class="row row-cols-1 mb-4 pb-2 border-bottom gx-0">
+                                        <div class="col">
+                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">
+                                                Primary Guardian</p>
+                                        </div>
+                                        <div class="col d-flex flex-row align-items-center">
+                                            <i class="fas fa-check-circle me-2 fa-fw" dmx-class:text-success="dd_guardianDetails.data.primary" dmx-class:text-danger="!dd_guardianDetails.data.primary" dmx-class:fa-check-circle="dd_guardianDetails.data.primary" dmx-class:fa-times-circle="!dd_guardianDetails.data.primary"></i>
+                                            <p dmx-text="dd_guardianDetails.data.primary === true ? 'Yes, ' +dd_guardianDetails.data.firstName +' '+dd_guardianDetails.data.lastName +' is the primary guardian for this family.' : 'No. Edit this guardian to make them primary.'" class="mb-0">Yes, Michael Doe is the primary guardian
+                                                for this family.</p>
+                                        </div>
+                                    </div>
+                                    <div class="row gx-0">
+                                        <div class="col mb-4 pb-2 border-bottom">
+                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">
+                                                Phone Numbers</p>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered align-middle mb-0">
+                                                    <thead class="text-muted fw-450 text-capitalize">
+                                                        <tr class="small">
+                                                            <th class="collapse-cell">SMS</th>
+                                                            <th class="collapse-cell">Type</th>
+                                                            <th>Number</th>
+                                                            <th class="collapse-cell"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="oc_GET_GUARDIAN_details.dd_guardianDetails.data.phones" id="rp_tb_guardian_phones">
+                                                        <tr>
+                                                            <td class="text-nowrap">
+                                                                <p class="mb-0 clickable user-select-none">
+                                                                    <i class="fas fa-comment-dots me-1 fa-fw text-primary"></i>Send
+                                                                </p>
+                                                            </td>
+                                                            <td dmx-text="appSettings.contactTypes[type].type">
+                                                            </td>
+                                                            <td dmx-text="number"></td>
+                                                            <td class="text-nowrap">
+                                                                <p class="mb-0 fw-500 text-secondary clickable user-select-none small">
+                                                                    <i class="fas fa-pen me-1 fa-sm fa-fw"></i>EDIT
+                                                                </p>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row gx-0">
+                                        <div class="col mb-4 pb-2 border-bottom">
+                                            <p class="mb-2 fs-6 pb-1 border-bottom text-muted fw-450">
+                                                Email Addresses</p>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered align-middle mb-0">
+                                                    <thead class="text-muted fw-450 text-capitalize">
+                                                        <tr class="small">
+                                                            <th class="collapse-cell">EMAIL</th>
+                                                            <th class="collapse-cell">Type</th>
+                                                            <th>Address</th>
+                                                            <th class="collapse-cell"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="oc_GET_GUARDIAN_details.dd_guardianDetails.data.emails" id="rp_tb_guardian_emails">
+                                                        <tr>
+                                                            <td class="text-nowrap">
+                                                                <p class="mb-0 clickable user-select-none">
+                                                                    <i class="fas fa-paper-plane me-1 fa-fw text-primary"></i>Send
+                                                                </p>
+                                                            </td>
+                                                            <td dmx-text="appSettings.contactTypes[type].type">
+                                                            </td>
+                                                            <td dmx-text="address"></td>
+                                                            <td class="text-nowrap">
+                                                                <p class="mb-0 fw-500 text-secondary clickable user-select-none small">
+                                                                    <i class="fas fa-pen me-1 fa-sm fa-fw"></i>EDIT
+                                                                </p>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row placeholder-glow" is="dmx-if" id="cr_guardianslist_placeholder" dmx-bind:condition="sc_GET_FAMILY_guardians.state.executing">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-hover big-small">
+                                    <thead class="table-white fw-700 border-bottom text-capitalize small">
+                                        <tr>
+                                            <th scope="row" style="width: 1%; white-space: nowrap;">
+                                            </th>
+                                            <th style="">name</th>
+                                            <th style="">Relationship</th>
+                                            <th scope="row">Phones</th>
+                                            <th scope="row">Emails</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody dmx-generator="bs5table" class="table-white">
+                                        <tr dmx-hide="!toggle_loadingplaceholders.checked">
+                                            <td class="text-center align-middle text-primary-main">
+                                                <i class="fas fa-award clickable user-select-none placeholder fa-fw"></i>
+                                            </td>
+                                            <td style="white-space: nowrap;" class="clickable align-middle">
+                                                <p class="mb-0 text-decoration-underline placeholder">
+                                                    Family Name</p>
+                                            </td>
+                                            <td class="align-middle">
+                                                <p class="mb-0 text-decoration-underline placeholder" wappler-command="editContent">Relationship</p>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="row " is="dmx-repeat" id="rp_phones2" dmx-bind:repeat="phones">
+                                                    <div class="col-auto placeholder" dmx-text="number" style="">0400 000 000
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="row">
+                                                    <div class="col-auto" style="letter-spacing: 0.8px;">
+                                                        <p class="mb-0 placeholder">test@example.com</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr dmx-hide="!toggle_loadingplaceholders.checked">
+                                            <td class="text-center align-middle text-primary-main">
+                                                <i class="fas fa-award clickable user-select-none placeholder fa-fw"></i>
+                                            </td>
+                                            <td style="white-space: nowrap;" class="clickable align-middle">
+                                                <p class="mb-0 text-decoration-underline placeholder">
+                                                    Family Name</p>
+                                            </td>
+                                            <td class="align-middle">
+                                                <p class="mb-0 text-decoration-underline placeholder" wappler-command="editContent">Relationship</p>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="row " is="dmx-repeat" id="rp_phones1" dmx-bind:repeat="phones">
+                                                    <div class="col-auto placeholder" dmx-text="number" style="">0400 000 000
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="row">
+                                                    <div class="col-auto" style="letter-spacing: 0.8px;">
+                                                        <p class="mb-0 placeholder">test@example.com</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col" is="dmx-if" id="cr_students_list" dmx-bind:condition="!sc_GET_FAMILY_students.state.executing&amp;&amp;!sc_GET_FAMILY_students.state.processing" dmx-animate-enter.duration:500.delay:150="fadeInUp">
+            <div class="row g-0">
+                <div class="col bg-white p-4 rounded-3 mb-2 pdl-surface-shadow">
+                    <div class="offcanvas offcanvas-end" id="oc_student_absences" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset();sel_absence_types_filter.setValue('active');var_studentuuid_absenceview.setValue(null)" data-bs-scroll="false" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
+                        <div class="offcanvas-header border-bottom">
+                            <h4 class="offcanvas-title fw-450"><i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit Absences
+                            </h4>
+                            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                        </div>
+                        <div class="offcanvas-header border-bottom">
+                            <h5 class="offcanvas-title fw-500" dmx-text="oc_student_absences.GET_ABSENCES.data.query_student_name.firstName +' '+oc_student_absences.GET_ABSENCES.data.query_student_name.lastName">
+                                Johnathan Doe</h5>
+                            <div class="d-flex flex-row w-auto justify-content-end"><select id="sel_absence_types_filter" class="form-select form-control-lg" dmx-bind:options="appSettings.absence_status" optiontext="$value.capitalize()" optionvalue="$value" dmx-on:updated.debounce:150="GET_ABSENCES.load({},true)" dmx-bind:value="'active'">
+                                    <option value="all">All</option>
+                                </select></div>
+                        </div>
+                        <div class="offcanvas-body">
+                            <dmx-value id="var_studentuuid_absenceview"></dmx-value>
+                            <dmx-serverconnect id="GET_ABSENCES" noload url="/api/families/student/absences/GET_ABSENCES" dmx-param:status_filter="oc_student_absences.sel_absence_types_filter.value" dmx-param:student_uuid="oc_student_absences.var_studentuuid_absenceview.value">
+                            </dmx-serverconnect>
+                            <p class="fs-6 fw-450 text-muted mb-2 pb-1 border-bottom" dmx-text="oc_student_absences.sel_absence_types_filter.value.capitalize() +' Absences:'">
+                                Current Absences:</p>
+                            <div class="row gx-0" is="dmx-if" id="cr_hasAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length > 0">
+                                <div class="col">
+                                    <div class="table-responsive">
+                                        <table class="table big-small table-hover table-bordered">
+                                            <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                <tr>
+                                                    <th scope="row" style="" class="collapse-cell"></th>
+                                                    <th scope="col" class="collapse-cell">Status</th>
+                                                    <th scope="col">Date</th>
+                                                    <th scope="col">Class</th>
+                                                    <th scope="col">Makeup Token</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody is="dmx-repeat" id="rp_student_absences_list" dmx-bind:repeat="oc_student_absences.GET_ABSENCES.data.rp_absences" class="align-middle">
+                                                <tr>
+                                                    <th scope="row">
+                                                        <button id="btn_edit_absence" class="btn btn-sm fw-500 text-primary">EDIT</button>
+                                                    </th>
+                                                    <td dmx-text="status.capitalize()">
+                                                        Active<br></td>
+                                                    <td dmx-text="absence_date.toDate().formatDate(appSettings.localization_puddle_dateformat)">
+                                                        21/01/2022<br></td>
+                                                    <td dmx-text="appSettings.days_array[dayint].trunc('3', 'true', '.') +' - '+startTimeDisplay +' '+appSettings.classLevelsByID[classlevel_uuid].name +' - '+appSettings.instructorsById[instructor_uuid].trunc_name">
+                                                        Sun. - 10:30 AM Duckling - Rhonda J</td>
+                                                    <td dmx-html="query_makeup_token.uuid ? ((query_makeup_token.status == 'active' ? '<i class=&quot;fas fa-dot-circle text-makeup me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'used' ? '<i class=&quot;fas fa-dot-circle text-muted me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'expired' ? '<i class=&quot;fas fa-times-circle text-muted me-1 fa-fw&quot;></i>' : '<i class=&quot;fas fa-dot-circle text-danger me-1 fa-fw&quot;></i>') + query_makeup_token.status.capitalize()) : '<i class=&quot;fas fa-times-circle text-danger me-1 fa-fw&quot;></i> Not Issued'">
+                                                        Active</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-0" is="dmx-if" id="cr_noAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length == 0">
+                                <div class="col border rounded-3 d-flex align-items-center justify-content-center p-4 flex-column">
+                                    <p class="mb-0 fw-500 text-danger" dmx-text="'There are no '+(oc_student_absences.sel_absence_types_filter.value === 'all' ? '' : oc_student_absences.sel_absence_types_filter.value +' ') +'absences for this student.'">
+                                        There are no current absences for this student.</p>
+                                    <p class="mb-0">To view other absences, please select from the
+                                        dropdown.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row pb-4 align-items-center">
+                        <div class="col align-self-center">
+                            <h3 class="mb-0 fw-700"><i class="fas fa-child me-3 text-primary fa-sm"></i>Students
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="row" is="dmx-if" id="cr_studentlist" dmx-bind:condition="!toggle_loadingplaceholders.checked">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-hover big-small">
+                                    <thead class="table-white fw-700 border-bottom text-capitalize small">
+                                        <tr>
+                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                            <th style="" class="visually-hidden">ID</th>
+                                            <th style="">Student</th>
+                                            <th>Age</th>
+                                            <th>Level</th>
+                                            <th>Student Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_students.data.students" id="studentTableRepeat" class="table-white">
+                                        <tr>
+                                            <td class="p-0">
+                                                <div class="dropdown">
+                                                    <button id="drd_students" class="btn dropdown-toggle change-chevron border bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v fa-xs"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropup" aria-labelledby="drd_students">
+                                                        <h6 class="dropdown-header">Student Information
+                                                        </h6>
+                                                        <a class="dropdown-item clickable user-select-none" dmx-bind:href="'/families/familydetail/'+query.familyid+'/studentdetail/'+uuid"><i class="fas fa-child me-2 fa-fw"></i>View
+                                                            Student Details<i class="fas fa-external-link-alt fa-xs fa-fw ms-2 text-muted"></i></a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <h6 class="dropdown-header">Enrolments</h6>
+                                                        <div class="dropdown-item clickable user-select-none">
+                                                            <i class="fas fa-calendar-plus fa-fw me-2"></i>Create
+                                                            Enrolment
+                                                        </div>
+                                                        <div class="dropdown-item clickable user-select-none">
+                                                            <i class="far fa-calendar-check fa-fw me-2"></i>View
+                                                            Enrolments
+                                                        </div>
+                                                        <div class="dropdown-divider"></div>
+                                                        <h6 class="dropdown-header">Absences</h6>
+                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="run({run:{action:`CREATE_ABSENCE.dd_studentDetails.select(uuid);CREATE_ABSENCE.show()`}})" href="javascript:void(0);"><i class="far fa-calendar-times me-2 fa-fw"></i>Create
+                                                            Absence</div>
+                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="oc_student_absences.var_studentuuid_absenceview.setValue(uuid);oc_student_absences.GET_ABSENCES.load({});oc_student_absences.show()">
+                                                            <i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit
+                                                            Absences
+                                                        </div>
+                                                        <div class="dropdown-divider"></div>
+                                                        <h6 class="dropdown-header">Makeups</h6>
+                                                        <div class="dropdown-item clickable user-select-none" href="#"><i class="fas fa-dot-circle me-2 fa-fw"></i>
+                                                            View/Edit Tokens</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td dmx-text="id" class="visually-hidden">15466</td>
+                                            <td dmx-text="firstName+' '+lastName">
+                                            </td>
+                                            <td dmx-text="age">3y 4m</td>
+                                            <td dmx-text="appSettings.classLevelsByID[classlevel_uuid].name">
+                                                Duckling</td>
+                                            <td dmx-text="notes_count_message" class="clickable" dmx-style:text-decoration-underline.important="notes_count>0">1 Note</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row placeholder-glow" is="dmx-if" id="cr_student_placeholder" dmx-bind:condition="toggle_loadingplaceholders.checked">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-hover big-small">
+                                    <thead class="table-white fw-700 border-bottom text-capitalize small">
+                                        <tr>
+                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                            <th style="" class="visually-hidden">ID</th>
+                                            <th style="">Student</th>
+                                            <th>Age</th>
+                                            <th>Level</th>
+                                            <th>Student Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody dmx-generator="bs5table" class="table-white">
+                                        <tr>
+                                            <td class="p-0">
+                                                <div class="dropdown">
+                                                    <button class="btn dropdown-toggle change-chevron p-2 bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v placeholder fa-fw"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="visually-hidden">
+                                                <p class="mb-0 placeholder">123456789</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                            <td class="text-decoration-underline clickable">
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-0">
+                                                <div class="dropdown">
+                                                    <button class="btn dropdown-toggle change-chevron p-2 bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v placeholder fa-fw"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="visually-hidden">
+                                                <p class="mb-0 placeholder">123456789</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                            <td class="text-decoration-underline clickable">
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-0">
+                                                <div class="dropdown">
+                                                    <button class="btn dropdown-toggle change-chevron p-2 bg-white" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v placeholder fa-fw"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="visually-hidden">
+                                                <p class="mb-0 placeholder">123456789</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">John Doe</p>
+                                            </td>
+                                            <td>
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                            <td class="text-decoration-underline clickable">
+                                                <p class="mb-0 placeholder" wappler-command="editContent">Ducklings</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

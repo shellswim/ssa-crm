@@ -1,0 +1,403 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_students",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "student_notes",
+                "column": "uuid",
+                "alias": "notes_count",
+                "aggregate": "COUNT"
+              },
+              {
+                "table": "student_notes",
+                "column": "priority",
+                "alias": "max_note_priority",
+                "aggregate": "MAX"
+              },
+              {
+                "table": "students",
+                "column": "uuid"
+              },
+              {
+                "table": "students",
+                "column": "id"
+              },
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              },
+              {
+                "table": "students",
+                "column": "dob"
+              },
+              {
+                "table": "students",
+                "column": "family"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetComments"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetMedical"
+              },
+              {
+                "table": "students",
+                "column": "additionalMedical"
+              },
+              {
+                "table": "students",
+                "column": "gender"
+              },
+              {
+                "table": "students",
+                "column": "level"
+              },
+              {
+                "table": "students",
+                "column": "age"
+              },
+              {
+                "table": "students",
+                "column": "familyold"
+              },
+              {
+                "table": "students",
+                "column": "classlevel_uuid"
+              }
+            ],
+            "table": {
+              "name": "students"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "student_notes",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "student_notes",
+                      "column": "student_uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "students",
+                        "column": "uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.family",
+                  "field": "students.family",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "family",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "primary": false,
+                      "nullable": false,
+                      "references": "uuid",
+                      "inTable": "families",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "maxLength": 36,
+                      "name": "family"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT COUNT(student_notes.uuid) AS notes_count, MAX(student_notes.priority) AS max_note_priority, students.uuid, students.id, students.firstName, students.lastName, students.dob, students.family, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.gender, students.level, students.age, students.familyold, students.classlevel_uuid\nFROM students\nLEFT JOIN student_notes ON (student_notes.student_uuid = students.uuid)\nWHERE students.family = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY students.uuid, students.id, students.firstName, students.lastName, students.dob, students.family, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.gender, students.level, students.age, students.familyold, students.classlevel_uuid",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              }
+            ],
+            "groupBy": [
+              {
+                "table": "students",
+                "column": "uuid"
+              },
+              {
+                "table": "students",
+                "column": "id"
+              },
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              },
+              {
+                "table": "students",
+                "column": "dob"
+              },
+              {
+                "table": "students",
+                "column": "family"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetComments"
+              },
+              {
+                "table": "students",
+                "column": "rollSheetMedical"
+              },
+              {
+                "table": "students",
+                "column": "additionalMedical"
+              },
+              {
+                "table": "students",
+                "column": "gender"
+              },
+              {
+                "table": "students",
+                "column": "level"
+              },
+              {
+                "table": "students",
+                "column": "age"
+              },
+              {
+                "table": "students",
+                "column": "familyold"
+              },
+              {
+                "table": "students",
+                "column": "classlevel_uuid"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "notes_count"
+          },
+          {
+            "type": "number",
+            "name": "max_note_priority"
+          },
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "date",
+            "name": "dob"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetComments"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetMedical"
+          },
+          {
+            "type": "text",
+            "name": "additionalMedical"
+          },
+          {
+            "type": "text",
+            "name": "gender"
+          },
+          {
+            "type": "number",
+            "name": "level"
+          },
+          {
+            "type": "text",
+            "name": "age"
+          },
+          {
+            "type": "number",
+            "name": "familyold"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "students",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_students}}",
+          "outputFields": [],
+          "outputFilter": "exclude",
+          "exec": {
+            "steps": {
+              "name": "notes_count_message",
+              "module": "core",
+              "action": "setvalue",
+              "options": {
+                "value": "{{(notes_count > 0) ? pluralize('Note', notes_count, true) : '-'}}"
+              },
+              "meta": [],
+              "outputType": "text",
+              "output": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "notes_count",
+            "type": "text"
+          },
+          {
+            "name": "max_note_priority",
+            "type": "number"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "dob",
+            "type": "date"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "rollSheetComments",
+            "type": "text"
+          },
+          {
+            "name": "rollSheetMedical",
+            "type": "text"
+          },
+          {
+            "name": "additionalMedical",
+            "type": "text"
+          },
+          {
+            "name": "gender",
+            "type": "text"
+          },
+          {
+            "name": "level",
+            "type": "number"
+          },
+          {
+            "name": "age",
+            "type": "text"
+          },
+          {
+            "name": "familyold",
+            "type": "number"
+          },
+          {
+            "name": "classlevel_uuid",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

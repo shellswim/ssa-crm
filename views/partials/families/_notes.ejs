@@ -1,0 +1,251 @@
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,0.9)" dmx-on:load="run({run:{action:`queryManager.set(\'ledgerinfo_limit\',5);queryManager.set(\'ledgerinfo_offset\',0)`}})"></dmx-preloader><!-- Wappler include is="dmx-app" id="_notes" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxPreloader:{},dmxDataTraversal:{},dmxBootstrap5Modal:{}}" -->
+<dmx-serverconnect id="sc_GET_FAMILY_notes" url="/api/families/notes/GET_FAMILY_notes" dmx-param:family_uuid="query.familyid" dmx-param:priority="sel_filter_notes_priority.value" dmx-param:status="sel_filter_notes_status.value"></dmx-serverconnect>
+<dmx-serverconnect id="sc_DELETE_FAMILY_note" url="/api/families/notes/DELETE_FAMILY_note" noload dmx-on:success="mod_editFamilyNote.hide();sc_GET_FAMILY_notes.load({},true);familyDetails.load({},true)"></dmx-serverconnect>
+<dmx-serverconnect id="sc_CLOSE_FAMILY_note" url="/api/families/notes/CLOSE_FAMILY_note" noload="" dmx-on:success="flow_swal_toast_colored.run({icon: 'success', title: 'Success', message: 'Note closed.', timer: 3000, timerprogressbar: true});mod_editFamilyNote.hide();sc_GET_FAMILY_notes.load({},true);familyDetails.load({},true)"></dmx-serverconnect>
+<dmx-serverconnect id="sc_OPEN_FAMILY_note" url="/api/families/notes/OPEN_FAMILY_note" noload="" dmx-on:success="run([{assign:{value:`mod_editFamilyNote.dd_editFamilyNote.data.uuid`,name:'var_note_uuid'}},{run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Success\', message: \'Note reopened.\', timer: 3000, timerprogressbar: true})`}},{run:{action:`sc_GET_FAMILY_notes.load({},true);sel_filter_notes_status.setValue(\'open\')`}},{run:{action:`familyDetails.load({},true)`}},{run:{action:`flow_swal_alert.run({icon: \'info\', title: \'Note Reopened\', message: \'The note was successfully reopened.<br>Your note filters have been reset to show open notes.\'})`}}])"></dmx-serverconnect>
+
+<!-- MODALS -->
+<div class="modal fade" id="mod_createFamilyNote" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="run([{run:{action:`familyNote.reset()`}},{runJS:{function:'pdl_tinymce_reset',args:['newfamilynote']}}])" dmx-on:show-bs-modal="run({runJS:{function:'pdl_tinymce_init',args:['newfamilynote']}})">
+    <div class="modal-dialog modal-lg modal-fullscreen-xl-down" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title"><i class="far fa-sticky-note me-2 text-primary fa-fw"></i>Create Family Note
+                </h5>
+                <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal">
+                    <span aria-hidden="true" class="visually-hidden">×</span>
+                </button>
+            </div>
+            <div class="modal-body light-blue-bg border-bottom p-4">
+                <form is="dmx-serverconnect-form" id="familyNote" method="post" action="/api/families/notes/CREATE_FAMILY_note" dmx-generator="bootstrap5" dmx-form-type="horizontal" dmx-on:success="run([{run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Success\', message: \'Family note created.\', timer: 3000, timerprogressbar: true});mod_createFamilyNote.hide();sc_GET_FAMILY_notes.load({},true)`}},{wait:{delay:300}},{run:{action:`familyDetails.load({},true)`}}])" dmx-param:familyid="query.familyid"><input id="inp_fam_noteid" name="noteid1" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                    <div class="row row-cols-1 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col mb-2">
+                            <label for="fam_noteSubjectInput" class="form-label col-form-label">Subject<span class="fw-bold text-danger">*</span></label>
+                            <input type="text" class="form-control" id="fam_noteSubjectInput" name="subject" aria-describedby="input1_help" placeholder="Add subject...">
+                        </div>
+                        <div class="mb-2 col-auto">
+                            <label for="fam_selectEditNotePriority" class="form-label col-form-label">Priority of
+                                Note<span class="fw-bold text-danger">*</span></label>
+                            <select id="fam_selectEditNotePriority" class="form-select" dmx-bind:value="getStudentNote_Single.data.singleStudentNote.priority" name="priority">
+                                <option value="1">Lowest</option>
+                                <option value="2">Low</option>
+                                <option value="3">Medium</option>
+                                <option value="4">High</option>
+                                <option value="5">Critical</option>
+                            </select>
+                        </div>
+
+
+                    </div>
+                    <div class="row p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <label for="fam_noteContentTextArea" class="form-label col-form-label">Note
+                                        Content<span class="fw-bold text-danger">*</span></label>
+                                    <textarea id="newfamilynote" class="form-control" name="content">
+                                    </textarea>
+                                    <script>
+                                        // tinymce.init({
+                                        //     selector: 'textarea#newfamilynote',
+                                        //     height: 400,
+                                        //     menubar: false,
+                                        //     plugins: [
+                                        //     'advlist autolink fullscreen lists link image charmap print preview anchor',
+                                        //     'searchreplace visualblocks code fullscreen',
+                                        //     'insertdatetime media table paste code help wordcount'
+                                        //     ],
+                                        //     toolbar: 'undo redo | formatselect | ' +
+                                        //     'bold italic backcolor | alignleft aligncenter ' +
+                                        //     'alignright alignjustify | bullist numlist outdent indent | ' +
+                                        //     'removeformat | fullscreen | help',
+                                        //     images_upload_handler: pdl_image_upload_handler,
+                                        //     automatic_uploads: true,
+                                        //     paste_data_images: true,
+                                        //     setup: function(editor) {
+                                        //         editor.on('change', function(e) {
+                                        //             document.querySelector('textarea#newfamilynote').value = tinymce.activeEditor.getContent()
+                                        //         })
+                                        //     }
+                                        // });
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-danger me-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="familyNote" class="btn btn-primary"><i class="bi-save2 me-2"></i>Save Note
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mod_editFamilyNote" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="run([{run:{action:`mod_editFamilyNote.dd_editFamilyNote.editFamilyNote.reset()`}},{run:{action:`getFamilyID.remove(\'familynoteid\')`}},{runJS:{function:'pdl_tinymce_destroy',args:['editfamilynote']}}])" dmx-on:show-bs-modal="run({runJS:{function:'pdl_tinymce_init',args:['editfamilynote',`mod_editFamilyNote.dd_editFamilyNote.data.content`]}})">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-light">
+                <h5 class="modal-title">Edit Family Note</h5>
+                <button type="button" class="btn-close text-light" aria-label="Close" data-bs-dismiss="modal">
+                    <span aria-hidden="true" class="visually-hidden">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <dmx-data-detail id="dd_editFamilyNote" dmx-bind:data="sc_GET_FAMILY_notes.data.family_notes" key="uuid">
+                    <form is="dmx-serverconnect-form" id="editFamilyNote" method="post" action="/api/families/notes/UPDATE_FAMILY_note" dmx-generator="bootstrap5" dmx-form-type="horizontal" dmx-on:success="run([{run:{action:`mod_editFamilyNote.hide()`}},{wait:{delay:300}},{run:{action:`sc_GET_FAMILY_notes.load({},true)`}},{run:{action:`familyDetails.load({},true)`}},{runJS:{function:'swal_toast_colored',args:['success','Updated!','The note has been successfully updated.',`true`,'3000',`true`,'']}}])">
+                        <input id="inp_fam_editNoteUuid" name="note_uuid" type="hidden" class="form-control" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.uuid">
+                        <input id="inp_fam_editNote_familyuuid" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                        <div class="row gx-3">
+                            <div class="col d-flex flex-column justify-content-start">
+                                <div class="row row-cols-2 gy-3">
+                                    <div class="col">
+                                        <label for="fam_editNoteSubjectInput" class="col-form-label form-label">Subject<span class="fw-bold text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="fam_editNoteSubjectInput" name="subject" aria-describedby="input1_help" placeholder="Add subject..." dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.subject">
+                                        <input type="hidden" class="form-control" id="fam_editNote_oldSubject" name="old_subject" aria-describedby="input1_help" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.subject">
+
+                                    </div>
+                                    <div class="col">
+                                        <label for="fam_selectEditNotePriority" class="col-form-label form-label">*Priority of Note<span class="fw-bold text-danger">*</span></label>
+                                        <select id="fam_selectEditNotePriority" class="form-select" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.priority" name="priority">
+                                            <option value="1">Lowest</option>
+                                            <option value="2">Low</option>
+                                            <option value="3">Medium</option>
+                                            <option value="4">High</option>
+                                            <option value="5">Critical</option>
+                                        </select>
+                                        <small id="select1Help2" class="form-text text-muted">Please ensure you select
+                                            the correct priority for the situation.</small>
+                                        <input type="hidden" class="form-control" id="fam_editNote_oldPriority" name="old_priority" aria-describedby="input1_help" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.priority">
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label for="fam_editNoteContentTextArea" class="col-form-label form-label">Note
+                                            Content<span class="fw-bold text-danger">*</span></label>
+                                        <textarea id="editfamilynote" class="form-control" name="content" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.content">                                        </textarea>
+                                        <input type="hidden" class="form-control" id="fam_editNote_oldContent" name="old_content" aria-describedby="input1_help" dmx-bind:value="mod_editFamilyNote.dd_editFamilyNote.data.content">
+                                        <script>
+                                        </script>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row gx-3">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-2 pb-2 mt-2 pt-2 border-bottom fw-bold">Additional</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col d-flex">
+                                        <button id="btn_open_familyNote" class="btn text-start btn-secondary" dmx-on:click="run([{runJS:{function:'swal_confirm',args:['warning','Are you sure you want to re-open this note?',`false`,'',`true`,'Cancel','Open Note',`false`,`false`,''],name:'confirm_opennote'}},{condition:{if:`confirm_opennote == true`,then:{steps:{run:{action:`sc_OPEN_FAMILY_note.load({note_uuid: mod_editFamilyNote.dd_editFamilyNote.data.uuid})`}}}}}])" dmx-hide="mod_editFamilyNote.dd_editFamilyNote.data.status=='open'"><i class="far fa-circle fa-sm me-2"></i>OPEN NOTE</button>
+                                        <button id="btn_close_familyNote" class="btn text-start btn-warning" dmx-on:click="run([{runJS:{function:'swal_confirm',args:['warning','Are you sure you want to close this note?',`false`,'',`true`,'Cancel','Close Note',`false`,`false`,'You can reopen the note later. Filter notes by closed and edit the note.'],name:'confirm_closenote'}},{condition:{if:`confirm_closenote == true`,then:{steps:{run:{action:`sc_CLOSE_FAMILY_note.load({note_uuid: mod_editFamilyNote.dd_editFamilyNote.data.uuid})`}}}}}])" dmx-hide="mod_editFamilyNote.dd_editFamilyNote.data.status=='closed'"><i class="fas fa-ban fa-sm me-2"></i>CLOSE NOTE</button>
+                                    </div>
+                                    <div class="col d-flex flex-row justify-content-end"><button id="deleteFamilyNoteButton" class="btn text-start btn-danger" dmx-on:dblclick="run([{runJS:{function:'swal_confirm',args:['warning','Are You Sure?',`false`,'',`true`,'Cancel','Delete Note',`false`,`false`,'Are you sure you want to delete this note. This action cannot be undone.'],name:'confirm_deletenote'}},{condition:{if:`confirm_deletenote===true`,then:{steps:[{run:{action:`sc_DELETE_FAMILY_note.load({note_uuid: mod_editFamilyNote.dd_editFamilyNote.data.uuid})`}},{runJS:{function:'swal_toast_colored',args:['success','Success','Note deleted successfully.',`true`,'3000',`true`]}}]}}}])"><i class="far fa-trash-alt me-1 fa-fw"></i>DELETE</button></div>
+                                </div>
+
+
+
+                            </div>
+                        </div>
+
+                    </form>
+                </dmx-data-detail>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div class="d-flex flex-row justify-content-between w-100">
+                    <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="editFamilyNote" class="btn btn-success">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="standard-max-width">
+    <div class="row align-items-lg-stretch g-0">
+        <div class="col p-4 bg-white rounded-3 pdl-surface-shadow">
+            <div class="row">
+                <div class="col">
+                    <h3 class="mb-3 fw-700"><i class="far fa-sticky-note me-3 text-primary fa-sm"></i>Family Notes</h3>
+                </div>
+                <div class="col d-flex justify-content-end flex-row align-items-start"><button id="btn_newFamilyNote" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#mod_createFamilyNote"><i class="fas fa-plus-circle fa-fw fa-sm me-2"></i>New Note</button>
+                </div>
+            </div>
+            <div class="row mb-3 pb-3 border-bottom align-items-center">
+                <div class="col-auto">
+                    <div class="form-group">
+                        <label for="sel_filter_notes_priority" class="form-label col-form-label">Priority</label>
+                        <select id="sel_filter_notes_priority" class="form-select">
+                            <option selected="" value="">All</option>
+                            <option value="1">Lowest</option>
+                            <option value="2">Low</option>
+                            <option value="3">Medium</option>
+                            <option value="4">High</option>
+                            <option value="5">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="form-group">
+                        <label for="sel_filter_notes_status" class="form-label col-form-label">Status</label>
+                        <select id="sel_filter_notes_status" class="form-select">
+                            <option selected="" value="open">Open</option>
+                            <option value="closed">Closed</option>
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <section is="dmx-if" id="cr_notes" dmx-bind:condition="sc_GET_FAMILY_notes.data.family_notes.length>0">
+                <div class="row row-cols-1" is="dmx-repeat" id="rp_familynotes" dmx-bind:repeat="sc_GET_FAMILY_notes.data.family_notes">
+                    <div class="col mb-3 pb-3 border-bottom">
+                        <div class="row g-0">
+                            <!-- <div class="col-2 p-3 align-self-center" dmx-class:pri-1-solid="priority === 1" dmx-class:pri-2-solid="priority === 2" dmx-class:pri-3-solid="priority === 3" dmx-class:pri-4-solid="priority === 4" dmx-class:pri-5-solid="priority === 5">
+                                                                <h5 dmx-show="(priority == 1)" class="mb-0 fw-bolder">Lowest</h5>
+                                                                <h5 dmx-show="(priority == 2)" class="mb-0 fw-bolder">Low</h5>
+                                                                <h5 dmx-show="(priority == 3)" class="mb-0 fw-bolder">Medium</h5>
+                                                                <h5 dmx-show="(priority == 4)" class="mb-0 fw-bolder">High</h5>
+                                                                <h5 dmx-show="(priority == 5)" class="mb-0 fw-bolder"><i class="fas fa-exclamation-triangle fa-fw me-2"></i>Critical
+                                                                </h5>
+                                                            </div> -->
+                            <div class="col">
+                                <h5 class="fw-700 d-flex align-items-center mb-2 clickable" dmx-on:click="mod_editFamilyNote.dd_editFamilyNote.select(uuid);mod_editFamilyNote.show()">
+                                    <span dmx-show=" (priority==1)" class="badge pri-1-solid fw-600 me-2">Lowest</span>
+                                    <span dmx-show="(priority == 2)" class="badge pri-2-solid fw-600 me-2">Low</span>
+                                    <span dmx-show="(priority == 3)" class="badge pri-3-solid fw-600 me-2">Medium</span>
+                                    <span dmx-show="(priority == 4)" class="badge pri-4-solid fw-600 me-2">High</span>
+                                    <span dmx-show="(priority == 5)" class="badge pri-5-solid fw-600 me-2"><i class="fas fa-exclamation-triangle fa-fw mx-1 fa-sm"></i>Critical</span>
+                                    {{subject}}
+                                </h5>
+                                <p dmx-html="'Created By: '+created_by.firstName+' '+created_by.lastName+' - '+created_timestamp.toDate().formatDate(appSettings.localization_puddle_dateformat+' @ '+appSettings.localization_timeformat)" class="fst-italic small mb-0">Created By: Jane Doe - 15/03/2022 @ 4:00pm
+                                </p>
+                                <p dmx-html="'Updated By: '+updated_by.firstName+' '+updated_by.lastName+' - '+updated_timestamp.toDate().formatDate(appSettings.localization_puddle_dateformat+' @ '+appSettings.localization_timeformat)" class="fst-italic small mb-0" dmx-hide="!updated_by">Updated By:
+                                    Jane Doe - 15/03/2022 @ 4:22pm</p>
+                                <p class="mt-2 mb-0" dmx-html="content.replace('<br>', ' ').stripTags()">
+                                    Note details.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section is="dmx-if" id="cr_nonotes" dmx-bind:condition="sc_GET_FAMILY_notes.data.family_notes.length==0">
+                <div class="row align-items-lg-stretch g-0">
+                    <div class="col">
+
+                        <div class="row">
+                            <div class="col border rounded-3 p-3">
+                                <h6 class="mb-0 text-center text-danger">No notes were found.</h6>
+                                <p class="mb-0 text-muted small text-center">Create a note or change the filters above to show notes here.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+
+</section>

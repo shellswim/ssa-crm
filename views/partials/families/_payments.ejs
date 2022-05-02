@@ -1,0 +1,301 @@
+<!-- Wappler include is="dmx-app" id="_payments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Navigation:{},dmxDataTraversal:{},dmxBootstrap5Modal:{},dmxPreloader:{}}" head-page="layouts/layout2" -->
+<!-- New Wappler Page -->
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,0.9)"></dmx-preloader>
+<dmx-serverconnect id="CONNECT_CUST_stripe" url="/api/stripe/customers/CONNECT_CUST_stripe" dmx-param:stripe_cust_id="familyDetails.data.query_family_details.stripe_cust_id" dmx-param:return_url="browser1.location.href"></dmx-serverconnect>
+<dmx-serverconnect id="CREATE_CUST_stripe" url="/api/stripe/customers/CREATE_CUST_stripe" dmx-param:uuid="familyDetails.data.query_family_details.uuid" noload dmx-param:connected_account="CONNECT_stripe.data.retrieveAccount.id" dmx-param:customer_name="familyDetails.data.primaryGuardian.firstName+' '+familyDetails.data.primaryGuardian.lastName" dmx-param:customer_email="familyDetails.data.primaryGuardian.address"></dmx-serverconnect>
+<section class="standard-max-width">
+    <div class="row gx-0 position-relative" dmx-animate-leave.duration:450="fadeOut" dmx-hide="cookies.data.webhook_processing == 'true'">
+        <div class="col mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+            <div class="row">
+                <div class="col d-flex flex-row justify-content-between">
+                    <h4>Stripe Customer Account</h4>
+                    <div class="dropdown" dmx-show="familyDetails.data.familyDetails.stripe_cust_id">
+                        <button id="dd_stripeActions" class="btn dropdown-toggle btn-sm btn-light no-caret bg-white border rounded-3 shadow-sm" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dropdown-menu" aria-labelledby="dropdown1">
+                            <button class="dropdown-item text-light bg-danger small" dmx-on:click="run([{condition:{if:`CONNECT_CUST_stripe.data.retrieveCustomer.id`}},{'bootbox.confirm':{buttons:{confirm:{label:'DELETE',className:'btn-danger'},cancel:{}},message:'This will permanently delete this customers Stripe data. It cannot be undone. ',title:'Delete Customer\'s Stripe Account?',swapButtonOrder:true,size:'lg',backdrop:'true',then:{steps:{serverConnect:{url:'/api/stripe/customers/DELETE_CUST_stripe',site:'SSA-CRM',params:{customer:`CONNECT_CUST_stripe.data.retrieveCustomer.id`,connected_account:`CONNECT_stripe.data.retrieveAccount.id`},name:'DELETE_CUSTOMER_stripe'}}},else:{steps:{'bootbox.alert':{buttons:{ok:{className:'btn-success'}},title:'ABORTED',message:'Customer deletion was successfully cancelled.',closeButton:false}}}}}])"><i class="fas fa-trash me-2"></i>Delete Stripe Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p>Puddle partners with online payments processor Stripe to allow our customers to securely
+                pay online.</p>
+            <div class="modal fade" id="modal_CREATE_STRIPE_customer" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="form_newStripeCustomer.reset()">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header border-bottom pe-4">
+                            <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" loading="lazy" width="150"><img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" loading="lazy" width="150" class="me-2">
+                        </div>
+                        <div class="modal-body">
+                            <p class="fw-450">To set this customer up with Stripe payments, you must
+                                create them as a new 'Stripe Customer'.</p>
+                            <p class="mb-4">You can add a payment method to this file after you have
+                                finished creating the Stripe Customer Account.</p>
+                            <form id="form_newStripeCustomer" method="post" is="dmx-serverconnect-form" action="/api/stripe/customers/CREATE_CUST_stripe" dmx-on:success="modal_CREATE_STRIPE_customer.hide()">
+                                <input id="inp_customer_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="familyDetails.data.familyDetails.uuid">
+                                <dmx-data-detail id="dd_selectedGuardian" dmx-bind:data="familyDetails.data.getGuardiansWContacts" key="id">
+                                </dmx-data-detail>
+                                <h4 class="fw-500 mb-2 pb-2 border-bottom">Create Customer</h4>
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <h6 class="fw-400">Use existing guardian details?</h6>
+                                    <p id="bs5-form-group-help1" class="form-text text-muted">Prefill
+                                        customer details by selecting from the guardian drop list.</p>
+                                    <select id="sel_chooseGuardian" class="form-select" dmx-bind:options="familyDetails.data.getGuardiansWContacts" optiontext="firstName +' '+lastName" optionvalue="id" dmx-on:updated="dd_selectedGuardian.select(sel_chooseGuardian.value.toNumber())">
+                                        <option value="">Select Guardian...</option>
+                                    </select>
+                                </div>
+                                <h6 class="fw-400">Customer Details</h6>
+                                <div class="mb-3">
+                                    <label for="inp_customer_name" class="form-label col-form-label">Full Name *</label>
+                                    <input type="text" class="form-control" id="inp_customer_name" name="customer_name" aria-describedby="input1_help" placeholder="John Doe" required="" dmx-bind:value="dd_selectedGuardian.data ? dd_selectedGuardian.data.firstName +' '+dd_selectedGuardian.data.lastName : null">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inp_customer_email" class="form-label col-form-label">Preferred Email *</label>
+                                    <p id="bs5-form-group-help2" class="form-text text-muted">Select
+                                        existing email address for selected customer, or add a new one.
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_chooseEmail" class="form-select" dmx-bind:options="dd_selectedGuardian.data.emailAddressesArray" dmx-on:updated="inp_customer_email.setValue(value)" optiontext="address" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="address">
+                                                <option value="">Select Email Address...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col"><input type="email" class="form-control" id="inp_customer_email" name="customer_email" aria-describedby="input1_help" placeholder="johndoe@example.com" required="" data-rule-email=""></div>
+                                    </div>
+                                </div>
+                                <div class="mb-5">
+                                    <label for="inp_customer_phone" class="form-label col-form-label">Preferred Phone Number
+                                        *</label>
+                                    <p id="bs5-form-group-help3" class="form-text text-muted">Select
+                                        existing phone number for selected customer, or add a new one.
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_choosePhone" class="form-select" dmx-bind:options="dd_selectedGuardian.data.phoneNumbersArray" dmx-on:updated="inp_customer_phone.setValue(value)" optiontext="phone" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="phone">
+                                                <option value="">Select Phone Number...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col"><input type="tel" class="form-control" id="inp_customer_phone" name="customer_phone" aria-describedby="input1_help" placeholder="xxxx xxx xxx" required="" data-msg-required="Please enter a phone number."></div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer border-top d-flex justify-content-between">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary" form="form_newStripeCustomer" type="submit">Create Stripe Customer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" is="dmx-if" id="cr_nocust_stripe" dmx-bind:condition="!familyDetails.data.query_family_details.stripe_cust_id" dmx-show="!CONNECT_CUST_stripe.data.retrieveCustomer.id">
+                <div class="col">
+                    <p class="mb-3 pb-3 border-bottom">If a customer wishes to pay their tuition via
+                        saved payment details, it is required they become a customer of yours through
+                        Stripe. To start, click the button below to get them set up.</p>
+                    <dmx-value id="var_stripeSetup" dmx-bind:value="false"></dmx-value>
+                    <button id="btn_createCust_stripe_modal" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_CREATE_STRIPE_customer"><span class="spinner-border spinner-border-sm me-2" role="status" dmx-hide="cr_nocust_stripe.var_stripeSetup.value == false" id="btn_createCust_stripe_modal"></span><i dmx-hide="cr_nocust_stripe.var_stripeSetup.value == true" class="fas fa-credit-card me-2"></i>Setup Payment Information
+                    </button>
+                </div>
+            </div>
+            <div class="row" is="dmx-if" id="cr_custdetails_stripe" dmx-bind:condition="familyDetails.data.query_family_details.stripe_cust_id">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col">
+                            <ul class="nav my-3 py-3 border-top border-bottom detail-tabs flex-row justify-content-start gx-2 nav-pills" id="navTabs_stripe" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link py-3 px-4 active" id="stripeTab_stripeDetails" data-bs-toggle="tab" data-bs-target="#navTabs_stripe_details" role="tab" aria-controls="navTabs1_2" aria-selected="false">Stripe Details</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3 px-4" id="stripeTab_stripeSavedPayment" data-bs-toggle="tab" data-bs-target="#navTabs_stripe_SavedPayment" role="tab" aria-controls="navTabs1_2" aria-selected="false">Payment
+                                        Methods</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="navTabs1_content">
+                                <div class="tab-pane fade active show" id="navTabs_stripe_details" role="tabpanel">
+                                    <h5 class="fw-600 mt-2 mb-4 py-2 border-bottom lh-lg">Stripe
+                                        Customer Information</h5>
+                                    <div class="row flex-table">
+                                        <div class="col">
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Stripe ID</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.id">
+                                                        cus_hfnuwefh2984</p>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Full Name</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.name">
+                                                        Jane Doe</p>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Email Address</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.email || 'N/A'">
+                                                        jane.doe@example.com</p>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Phone Number</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.phone || 'N/A'">
+                                                        +61400300300</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Saved Payment Method?</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.invoice_settings.default_payment_method ? 'TRUE' : 'FALSE'">
+                                                        FALSE</p>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Invoice Prefix:<i class="bi-question-circle-fill ms-2" dmx-bs-tooltip="'Invoice Prefix is the string of characters a customer will see on a Stripe invoice after a successful transaction. This is a unique prefix auto-created by Stripe.'" data-bs-trigger="hover"></i>
+                                                    </p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.invoice_prefix">
+                                                        2693F829</p>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col">
+                                                    <p class="text-muted">Stripe Customer Created</p>
+                                                </div>
+                                                <div class="col">
+                                                    <p dmx-text="CONNECT_CUST_stripe.data.retrieveCustomer.created.toDate().formatDate('dd MMMM yyyy hh:mm:ss a')">
+                                                        02 January 2022 10:54 PM</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="navTabs_stripe_SavedPayment" role="tabpanel">
+                                    <div class="modal fade" id="modal_STRIPE_ADD_paymentInfo" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-bottom pe-4">
+                                                    <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" width="150">
+                                                    <img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" width="150" class="me-2">
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="mb-3">To ensure the security of your
+                                                        customers, Puddle requires you to head to the
+                                                        customer billing portal to update any payment
+                                                        information including card details, address, tax
+                                                        identification and more.</p>
+                                                    <a id="btn_addPaymentMethod" class="btn btn-outline-primary" dmx-bind:href="CONNECT_CUST_stripe.data.createBillingPortalSession.url">Go
+                                                        to Billing Portal</a>
+                                                </div>
+                                                <div class="modal-footer border-top justify-content-end">
+                                                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 gx-0" is="dmx-if" id="cr_noBillingPortal" dmx-bind:condition="!CONNECT_stripe.data.retrieveBillingPortalConfiguration" dmx-class:mb-3="!CONNECT_stripe.data.retrieveBillingPortalConfiguration">
+                                        <div class="p-2 col-auto bg-danger text-white rounded-3">
+                                            <p class="mb-0 lh-sm">Billing portal is INACTIVE or has not
+                                                been configured for your account.<br>Customers will be
+                                                unable to save payment methods until this has been
+                                                completed. <br>Please talk to your system administrator
+                                                about getting this feature enabled.</p>
+                                        </div>
+                                    </div><button id="btn_addPaymentInfo" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal_STRIPE_ADD_paymentInfo" dmx-bind:disabled="!CONNECT_stripe.data.retrieveBillingPortalConfiguration"><i class="fas fa-file-invoice-dollar me-2"></i>Add/Edit Payment
+                                        Methods&nbsp;</button>
+                                    <h5 class="fw-600 mt-3 pt-3 mb-4 pb-2 border-bottom border-top lh-lg">
+                                        Saved Payment Information</h5>
+                                    <div id="cr_existsPaymentMethods" is="dmx-if" dmx-bind:condition="CONNECT_CUST_stripe.data.listPaymentMethods_cards.data">
+                                        <div id="rp_STRIPE_payment_methods" is="dmx-repeat" dmx-bind:repeat="CONNECT_CUST_stripe.data.listPaymentMethods_cards.data">
+                                            <div class="row gx-0 row-cols-2 flex-table pb-3 mb-3 border-bottom">
+                                                <div class="col">
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Payment Type</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="type.capitalize()">Card</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Card Type</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="card.brand.capitalize()">
+                                                                MasterCard</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Card Number (Last 4)
+                                                            </p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="'**** **** **** '+card.last4">
+                                                                **** **** **** 1234</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Expiry Date</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="card.exp_month+' / '+card.exp_year">
+                                                                01 / 2022</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">CVC Check Passed?</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="card.checks.cvc_check.capitalize()">
+                                                                Pass</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Payment Method ID</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="id">
+                                                                pm_opnqc4028941jdi190423urfhicnqp21</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-1">
+                                                        <div class="col">
+                                                            <p class="text-muted">Customer ID</p>
+                                                        </div>
+                                                        <div class="col">
+                                                            <p dmx-text="customer">cus_fh324ue80wfh32
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

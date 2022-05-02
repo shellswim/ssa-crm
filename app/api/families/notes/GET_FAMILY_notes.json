@@ -1,0 +1,448 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "priority"
+      },
+      {
+        "type": "text",
+        "name": "status"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_notes",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "family_notes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "family_notes.family_uuid",
+                  "field": "family_notes.family_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "family_notes",
+                    "column": "family_uuid",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "families",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "family_uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "family_notes.priority",
+                      "field": "family_notes.priority",
+                      "type": "double",
+                      "operator": "equal",
+                      "value": "{{$_GET.priority}}",
+                      "data": {
+                        "table": "family_notes",
+                        "column": "priority",
+                        "type": "number",
+                        "columnObj": {
+                          "type": "integer",
+                          "primary": false,
+                          "comment": "Range between 1-5. 1 being low and 5 being critical.",
+                          "nullable": true,
+                          "name": "priority"
+                        }
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.priority}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "family_notes.status",
+                      "field": "family_notes.status",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.status}}",
+                      "data": {
+                        "table": "family_notes",
+                        "column": "status",
+                        "type": "text",
+                        "columnObj": {
+                          "type": "enum",
+                          "default": "'open'",
+                          "maxLength": 6,
+                          "primary": false,
+                          "nullable": false,
+                          "name": "status"
+                        }
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.status.length() > 0}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM family_notes\nWHERE family_uuid = :P1 /* {{$_GET.family_uuid}} */ AND (priority = :P2 /* {{$_GET.priority}} */) AND (status = :P3 /* {{$_GET.status}} */)\nORDER BY priority DESC, created_timestamp DESC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.priority}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P3",
+                "value": "{{$_GET.status}}"
+              }
+            ],
+            "orders": [
+              {
+                "table": "family_notes",
+                "column": "priority",
+                "direction": "DESC",
+                "recid": 1
+              },
+              {
+                "table": "family_notes",
+                "column": "created_timestamp",
+                "direction": "DESC",
+                "recid": 2
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "content"
+          },
+          {
+            "type": "number",
+            "name": "priority"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "subject"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "created_timestamp"
+          },
+          {
+            "type": "number",
+            "name": "updated_timestamp"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "family_notes",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_notes}}",
+          "outputFields": [],
+          "outputFilter": "exclude",
+          "exec": {
+            "steps": [
+              {
+                "name": "created_by",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "db_users",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "db_users",
+                        "column": "lastName"
+                      }
+                    ],
+                    "table": {
+                      "name": "db_users"
+                    },
+                    "primary": "id",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "db_users.uuid",
+                          "field": "db_users.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{created_by}}",
+                          "data": {
+                            "table": "db_users",
+                            "column": "uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": false,
+                              "name": "uuid"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT firstName, lastName\nFROM db_users\nWHERE uuid = :P1 /* {{created_by}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{created_by}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "updated_by",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "db_users",
+                        "column": "firstName"
+                      },
+                      {
+                        "table": "db_users",
+                        "column": "lastName"
+                      }
+                    ],
+                    "table": {
+                      "name": "db_users"
+                    },
+                    "primary": "id",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "db_users.uuid",
+                          "field": "db_users.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{updated_by}}",
+                          "data": {
+                            "table": "db_users",
+                            "column": "uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": false,
+                              "name": "uuid"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT firstName, lastName\nFROM db_users\nWHERE uuid = :P1 /* {{updated_by}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{updated_by}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  }
+                ],
+                "outputType": "object"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "content",
+            "type": "text"
+          },
+          {
+            "name": "priority",
+            "type": "number"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "subject",
+            "type": "text"
+          },
+          {
+            "name": "status",
+            "type": "text"
+          },
+          {
+            "name": "family_uuid",
+            "type": "number"
+          },
+          {
+            "name": "created_timestamp",
+            "type": "number"
+          },
+          {
+            "name": "updated_timestamp",
+            "type": "number"
+          },
+          {
+            "name": "created_by",
+            "type": "text"
+          },
+          {
+            "name": "updated_by",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

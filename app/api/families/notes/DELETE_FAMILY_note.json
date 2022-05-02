@@ -1,0 +1,186 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "note_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_note",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "family_notes",
+                "column": "content"
+              },
+              {
+                "table": "family_notes",
+                "column": "priority"
+              },
+              {
+                "table": "family_notes",
+                "column": "subject"
+              },
+              {
+                "table": "family_notes",
+                "column": "family_uuid"
+              }
+            ],
+            "table": {
+              "name": "family_notes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "family_notes.uuid",
+                  "field": "family_notes.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.note_uuid}}",
+                  "data": {
+                    "table": "family_notes",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT content, priority, subject, family_uuid\nFROM family_notes\nWHERE uuid = :P1 /* {{$_GET.note_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.note_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "content"
+          },
+          {
+            "type": "number",
+            "name": "priority"
+          },
+          {
+            "type": "text",
+            "name": "subject"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "delete",
+              "module": "dbupdater",
+              "action": "delete",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "delete",
+                  "table": "family_notes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "field": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_GET.note_uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "returning": "uuid",
+                  "query": "DELETE\nFROM family_notes\nWHERE uuid = :P1 /* {{$_GET.note_uuid}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{$_GET.note_uuid}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/CREATE_FAMILY_log",
+          "params": {
+            "family_uuid": "{{query_note.family_uuid}}",
+            "log_category": "Family Note",
+            "log_type": "deleted",
+            "logged_by": "{{identity}}",
+            "old_value": "{{'Subject: '+query_note.subject+' \\\\nContent: '+query_note.content+' \\\\nPriority: '+query_note.priority}}"
+          }
+        },
+        "output": false
+      }
+    ]
+  }
+}

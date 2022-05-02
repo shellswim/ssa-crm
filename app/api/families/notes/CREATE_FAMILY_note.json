@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familyid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "content"
+      },
+      {
+        "type": "number",
+        "name": "priority"
+      },
+      {
+        "type": "text",
+        "name": "subject"
+      },
+      {
+        "type": "number",
+        "name": "family"
+      }
+    ],
+    "$_SESSION": [
+      {
+        "type": "text",
+        "name": "user_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "",
+      "module": "core",
+      "action": "trycatch",
+      "options": {
+        "try": {
+          "steps": [
+            {
+              "name": "insert",
+              "module": "dbupdater",
+              "action": "insert",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "insert",
+                  "values": [
+                    {
+                      "table": "familyNotes",
+                      "column": "content",
+                      "type": "text",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "table": "familyNotes",
+                      "column": "priority",
+                      "type": "number",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "table": "familyNotes",
+                      "column": "subject",
+                      "type": "text",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "family_uuid",
+                      "type": "number",
+                      "value": "{{$_GET.familyid}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "uuid",
+                      "type": "text",
+                      "value": "{{'fno_' + UUID.replace('-', '')}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "created_timestamp",
+                      "type": "number",
+                      "value": "{{NOW_UTC.toTimestamp()}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "created_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    }
+                  ],
+                  "table": "family_notes",
+                  "returning": "uuid",
+                  "query": "INSERT INTO family_notes\n(content, priority, subject, family_uuid, uuid, created_timestamp, created_by) VALUES (:P1 /* {{$_POST.content}} */, :P2 /* {{$_POST.priority}} */, :P3 /* {{$_POST.subject}} */, :P4 /* {{$_GET.familyid}} */, :P5 /* {{'fno_' + UUID.replace('-', '')}} */, :P6 /* {{NOW_UTC.toTimestamp()}} */, :P7 /* {{identity}} */)",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{$_GET.familyid}}"
+                    },
+                    {
+                      "name": ":P5",
+                      "type": "expression",
+                      "value": "{{'fno_' + UUID.replace('-', '')}}"
+                    },
+                    {
+                      "name": ":P6",
+                      "type": "expression",
+                      "value": "{{NOW_UTC.toTimestamp()}}"
+                    },
+                    {
+                      "name": ":P7",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "identity",
+                  "type": "text"
+                },
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "name": "exec",
+              "module": "core",
+              "action": "exec",
+              "options": {
+                "exec": "base/CREATE_FAMILY_log",
+                "params": {
+                  "family_uuid": "{{$_GET.familyid}}",
+                  "log_category": "Family Note",
+                  "log_type": "created",
+                  "logged_by": "{{identity}}",
+                  "new_value": "{{'Subject: '+$_POST.subject+'\\\\nContent: '+$_POST.content+'\\\\nPriority: '+$_POST.priority}}"
+                }
+              },
+              "output": true
+            }
+          ]
+        },
+        "catch": {
+          "steps": {
+            "name": "",
+            "module": "core",
+            "action": "response",
+            "options": {
+              "status": 500,
+              "data": "{{$_ERROR}}"
+            },
+            "output": true
+          }
+        }
+      }
+    }
+  }
+}

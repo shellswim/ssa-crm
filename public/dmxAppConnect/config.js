@@ -1577,6 +1577,38 @@ dmx.config({
       {
         "type": "text",
         "name": "payintent_uuid"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_limit"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_offset"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_dir"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_sort"
+      },
+      {
+        "type": "text",
+        "name": "flogs_limit"
+      },
+      {
+        "type": "text",
+        "name": "flogs_offset"
+      },
+      {
+        "type": "text",
+        "name": "flogs_dir"
+      },
+      {
+        "type": "text",
+        "name": "flogs_sort"
       }
     ],
     "tableRepeat1": {
@@ -2584,6 +2616,14 @@ dmx.config({
       {
         "type": "text",
         "name": "familyid"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_offset"
+      },
+      {
+        "type": "text",
+        "name": "ledgerinfo_limit"
       }
     ],
     "rp_phoneNumbers": {
@@ -3989,162 +4029,160 @@ dmx.config({
           "type": "number"
         },
         {
-          "name": "enrolment_charges",
+          "name": "query_enrolment_charges",
           "type": "array",
           "sub": [
             {
-              "name": "enrolment_uuid",
-              "type": "number"
+              "type": "text",
+              "name": "uuid"
             },
             {
-              "name": "startTimeDisplay",
-              "type": "text"
+              "type": "number",
+              "name": "id"
             },
             {
-              "name": "classlevel_uuid",
-              "type": "text"
+              "type": "date",
+              "name": "startofweek"
             },
             {
-              "name": "instructor_uuid",
-              "type": "text"
+              "type": "number",
+              "name": "classId"
             },
             {
-              "name": "day",
-              "type": "number"
+              "type": "text",
+              "name": "class_uuid"
             },
             {
-              "name": "enrolment_charges",
-              "type": "array",
-              "sub": [
-                {
-                  "type": "text",
-                  "name": "uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "id"
-                },
-                {
-                  "type": "date",
-                  "name": "startofweek"
-                },
-                {
-                  "type": "number",
-                  "name": "classId"
-                },
-                {
-                  "type": "text",
-                  "name": "class_uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "studentid"
-                },
-                {
-                  "type": "number",
-                  "name": "student_uuid"
-                },
-                {
-                  "type": "text",
-                  "name": "classtype_uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "classTypeId"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolid"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolment_uuid"
-                },
-                {
-                  "type": "date",
-                  "name": "classDate"
-                },
-                {
-                  "type": "number",
-                  "name": "baseRate"
-                },
-                {
-                  "type": "number",
-                  "name": "endisc"
-                },
-                {
-                  "type": "text",
-                  "name": "ennetrate"
-                },
-                {
-                  "type": "text",
-                  "name": "endiscdescription"
-                },
-                {
-                  "type": "text",
-                  "name": "endiscrate"
-                },
-                {
-                  "type": "text",
-                  "name": "familydiscountdesc"
-                },
-                {
-                  "type": "text",
-                  "name": "familydiscountrate"
-                },
-                {
-                  "type": "number",
-                  "name": "familydiscounttotal"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolsubtotal"
-                },
-                {
-                  "type": "boolean",
-                  "name": "holding_fee"
-                },
-                {
-                  "type": "number",
-                  "name": "holding_fee_discount"
-                },
-                {
-                  "type": "number",
-                  "name": "enrolgrandtotal"
-                },
-                {
-                  "type": "number",
-                  "name": "chargeId"
-                },
-                {
-                  "type": "number",
-                  "name": "charge_uuid"
-                },
-                {
-                  "type": "number",
-                  "name": "isvalid"
-                },
-                {
-                  "type": "text",
-                  "name": "debuggerstatus"
-                },
-                {
-                  "type": "number",
-                  "name": "created"
-                },
-                {
-                  "type": "number",
-                  "name": "updated"
-                },
-                {
-                  "type": "number",
-                  "name": "classDate2"
-                },
-                {
-                  "type": "number",
-                  "name": "startofweek2"
-                }
-              ]
+              "type": "number",
+              "name": "studentid"
+            },
+            {
+              "type": "number",
+              "name": "student_uuid"
+            },
+            {
+              "type": "text",
+              "name": "classtype_uuid"
+            },
+            {
+              "type": "number",
+              "name": "classTypeId"
+            },
+            {
+              "type": "number",
+              "name": "enrolid"
+            },
+            {
+              "type": "number",
+              "name": "enrolment_uuid"
+            },
+            {
+              "type": "date",
+              "name": "classDate"
+            },
+            {
+              "type": "number",
+              "name": "baseRate"
+            },
+            {
+              "type": "number",
+              "name": "endisc"
+            },
+            {
+              "type": "text",
+              "name": "ennetrate"
+            },
+            {
+              "type": "text",
+              "name": "endiscdescription"
+            },
+            {
+              "type": "text",
+              "name": "endiscrate"
+            },
+            {
+              "type": "text",
+              "name": "familydiscountdesc"
+            },
+            {
+              "type": "text",
+              "name": "familydiscountrate"
+            },
+            {
+              "type": "number",
+              "name": "familydiscounttotal"
+            },
+            {
+              "type": "number",
+              "name": "enrolsubtotal"
+            },
+            {
+              "type": "boolean",
+              "name": "holding_fee"
+            },
+            {
+              "type": "number",
+              "name": "holding_fee_discount"
+            },
+            {
+              "type": "number",
+              "name": "enrolgrandtotal"
+            },
+            {
+              "type": "number",
+              "name": "chargeId"
+            },
+            {
+              "type": "number",
+              "name": "charge_uuid"
+            },
+            {
+              "type": "text",
+              "name": "debuggerstatus"
+            },
+            {
+              "type": "number",
+              "name": "created"
+            },
+            {
+              "type": "number",
+              "name": "updated"
+            },
+            {
+              "type": "text",
+              "name": "created_by"
+            },
+            {
+              "type": "text",
+              "name": "updated_by"
+            },
+            {
+              "type": "number",
+              "name": "isvalid"
+            },
+            {
+              "type": "number",
+              "name": "classDate2"
+            },
+            {
+              "type": "number",
+              "name": "startofweek2"
+            },
+            {
+              "type": "number",
+              "name": "startTimeDecimal"
+            },
+            {
+              "type": "number",
+              "name": "class_day"
+            },
+            {
+              "type": "text",
+              "name": "instructor_uuid"
+            },
+            {
+              "type": "text",
+              "name": "classlevel_uuid"
             }
           ]
         }
@@ -8797,7 +8835,39 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "var_discountgrandtotal": {
+      "meta": null,
+      "outputType": "number"
+    },
+    "ds_variables_store": [
+      {
+        "type": "object",
+        "name": "ledger",
+        "sub": [
+          {
+            "type": "text",
+            "name": "limit"
+          },
+          {
+            "type": "text",
+            "name": "sort"
+          },
+          {
+            "type": "text",
+            "name": "dir"
+          },
+          {
+            "type": "text",
+            "name": "offset"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "name": "new"
+      }
+    ]
   },
   "createFamily": {
     "studentDatastore": [
@@ -13132,5 +13202,293 @@ dmx.config({
       "meta": null,
       "outputType": "text"
     }
+  },
+  "_overview": {
+    "guardianTableRepeat": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "family_uuid",
+          "type": "number"
+        },
+        {
+          "name": "default_email",
+          "type": "number"
+        },
+        {
+          "name": "default_phone",
+          "type": "number"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "primary",
+          "type": "text",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_phones": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "phone"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        },
+        {
+          "type": "number",
+          "name": "guardian_uuid"
+        }
+      ],
+      "outputType": "array"
+    },
+    "studentTableRepeat": {
+      "meta": [
+        {
+          "name": "notes_count",
+          "type": "object",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    }
+  },
+  "_notes": {
+    "rp_familynotes": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "priority",
+          "type": "number"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "subject",
+          "type": "text"
+        },
+        {
+          "name": "family_uuid",
+          "type": "number"
+        },
+        {
+          "name": "created_timestamp",
+          "type": "number"
+        },
+        {
+          "name": "updated_timestamp",
+          "type": "number"
+        },
+        {
+          "name": "created_by",
+          "type": "text",
+          "sub": [
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            }
+          ]
+        },
+        {
+          "name": "updated_by",
+          "type": "text",
+          "sub": [
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_editFamilyNote": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "priority",
+          "type": "number"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "subject",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "family_uuid",
+          "type": "number"
+        },
+        {
+          "name": "created_timestamp",
+          "type": "number"
+        },
+        {
+          "name": "updated_timestamp",
+          "type": "number"
+        },
+        {
+          "name": "created_by",
+          "type": "text",
+          "sub": [
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            }
+          ]
+        },
+        {
+          "name": "updated_by",
+          "type": "text",
+          "sub": [
+            {
+              "type": "text",
+              "name": "firstName"
+            },
+            {
+              "type": "text",
+              "name": "lastName"
+            }
+          ]
+        }
+      ],
+      "outputType": "array"
+    }
+  },
+  "_logs": {
+    "rp_familylogs": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "family_uuid"
+        },
+        {
+          "type": "text",
+          "name": "log_type"
+        },
+        {
+          "type": "text",
+          "name": "log_category"
+        },
+        {
+          "type": "number",
+          "name": "logged_at"
+        },
+        {
+          "type": "text",
+          "name": "logged_by"
+        },
+        {
+          "type": "text",
+          "name": "ip_address"
+        },
+        {
+          "type": "text",
+          "name": "old_value"
+        },
+        {
+          "type": "text",
+          "name": "new_value"
+        }
+      ],
+      "outputType": "array"
+    },
+    "query": [
+      {
+        "type": "text",
+        "name": "flogs_offset"
+      },
+      {
+        "type": "text",
+        "name": "flogs_limit"
+      }
+    ]
   }
 });

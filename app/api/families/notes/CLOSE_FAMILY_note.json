@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "note_uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_note",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "family_notes",
+                "column": "family_uuid"
+              },
+              {
+                "table": "family_notes",
+                "column": "subject"
+              }
+            ],
+            "table": {
+              "name": "family_notes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "family_notes.uuid",
+                  "field": "family_notes.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.note_uuid}}",
+                  "data": {
+                    "table": "family_notes",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT family_uuid, subject\nFROM family_notes\nWHERE uuid = :P1 /* {{$_GET.note_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.note_uuid}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "text",
+            "name": "subject"
+          }
+        ],
+        "type": "dbconnector_single",
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "update",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "family_notes",
+                      "column": "status",
+                      "type": "text",
+                      "value": "2"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "updated_timestamp",
+                      "type": "number",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "updated_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    }
+                  ],
+                  "table": "family_notes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "field": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_GET.note_uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "returning": "uuid",
+                  "query": "UPDATE family_notes\nSET status = '2', updated_timestamp = :P1 /* {{TIMESTAMP}} */, updated_by = :P2 /* {{identity}} */\nWHERE uuid = :P3 /* {{$_GET.note_uuid}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P3",
+                      "value": "{{$_GET.note_uuid}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/CREATE_FAMILY_log",
+          "params": {
+            "family_uuid": "{{query_note.family_uuid}}",
+            "log_category": "Family Note",
+            "log_type": "updated",
+            "new_value": "{{'Note Closed. \\\\nSubject: '+query_note.subject}}"
+          }
+        },
+        "output": true
+      }
+    ]
+  }
+}

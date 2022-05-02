@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "offset"
+      },
+      {
+        "type": "text",
+        "name": "limit"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "log_category"
+      },
+      {
+        "type": "text",
+        "name": "log_type"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "query_logs",
+      "module": "dbconnector",
+      "action": "paged",
+      "options": {
+        "sql": {
+          "type": "SELECT",
+          "columns": [],
+          "table": {
+            "name": "family_logs"
+          },
+          "primary": "uuid",
+          "joins": [],
+          "wheres": {
+            "condition": "AND",
+            "rules": [
+              {
+                "id": "family_logs.family_uuid",
+                "field": "family_logs.family_uuid",
+                "type": "double",
+                "operator": "equal",
+                "value": "{{$_GET.family_uuid}}",
+                "data": {
+                  "table": "family_logs",
+                  "column": "family_uuid",
+                  "type": "number",
+                  "columnObj": {
+                    "type": "reference",
+                    "maxLength": 50,
+                    "primary": false,
+                    "nullable": false,
+                    "references": "uuid",
+                    "inTable": "families",
+                    "onUpdate": "CASCADE",
+                    "onDelete": "CASCADE",
+                    "name": "family_uuid"
+                  }
+                },
+                "operation": "="
+              },
+              {
+                "condition": "AND",
+                "rules": [
+                  {
+                    "id": "family_logs.log_category",
+                    "field": "family_logs.log_category",
+                    "type": "string",
+                    "operator": "equal",
+                    "value": "{{$_GET.log_category}}",
+                    "data": {
+                      "table": "family_logs",
+                      "column": "log_category",
+                      "type": "text",
+                      "columnObj": {
+                        "type": "text",
+                        "maxLength": 65535,
+                        "primary": false,
+                        "nullable": true,
+                        "name": "log_category"
+                      }
+                    },
+                    "operation": "="
+                  }
+                ],
+                "conditional": "{{$_GET.log_category.length()>0}}"
+              },
+              {
+                "condition": "AND",
+                "rules": [
+                  {
+                    "id": "family_logs.log_type",
+                    "field": "family_logs.log_type",
+                    "type": "string",
+                    "operator": "equal",
+                    "value": "{{$_GET.log_type}}",
+                    "data": {
+                      "table": "family_logs",
+                      "column": "log_type",
+                      "type": "text",
+                      "columnObj": {
+                        "type": "enum",
+                        "maxLength": 11,
+                        "primary": false,
+                        "nullable": false,
+                        "name": "log_type"
+                      }
+                    },
+                    "operation": "="
+                  }
+                ],
+                "conditional": "{{$_GET.log_type.length()>0}}"
+              }
+            ],
+            "conditional": null,
+            "valid": true
+          },
+          "query": "SELECT *\nFROM family_logs\nWHERE family_uuid = :P1 /* {{$_GET.family_uuid}} */ AND (log_category = :P2 /* {{$_GET.log_category}} */) AND (log_type = :P3 /* {{$_GET.log_type}} */)\nORDER BY logged_at DESC",
+          "params": [
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P1",
+              "value": "{{$_GET.family_uuid}}"
+            },
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P2",
+              "value": "{{$_GET.log_category}}"
+            },
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P3",
+              "value": "{{$_GET.log_type}}"
+            }
+          ],
+          "orders": [
+            {
+              "table": "family_logs",
+              "column": "logged_at",
+              "direction": "DESC",
+              "recid": 1
+            }
+          ]
+        },
+        "connection": "db"
+      },
+      "output": true,
+      "meta": [
+        {
+          "name": "offset",
+          "type": "number"
+        },
+        {
+          "name": "limit",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "page",
+          "type": "object",
+          "sub": [
+            {
+              "name": "offset",
+              "type": "object",
+              "sub": [
+                {
+                  "name": "first",
+                  "type": "number"
+                },
+                {
+                  "name": "prev",
+                  "type": "number"
+                },
+                {
+                  "name": "next",
+                  "type": "number"
+                },
+                {
+                  "name": "last",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "name": "current",
+              "type": "number"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "data",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "family_uuid"
+            },
+            {
+              "type": "text",
+              "name": "log_type"
+            },
+            {
+              "type": "text",
+              "name": "log_category"
+            },
+            {
+              "type": "number",
+              "name": "logged_at"
+            },
+            {
+              "type": "text",
+              "name": "logged_by"
+            },
+            {
+              "type": "text",
+              "name": "ip_address"
+            },
+            {
+              "type": "text",
+              "name": "old_value"
+            },
+            {
+              "type": "text",
+              "name": "new_value"
+            }
+          ]
+        }
+      ],
+      "outputType": "object"
+    }
+  }
+}

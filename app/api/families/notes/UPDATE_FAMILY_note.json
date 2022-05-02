@@ -1,0 +1,190 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "familynoteid"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "content"
+      },
+      {
+        "type": "number",
+        "name": "priority"
+      },
+      {
+        "type": "text",
+        "name": "subject"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "old_content"
+      },
+      {
+        "type": "text",
+        "name": "old_subject"
+      },
+      {
+        "type": "text",
+        "name": "old_priority"
+      },
+      {
+        "type": "text",
+        "name": "note_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "update",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "familyNotes",
+                      "column": "content",
+                      "type": "text",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "table": "familyNotes",
+                      "column": "priority",
+                      "type": "number",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "table": "familyNotes",
+                      "column": "subject",
+                      "type": "text",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "updated_timestamp",
+                      "type": "number",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "table": "family_notes",
+                      "column": "updated_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    }
+                  ],
+                  "table": "family_notes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "field": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_POST.note_uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "UPDATE family_notes\nSET content = :P1 /* {{$_POST.content}} */, priority = :P2 /* {{$_POST.priority}} */, subject = :P3 /* {{$_POST.subject}} */, updated_timestamp = :P4 /* {{TIMESTAMP}} */, updated_by = :P5 /* {{identity}} */\nWHERE uuid = :P6 /* {{$_POST.note_uuid}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "name": ":P5",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P6",
+                      "value": "{{$_POST.note_uuid}}"
+                    }
+                  ],
+                  "returning": "uuid"
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ],
+              "output": true
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/CREATE_FAMILY_log",
+          "params": {
+            "family_uuid": "{{$_POST.family_uuid}}",
+            "log_category": "Family Note",
+            "log_type": "updated",
+            "logged_at": "{{TIMESTAMP}}",
+            "logged_by": "{{identity}}",
+            "old_value": "{{'Subject: '+$_POST.old_subject+'\\\\nContent: '+$_POST.old_content+'\\\\nPriority: '+$_POST.old_priority}}",
+            "new_value": "{{'Subject: '+$_POST.subject+'\\\\nContent: '+$_POST.content+'\\\\nPriority: '+$_POST.priority}}"
+          }
+        },
+        "output": true
+      }
+    ]
+  }
+}

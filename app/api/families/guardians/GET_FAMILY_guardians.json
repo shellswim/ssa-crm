@@ -1,0 +1,341 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_guardians",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "guardians",
+                "column": "*"
+              },
+              {
+                "table": "phoneNumbers",
+                "column": "phone"
+              },
+              {
+                "table": "emails",
+                "column": "address"
+              }
+            ],
+            "table": {
+              "name": "guardians"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "phoneNumbers",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "phoneNumbers",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "guardians",
+                        "column": "default_phone"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "emails",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "emails",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "guardians",
+                        "column": "default_email"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.family_uuid",
+                  "field": "guardians.family_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "family_uuid",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "families",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "family_uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT guardians.*, phoneNumbers.phone, emails.address\nFROM guardians\nLEFT JOIN phoneNumbers ON (phoneNumbers.uuid = guardians.default_phone) LEFT JOIN emails ON (emails.uuid = guardians.default_email)\nWHERE guardians.family_uuid = :P1 /* {{$_GET.family_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              }
+            ]
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "relationship"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "default_email"
+          },
+          {
+            "type": "number",
+            "name": "default_phone"
+          },
+          {
+            "type": "text",
+            "name": "phone"
+          },
+          {
+            "type": "text",
+            "name": "address"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "guardians",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "outputFilter": "exclude",
+          "repeat": "{{query_guardians}}",
+          "outputFields": [],
+          "exec": {
+            "steps": [
+              {
+                "name": "query_primary_guardian",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "families",
+                        "column": "guardian_uuid",
+                        "alias": "primary",
+                        "aggregate": ""
+                      }
+                    ],
+                    "table": {
+                      "name": "families"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "families.uuid",
+                          "field": "families.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{$_GET.family_uuid}}",
+                          "data": {
+                            "table": "families",
+                            "column": "uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": true,
+                              "nullable": false,
+                              "comment": "families uuid column for later use",
+                              "name": "uuid"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT guardian_uuid AS primary\nFROM families\nWHERE uuid = :P1 /* {{$_GET.family_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{$_GET.family_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "primary"
+                  }
+                ],
+                "outputType": "object"
+              },
+              {
+                "name": "primary",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{(uuid === query_primary_guardian.primary) ? true : false}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "family",
+            "type": "number"
+          },
+          {
+            "name": "relationship",
+            "type": "number"
+          },
+          {
+            "name": "family_uuid",
+            "type": "number"
+          },
+          {
+            "name": "default_email",
+            "type": "number"
+          },
+          {
+            "name": "default_phone",
+            "type": "number"
+          },
+          {
+            "name": "phone",
+            "type": "text"
+          },
+          {
+            "name": "address",
+            "type": "text"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}
