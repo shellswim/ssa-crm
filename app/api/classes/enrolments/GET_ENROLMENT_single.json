@@ -3,7 +3,7 @@
     "$_GET": [
       {
         "type": "text",
-        "name": "uuid"
+        "name": "enrolment_uuid"
       }
     ]
   },
@@ -22,13 +22,13 @@
               "name": "enrolments"
             },
             "joins": [],
-            "query": "SELECT *\nFROM enrolments\nWHERE uuid = :P1 /* {{$_GET.uuid}} */",
+            "query": "SELECT *\nFROM enrolments\nWHERE uuid = :P1 /* {{$_GET.enrolment_uuid}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{$_GET.uuid}}"
+                "value": "{{$_GET.enrolment_uuid}}"
               }
             ],
             "wheres": {
@@ -39,18 +39,26 @@
                   "field": "enrolments.uuid",
                   "type": "string",
                   "operator": "equal",
-                  "value": "{{$_GET.uuid}}",
+                  "value": "{{$_GET.enrolment_uuid}}",
                   "data": {
                     "table": "enrolments",
                     "column": "uuid",
-                    "type": "text"
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
                   },
                   "operation": "="
                 }
               ],
               "conditional": null,
               "valid": true
-            }
+            },
+            "primary": "uuid"
           }
         },
         "output": true,
@@ -132,8 +140,12 @@
             "name": "priceOverrideType"
           },
           {
-            "type": "text",
-            "name": "debuggerstatus"
+            "type": "boolean",
+            "name": "deleted"
+          },
+          {
+            "type": "number",
+            "name": "deleted_time"
           }
         ],
         "outputType": "object"
@@ -235,6 +247,10 @@
           {
             "type": "number",
             "name": "familyold"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
           }
         ],
         "outputType": "object"
@@ -273,98 +289,28 @@
                 "column": "max"
               },
               {
-                "table": "days",
-                "column": "name",
-                "alias": "dayName",
-                "aggregate": ""
+                "table": "classes",
+                "column": "day",
+                "alias": "classday"
               },
               {
-                "table": "staff",
-                "column": "firstName",
-                "alias": "instructorFirstName"
+                "table": "classes",
+                "column": "instructor_uuid"
               },
               {
-                "table": "staff",
-                "column": "lastName",
-                "alias": "instructorLastName"
+                "table": "classes",
+                "column": "classlevel_uuid"
               },
               {
-                "table": "classLevels",
-                "column": "name",
-                "alias": "levelName"
-              },
-              {
-                "table": "classLevels",
-                "column": "colour",
-                "alias": "levelColour"
+                "table": "classes",
+                "column": "classtype_uuid"
               }
             ],
             "table": {
               "name": "classes"
             },
-            "joins": [
-              {
-                "table": "days",
-                "column": "*",
-                "type": "INNER",
-                "clauses": {
-                  "condition": "AND",
-                  "rules": [
-                    {
-                      "table": "days",
-                      "column": "id",
-                      "operator": "equal",
-                      "value": {
-                        "table": "classes",
-                        "column": "day"
-                      },
-                      "operation": "="
-                    }
-                  ]
-                }
-              },
-              {
-                "table": "staff",
-                "column": "*",
-                "type": "INNER",
-                "clauses": {
-                  "condition": "AND",
-                  "rules": [
-                    {
-                      "table": "staff",
-                      "column": "id",
-                      "operator": "equal",
-                      "value": {
-                        "table": "classes",
-                        "column": "instructor"
-                      },
-                      "operation": "="
-                    }
-                  ]
-                }
-              },
-              {
-                "table": "classLevels",
-                "column": "*",
-                "type": "INNER",
-                "clauses": {
-                  "condition": "AND",
-                  "rules": [
-                    {
-                      "table": "classLevels",
-                      "column": "id",
-                      "operator": "equal",
-                      "value": {
-                        "table": "classes",
-                        "column": "classLevel"
-                      },
-                      "operation": "="
-                    }
-                  ]
-                }
-              }
-            ],
-            "query": "SELECT classes.id, classes.startTimeDecimal, classes.endTimeDecimal, classes.startTimeDisplay, classes.endTimeDisplay, classes.max, days.name AS dayName, staff.firstName AS instructorFirstName, staff.lastName AS instructorLastName, classLevels.name AS levelName, classLevels.colour AS levelColour\nFROM classes\nINNER JOIN days ON (days.id = classes.day) INNER JOIN staff ON (staff.id = classes.instructor) INNER JOIN classLevels ON (classLevels.id = classes.classLevel)\nWHERE classes.uuid = :P1 /* {{enrolment.class_uuid}} */",
+            "joins": [],
+            "query": "SELECT id, startTimeDecimal, endTimeDecimal, startTimeDisplay, endTimeDisplay, max, day AS classday, instructor_uuid, classlevel_uuid, classtype_uuid\nFROM classes\nWHERE uuid = :P1 /* {{enrolment.class_uuid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -392,7 +338,8 @@
               ],
               "conditional": null,
               "valid": true
-            }
+            },
+            "primary": "uuid"
           }
         },
         "output": true,
@@ -422,24 +369,20 @@
             "name": "max"
           },
           {
-            "type": "text",
-            "name": "dayName"
+            "type": "number",
+            "name": "classday"
           },
           {
             "type": "text",
-            "name": "instructorFirstName"
+            "name": "instructor_uuid"
           },
           {
             "type": "text",
-            "name": "instructorLastName"
+            "name": "classlevel_uuid"
           },
           {
             "type": "text",
-            "name": "levelName"
-          },
-          {
-            "type": "text",
-            "name": "levelColour"
+            "name": "classtype_uuid"
           }
         ],
         "outputType": "object"

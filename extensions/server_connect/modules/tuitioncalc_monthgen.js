@@ -4,7 +4,6 @@ const db = require('../../../lib/core/db');
 const _ = require('underscore');
 
 exports.tuitioncalc_monthgen = async function(options) {
-
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
     // get the database connection
@@ -26,12 +25,18 @@ exports.tuitioncalc_monthgen = async function(options) {
         `)).value;
 
     let charges = await get_charges(startofmonth);
-
+    debugger; 
     if(Array.isArray(charges) && charges.length > 0) {
         chargearray = create_monthsarray(charges);
+        if(chargeahead) {
+            let nextmonth = DateTime.now().startOf('month').plus({months: 1}).toISODate();
+            if(!chargearray.includes(nextmonth)) {
+                chargearray.push(nextmonth);
+            }
+        }
     } else {
         let months = [startofmonth.toISODate()];
-        if(chargeahead && startofmonth.plus({months: 1}).month <= DateTime.now().plus({months: 1}).month) {
+        if(chargeahead && startofmonth.month <= DateTime.now().plus({months: 1}).month) {
             months.push(startofmonth.plus({months: 1}).toISODate());
         }
         chargearray = months;

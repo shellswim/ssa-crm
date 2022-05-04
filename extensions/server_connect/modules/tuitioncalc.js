@@ -11,7 +11,6 @@ const {
 } = require('mathjs');
 
 exports.tuitioncalc = async function (options) {
-    
     options = this.parse(options);
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -125,6 +124,9 @@ exports.tuitioncalc = async function (options) {
             for (let k = 0; k < se.days.length; k++) {
                 dayint = se.calendar_days[k].dayint;
                 let enrolquery = await getEnrolments(student.uuid, se.start, se.end, dayint);
+                
+                // Remove enrolments whose dropdate is before current class date.
+
                 enrolquery.enrolments.map(e => {
                     // Filter enrolments falling outside of current month.
                     if(e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()) {
@@ -402,6 +404,7 @@ exports.tuitioncalc = async function (options) {
     }
 
     async function getEnrolments(studentid, start, end, dayint) {
+        let enrols_array = [];
         let enrolments = dbClient(await db.raw(`
             SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid, c.startTimeDisplay, '${start}' AS startofweek 
             FROM enrolments e 
@@ -415,14 +418,19 @@ exports.tuitioncalc = async function (options) {
                     OR e.dropDate BETWEEN '${start}' AND '${end}') 
                 AND (e.startDate <= '${end}' OR e.startDate BETWEEN '${start}' AND '${end}')
                 AND c.day IN(${dayint})
+                AND e.deleted = 0
                 ORDER BY c.day, c.startTimeDecimal
         `));
+        
         for(let i=0;i<enrolments.length;i++) {
             let e = enrolments[i];
-            let add_days = dayint - 1;
+            let add_days = dayint - 1, dropdate = DateTime.fromSQL(e.dropDate).toSeconds();
             e.classdate_timestamp = DateTime.fromISO(start).plus({days: add_days}).toSeconds();
             e.classdate = DateTime.fromISO(start).plus({days: add_days}).toISODate();
-            
+
+            // If dropdate is before current class date, stop execution of current loop and deny push of enrolment to array.
+            if(dropdate && dropdate < e.classdate_timestamp) continue;
+
             // Add Base Rates
             e.baseRate = dbClientSingleValue(await db.raw(`
                 SELECT cb.baserate
@@ -431,8 +439,14 @@ exports.tuitioncalc = async function (options) {
                     '${e.classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
                     AND cb.classlevel_uuid = '${e.classlevel_uuid}';
             `),'baserate');
+
+            enrols_array.push(e);
         }
-        if (dummyenrol && dummyJSON.student_uuid == studentid && dummyJSON.classday == dayint && DateTime.fromISO(dummyJSON.startDate).toSeconds() <= DateTime.fromISO(end).toSeconds()) {
+        // enrolments = enrolments.filter(e => {
+        //     return DateTime.fromSQL(e.dropDate).toSeconds() > e.classdate_timestamp;
+        // });
+
+        if (dummyenrol && dummyJSON?.student_uuid == studentid && dummyJSON?.classday == dayint && DateTime.fromISO(dummyJSON?.startDate).toSeconds() <= DateTime.fromISO(end).toSeconds() && (dummyJSON?.dropDate ? DateTime.fromISO(dummyJSON?.dropDate).toSeconds() >= DateTime.fromISO(start).plus({days: dayint - 1}).toSeconds() : true)) {
             let classdate_timestamp = DateTime.fromISO(start).plus({days: dayint - 1}).toSeconds();
             let classdate = DateTime.fromISO(start).plus({days: dayint - 1}).toISODate();
             let baserate = dbClientSingleValue(await db.raw(`
@@ -464,7 +478,6 @@ exports.tuitioncalc = async function (options) {
                 "startofweek": start,
                 "uuid": 'dummy',
             });
-
         }
         if(Array.isArray(enrolments) && enrolments.length > 0) {
             enrolments.map(e => {
@@ -680,7 +693,7 @@ exports.tuitioncalc = async function (options) {
             return v = v.rows;
         }
     }
-
+    debugger;
 
     return {
         "family_uuid": options.family_uuid,
@@ -703,4 +716,5 @@ exports.tuitioncalc = async function (options) {
         },
         'enrolments': family_enrolments
     };
+
 }

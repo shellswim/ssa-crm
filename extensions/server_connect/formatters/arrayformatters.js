@@ -1,3 +1,5 @@
+const { filter } = require("underscore");
+
 module.exports = {
     lastIndex: function(val) {
         return arr.lastIndexOf(val);
@@ -19,5 +21,10 @@ module.exports = {
     },
     stringify: function(val) {
         return JSON.stringify(val);
+    },
+    removeEmptyObjects: function(val) {
+        return val.filter(a => {
+            return Object.keys(a).length > 0;
+        });
     }
 }

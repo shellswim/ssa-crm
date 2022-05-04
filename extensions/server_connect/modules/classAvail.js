@@ -71,16 +71,16 @@ exports.classAvail = async function (options) {
     /** Setup Filters */
     let filtered_classes = false; // Boolean switch for filters.
     let filters = {
-            "day_filter": this.parse(options.day_filter) == '' ? [] : this.parse(options.day_filter).split(',').map((i) => {
+            "day_filter": this.parse(options.day_filter) == '' ? [] : this.parse(options.day_filter).map((i) => {
                 return Number(i)
             }),
-            "time_filter": this.parse(options.time_filter) == '' ? [] : this.parse(options.time_filter).split(',').map((i) => {
+            "time_filter": this.parse(options.time_filter) == '' ? [] : this.parse(options.time_filter).map((i) => {
                 return Number(i)
             }),
-            "instructor_filter": this.parse(options.instructor_filter) == '' ? [] : this.parse(options.instructor_filter).split(',').map((i) => {
+            "instructor_filter": this.parse(options.instructor_filter) == '' ? [] : this.parse(options.instructor_filter).map((i) => {
                 return `'` + i + `'`
             }),
-            "level_filter": this.parse(options.level_filter) == '' ? [] : this.parse(options.level_filter).split(',').map((i) => {
+            "level_filter": this.parse(options.level_filter) == '' ? [] : this.parse(options.level_filter).map((i) => {
                 return `'` + i + `'`
             })
         },
@@ -134,9 +134,12 @@ exports.classAvail = async function (options) {
         c.max,
         c.classtype_uuid,
         c.classType,
-        ct.shortName
+        ct.shortName,
+        ct.id,
+        i.id,
+        cl.id
 
-    FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
+    FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
     ${filters_applied ? `WHERE` : ``}
     ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
     ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
@@ -153,7 +156,7 @@ exports.classAvail = async function (options) {
             FIELD(day, 7, 1, 2, 3, 4, 5, 6)
         WHEN 'Monday' THEN
             c.day
-    END),c.startTimeDecimal
+    END),c.startTimeDecimal,cl.id, i.id
     ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
     `));
 
@@ -255,7 +258,6 @@ exports.classAvail = async function (options) {
     }
 
     async function processClass(weekday, class_uuid, classmax, classinfo) {
-
         let enrolments, 
             weekly_total_enrols = [],
             weekday_arr = [],
@@ -267,14 +269,11 @@ exports.classAvail = async function (options) {
             absence_array = [];
 
         // Get enrolment counts and availabilities.
+        let idx = 0;
         while(classprocess_weekday.toSeconds() <= enrolment_max_date.toSeconds()) {
-
-            let enrolments_processed = await processEnrolments(classinfo,weekday);
-
-            enrolment_count = enrolments_processed.enrolmentcount_bytype;
-            let enrolmenttotal = enrolments_processed.enrolmenttotal;
-            enrolments = enrolments_processed.enrolments;
-            weekly_total_enrols.push(enrolmenttotal);
+            let enrolments_processed = await processEnrolments(classinfo,classprocess_weekday);
+            if(idx === 0) enrolments = enrolments_processed.enrolments;
+            weekly_total_enrols.push(enrolments_processed.enrolmenttotal);
             weekday_arr.push(classprocess_weekday);
 
             // Increment the week;
@@ -287,6 +286,7 @@ exports.classAvail = async function (options) {
             classprocess_weekday = classprocess_weekday.plus({
                 days: 7
             });
+            idx += 1;
         }
         
         let mu_array_indexes = [],
@@ -379,7 +379,7 @@ exports.classAvail = async function (options) {
 
         let enrolments = dbClient(await db.raw(`
             SELECT
-                e.uuid,
+                e.uuid AS enrolment_uuid,
                 e.enrolmentType,
                 s.age,
                 e.class_uuid,

@@ -39,7 +39,7 @@
 <dmx-serverconnect id="checkClassTimeslot" noload url="/api/classes/checkClassTimeslot"></dmx-serverconnect>
 
 
-<dmx-serverconnect id="classesBase" url="/api/classes/classesBase" dmx-param:sort="classesQuery.data.sort" dmx-param:dir="classesQuery.data.dir" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:viewtype="'list'" dmx-param:filter_days="class_filter_store.data.filter_days || []" dmx-param:filter_times="class_filter_store.data.filter_times || []" dmx-param:filter_levels="class_filter_store.data.filter_levels || []" dmx-param:filter_instructors="class_filter_store.data.filter_instructors || []" dmx-param:avails_amount="class_filter_store.data.availabilities.amount" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-on:success="var_classlist_count.setValue(classesBase.data.nextavail.classes.length)" dmx-param:weekdate="weekrange_todaydate_picker.value" dmx-param:startofweek="appSettings.weekstart" dmx-on:error="run({condition:{if:`classesBase.lastError.response.message.startsWith(\'Date Range Error\')`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Date Range Error',`classesBase.lastError.response.message`]}},{run:{action:`weekrange_todaydate_picker.setValue(dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}}]}}})">
+<dmx-serverconnect id="classesBase" url="/api/classes/classesBase" dmx-param:sort="classesQuery.data.sort" dmx-param:dir="classesQuery.data.dir" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:viewtype="'list'" dmx-param:filter_days="class_filter_store.data.filter_days || []" dmx-param:filter_times="class_filter_store.data.filter_times || []" dmx-param:filter_levels="class_filter_store.data.filter_levels || []" dmx-param:filter_instructors="class_filter_store.data.filter_instructors || []" dmx-param:avails_amount="class_filter_store.data.availabilities.amount" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-on:success="var_classlist_count.setValue(classesBase.data.nextavail.classes.length)" dmx-param:weekdate="weekrange_todaydate_picker.value" dmx-param:startofweek="appSettings.weekstart" dmx-on:error="run({condition:{if:`classesBase.lastError.response.message.startsWith(\'Date Range Error\')`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Date Range Error',`classesBase.lastError.response.message`]}},{run:{action:`weekrange_todaydate_picker.setValue(dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}}]}}})" sockets="true">
 </dmx-serverconnect>
 
 
@@ -49,6 +49,7 @@
 <dmx-serverconnect id="searchClasses" url="/api/classes/searchClasses" noload dmx-param:offset=""></dmx-serverconnect>
 <dmx-serverconnect id="classHumanDetailsGlobal" url="/api/classes/getClassHumanDetails_SINGLE" noload=""></dmx-serverconnect>
 
+<dmx-serverconnect id="GET_ENROLMENT_single" url="/api/classes/enrolments/GET_ENROLMENT_single" noload></dmx-serverconnect>
 <dmx-serverconnect id="getClassDetails" url="/api/classes/getClassDetails" noload></dmx-serverconnect>
 
 <div class="modal fade" id="enrolmentSearchModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="inp_newEnrolDropDate.setValue(null);queryManager.remove('searchtextfilter');active_enroltype_toggle.disable(false);trial_enroltype_toggle.disable(false);makeup_enroltype_toggle.disable(false);casual_enroltype_toggle.disable(false);waitlist_enroltype_toggle.disable(false)">
@@ -69,8 +70,9 @@
                 <section>
                     <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
                         <div class="col">
-                            <h6>Choose Enrolment Type</h6>
-                            <div class="row">
+
+                            <h6>Enrolment Details</h6>
+                            <div class="row mb-1 pb-2 border-bottom g-0">
                                 <div class="col d-flex justify-content-start">
 
                                     <input type="radio" class="btn-check" name="btnradio" id="active_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'active'" value="standard">
@@ -90,11 +92,6 @@
 
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
-                        <div class="col">
-                            <h6>Enrolment Dates</h6>
                             <div class="row">
                                 <div class="col">
                                     <dmx-value id="var_newenrol_startdate"></dmx-value>
@@ -105,6 +102,7 @@
                                     <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
                                     <p class="small text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)" dmx-hide="!inp_newEnrolDropDate.value"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
                                     <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="enrolmentSearchModal.inp_newEnrolStartDate.value" step="7">
+
                                 </div>
                             </div>
                         </div>
@@ -116,8 +114,8 @@
                                     <h6>Family Search</h6>
                                     <div class="input-group">
 
-                                        <span class="input-group-text bg-dark text-white"><i class="fas fa-search"></i></span>
-                                        <input id="inp_searchModal" name="inp_searchModal" type="text" class="form-control form-control-lg" style="" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:500="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])" placeholder="Search for families or students">
+                                        <span class="input-group-text bg-info text-white border-0"><i class="fas fa-search"></i></span>
+                                        <input id="inp_searchModal" name="inp_searchModal" type="text" class="form-control" style="" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:500="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])" placeholder="Search for families or students">
 
                                     </div>
                                 </div>
@@ -165,7 +163,7 @@
                                                             <dmx-serverconnect id="sc_quote2" url="/api/classes/enrolments/GENERATE_QUOTE_enrolment" dmx-param:enrolmentType="1" dmx-param:student_uuid="uuid.formatDate('yyyy-MM-dd')" dmx-param:startdate="enrolmentSearchModal.inp_newEnrolStartDate.value" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" dmx-param:enabledummyenrol="1" noload></dmx-serverconnect>
 
                                                             <dmx-serverconnect id="sc_checkenrolexists" url="/api/classes/enrolments/CHECK_ENROLMENT_exists" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid" dmx-param:startdate="2022-03-23" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" noload=""></dmx-serverconnect>
-                                                            <button id="addActive" class="btn btn-sm btn-active-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(1);newEnrolmentModal.createEnrolmentForm.inp_hd_ne_dummyenrol_json.setValue([&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, null,&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify())`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, null,&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\')})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="fas fa-user-plus fa-sm me-1 fa-fw"></i>Add
+                                                            <button id="addActive" class="btn btn-sm btn-active-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(1);newEnrolmentModal.createEnrolmentForm.inp_hd_ne_dummyenrol_json.setValue([&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify())`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'), dropDate: inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\')})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="fas fa-user-plus fa-sm me-1 fa-fw"></i>Add
 
                                                             </button>
 
@@ -1504,112 +1502,109 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="transferEnrolmentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="getEnrolmentSingle.reset();transferEnrolmentForm.reset();classTransferSearchModal.tsm_searchClassForm.reset()" dmx-style:opacity="">
+<div class="modal fade" id="transferEnrolmentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="GET_ENROLMENT_single.reset();transferEnrolmentForm.reset();classTransferSearchModal.tsm_searchClassForm.reset()" dmx-style:opacity="">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
 
-            <div class="modal-header text-light bg-secondary">
-                <h5 class="modal-title">Transfer Enrolment: {{getEnrolmentSingle.data.student.firstName+' '+getEnrolmentSingle.data.student.lastName}}<br></h5>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-random fa-sm fa-fw me-2 text-primary"></i>Transfer Enrolment:
+
+                </h5>
                 <button type="button" class="btn-close text-light" aria-label="Close" data-bs-dismiss="modal">
                     <span aria-hidden="true" class="visually-hidden">×</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <form is="dmx-serverconnect-form" id="transferEnrolmentForm" method="post" action="/api/classes/transferEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-on:success="transferEnrolmentModal.hide();notifies1.success(getEnrolmentSingle.data.student.firstName+' '+getEnrolmentSingle.data.student.lastName+'\'s enrolment successfully transferred.');classesBase.load()" dmx-param:fromenrolmentid="{{getEnrolmentSingle.data.enrolment.id}}">
+            <div class="modal-body light-blue-bg">
+                <form is="dmx-serverconnect-form" id="transferEnrolmentForm" method="post" action="/api/classes/transferEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-on:success="transferEnrolmentModal.hide();notifies1.success(GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName+'\'s enrolment successfully transferred.');classesBase.load()" dmx-param:fromenrolmentid="{{GET_ENROLMENT_single.data.enrolment.id}}">
 
-                    <div class="row" id="row_transferringFrom">
-                        <div class="col">
-                            <p class="text-muted rounded-small border p-2">
-                                <strong>Transferring From:<br></strong>
-                                {{getEnrolmentSingle.data.class.dayName+' '+getEnrolmentSingle.data.class.levelName+' - '+getEnrolmentSingle.data.class.startTimeDisplay+' - '+getEnrolmentSingle.data.class.instructorFirstName+' '+getEnrolmentSingle.data.class.instructorLastName.trunc(1, true, '.')}}
-                            </p>
+                    <div class="row row-cols-1 g-0 mb-3" id="row_transferringFrom">
+                        <div class="col p-4 py-3 rounded-3 bg-white pdl-surface-shadow">
 
-                        </div>
-                        <div class="col-break w-100"></div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_dropDate" class="col-form-label form-label">Drop date (current class)</label>
-                                <input type="date" class="form-control" id="inp_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="Enter Drop date" dmx-bind:value="getEnrolmentSingle.data.enrolment.dropDate.formatDate('yyyy-MM-dd')" required="">
-                            </div>
-                        </div>
-                        <div class="col-break w-100"></div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" value="" id="cb_tr_addTransferReason" name="input1">
-                                    <label class="form-check-label" for="cb_tr_addTransferReason">Add transfer reason?</label>
+                            <h5 class="mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;fas fa-child fa-sm me-1 fa-fw text-primary&quot;></i>'+GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName"><i class="fas fa-child fa-sm me-1 fa-fw text-primary"></i>Some Student Name</h5>
+                            <p dmx-text="'Transferring From: '+appSettings.days_array[GET_ENROLMENT_single.data.class.classday] + ' - ' + GET_ENROLMENT_single.data.class.startTimeDisplay + ' ' + appSettings.classLevelsByID[GET_ENROLMENT_single.data.class.classlevel_uuid].name + ' - ' + appSettings.instructorsById[GET_ENROLMENT_single.data.class.instructor_uuid].trunc_name" class="fw-600">Transferring From:</p>
+
+                            <div class="row mt-2 pt-2 border-top g-0">
+                                <div class="col">
+                                    <label for="inp_dropDate" class="col-form-label form-label">Drop date (current class)</label>
+                                    <input type="text" class="form-control w-auto" id="inp_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="Enter Drop date" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.dropDate.formatDate('yyyy-MM-dd')" required="" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat.lowercase()" data-rule-date="" style="">
+                                    <div class="row mt-2">
+                                        <div class="col">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" value="" id="cb_tr_addTransferReason" name="input1">
+                                                <label class="form-check-label" for="cb_tr_addTransferReason">Add transfer reason?</label>
+                                            </div>
+                                            <div class="collapse" id="transferReasonCollapse" is="dmx-bs5-collapse" dmx-bind:show="cb_tr_addTransferReason.checked">
+                                                <div class="mb-3">
+                                                    <label class="col-form-label form-label" for="cb_tr_futureDropDate">Transfer Reason:</label>
+                                                    <textarea id="inp_tr_dropReason" type="textarea" class="form-control border p-2 rounded-small" rows="4"></textarea>
+                                                    <input id="inp_hd_dropReason" name="dropReason" type="hidden" class="form-control" dmx-bind:value="inp_tr_dropReason.value == &quot;&quot; ? 'Transferred to: ' +GET_ENROLMENT_single.data.class.dayName+' '+GET_ENROLMENT_single.data.class.levelName+' - '+GET_ENROLMENT_single.data.class.startTimeDisplay+' - '+GET_ENROLMENT_single.data.class.instructorFirstName+' '+GET_ENROLMENT_single.data.class.instructorLastName.trunc(1, true, '.') : inp_tr_dropReason.value">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-
-                            <div class="collapse" id="transferReasonCollapse" is="dmx-bs5-collapse" dmx-bind:show="cb_tr_addTransferReason.checked">
-                                <div class="mb-3">
-                                    <label class="col-form-label form-label" for="cb_tr_futureDropDate">Transfer Reason:</label>
-                                    <textarea id="inp_tr_dropReason" type="textarea" class="form-control border p-2 rounded-small" rows="4"></textarea>
-                                    <input id="inp_hd_dropReason" name="dropReason" type="hidden" class="form-control" dmx-bind:value="inp_tr_dropReason.value == &quot;&quot; ? 'Transferred to: ' +getEnrolmentSingle.data.class.dayName+' '+getEnrolmentSingle.data.class.levelName+' - '+getEnrolmentSingle.data.class.startTimeDisplay+' - '+getEnrolmentSingle.data.class.instructorFirstName+' '+getEnrolmentSingle.data.class.instructorLastName.trunc(1, true, '.') : inp_tr_dropReason.value">
-                                </div>
-                            </div>
-
                         </div>
-                        <hr>
+
                     </div>
 
-                    <div class="row" id="row_transferringTo">
+                    <div class="row row-cols-1 g-0" id="row_transferringTo">
 
-                        <div class="col">
+                        <div class="col p-4 py-3 rounded-3 bg-white pdl-surface-shadow">
 
                             <div class="row no-gutters">
                                 <dmx-value id="var_transferToClass"></dmx-value>
                                 <div class="col-break w-100"></div>
 
                             </div>
-                            <hr>
                             <div class="row gx-3">
-                                <div class="col mb-2">
-                                    <p class="text-muted rounded-small border p-2 border-success" dmx-hide="var_transferToClass.value == null"><strong>Transferring To:<br></strong>
-                                        {{var_transferToClass.value.day + ' ' + var_transferToClass.value.level + ' - ' + var_transferToClass.value.time + ' - ' + var_transferToClass.value.instructor }}</p>
-                                    <p class="text-muted rounded-small border border-danger p-2" dmx-show="var_transferToClass.value == null"><strong>Transferring To:<br></strong><i class="fas fa-exclamation-triangle text-danger"></i>&nbsp;<span class="text-danger">Please select a class to transfer to.</span></p>
-                                    <button id="btn_changeTransfer" class="btn btn-outline-primary btn-sm float-end" dmx-hide="var_transferToClass.value == null" dmx-on:click="classTransferSearchModal.show()"><i class="fas fa-sync me-1 fa-xs fa-fw"></i>Change</button>
-                                    <button id="btn_addTransfer" class="btn btn-outline-primary btn-sm float-end" dmx-hide="var_transferToClass.value != null" dmx-on:click="classTransferSearchModal.show()"><i class="fas fa-plus  me-1 fa-fw fa-sm"></i>Add Class</button>
+                                <div class="col">
+                                    <div class="row mb-2 align-items-center">
+                                        <div class="col">
+                                            <p dmx-hide="var_transferToClass.value == null" dmx-text="var_transferToClass.value.day+' - '+var_transferToClass.value.time+' - '+var_transferToClass.value.level+' - '+var_transferToClass.value.instructor " class="fw-600 mb-0">Transferring To:</p>
+                                        </div>
+                                        <div class="col d-flex flex-row justify-content-end"><button id="btn_addTransfer" class="btn btn-sm btn-secondary" dmx-hide="var_transferToClass.value != null" dmx-on:click="classTransferSearchModal.show()"><i class="fas fa-plus-circle  me-1 fa-fw fa-sm"></i>Add Class</button><button id="btn_changeTransfer" class="btn btn-outline-primary btn-sm" dmx-hide="var_transferToClass.value == null" dmx-on:click="classTransferSearchModal.show()"><i class="fas fa-sync me-1 fa-xs fa-fw"></i>Change</button></div>
+                                    </div>
+
+                                    <p class="text-muted rounded-small border border-danger p-2" dmx-show="var_transferToClass.value == null"><i class="fas fa-exclamation-triangle text-danger"></i>&nbsp;<span class="text-danger">Please select a class to transfer to.</span></p>
+
+
                                 </div>
-                                <div class="col-break w-100"></div>
+
+                            </div>
+                            <div class="row">
                                 <div class="col">
                                     <div class="mb-3">
                                         <label for="inp_tr_startDate" class="col-form-label form-label">Start date</label>
-                                        <input type="date" class="form-control" id="inp_tr_startDate" name="startDateTo" aria-describedby="inp_startDate_help" placeholder="Enter Start date" required="">
+                                        <input type="text" class="form-control w-auto" id="inp_tr_startDate" name="startDateTo" placeholder="Enter Start date" required="" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat.lowercase()" data-rule-date="">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row gx-3">
                                 <div class="col">
-                                    <div class="mb-3 mt-3">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_tr_futureDropDate" name="input2">
-                                            <label class="form-check-label" for="cb_tr_futureDropDate">Add future drop date?</label>
-                                        </div>
+                                    <label for="sel_tr_enrolmentType" class="col-form-label form-label">Enrolment Type:</label>
+                                    <select id="sel_tr_enrolmentType" class="form-select w-auto" name="enrolmentTypeTo" dmx-bind:options="appSettings.enrolTypesArray" optiontext="type" optionvalue="id"></select>
+                                </div>
+                            </div>
+                            <div class="row g-0 mb-3">
+                                <div class="col">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" value="" id="cb_tr_futureDropDate" name="input2">
+                                        <label class="form-check-label" for="cb_tr_futureDropDate">Add future drop date?</label>
                                     </div>
                                     <div class="collapse" id="futureDropdateCollapse" is="dmx-bs5-collapse" dmx-bind:show="cb_tr_addTransferReason.checked">
                                         <div class="mb-3">
                                             <label class="col-form-label form-label" for="cb_tr_futureDropDate">Future Drop Date:</label>
-                                            <input id="inp_futureDropDate" name="dropDateTo" class="form-control" type="date">
+                                            <input id="inp_futureDropDate" name="dropDateTo" class="form-control w-auto" type="text" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat.lowercase()" data-rule-date="">
                                         </div>
                                     </div>
                                 </div>
 
                             </div>
-                            <div class="row gx-3">
-                                <div class="col">
-                                    <div class="mb-3">
-                                        <label for="sel_tr_enrolmentType" class="col-form-label form-label">Enrolment Type:</label>
-                                        <select id="sel_tr_enrolmentType" class="form-select" name="enrolmentTypeTo" dmx-bind:options="classesBase.data.enrolmentTypes" optiontext="type" optionvalue="id" dmx-bind:value="getEnrolmentSingle.data.enrolment.enrolmentType"></select>
-                                    </div>
-                                </div>
-                            </div>
-                            <small id="bs4-form-group-help6" class="form-text text-muted text-end">EnrolmentID: {{getEnrolmentSingle.data.enrolment.id}}</small>
+
+                            <small id="bs4-form-group-help6" class="form-text text-muted text-end">EnrolmentID: {{GET_ENROLMENT_single.data.enrolment.uuid}}</small>
 
                         </div>
                         <input id="inp_hd_toClassId" name="toClassId" type="hidden" class="form-control" dmx-bind:value="var_transferToClass.value.id">
-                        <input id="inp_hd_studentId" name="student" type="hidden" class="form-control" dmx-bind:value="getEnrolmentSingle.data.student.id">
+                        <input id="inp_hd_studentId" name="student" type="hidden" class="form-control" dmx-bind:value="GET_ENROLMENT_single.data.student.id">
                     </div>
                 </form>
             </div>
@@ -1624,29 +1619,29 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
 
-            <div class="modal-header text-light bg-secondary">
-                <h5 class="modal-title">Edit Enrolment: {{GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName}}<br></h5>
+            <div class="modal-header border-bottom fw-700">
+                <h5 class="modal-title">Edit Enrolment:<br></h5>
                 <button type="button" class="btn-close text-light" aria-label="Close" data-bs-dismiss="modal">
                     <span aria-hidden="true" class="visually-hidden">×</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <dmx-serverconnect id="GET_ENROLMENT_single" url="/api/classes/enrolments/GET_ENROLMENT_single" noload></dmx-serverconnect>
+            <div class="modal-body light-blue-bg">
+
                 <dmx-value id="var_editenrolment_enroldetail"></dmx-value>
                 <div class="row">
                     <div class="col">
-                        <p class="text-muted">
-                            {{GET_ENROLMENT_single.data.class.dayName+' '+GET_ENROLMENT_single.data.class.levelName+' - '+GET_ENROLMENT_single.data.class.startTimeDisplay+' - '+GET_ENROLMENT_single.data.class.instructorFirstName+' '+GET_ENROLMENT_single.data.class.instructorLastName.trunc(1, true, '.')}}
-                        </p>
-                        <hr>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <form is="dmx-serverconnect-form" id="editEnrolmentForm" method="post" action="/api/classes/editEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-on:success="classesBase.load(true);editEnrolmentModal.hide();notifies1.success(getEnrolmentSingle.data.student.firstName+' '+getEnrolmentSingle.data.student.lastName+'\'s enrolment successfully edited.');classesBase.load()">
-                            <input type="hidden" class="form-control" id="inp_id" name="id" aria-describedby="inp_id_help" placeholder="Enter Id" data-msg-required="" dmx-bind:value="getEnrolmentSingle.data.enrolment.id">
-                            <div class="row gx-3">
-                                <div class="col">
+                        <form is="dmx-serverconnect-form" id="editEnrolmentForm" method="post" action="/api/classes/editEnrolment" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-on:success="classesBase.load(true);editEnrolmentModal.hide();notifies1.success(GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName+'\'s enrolment successfully edited.');classesBase.load()">
+                            <input type="hidden" class="form-control" id="inp_id" name="id" aria-describedby="inp_id_help" placeholder="Enter Id" data-msg-required="" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.id">
+                            <div class="row g-0 mb-2">
+                                <div class="col p-4 py-3 rounded-3 bg-white pdl-surface-shadow">
+                                    <h5 class="mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;fas fa-child fa-sm me-1 fa-fw text-primary&quot;></i>'+GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName"><i class="fas fa-child fa-sm me-1 fa-fw text-primary"></i>Some Student Name</h5>
+                                    <h6 dmx-html="'<i class=&quot;far fa-calendar me-1 fa-fw&quot;></i>'+appSettings.days_array[GET_ENROLMENT_single.data.class.classday]+' - '+GET_ENROLMENT_single.data.class.startTimeDisplay+' '+appSettings.classLevelsByID[GET_ENROLMENT_single.data.class.classlevel_uuid].name+' - '+appSettings.instructorsById[GET_ENROLMENT_single.data.class.instructor_uuid].trunc_name" class="fw-bold mb-0"><i class="far fa-calendar me-1 fa-fw"></i>Sunday - 9:30AM Duckling - John Z.
+                                    </h6>
+                                </div>
+                            </div>
+
+                            <div class="row g-0 mb-2">
+                                <div class="col p-4 pt-3 pb-2 rounded-3 bg-white pdl-surface-shadow">
                                     <div class="mb-3">
                                         <label for="sel_tr_enrolmentType" class="col-form-label form-label">Enrolment Type</label>
                                         <select id="sel_enrolmentType" class="form-select" name="enrolmentType-sel" dmx-bind:options="appSettings.enrolTypesArray" optiontext="type" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.enrolmentType" disabled="true" optionvalue="id">
@@ -1658,39 +1653,59 @@
                             </div>
                             <fieldset dmx-bind:disabled="">
 
-                                <div class="row gx-3">
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_startDate" class="form-label col-form-label">Start date</label>
-                                            <input type="text" class="form-control" id="inp_startDate" name="startDate" aria-describedby="inp_startDate_help" placeholder="dd/mm/yyyy" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.startDate.formatDate('yyyy-MM-dd')" is="dmx-date-picker" format="DD/MM/YYYY">
+                                <div class="row g-0">
+                                    <div class="col p-4 rounded-3 bg-white pdl-surface-shadow">
+                                        <div class="row gx-3">
+                                            <div class="col">
+                                                <div class="mb-3">
+                                                    <label for="inp_startDate" class="form-label col-form-label">Start date</label>
+                                                    <input type="text" class="form-control" id="inp_startDate" name="startDate" aria-describedby="inp_startDate_help" placeholder="dd/mm/yyyy" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.startDate.formatDate('yyyy-MM-dd')" is="dmx-date-picker" format="DD/MM/YYYY">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row gx-3">
+                                            <div class="col">
+                                                <div class="mb-3">
+                                                    <label for="inp_dropDate" class="form-label col-form-label">Drop date</label>
+                                                    <input type="text" class="form-control" id="inp_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="dd/mm/yyyy" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.dropDate.formatDate('yyyy-MM-dd')" is="dmx-date-picker" format="DD/MM/YYYY">
+                                                </div>
+                                                <div class="collapse" id="editEnrolmentDropReasonCollapse" is="dmx-bs5-collapse" dmx-bind:show="GET_ENROLMENT_single.data.enrolment.dropDate">
+                                                    <p><strong>Drop Reason:</strong><br>{{GET_ENROLMENT_single.data.enrolment.dropReason}}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row gx-3">
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_dropDate" class="form-label col-form-label">Drop date</label>
-                                            <input type="text" class="form-control" id="inp_dropDate" name="dropDate" aria-describedby="inp_dropDate_help" placeholder="dd/mm/yyyy" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.dropDate.formatDate('yyyy-MM-dd')" is="dmx-date-picker" format="DD/MM/YYYY">
-                                        </div>
-                                        <div class="collapse" id="editEnrolmentDropReasonCollapse" is="dmx-bs5-collapse" dmx-bind:show="getEnrolmentSingle.data.enrolment.dropDate">
-                                            <p><strong>Drop Reason:</strong><br>{{getEnrolmentSingle.data.enrolment.dropReason}}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row py-3 my-2 border-top border-bottom">
-                                    <div class="col">
 
-                                        <button id="btn1" class="btn btn-outline-danger">Delete Enrolment</button>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-0">EnrolmentID: {{GET_ENROLMENT_single.data.enrolment.uuid}}</p>
+
+
+
                             </fieldset>
                         </form>
+                        <form action="/api/classes/enrolments/DELETE_ENROLMENT" id="form_deleteEnrolment" is="dmx-serverconnect-form" method="post" class="pt-3">
+                            <div class="row">
+                                <div class="col">
+                                    <input id="inp_hd_de_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.uuid">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <form action=""></form>
+                                    <button id="btn_deleteEnrolment" class="btn btn-outline-danger bg-white pdl-button-shadow" dmx-on:click="run([{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'Are you sure?\', showdeny: true, showcancel: false, canceltext: \'Cancel\', confirmtext: \'DELETE ANYWAY\', confirmationdialog: false, denydialog: false, message: \'<p>Are you sure you want to delete this enrolment. <br>This action cannot be undone.</p> <p> All charges associated with this enrolment will be recalculated.<br>Are you sure you want to continue?</p>\', denytext: \'Cancel\'})`}},{condition:{if:`flow_swal_confirm.data.confirm`,then:{steps:{run:{action:`editEnrolmentModal.form_deleteEnrolment.submit();classesBase.load({},true);editEnrolmentModal.hide();editEnrolmentModal.editEnrolmentForm.reset();editEnrolmentModal.form_deleteEnrolment.reset()`}}}}}])"><i class="fas fa-trash me-1 fa-sm fa-fw"></i>Delete Enrolment
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <p class="text-muted small mb-0 mt-3">ID: {{GET_ENROLMENT_single.data.enrolment.uuid}}</p>
+                                </div>
+                            </div>
 
+                        </form>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer d-flex justify-content-between">
+            <div class="modal-footer d-flex justify-content-between border-top">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary" form="editEnrolmentForm">Save Enrolment</button>
             </div>
@@ -1698,39 +1713,47 @@
     </div>
 </div>
 
-<div class="modal fade" id="dropEnrolmentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true">
+<div class="modal fade" id="dropEnrolmentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="dropEnrolmentForm.reset();GET_ENROLMENT_single.reset()">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-light">
-                <h5 class="modal-title">Drop Enrolment: {{getEnrolmentSingle.data.student.firstName+' '+getEnrolmentSingle.data.student.lastName}}</h5>
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-700"><i class="far fa-arrow-alt-circle-down me-2 fa-fw fa-sm text-danger"></i>Drop Enrolment:
+                </h5>
+
                 <button type="button" class="btn-close text-light" aria-label="Close" data-bs-dismiss="modal">
                     <span aria-hidden="true" class="visually-hidden">×</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p>{{getEnrolmentSingle.data.class.dayName+' '+getEnrolmentSingle.data.class.levelName+' - '+getEnrolmentSingle.data.class.startTimeDisplay+' - '+getEnrolmentSingle.data.class.instructorFirstName+' '+getEnrolmentSingle.data.class.instructorLastName.trunc(1, true, '.')}}
-                </p>
-                <hr>
-                <form id="dropEnrolmentForm" is="dmx-serverconnect-form" method="post" action="/api/classes/getEnrolmentSingle" dmx-on:success="notifies1.success('Enrolment successfully dropped: '+getEnrolmentSingle.data.student.firstName+' '+getEnrolmentSingle.data.student.lastName+' - '+getEnrolmentSingle.data.class.dayName+' '+getEnrolmentSingle.data.class.levelName+' - '+getEnrolmentSingle.data.class.startTimeDisplay+' with '+getEnrolmentSingle.data.class.instructorFirstName+' '+getEnrolmentSingle.data.class.instructorLastName.trunc(1, '.', true));dropEnrolmentModal.hide();getEnrolmentSingle.reset()">
+            <div class="modal-body light-blue-bg">
+                <div class="row g-0 mb-3">
+                    <div class="col p-4 py-3 rounded-3 bg-white pdl-surface-shadow">
+                        <h5 class="mb-2 pb-2 border-bottom" dmx-html="'<i class=&quot;fas fa-child fa-sm me-1 fa-fw text-primary&quot;></i>'+GET_ENROLMENT_single.data.student.firstName+' '+GET_ENROLMENT_single.data.student.lastName"><i class="fas fa-child fa-sm me-1 fa-fw text-primary"></i>Some Student Name</h5>
+
+                        <h6 dmx-html="'<i class=&quot;far fa-calendar me-1 fa-fw&quot;></i>'+appSettings.days_array[GET_ENROLMENT_single.data.class.classday]+' - '+GET_ENROLMENT_single.data.class.startTimeDisplay+' '+appSettings.classLevelsByID[GET_ENROLMENT_single.data.class.classlevel_uuid].name+' - '+appSettings.instructorsById[GET_ENROLMENT_single.data.class.instructor_uuid].trunc_name" class="fw-bold mb-0"><i class="far fa-calendar me-1 fa-fw"></i>Sunday - 9:30AM Duckling - John Z.
+                        </h6>
+                    </div>
+                </div>
+                <form id="dropEnrolmentForm" is="dmx-serverconnect-form" method="post" action="/api/classes/enrolments/DROP_enrolment" class="p-4 pt-3 pdl-surface-shadow bg-white rounded-3" dmx-on:success="run([{run:{action:`flow_swal_alert.run({icon: \'success\', title: \'Enrolment Dropped\', message: \'The enrolment for \'+dropEnrolmentModal.dropEnrolmentForm.data.query_enrolment.firstName+\' \'+dropEnrolmentModal.dropEnrolmentForm.data.query_enrolment.lastName+\' has been successfully dropped.\'})`}},{run:{action:`dropEnrolmentModal.hide()`}}])" dmx-on:error="flow_swal_alert.run({icon: 'warning', title: 'Error', message: dropEnrolmentModal.dropEnrolmentForm.lastError.response})">
 
                     <div class="mb-3">
                         <label for="classType" class="col-form-label form-label">Drop Date:</label>
-                        <input id="inp_dropDate_dropmodal" class="form-control clickable" name="dropDate" is="dmx-date-picker" required="" opens="center">
-                        <small id="bs4-form-group-help3" class="form-text text-muted">Please select the last day of enrolment.<br> This date is inclusive and the enrolment will be inactive from the day after the drop date.</small>
+                        <input id="inp_dropDate_dropmodal" class="form-control clickable" name="dropDate" is="dmx-date-picker" required="" opens="center" dmx-bind:format="appSettings.localization_dateformat">
+                        <small id="bs4-form-group-help3" class="form-text text-muted">This date is inclusive and the enrolment will be inactive from the day after the drop date.</small>
 
                     </div>
                     <div class="mb-3">
                         <label for="ta_dropReason" class="col-form-label form-label">Drop Reason:&nbsp;</label>
                         <textarea id="ta_dropReason" class="form-control border rounded-small p-3" rows="6" name="dropReason"></textarea>
                     </div>
-                    <small id="bs4-form-group-help4" class="form-text text-muted text-end">EnrolmentID: {{getEnrolmentSingle.data.enrolment.id}}</small>
+                    <small id="bs4-form-group-help4" class="form-text text-muted text-end">EnrolmentID: {{GET_ENROLMENT_single.data.enrolment.uuid}}</small>
+                    <input id="inp_drop_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="GET_ENROLMENT_single.data.enrolment.uuid">
 
                 </form>
 
             </div>
             <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button for="dropEnrolmentForm" type="submit" class="btn btn-primary">Drop Enrolment</button>
+                <button form="dropEnrolmentForm" type="submit" class="btn btn-primary">Drop Enrolment</button>
             </div>
         </div>
     </div>
@@ -1927,7 +1950,7 @@
                                                                                                                     <i class="fas fa-chevron-down text-muted fa-sm"></i>
                                                                                                                 </button>
                                                                                                                 <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="editEnrolmentModal.editEnrolmentForm.hdn_inp_isValid.setValue(isValid);editEnrolmentModal.GET_ENROLMENT_single.load({uuid: uuid});editEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="editEnrolmentModal.editEnrolmentForm.hdn_inp_isValid.setValue(isValid);GET_ENROLMENT_single.load({uuid: uuid, enrolment_uuid: enrolment_uuid});editEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-pencil"></i>
@@ -1937,7 +1960,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({uuid: uuid, enrolment_uuid: enrolment_uuid});dropEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-arrow-down-circle"></i>
@@ -1947,7 +1970,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({uuid: uuid, enrolment_uuid: enrolment_uuid});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-shuffle"></i>
@@ -2007,7 +2030,7 @@
                                                                                                             <i class="fas fa-ellipsis-v text-muted"></i>
                                                                                                         </button>
                                                                                                         <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="editEnrolmentModal.GET_ENROLMENT_single.load({uuid: uuid});editEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({uuid: uuid});editEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-pencil"></i>
@@ -2017,7 +2040,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-arrow-down-circle"></i>
@@ -2027,7 +2050,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-shuffle"></i>
@@ -2097,7 +2120,7 @@
                                                                                                                         </div>
                                                                                                                     </a>
 
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-pencil"></i>
@@ -2108,7 +2131,7 @@
                                                                                                                         </div>
 
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-arrow-down-circle"></i>
@@ -2118,7 +2141,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-shuffle"></i>
@@ -2141,7 +2164,7 @@
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <!-- <button id="btn_trEnr_details" dmx-bind:id="btn_trEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                            dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap"></i></button>
+                                                                            dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap"></i></button>
                                                                         <button id="btn_trEnr_drop" dmx-bind:id="btn_trEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down"></i></button>
                                                                         <button id="btn_trEnr_transfer" dmx-bind:id="btn_trEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random"></i></button> -->
                                                                                                         </td>
@@ -2189,7 +2212,7 @@
                                                                                                                 </div>
                                                                                                             </a>
 
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-pencil"></i>
@@ -2200,7 +2223,7 @@
                                                                                                                 </div>
 
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-arrow-down-circle"></i>
@@ -2210,7 +2233,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-shuffle"></i>
@@ -2233,7 +2256,7 @@
                                                                                                         </div>
                                                                                                     </div>
                                                                                                     <!-- <button id="btn_trEnr_details" dmx-bind:id="btn_trEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap"></i></button>
                                                                     <button id="btn_trEnr_drop" dmx-bind:id="btn_trEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down"></i></button>
                                                                     <button id="btn_trEnr_transfer" dmx-bind:id="btn_trEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random"></i></button> -->
                                                                                                 </td>
@@ -2275,7 +2298,7 @@
                                                                                                             <div class="dropdown no-caret">
                                                                                                                 <button dmx-bind:id="enrolmentDropdown_{{id}}" id="dropdown3" class="btn dropdown-toggle no-caret btn-sm btn-outline-light" type="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v text-muted"></i></button>
                                                                                                                 <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-pencil"></i>
@@ -2285,7 +2308,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-arrow-down-circle"></i>
@@ -2295,7 +2318,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-shuffle"></i>
@@ -2318,7 +2341,7 @@
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <!-- <button id="btn_muEnr_details" dmx-bind:id="btn_muEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                     <button id="btn_muEnr_drop" dmx-bind:id="btn_muEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                     <button id="btn_muEnr_transfer" dmx-bind:id="btn_muEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                         </td>
@@ -2355,7 +2378,7 @@
                                                                                                     <div class="dropdown no-caret">
                                                                                                         <button dmx-bind:id="enrolmentDropdown_{{id}}" id="dropdown" class="btn dropdown-toggle no-caret btn-sm btn-outline-light" type="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v text-muted"></i></button>
                                                                                                         <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-pencil"></i>
@@ -2365,7 +2388,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-arrow-down-circle"></i>
@@ -2375,7 +2398,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-shuffle"></i>
@@ -2398,7 +2421,7 @@
                                                                                                         </div>
                                                                                                     </div>
                                                                                                     <!-- <button id="btn_muEnr_details" dmx-bind:id="btn_muEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                     <button id="btn_muEnr_drop" dmx-bind:id="btn_muEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                     <button id="btn_muEnr_transfer" dmx-bind:id="btn_muEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                 </td>
@@ -2441,7 +2464,7 @@
                                                                                                             <div class="dropdown no-caret">
                                                                                                                 <button dmx-bind:id="enrolmentDropdown_{{id}}" id="dropdown1" class="btn dropdown-toggle no-caret btn-sm btn-outline-light" type="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v text-muted"></i></button>
                                                                                                                 <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-pencil"></i>
@@ -2451,7 +2474,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-arrow-down-circle"></i>
@@ -2461,7 +2484,7 @@
                                                                                                                             </div>
                                                                                                                         </div>
                                                                                                                     </a>
-                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                                    <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-shuffle"></i>
@@ -2484,7 +2507,7 @@
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <!-- <button id="btn_waEnr_details" dmx-bind:id="btn_waEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                     <button id="btn_waEnr_drop" dmx-bind:id="btn_waEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                     <button id="btn_waEnr_transfer" dmx-bind:id="btn_waEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                         </td>
@@ -2521,7 +2544,7 @@
                                                                                                     <div class="dropdown no-caret">
                                                                                                         <button dmx-bind:id="enrolmentDropdown_{{id}}" id="dropdown1" class="btn dropdown-toggle no-caret btn-sm btn-outline-light" type="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v text-muted"></i></button>
                                                                                                         <div class="dropdown-menu shadow-light rounded-small" aria-labelledby="dropdown2">
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-pencil"></i>
@@ -2531,7 +2554,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});dropEnrolmentModal.show()">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});dropEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-arrow-down-circle"></i>
@@ -2541,7 +2564,7 @@
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             </a>
-                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
+                                                                                                            <a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});transferEnrolmentModal.show()" dmx-class:border-bottom="student.family != '' || student.family != null">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-shuffle"></i>
@@ -2564,7 +2587,7 @@
                                                                                                         </div>
                                                                                                     </div>
                                                                                                     <!-- <button id="btn_waEnr_details" dmx-bind:id="btn_waEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                     <button id="btn_waEnr_drop" dmx-bind:id="btn_waEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                     <button id="btn_waEnr_transfer" dmx-bind:id="btn_waEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                 </td>
@@ -2617,7 +2640,7 @@
                                                                                                                                 Upgrade to Active
                                                                                                                             </div>
                                                                                                                         </div>
-                                                                                                                    </a><a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                                    </a><a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                         <div class="row flex-nowrap">
                                                                                                                             <div class="col-1">
                                                                                                                                 <i class="bi-pencil"></i>
@@ -2654,7 +2677,7 @@
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <!-- <button id="btn_waEnr_details" dmx-bind:id="btn_waEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                                                                                            dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                                                                                            dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                                                                                         <button id="btn_waEnr_drop" dmx-bind:id="btn_waEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                                                                                         <button id="btn_waEnr_transfer" dmx-bind:id="btn_waEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                         </td>
@@ -2702,7 +2725,7 @@
                                                                                                                         Upgrade to Active
                                                                                                                     </div>
                                                                                                                 </div>
-                                                                                                            </a><a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()">
+                                                                                                            </a><a class="dropdown-item border-bottom" href="javascript:void(0);" dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()">
                                                                                                                 <div class="row flex-nowrap">
                                                                                                                     <div class="col-1">
                                                                                                                         <i class="bi-pencil"></i>
@@ -2739,7 +2762,7 @@
                                                                                                         </div>
                                                                                                     </div>
                                                                                                     <!-- <button id="btn_waEnr_details" dmx-bind:id="btn_waEnr_details_{{id}}_{{$index}}" class="btn btn-light circle-button-small"
-                                                                        dmx-on:click="getEnrolmentSingle.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
+                                                                        dmx-on:click="GET_ENROLMENT_single.load({enrolmentid: id});editEnrolmentModal.show()"><i class="fas fa-graduation-cap fa-fw"></i></button>
                                                                     <button id="btn_waEnr_drop" dmx-bind:id="btn_waEnr_drop_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-arrow-alt-circle-down fa-fw"></i></button>
                                                                     <button id="btn_waEnr_transfer" dmx-bind:id="btn_waEnr_transfer_{{id}}_{{$index}}" class="btn btn-light circle-button-small"><i class="fas fa-random fa-fw"></i></button> -->
                                                                                                 </td>

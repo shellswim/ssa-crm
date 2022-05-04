@@ -5,8 +5,6 @@ const crypto = require('crypto');
 
 exports.tuitioncharge = async function (options) {
 
-    debugger; 
-
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
     // get the database connection
@@ -103,7 +101,23 @@ exports.tuitioncharge = async function (options) {
         await db.raw(`
                 UPDATE charges_enrolments
                 SET 
-                    classDate = '${DateTime.fromISO(enrolment.classdate).toISODate()}', classDate2 = ${DateTime.fromISO(enrolment.classdate).toSeconds()}, baseRate = ${p.baseRate}, endisc = ${p.multienrol_discount}, ennetrate = ${p.multienrol_subtotal}, endiscdescription = '${p.multienrol_discount_description}', endiscrate = NULL, familydiscountdesc = '${p.familydiscount_description}', familydiscountrate = NULL, familydiscounttotal = ${p.family_discount}, enrolsubtotal = ${p.familydiscount_subtotal}, enrolgrandtotal = ${p.enrolgrandtotal}, holding_fee = ${p.holding_fee > 0 ? 1 : 0}, holding_fee_discount = ${p.holding_fee}, debuggerstatus = 'updated', updated = ${timestamp}, updated_by = '${user}'
+                    classDate = '${DateTime.fromISO(enrolment.classdate).toISODate()}', 
+                    classDate2 = ${DateTime.fromISO(enrolment.classdate).toSeconds()}, 
+                    baseRate = ${p.baseRate}, 
+                    endisc = ${p.multienrol_discount}, 
+                    ennetrate = ${p.multienrol_subtotal}, 
+                    endiscdescription = '${p.multienrol_discount_description}',
+                    endiscrate = NULL, 
+                    familydiscountdesc = '${p.familydiscount_description}',
+                    familydiscountrate = NULL, familydiscounttotal = ${p.family_discount},
+                    enrolsubtotal = ${p.familydiscount_subtotal},
+                    enrolgrandtotal = ${p.enrolgrandtotal},
+                    holding_fee = ${p.holding_fee > 0 ? 1 : 0},
+                    holding_fee_discount = ${p.holding_fee},
+                    debuggerstatus = 'updated',
+                    updated = ${timestamp},
+                    updated_by = '${user}'
+
                 WHERE uuid = '${ecuuid}'
                 `
         );
@@ -112,18 +126,17 @@ exports.tuitioncharge = async function (options) {
 
     async function enrolcharges_delete_redundant(arr, fcuuid) {
         if (arr.length == 0) {
-            return;
+            arr = null;
         } else {
             arr = arr.map((i) => {
                 return `'` + i + `'`
-            }).toString();
+            }).toString();            
+        }
         await db.raw(`
             DELETE
             FROM charges_enrolments ce
-            WHERE ce.uuid NOT IN(${arr}) AND ce.charge_uuid = '${fcuuid}';
+            WHERE ce.uuid NOT IN(${arr === null ? '\'\'' : arr}) AND ce.charge_uuid = '${fcuuid}';
         `);
-
-        }
     }
 
     async function familycharge_insert(d) {
@@ -148,17 +161,19 @@ exports.tuitioncharge = async function (options) {
 
     async function familycharge_update(fcuuid, details) {
         let d = details;
+        let disc_total = (d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2);
+        if(isNaN(disc_total)) disc_total = 0.00;
         await db.raw(`
             UPDATE charges_family
             SET 
-                title = '${title}',
-                ${description ? 'description = ' + description + ',' : ''}
-                ${reference ? 'reference = ' + reference + ',' : ''}
-                dueDate = '${due_date}', 
-                chargeDate = '${charge_date}', 
-                baseTotal = ${d.tuitiontotals.baseRate}, 
-                discounttotal = ${(d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2)}, 
-                total = ${d.tuitiontotals.enrolgrandtotal}
+                ${title ? 'title = \'' + title + '\',' : '' }
+                ${description ? 'description = \'' + description + '\',' : ''}
+                ${reference ? 'reference = \'' + reference + '\',' : ''}
+                ${due_date ? 'dueDate = \'' + due_date + '\',' : ''}
+                ${charge_date ? 'chargeDate = \'' + charge_date + '\',' : ''}
+                baseTotal = ${d.tuitiontotals.baseRate || 0.00}, 
+                discounttotal = ${disc_total == NaN ? 0.00 : disc_total}, 
+                total = ${d.tuitiontotals.enrolgrandtotal || 0.00}
             WHERE uuid = '${fcuuid}'
         `);
     }

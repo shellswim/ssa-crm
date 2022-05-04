@@ -751,6 +751,257 @@
           }
         ],
         "outputType": "array"
+      },
+      {
+        "name": "query_new_enrolment",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "enrolmentTypes",
+                "column": "type",
+                "alias": "enrolmentType"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "class_level"
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "alias": "instructor_first"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "alias": "instructor_last"
+              },
+              {
+                "table": "e",
+                "column": "startDate"
+              },
+              {
+                "table": "e",
+                "column": "dropDate"
+              }
+            ],
+            "table": {
+              "name": "enrolments",
+              "alias": "e"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "classes",
+                "column": "*",
+                "alias": "c",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "c",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "class_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "enrolmentTypes",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "enrolmentTypes",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "enrolmentType"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              }
+            ],
+            "query": "SELECT enrolmentTypes.type AS enrolmentType, days.dayname, c.startTimeDisplay, classLevels.name AS class_level, staff.firstName AS instructor_first, staff.lastName AS instructor_last, e.startDate, e.dropDate\nFROM enrolments AS e\nLEFT JOIN classes AS c ON (c.uuid = e.class_uuid) LEFT JOIN days ON (days.id = c.day) LEFT JOIN staff ON (staff.uuid = c.instructor_uuid) LEFT JOIN classLevels ON (classLevels.uuid = c.classlevel_uuid) LEFT JOIN enrolmentTypes ON (enrolmentTypes.id = e.enrolmentType)\nWHERE e.id = :P1 /* {{insert_new_enrolment.identity}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{insert_new_enrolment.identity}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "e.id",
+                  "field": "e.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{insert_new_enrolment.identity}}",
+                  "data": {
+                    "table": "e",
+                    "column": "id",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "integer",
+                      "primary": false,
+                      "nullable": false,
+                      "name": "id"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "enrolmentType"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "class_level"
+          },
+          {
+            "type": "text",
+            "name": "instructor_first"
+          },
+          {
+            "type": "text",
+            "name": "instructor_last"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_STUDENT_log",
+          "params": {
+            "family_uuid": "{{$_POST.family_uuid}}",
+            "family_log_category": "Student",
+            "family_log_type": "created",
+            "log_category": "Enrolment",
+            "log_type": "created",
+            "student_uuid": "{{dummyenrol.student_uuid}}",
+            "log": "{{'NEW ENROLMENT: Created new enrolment for '+dummyenrol.firstName+' '+dummyenrol.lastName+'\\\\n Class: '+query_new_enrolment.dayname+' '+query_new_enrolment.startTimeDisplay+' '+query_new_enrolment.class_level+' '+query_new_enrolment.instructor_first+' '+query_new_enrolment.instructor_last.trunc(1, true, '.').uppercase()+' \\\\n Start Date: '+query_new_enrolment.startDate+' \\\\n Drop Date: '+query_new_enrolment.dropDate}}"
+          }
+        },
+        "output": true
       }
     ]
   }
