@@ -1,0 +1,1146 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "uuid"
+      },
+      {
+        "type": "number",
+        "name": "enrolmentType"
+      },
+      {
+        "type": "date",
+        "name": "dropDate"
+      },
+      {
+        "type": "date",
+        "name": "startDate"
+      },
+      {
+        "type": "text",
+        "name": "dropReason"
+      },
+      {
+        "type": "boolean",
+        "name": "priceOverride"
+      },
+      {
+        "type": "number",
+        "name": "priceOverrideValue"
+      },
+      {
+        "type": "text",
+        "name": "priceOverrideType"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_enrolment",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "e",
+                "column": "uuid"
+              },
+              {
+                "table": "e",
+                "column": "dropDate"
+              },
+              {
+                "table": "e",
+                "column": "startDate"
+              },
+              {
+                "table": "e",
+                "column": "student_uuid"
+              },
+              {
+                "table": "e",
+                "column": "dropReason"
+              },
+              {
+                "table": "e",
+                "column": "priceOverride"
+              },
+              {
+                "table": "e",
+                "column": "priceOverrideValue"
+              },
+              {
+                "table": "e",
+                "column": "priceOverrideType"
+              },
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
+              },
+              {
+                "table": "s",
+                "column": "family"
+              },
+              {
+                "table": "d",
+                "column": "dayname"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "cl",
+                "column": "name",
+                "alias": "classlevel"
+              },
+              {
+                "table": "i",
+                "column": "firstName",
+                "alias": "instructor_first"
+              },
+              {
+                "table": "i",
+                "column": "lastName",
+                "alias": "instructor_last"
+              }
+            ],
+            "table": {
+              "name": "enrolments",
+              "alias": "e"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "classes",
+                "column": "*",
+                "alias": "c",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "c",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "class_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "alias": "d",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "d",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "alias": "cl",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "cl",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "alias": "i",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "i",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "query": "SELECT e.uuid, e.dropDate, e.startDate, e.student_uuid, e.dropReason, e.priceOverride, e.priceOverrideValue, e.priceOverrideType, s.firstName, s.lastName, s.family, d.dayname, c.startTimeDisplay, cl.name AS classlevel, i.firstName AS instructor_first, i.lastName AS instructor_last\nFROM enrolments AS e\nLEFT JOIN students AS s ON (s.uuid = e.student_uuid) LEFT JOIN classes AS c ON (c.uuid = e.class_uuid) LEFT JOIN days AS d ON (d.id = c.day) LEFT JOIN classLevels AS cl ON (cl.uuid = c.classlevel_uuid) LEFT JOIN staff AS i ON (i.uuid = c.classlevel_uuid)\nWHERE e.uuid = :P1 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.uuid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "e.uuid",
+                  "field": "e.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.uuid}}",
+                  "data": {
+                    "table": "e",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          },
+          "connection": "db"
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "text",
+            "name": "dropReason"
+          },
+          {
+            "type": "boolean",
+            "name": "priceOverride"
+          },
+          {
+            "type": "number",
+            "name": "priceOverrideValue"
+          },
+          {
+            "type": "text",
+            "name": "priceOverrideType"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "classlevel"
+          },
+          {
+            "type": "text",
+            "name": "instructor_first"
+          },
+          {
+            "type": "text",
+            "name": "instructor_last"
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_single"
+      },
+      {
+        "name": "update",
+        "module": "dbupdater",
+        "action": "update",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "update",
+            "values": [
+              {
+                "table": "enrolments",
+                "column": "enrolmentType",
+                "type": "number",
+                "value": "{{$_POST.enrolmentType}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "dropDate",
+                "type": "date",
+                "value": "{{$_POST.dropDate}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "startDate",
+                "type": "date",
+                "value": "{{$_POST.startDate}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "dropReason",
+                "type": "text",
+                "value": "{{$_POST.dropReason}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "priceOverride",
+                "type": "boolean",
+                "value": "{{($_POST.priceOverride > 0) ? 1 : 0}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "priceOverrideValue",
+                "type": "number",
+                "value": "{{$_POST.priceOverride}}"
+              },
+              {
+                "table": "enrolments",
+                "column": "priceOverrideType",
+                "type": "text",
+                "value": "{{$_POST.priceOverrideType}}"
+              }
+            ],
+            "table": "enrolments",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.uuid}}",
+                  "data": {
+                    "column": "uuid"
+                  },
+                  "operation": "="
+                }
+              ]
+            },
+            "returning": "uuid",
+            "query": "UPDATE enrolments\nSET enrolmentType = :P1 /* {{$_POST.enrolmentType}} */, dropDate = :P2 /* {{$_POST.dropDate}} */, startDate = :P3 /* {{$_POST.startDate}} */, dropReason = :P4 /* {{$_POST.dropReason}} */, priceOverride = :P5 /* {{($_POST.priceOverride > 0) ? 1 : 0}} */, priceOverrideValue = :P6 /* {{$_POST.priceOverride}} */, priceOverrideType = :P7 /* {{$_POST.priceOverrideType}} */\nWHERE uuid = :P8 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{$_POST.enrolmentType}}"
+              },
+              {
+                "name": ":P2",
+                "type": "expression",
+                "value": "{{$_POST.dropDate}}"
+              },
+              {
+                "name": ":P3",
+                "type": "expression",
+                "value": "{{$_POST.startDate}}"
+              },
+              {
+                "name": ":P4",
+                "type": "expression",
+                "value": "{{$_POST.dropReason}}"
+              },
+              {
+                "name": ":P5",
+                "type": "expression",
+                "value": "{{($_POST.priceOverride > 0) ? 1 : 0}}"
+              },
+              {
+                "name": ":P6",
+                "type": "expression",
+                "value": "{{$_POST.priceOverride}}"
+              },
+              {
+                "name": ":P7",
+                "type": "expression",
+                "value": "{{$_POST.priceOverrideType}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P8",
+                "value": "{{$_POST.uuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ],
+        "output": false
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{((query_enrolment.dropDate.formatDate('yyyy-MM-dd') != $_POST.dropDate.formatDate('yyyy-MM-dd')) || (query_enrolment.startDate.formatDate('yyyy-MM-dd') != $_POST.startDate.formatDate('yyyy-MM-dd')))}}",
+          "then": {
+            "steps": [
+              {
+                "name": "query_enrolcharges",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "charges_enrolments",
+                        "column": "charge_uuid"
+                      }
+                    ],
+                    "table": {
+                      "name": "charges_enrolments"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "charges_enrolments.enrolment_uuid",
+                          "field": "charges_enrolments.enrolment_uuid",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{$_POST.uuid}}",
+                          "data": {
+                            "table": "charges_enrolments",
+                            "column": "enrolment_uuid",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "reference",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": true,
+                              "references": "uuid",
+                              "inTable": "enrolments",
+                              "onUpdate": "CASCADE",
+                              "onDelete": "CASCADE",
+                              "name": "enrolment_uuid"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT charge_uuid\nFROM charges_enrolments\nWHERE enrolment_uuid = :P1 /* {{$_POST.uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{$_POST.uuid}}"
+                      }
+                    ]
+                  },
+                  "connection": "db"
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "number",
+                    "name": "charge_uuid"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "query_familycharges",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "charges_family",
+                        "column": "uuid"
+                      },
+                      {
+                        "table": "charges_family",
+                        "column": "chargeFor_monthly"
+                      }
+                    ],
+                    "table": {
+                      "name": "charges_family"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "distinct": true,
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "charges_family.uuid",
+                          "field": "charges_family.uuid",
+                          "type": "string",
+                          "operator": "in",
+                          "value": "{{query_enrolcharges.flatten('charge_uuid')}}",
+                          "data": {
+                            "table": "charges_family",
+                            "column": "uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": true,
+                              "nullable": false,
+                              "name": "uuid"
+                            }
+                          },
+                          "operation": "IN"
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "orders": [],
+                    "query": "SELECT DISTINCT uuid, chargeFor_monthly\nFROM charges_family\nWHERE uuid IN ({{query_enrolcharges.flatten('charge_uuid')}})",
+                    "params": []
+                  },
+                  "connection": "db"
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "chargeFor_monthly"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "generate_months_recalc",
+                "module": "tuitioncalc_monthgen",
+                "action": "tuitioncalc_monthgen",
+                "options": {
+                  "family_uuid": "{{query_enrolment.family}}",
+                  "startdate": "{{$_POST.startDate}}"
+                },
+                "meta": [
+                  {
+                    "name": "chargearray",
+                    "type": "array"
+                  }
+                ]
+              },
+              {
+                "name": "repeat",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{generate_months_recalc}}",
+                  "outputFields": [],
+                  "outputFilter": "exclude",
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "recalc_tuition",
+                        "module": "tuitioncalc",
+                        "action": "tuitioncalc",
+                        "options": {
+                          "family_uuid": "{{query_enrolment.family}}",
+                          "monthtoprocess": "{{$value}}"
+                        },
+                        "meta": [
+                          {
+                            "name": "chargefor",
+                            "type": "text"
+                          },
+                          {
+                            "name": "monthlychargeexists",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "exists",
+                                "type": "boolean"
+                              },
+                              {
+                                "name": "charge_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "status",
+                                "type": "number"
+                              },
+                              {
+                                "name": "created",
+                                "type": "date"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "students",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "additionalMedical",
+                                "type": "text"
+                              },
+                              {
+                                "name": "age",
+                                "type": "text"
+                              },
+                              {
+                                "name": "classlevel_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "dob",
+                                "type": "text"
+                              },
+                              {
+                                "name": "family",
+                                "type": "text"
+                              },
+                              {
+                                "name": "familyold",
+                                "type": "number"
+                              },
+                              {
+                                "name": "familyorder",
+                                "type": "number"
+                              },
+                              {
+                                "name": "firstName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "gender",
+                                "type": "text"
+                              },
+                              {
+                                "name": "id",
+                                "type": "number"
+                              },
+                              {
+                                "name": "lastName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "level",
+                                "type": "number"
+                              },
+                              {
+                                "name": "rollSheetComments",
+                                "type": "text"
+                              },
+                              {
+                                "name": "rollSheetMedical",
+                                "type": "text"
+                              },
+                              {
+                                "name": "total_enrolments",
+                                "type": "number"
+                              },
+                              {
+                                "name": "uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "enrolments",
+                                "type": "array",
+                                "sub": [
+                                  {
+                                    "name": "end",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "start",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "total_enrolments",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "items",
+                                    "type": "array",
+                                    "sub": [
+                                      {
+                                        "name": "baseRate",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "classId",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "classType",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "class_uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "classdate",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "classdate_timestamp",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "classday",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "classlevel_uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "classtype_uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "deleted",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "deleted_time",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "dropDate",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "dropReason",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "enrolmentType",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "firstName",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "id",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "instructor_uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "isTransferIn",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "isTransferOut",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "isValid",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "lastName",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "priceOverride",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "priceOverrideType",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "priceOverrideValue",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "shortName",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "startDate",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "startTimeDisplay",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "student",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "student_uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "transferFrom",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "transferTo",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "transferToStart",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "uuid",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "name": "pricing",
+                                        "type": "object",
+                                        "sub": [
+                                          {
+                                            "name": "baseRate",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "enrolgrandtotal",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "family_discount",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "familydiscount_description",
+                                            "type": "text"
+                                          },
+                                          {
+                                            "name": "familydiscount_subtotal",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "holding_fee",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "multienrol_discount",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "multienrol_discount_description",
+                                            "type": "number"
+                                          },
+                                          {
+                                            "name": "multienrol_subtotal",
+                                            "type": "number"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "name": "tuitiontotals",
+                                    "type": "object",
+                                    "sub": [
+                                      {
+                                        "name": "baseRate",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "enrolgrandtotal",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "family_discount",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "familydiscount_subtotal",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "holding_fee",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "multienrol_discount",
+                                        "type": "number"
+                                      },
+                                      {
+                                        "name": "multienrol_subtotal",
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "tuitiontotals",
+                                "type": "object",
+                                "sub": [
+                                  {
+                                    "name": "baseRate",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "enrolgrandtotal",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "family_discount",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "familydiscount_subtotal",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "holding_fee",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "multienrol_discount",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "multienrol_subtotal",
+                                    "type": "number"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "tuitiontotals",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "baseRate",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enrolgrandtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "family_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "familydiscount_subtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "holding_fee",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_subtotal",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ],
+                        "output": false
+                      },
+                      {
+                        "name": "",
+                        "module": "core",
+                        "action": "condition",
+                        "options": {
+                          "if": "{{recalc_tuition!==null}}",
+                          "then": {
+                            "steps": {
+                              "name": "recharge",
+                              "module": "tuitioncharge",
+                              "action": "tuitioncharge",
+                              "options": {
+                                "details": "{{recalc_tuition}}",
+                                "user": "{{identity}}"
+                              }
+                            }
+                          }
+                        },
+                        "outputType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "chargearray",
+                    "type": "array"
+                  }
+                ],
+                "outputType": "array"
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      },
+      {
+        "name": "log_content",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "Enrolment Updated: {{query_enrolment.dayname+' - '+query_enrolment.startTimeDisplay+' '+query_enrolment.classlevel+' - '+query_enrolment.instructor_first+' '+query_enrolment.instructor_last.trunc(1,'.',true)}} for {{query_enrolment.firstName + ' ' + query_enrolment.lastName}} was updated.\\n\n{{($_POST.startDate.formatDate('yyyy-MM-dd') != query_enrolment.startDate.formatDate('yyyy-MM-dd')) ? ('Start Date: ' + query_enrolment.startDate.formatDate('yyyy-MM-dd') + ' → ' + $_POST.startDate.formatDate('yyyy-MM-dd') + '\\\\n') : ''}}\n{{($_POST.dropDate.formatDate('yyyy-MM-dd') != query_enrolment.dropDate.formatDate('yyyy-MM-dd')) ? ('Drop Date: ' + query_enrolment.dropDate.formatDate('yyyy-MM-dd') + ' → ' + $_POST.dropDate.formatDate('yyyy-MM-dd') + '\\\\n') : ''}}\n{{($_POST.dropReason != query_enrolment.dropReason) ? ('Drop Reason: ' + query_enrolment.dropReason + ' → ' + $_POST.dropReason + '\\\\n') : ''}}\n{{($_POST.priceOverride != query_enrolment.priceOverrideValue) ? ('Price Override: ' + query_enrolment.priceOverrideValue + ' → ' + $_POST.priceOverride + '\\\\n') : ''}}\n{{($_POST.priceOverrideType != query_enrolment.priceOverrideType) ? ('Price Override Type: ' + query_enrolment.priceOverrideType + ' → ' + $_POST.priceOverrideType + '\\\\n') : ''}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_STUDENT_log",
+          "params": {
+            "family_uuid": "{{query_enrolment.family}}",
+            "log_category": "Enrolment",
+            "log_type": "updated",
+            "student_uuid": "{{query_enrolment.student_uuid}}",
+            "family_log_category": "Student",
+            "family_log_type": "updated",
+            "log": "{{log_content}}"
+          }
+        },
+        "output": true
+      },
+      {
+        "name": "refresh",
+        "module": "sockets",
+        "action": "refresh",
+        "options": {
+          "action": "classes/classesBase"
+        }
+      }
+    ]
+  }
+}

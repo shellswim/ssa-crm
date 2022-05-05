@@ -11,6 +11,7 @@ const {
 } = require('mathjs');
 
 exports.tuitioncalc = async function (options) {
+    debugger;
     options = this.parse(options);
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
