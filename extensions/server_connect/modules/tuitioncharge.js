@@ -150,9 +150,20 @@ exports.tuitioncharge = async function (options) {
                     uuid, family_uuid, total, title, reference, description, chargeFor_monthly, dueDate, chargeType, basetotal, discounttotal, chargeDate, createdby, created
                 )
                 VALUES (
-                    '${uuid}', '${d.family_uuid}', ${d.tuitiontotals.enrolgrandtotal}, '${title}', 
-                    ${description ? description : 'NULL'}, 
-                    ${reference ? reference : 'NULL'}, '${d.chargefor_date}', '${due_date}', 'tuition', ${d.tuitiontotals.baseRate}, ${(d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2)}, '${charge_date}', '${user}', ${timestamp}
+                    '${uuid}', 
+                    '${d.family_uuid}', 
+                    ${d.tuitiontotals.enrolgrandtotal}, 
+                    ${title ? '\''+title+'\'' : '\'' + 'Family Tuition Charge: ' + DateTime.fromISO(d.chargefor_date).toFormat('MMMM yyyy')+'\''}, 
+                    ${description ? '\''+description+'\'' : 'NULL'}, 
+                    ${reference ? '\''+reference+'\'' : 'NULL'}, 
+                    '${d.chargefor_date}', 
+                    '${due_date || DateTime.now().toISODate()}', 
+                    'tuition', 
+                    ${d.tuitiontotals.baseRate}, 
+                    ${(d.tuitiontotals.family_discount - d.tuitiontotals.multienrol_discount - d.tuitiontotals.holding_fee).toFixed(2)}, 
+                    '${charge_date || DateTime.now().toISODate()}', 
+                    '${user}', 
+                    ${timestamp}
                 )
         `);
 

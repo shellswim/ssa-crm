@@ -72,6 +72,19 @@ exports.tuitioncalc = async function (options) {
     /** Family, discounts and setup */
     let family_uuid = options.family_uuid;
     let _discounts = await discountmatrix();
+
+    /** Price Overrides values */
+    let priceoverride = dbClientFlat(await db.raw(`
+      SELECT value
+      FROM settings
+      WHERE name = 'price_override_enable'
+    `)).value;
+    let priceoverride_discounts = dbClientFlat(await db.raw(`
+      SELECT value
+      FROM settings
+      WHERE name = 'price_override_discount_enable'
+    `)).value;
+
     /** Check if charge exists for current month */
     let multipleChargeExists = false, chargeexists = false;
     let find_chargeexists = dbClient(await db.raw(`
@@ -106,7 +119,7 @@ exports.tuitioncalc = async function (options) {
 
     for (let i = 0; i < students.length; i++) {
         let student = students[i];
-        student.all_enrolments = [];
+        student.all_enrolments = [], student.enrolment_uuids = [];
         let enrolments = students[i].enrolments;
         student.total_enrolments = 0;
 
@@ -133,6 +146,7 @@ exports.tuitioncalc = async function (options) {
                     if(e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()) {
                         se.items.push(e);
                         student.all_enrolments.push(e);
+                        if(!student.enrolment_uuids.includes(e.uuid)) student.enrolment_uuids.push(e.uuid);
                         // Set enrolment count for current enrolment in global enrolments count object.
                         if(Object.hasOwn(enrolment_counts[student.uuid], e.uuid)) {
                             enrolment_counts[student.uuid][e.uuid].count += 1;
@@ -239,8 +253,8 @@ exports.tuitioncalc = async function (options) {
 
                 // math merge all new familydiscount, holding_fee and enrolgrandtotal objects to final_fees_object for student total pricing.
                 object_mathMerge(final_fees_object, [familydiscounts, fees_object], 'familydiscount_description');
-            }
 
+            }
             delete e.days;
         }
 
@@ -345,13 +359,22 @@ exports.tuitioncalc = async function (options) {
                         'multienrol_discount_description': '-'
                     }
                 } else {
-                    // set discounts.
-                    discount = {
-                        'multienrol_discount': calcDiscount(item.baseRate, find_discount.rate, find_discount.type),
-                        get multienrol_subtotal() {
-                            return evaluate(`${item.baseRate} - ${this.multienrol_discount}`)
-                        },
-                        'multienrol_discount_description': find_discount.description
+                    // Check price overrides
+                    if(priceoverride == 1 && priceoverride_discounts == 0 && item.priceOverride == 1) {
+                        discount = {
+                            'multienrol_discount': 0,
+                            'multienrol_subtotal': item.baseRate,
+                            'multienrol_discount_description': 'Price overriden. Discounts not applicable.'
+                        }
+                    } else {
+                        // set discounts.
+                        discount = {
+                            'multienrol_discount': calcDiscount(item.baseRate, find_discount.rate, find_discount.type),
+                            get multienrol_subtotal() {
+                                return evaluate(`${item.baseRate} - ${this.multienrol_discount}`)
+                            },
+                            'multienrol_discount_description': find_discount.description
+                        }
                     }
                 }
             }
@@ -366,6 +389,11 @@ exports.tuitioncalc = async function (options) {
             'family_discount': 0,
             'familydiscount_subtotal': 0
         };
+        if(priceoverride == 1 && priceoverride_discounts == 0 && e.priceOverride == 1) {
+            discount.familydiscount_description = 'Price overridden. Family discounts not applicable.';
+            discount.familydiscount_subtotal = e.baseRate;
+            return discount;
+        }
         let studentcount = student.familyorder;
         let find_discount = fd.discounts.find(d => {
             return d.count == studentcount;
@@ -422,7 +450,7 @@ exports.tuitioncalc = async function (options) {
                 AND e.deleted = 0
                 ORDER BY c.day, c.startTimeDecimal
         `));
-        
+        if(enrolments.length > 0) debugger;
         for(let i=0;i<enrolments.length;i++) {
             let e = enrolments[i];
             let add_days = dayint - 1, dropdate = DateTime.fromSQL(e.dropDate).toSeconds();
@@ -433,13 +461,17 @@ exports.tuitioncalc = async function (options) {
             if(dropdate && dropdate < e.classdate_timestamp) continue;
 
             // Add Base Rates
-            e.baseRate = dbClientSingleValue(await db.raw(`
-                SELECT cb.baserate
-                FROM charges_baserates cb
-                WHERE 
-                    '${e.classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
-                    AND cb.classlevel_uuid = '${e.classlevel_uuid}';
-            `),'baserate');
+            if(priceoverride == 1 && e.priceOverride == 1) {
+                e.baseRate = e.priceOverrideValue;
+            } else {
+                e.baseRate = dbClientSingleValue(await db.raw(`
+                    SELECT cb.baserate
+                    FROM charges_baserates cb
+                    WHERE 
+                        '${e.classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
+                        AND cb.classlevel_uuid = '${e.classlevel_uuid}';
+                `),'baserate');
+            }
 
             enrols_array.push(e);
         }
@@ -694,7 +726,6 @@ exports.tuitioncalc = async function (options) {
             return v = v.rows;
         }
     }
-    debugger;
 
     return {
         "family_uuid": options.family_uuid,
