@@ -82,10 +82,16 @@ module.exports = {
         }
         return date;
     },
+    fromMilliseconds: function(val) {
+        return DateTime.fromMillis(val).toFormat('yyyy-MM-dd HH:MM:ss');
+    },
     localtime: function(val,tz) {
         return DateTime.fromISO(val).setZone(tz).toFormat('yyyy-MM-dd HH:MM:ss');
     },
     lux_toformat: function(val,format) {
         return DateTime.fromISO(val).toFormat(format);
+    },
+    timestamp_milliseconds: function() {
+        return DateTime.now().toMillis();
     }
 }

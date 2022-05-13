@@ -725,6 +725,53 @@
         "outputType": "array"
       },
       {
+        "name": "delete_enrolcharges",
+        "module": "dbupdater",
+        "action": "delete",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "delete",
+            "table": "charges_enrolments",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "enrolment_uuid",
+                  "field": "enrolment_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.uuid}}",
+                  "data": {
+                    "column": "enrolment_uuid"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "returning": "uuid",
+            "query": "DELETE\nFROM charges_enrolments\nWHERE enrolment_uuid = :P1 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.uuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ],
+        "output": true
+      },
+      {
         "name": "repeat",
         "module": "core",
         "action": "repeat",
@@ -1153,15 +1200,30 @@
                       "options": {
                         "if": "{{recalculate_charges!==null}}",
                         "then": {
-                          "steps": {
-                            "name": "recharge",
-                            "module": "tuitioncharge",
-                            "action": "tuitioncharge",
-                            "options": {
-                              "details": "{{recalculate_charges}}",
-                              "user": "{{identity}}"
+                          "steps": [
+                            {
+                              "name": "user",
+                              "module": "core",
+                              "action": "setvalue",
+                              "options": {
+                                "value": {
+                                  "user": "{{identity}}",
+                                  "ip_address": "{{ipadd}}"
+                                }
+                              },
+                              "meta": [],
+                              "outputType": "text"
+                            },
+                            {
+                              "name": "recharge",
+                              "module": "tuitioncharge",
+                              "action": "tuitioncharge",
+                              "options": {
+                                "details": "{{recalculate_charges}}",
+                                "user": "{{user}}"
+                              }
                             }
-                          }
+                          ]
                         }
                       },
                       "outputType": "boolean"

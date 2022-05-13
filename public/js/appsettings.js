@@ -1,3 +1,5 @@
+const e = require("express");
+
 function appSettingsObject() {
     var l = dmx.parse('appSettings.data.getSettings'),
         cl = dmx.parse('appSettings.data.query_levels'),
@@ -5,7 +7,8 @@ function appSettingsObject() {
         rl = dmx.parse('appSettings.data.query_relationships'),
         ct = dmx.parse('appSettings.data.query_contacttypes'),
         ins = dmx.parse('appSettings.data.query_instructors'),
-        ab = dmx.parse('appSettings.data.absence_types'),
+        ab = dmx.parse('appSettings.data.query_absencetypes'),
+        clt = dmx.parse('appSettings.data.query_classtypes'),
         s = {},
         mn,
         mx,
@@ -25,7 +28,9 @@ function appSettingsObject() {
         ect = [],
         etarr = [],
         etid = {},
-        pct = []
+        pct = [],
+        clt_arr = [],
+        clt_id = {},
         abt = [];
 
     for (i = 0; i < l.length; i++) {
@@ -92,6 +97,16 @@ function appSettingsObject() {
     }
     s["enrolTypesById"] = etid;
     s["enrolTypesArray"] = etarr;
+
+    // Class Types / Statuses
+    // Array
+    for (let i = 0; i < clt.length; i++) {
+        let c = clt[i];
+        clt_arr.push(c);
+        clt_id[c.uuid] = {"long_name": c.longName, "short_name": c.shortName}
+    }
+    s["classTypes_arr"] = clt_arr;
+    s["classTypesById"] = clt_id;
 
     // Instructors by ID & Array
     for (let i = 0; i < ins.length; i++) {

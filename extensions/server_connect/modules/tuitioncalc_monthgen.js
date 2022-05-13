@@ -17,7 +17,7 @@ exports.tuitioncalc_monthgen = async function (options) {
     options = this.parse(options);
 
     let chargearray = [];
-    debugger;
+
     let startdate = DateTime.fromSQL(options.startdate),
         startofmonth = startdate.startOf('month'),
         chargeahead = !!dbClientFlat(await db.raw(`
@@ -28,7 +28,7 @@ exports.tuitioncalc_monthgen = async function (options) {
 
     let charges = await get_charges(startofmonth);
 
-    debugger;
+    
     if (Array.isArray(charges) && charges.length > 0) {
         chargearray = charges;
 
@@ -76,12 +76,22 @@ exports.tuitioncalc_monthgen = async function (options) {
     }
 
     async function get_charges(date) {
-        let charges = dbClient(await db.raw(`
-            SELECT cf.chargeFor_monthly AS monthlycharge
-            FROM charges_family cf
-            WHERE cf.family_uuid = '${options.family_uuid}' AND cf.chargeFor_monthly >= DATE('${date}')
-            ORDER BY cf.chargeFor_monthly
-        `));
+        let charges; 
+        if(options.enrolment_uuid) {
+            charges = dbClient(await db.raw(`
+                SELECT DISTINCT cf.chargeFor_monthly AS monthlycharge
+                FROM charges_family cf LEFT JOIN charges_enrolments ce on cf.uuid = ce.charge_uuid
+                WHERE cf.family_uuid = '${options.family_uuid}' AND ce.enrolment_uuid = '${options.enrolment_uuid}'
+                ORDER BY cf.chargeFor_monthly
+            `));
+        } else {
+            charges = dbClient(await db.raw(`
+                SELECT cf.chargeFor_monthly AS monthlycharge
+                FROM charges_family cf
+                WHERE cf.family_uuid = '${options.family_uuid}' AND cf.chargeFor_monthly >= DATE('${date}')
+                ORDER BY cf.chargeFor_monthly
+            `));
+        }
 
         // Flatten objects from query.
         if (charges.length > 0) {
@@ -89,7 +99,6 @@ exports.tuitioncalc_monthgen = async function (options) {
                 return DateTime.fromJSDate(a.monthlycharge).toISODate();
             });
         }
-
         return charges;
     }
 

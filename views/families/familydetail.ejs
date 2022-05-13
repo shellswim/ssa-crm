@@ -1,6 +1,7 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" dmx-on:load="run([{run:{action:`queryManager.set(\'ledgerinfo_offset\',0)`}},{run:{action:`queryManager.set(\'ledgerinfo_limit\',5)`}},{run:{action:`fl_findRelationshipName.run()`}}])" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{},dmxBootstrap5PagingGenerator:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{},dmxBootstrap5PagingGenerator:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" -->
+<meta name="ac:route" content="/families/familydetail/:familyid">
 <dmx-preloader id="familyDetail_preloader" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)" style="z-index: 1051;"></dmx-preloader>
-<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-on:done="getFees.load({familyid: query.familyid, monthtocount: '2021-06-01'})" dmx-param:familyuuid="query.familyid" dmx-on:success="run([{wait:{delay:300}},{run:{action:`toggle_loadingplaceholders.uncheck()`}}])" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
 <script is="dmx-flow" id="checkEmailArray" type="text/dmx-flow">{
   meta: {
     $param: [
@@ -67,16 +68,33 @@
     ]
   }
 }</script>
-<dmx-download id="downloadFile"></dmx-download>
 <dmx-session-manager id="ledgerStorage"></dmx-session-manager>
-
-
-<meta name="ac:route" content="/families/familydetail/:familyid">
 <dmx-value id="topPriorityNotes" dmx-bind:value="familyDetails.data.familyNotes[0].maxPriority == 5 ? 'Has Critical Note/s' : familyDetails.data.familyNotes[0].maxPriority == 4 ? 'Has High Priority Note/s' : familyDetails.data.familyNotes[0].maxPriority == 3 ? 'Has Medium Note/s' : 'Has Notes';">
 </dmx-value>
-<dmx-notifications id="successNotifies" position="bottom" closable="true" opacity="0.95" timeout="3500" extended-timeout="300" align="full"></dmx-notifications>
 <div class="section overlay" dmx-class:overlay-show="editGuardian.value === 1"></div>
 <dmx-query-manager id="getFamilyID"></dmx-query-manager>
+<dmx-serverconnect id="checkEmail" noload url="/api/families/checkEmail" dmx-on:success="createGuardianModalForm.arr_emailAddresses.addUniq(createGuardianModalForm.hd_emailObj.value)">
+</dmx-serverconnect>
+<dmx-serverconnect id="deleteGuardianPhone" url="/api/deleteGuardianPhone" noload></dmx-serverconnect>
+<dmx-serverconnect id="createGuardian" url="api/createGuardian" dmx-param:familyid="query.familyid" noload="">
+</dmx-serverconnect>
+<dmx-serverconnect id="deleteGuardian" url="/api/families/guardians/deleteGuardian" dmx-param:guardianid="" noload="">
+</dmx-serverconnect>
+<dmx-serverconnect id="deleteFamily" url="/api/deleteFamily" dmx-param:familyid="" noload></dmx-serverconnect>
+<dmx-serverconnect id="deleteFamilyNote" url="api/deleteFamilyNote" dmx-param:guardianid="updateGuardianModal.data_detail1.data.id" noload="" dmx-param:noteid=""></dmx-serverconnect>
+<dmx-serverconnect id="updateFamily" url="api/updateFamily" dmx-param:familyid="familyDetails.data.familyDetails.id" noload="" dmx-param:family_id="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="updatePrimaryGuardian" url="api/updateFamilyPrimaryGuardian" dmx-param:familyid="query.familyid" noload=""></dmx-serverconnect>
+<dmx-serverconnect id="getGuardianContactDetails" url="/api/getGuardianContactDetails" noload></dmx-serverconnect>
+
+<dmx-serverconnect id="deleteGuardianEmail" url="/api/deleteGuardianEmail" noload></dmx-serverconnect>
+<div class="container d-none" id="countries_states_scs">
+    <dmx-serverconnect id="getCountries" url="/api/baseActions/localizations/GET_countries"></dmx-serverconnect>
+    <dmx-serverconnect id="getCountryStates" url="/api/baseActions/getCountryStates" noload dmx-param:countryid="" dmx-on:success="address_createModal.form_createAddress.sel_state.setValue(getstateid.data.stateid.id)">
+    </dmx-serverconnect>
+    <dmx-serverconnect id="getcountryid" url="/api/baseActions/google/places/get_countryid" dmx-param:country="" noload>
+    </dmx-serverconnect>
+    <dmx-serverconnect id="getstateid" url="/api/baseActions/google/places/get_stateid" dmx-param:country="address_createModal.form_createAddress.inp_residenceAutocomplete.components.country.long" dmx-param:state="" noload></dmx-serverconnect>
+</div>
 <dmx-value id="editGuardian" dmx-bind:value="0"></dmx-value>
 <div class="modal" id="address_createOrEdit" is="dmx-bs5-modal" tabindex="-1">
     <div class="modal-dialog" role="document">
@@ -165,7 +183,7 @@
                         <div class="col">
                             <div class="mb-3">
                                 <label for="inp_country" class="col-form-label">Country</label>
-                                <select id="sel_country" class="form-select" name="country" dmx-bind:value="address_createModal.form_createAddress.var_countryid.value ? address_createModal.form_createAddress.var_countryid.value : appSettings.default_country" dmx-bind:options="getCountries.data.countries" optiontext="name" optionvalue="id" dmx-on:updated="run([{wait:{delay:100}},{run:{action:`getCountryStates.load({countryid: value})`}}])" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked">
+                                <select id="sel_country" class="form-select" name="country" dmx-bind:options="getCountries.data.countries" optiontext="name" optionvalue="id" dmx-on:updated="run([{wait:{delay:100}},{run:{action:`getCountryStates.load({countryid: value})`}}])" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked">
                                     <option disabled selected value="" hidden>Please select...</option>
                                 </select>
                             </div>
@@ -173,7 +191,7 @@
                         <div class="col">
                             <div class="mb-3">
                                 <label for="inp_state" class="col-form-label">State</label>
-                                <select id="sel_state" class="form-select" name="state" dmx-bind:options="getCountryStates.data.states" optiontext="name" optionvalue="id" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked" dmx-bind:disabled="getCountryStates.data.states.length === 0" dmx-bind:value="address_createModal.form_createAddress.var_stateid.value ? address_createModal.form_createAddress.var_stateid.value : ''">
+                                <select id="sel_state" class="form-select" name="state" dmx-bind:options="getCountryStates.data.states" optiontext="name" optionvalue="id" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked" dmx-bind:disabled="getCountryStates.data.states.length === 0">
                                     <option disabled selected value="" hidden>Please select...</option>
                                 </select>
                             </div>
@@ -1704,33 +1722,12 @@
         </div>
     </div>
 </div>
-<dmx-serverconnect id="checkEmail" noload url="/api/families/checkEmail" dmx-on:success="createGuardianModalForm.arr_emailAddresses.addUniq(createGuardianModalForm.hd_emailObj.value)">
-</dmx-serverconnect>
-<dmx-serverconnect id="deleteGuardianPhone" url="/api/deleteGuardianPhone" noload></dmx-serverconnect>
-<dmx-serverconnect id="createGuardian" url="api/createGuardian" dmx-param:familyid="query.familyid" noload="">
-</dmx-serverconnect>
-<dmx-serverconnect id="deleteGuardian" url="/api/families/guardians/deleteGuardian" dmx-param:guardianid="" noload="">
-</dmx-serverconnect>
-<dmx-serverconnect id="deleteFamily" url="/api/deleteFamily" dmx-param:familyid="" noload></dmx-serverconnect>
-<dmx-serverconnect id="deleteFamilyNote" url="api/deleteFamilyNote" dmx-param:guardianid="updateGuardianModal.data_detail1.data.id" noload="" dmx-param:noteid=""></dmx-serverconnect>
-<dmx-serverconnect id="updateFamily" url="api/updateFamily" dmx-param:familyid="familyDetails.data.familyDetails.id" noload="" dmx-param:family_id="query.familyid"></dmx-serverconnect>
-<dmx-serverconnect id="updatePrimaryGuardian" url="api/updateFamilyPrimaryGuardian" dmx-param:familyid="query.familyid" noload=""></dmx-serverconnect>
-<dmx-serverconnect id="getGuardianContactDetails" url="/api/getGuardianContactDetails" noload></dmx-serverconnect>
 
-<dmx-serverconnect id="deleteGuardianEmail" url="/api/deleteGuardianEmail"></dmx-serverconnect>
-<div class="container d-none" id="countries_states_scs">
-    <dmx-serverconnect id="getCountries" url="/api/baseActions/getCountries"></dmx-serverconnect>
-    <dmx-serverconnect id="getCountryStates" url="/api/baseActions/getCountryStates" noload dmx-param:countryid="" dmx-on:success="address_createModal.form_createAddress.sel_state.setValue(getstateid.data.stateid.id)">
-    </dmx-serverconnect>
-    <dmx-serverconnect id="getcountryid" url="/api/baseActions/google/places/get_countryid" dmx-param:country="" noload>
-    </dmx-serverconnect>
-    <dmx-serverconnect id="getstateid" url="/api/baseActions/google/places/get_stateid" dmx-param:country="address_createModal.form_createAddress.inp_residenceAutocomplete.components.country.long" dmx-param:state="" noload></dmx-serverconnect>
-</div>
 <dmx-datetime id="currentDateVariable"></dmx-datetime>
 <section class="bg-white p-5 pb-0 border-bottom">
     <div class="row">
         <div class="col d-flex flex-column">
-            <div class="row row-cols-1">
+            <div class="row row-cols-1 g-0">
                 <div class="col placeholder-glow">
                     <div class="row">
                         <div class="col d-flex">
@@ -1785,7 +1782,7 @@
                 <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
                     <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 text-body" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" href="#guardians" dmx-on:click="var_showPartial.setValue('overview')"><i class="bi-people me-2"></i>Overview</a>
+                            <a class="nav-link py-3 px-3 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" dmx-on:click="var_showPartial.setValue('overview')"><i class="bi-people me-2"></i>Overview</a>
                         </li>
                         <li class="nav-item col-auto">
                             <a class="nav-link py-3 px-3" id="navTabs1_2_tab" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger" dmx-on:click="var_showPartial.setValue('ledger')"><i class="bi-credit-card me-2"></i>Ledger
@@ -1859,8 +1856,3 @@
 
     </section>
 </main>
-<script>
-    // window.addEventListener('load', function (event) {
-    //     tabDeeplink(location.href.replace(/\/$/, ''), 'guardians');
-    // });
-</script>

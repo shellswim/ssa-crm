@@ -11,7 +11,7 @@ const {
 } = require('mathjs');
 
 exports.tuitioncalc = async function (options) {
-    debugger;
+    
     options = this.parse(options);
     //////////// Database Connection //////////
     const connection = this.parseRequired('db', 'string', 'connection is required.');
@@ -88,7 +88,7 @@ exports.tuitioncalc = async function (options) {
     /** Check if charge exists for current month */
     let multipleChargeExists = false, chargeexists = false;
     let find_chargeexists = dbClient(await db.raw(`
-        SELECT cf.uuid, cf.chargeDate, cf.dueDate
+        SELECT *
         FROM charges_family cf
         WHERE cf.chargeFor_monthly = '${DateTime.fromISO(options.monthtoprocess).startOf('month').toISODate('yyyy-MM-dd')}' AND cf.family_uuid = '${family_uuid}'
     `)) || [];
@@ -105,6 +105,7 @@ exports.tuitioncalc = async function (options) {
     }
     
     /** Students and Enrolments Setup */
+    debugger;
     let dummyenrol = options.dummyEnrolEnabled;
     let dummyJSON = options.dummyEnrolJSON ? JSON.parse(this.parse(options.dummyEnrolJSON)) : null;
     let discount_start_from_timestamp;
@@ -138,7 +139,7 @@ exports.tuitioncalc = async function (options) {
             for (let k = 0; k < se.days.length; k++) {
                 dayint = se.calendar_days[k].dayint;
                 let enrolquery = await getEnrolments(student.uuid, se.start, se.end, dayint);
-                
+                debugger;
                 // Remove enrolments whose dropdate is before current class date.
 
                 enrolquery.enrolments.map(e => {
@@ -433,6 +434,7 @@ exports.tuitioncalc = async function (options) {
     }
 
     async function getEnrolments(studentid, start, end, dayint) {
+
         let enrols_array = [];
         let enrolments = dbClient(await db.raw(`
             SELECT e.*, c.day AS classday, c.classType AS classType, c.classtype_uuid, ct.shortName, s.firstName, s.lastName, c.instructor_uuid, c.classlevel_uuid, c.startTimeDisplay, '${start}' AS startofweek 
@@ -453,12 +455,13 @@ exports.tuitioncalc = async function (options) {
         if(enrolments.length > 0) debugger;
         for(let i=0;i<enrolments.length;i++) {
             let e = enrolments[i];
-            let add_days = dayint - 1, dropdate = DateTime.fromSQL(e.dropDate).toSeconds();
+            let add_days = dayint - 1, dropdate = DateTime.fromJSDate(e.dropDate).toSeconds(), startdate = DateTime.fromJSDate(e.startDate).toSeconds();
             e.classdate_timestamp = DateTime.fromISO(start).plus({days: add_days}).toSeconds();
             e.classdate = DateTime.fromISO(start).plus({days: add_days}).toISODate();
 
-            // If dropdate is before current class date, stop execution of current loop and deny push of enrolment to array.
+            // If dropdate is < class date, or startdate > class date, stop execution of current loop and deny push of enrolment to array.
             if(dropdate && dropdate < e.classdate_timestamp) continue;
+            if(startdate > e.classdate_timestamp) continue;
 
             // Add Base Rates
             if(priceoverride == 1 && e.priceOverride == 1) {
@@ -489,7 +492,7 @@ exports.tuitioncalc = async function (options) {
                 '${classdate}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
                 AND cb.classlevel_uuid = '${dummyJSON.classlevel_uuid}';
             `),'baserate');
-            enrolments.push({
+            enrols_array.push({
                 "classday": dummyJSON.classday,
                 "classdate_timestamp": classdate_timestamp,
                 "classdate": classdate,
@@ -512,14 +515,17 @@ exports.tuitioncalc = async function (options) {
                 "uuid": 'dummy',
             });
         }
-        if(Array.isArray(enrolments) && enrolments.length > 0) {
-            enrolments.map(e => {
+        if(Array.isArray(enrols_array) && enrols_array.length > 0) {
+            enrols_array.map(e => {
                 family_enrolments.push(e);
+                if(e.enrolmentType !== 1) {
+                    e.baseRate = 0.00;
+                }
             });
         }
         return {
-            'enrolments': enrolments,
-            'total_enrolments': enrolments.length
+            'enrolments': enrols_array,
+            'total_enrolments': enrols_array.length
         };
     }
 

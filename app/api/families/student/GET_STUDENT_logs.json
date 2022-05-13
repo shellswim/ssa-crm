@@ -19,21 +19,13 @@
       },
       {
         "type": "text",
-        "name": "family_uuid"
-      },
-      {
-        "type": "text",
-        "name": "log_category"
-      },
-      {
-        "type": "text",
-        "name": "log_type"
+        "name": "student_uuid"
       }
     ]
   },
   "exec": {
     "steps": {
-      "name": "query_logs",
+      "name": "logs",
       "module": "dbconnector",
       "action": "paged",
       "options": {
@@ -41,7 +33,7 @@
           "type": "SELECT",
           "columns": [],
           "table": {
-            "name": "family_logs"
+            "name": "student_logs"
           },
           "primary": "uuid",
           "joins": [],
@@ -49,14 +41,14 @@
             "condition": "AND",
             "rules": [
               {
-                "id": "family_logs.family_uuid",
-                "field": "family_logs.family_uuid",
+                "id": "student_logs.student_uuid",
+                "field": "student_logs.student_uuid",
                 "type": "double",
                 "operator": "equal",
-                "value": "{{$_GET.family_uuid}}",
+                "value": "{{$_GET.student_uuid}}",
                 "data": {
-                  "table": "family_logs",
-                  "column": "family_uuid",
+                  "table": "student_logs",
+                  "column": "student_uuid",
                   "type": "number",
                   "columnObj": {
                     "type": "reference",
@@ -64,97 +56,33 @@
                     "primary": false,
                     "nullable": false,
                     "references": "uuid",
-                    "inTable": "families",
+                    "inTable": "students",
+                    "referenceType": "string",
                     "onUpdate": "CASCADE",
                     "onDelete": "CASCADE",
-                    "name": "family_uuid"
+                    "name": "student_uuid"
                   }
                 },
                 "operation": "="
-              },
-              {
-                "condition": "AND",
-                "rules": [
-                  {
-                    "id": "family_logs.log_category",
-                    "field": "family_logs.log_category",
-                    "type": "string",
-                    "operator": "equal",
-                    "value": "{{$_GET.log_category}}",
-                    "data": {
-                      "table": "family_logs",
-                      "column": "log_category",
-                      "type": "text",
-                      "columnObj": {
-                        "type": "text",
-                        "maxLength": 65535,
-                        "primary": false,
-                        "nullable": true,
-                        "name": "log_category"
-                      }
-                    },
-                    "operation": "="
-                  }
-                ],
-                "conditional": "{{$_GET.log_category.length()>0}}"
-              },
-              {
-                "condition": "AND",
-                "rules": [
-                  {
-                    "id": "family_logs.log_type",
-                    "field": "family_logs.log_type",
-                    "type": "string",
-                    "operator": "equal",
-                    "value": "{{$_GET.log_type}}",
-                    "data": {
-                      "table": "family_logs",
-                      "column": "log_type",
-                      "type": "text",
-                      "columnObj": {
-                        "type": "enum",
-                        "maxLength": 11,
-                        "primary": false,
-                        "nullable": false,
-                        "name": "log_type"
-                      }
-                    },
-                    "operation": "="
-                  }
-                ],
-                "conditional": "{{$_GET.log_type.length()>0}}"
               }
             ],
             "conditional": null,
             "valid": true
           },
-          "query": "SELECT *\nFROM family_logs\nWHERE family_uuid = :P1 /* {{$_GET.family_uuid}} */ AND (log_category = :P2 /* {{$_GET.log_category}} */) AND (log_type = :P3 /* {{$_GET.log_type}} */)\nORDER BY logged_at DESC",
+          "orders": [
+            {
+              "table": "student_logs",
+              "column": "logged_at",
+              "direction": "DESC"
+            }
+          ],
+          "query": "SELECT *\nFROM student_logs\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */\nORDER BY logged_at DESC",
           "params": [
             {
               "operator": "equal",
               "type": "expression",
               "name": ":P1",
-              "value": "{{$_GET.family_uuid}}"
-            },
-            {
-              "operator": "equal",
-              "type": "expression",
-              "name": ":P2",
-              "value": "{{$_GET.log_category}}"
-            },
-            {
-              "operator": "equal",
-              "type": "expression",
-              "name": ":P3",
-              "value": "{{$_GET.log_type}}"
-            }
-          ],
-          "orders": [
-            {
-              "table": "family_logs",
-              "column": "logged_at",
-              "direction": "DESC",
-              "recid": 1
+              "value": "{{$_GET.student_uuid}}"
             }
           ]
         },
@@ -224,11 +152,11 @@
             },
             {
               "type": "number",
-              "name": "family_uuid"
+              "name": "student_uuid"
             },
             {
-              "type": "text",
-              "name": "log_type"
+              "type": "number",
+              "name": "family_uuid"
             },
             {
               "type": "text",
@@ -249,6 +177,10 @@
             {
               "type": "text",
               "name": "log"
+            },
+            {
+              "type": "text",
+              "name": "log_type"
             }
           ]
         }

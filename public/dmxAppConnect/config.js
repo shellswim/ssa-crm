@@ -1609,6 +1609,14 @@ dmx.config({
       {
         "type": "text",
         "name": "flogs_sort"
+      },
+      {
+        "type": "text",
+        "name": "st_flogs_limit"
+      },
+      {
+        "type": "text",
+        "name": "st_flogs_offset"
       }
     ],
     "tableRepeat1": {
@@ -13292,6 +13300,61 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "query": [
+      {
+        "type": "text",
+        "name": "st_flogs_limit"
+      },
+      {
+        "type": "text",
+        "name": "st_flogs_offset"
+      }
+    ],
+    "rp_studentLogs": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "student_uuid"
+        },
+        {
+          "type": "number",
+          "name": "family_uuid"
+        },
+        {
+          "type": "text",
+          "name": "log_category"
+        },
+        {
+          "type": "number",
+          "name": "logged_at"
+        },
+        {
+          "type": "text",
+          "name": "logged_by"
+        },
+        {
+          "type": "text",
+          "name": "ip_address"
+        },
+        {
+          "type": "text",
+          "name": "log"
+        },
+        {
+          "type": "text",
+          "name": "log_type"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "_notes": {
@@ -13442,43 +13505,97 @@ dmx.config({
     "rp_familylogs": {
       "meta": [
         {
-          "type": "text",
-          "name": "uuid"
+          "name": "offset",
+          "type": "number"
         },
         {
-          "type": "number",
-          "name": "family_uuid"
+          "name": "limit",
+          "type": "number"
         },
         {
-          "type": "text",
-          "name": "log_type"
+          "name": "total",
+          "type": "number"
         },
         {
-          "type": "text",
-          "name": "log_category"
+          "name": "page",
+          "type": "object",
+          "sub": [
+            {
+              "name": "offset",
+              "type": "object",
+              "sub": [
+                {
+                  "name": "first",
+                  "type": "number"
+                },
+                {
+                  "name": "prev",
+                  "type": "number"
+                },
+                {
+                  "name": "next",
+                  "type": "number"
+                },
+                {
+                  "name": "last",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "name": "current",
+              "type": "number"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ]
         },
         {
-          "type": "number",
-          "name": "logged_at"
-        },
-        {
-          "type": "text",
-          "name": "logged_by"
-        },
-        {
-          "type": "text",
-          "name": "ip_address"
-        },
-        {
-          "type": "text",
-          "name": "old_value"
-        },
-        {
-          "type": "text",
-          "name": "new_value"
+          "name": "data",
+          "type": "array",
+          "sub": [
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "family_uuid"
+            },
+            {
+              "type": "text",
+              "name": "log_type"
+            },
+            {
+              "type": "text",
+              "name": "log_category"
+            },
+            {
+              "type": "number",
+              "name": "logged_at"
+            },
+            {
+              "type": "text",
+              "name": "logged_by"
+            },
+            {
+              "type": "text",
+              "name": "ip_address"
+            },
+            {
+              "type": "text",
+              "name": "log"
+            }
+          ]
         }
       ],
-      "outputType": "array"
+      "outputType": "object"
     },
     "query": [
       {
@@ -13488,6 +13605,12 @@ dmx.config({
       {
         "type": "text",
         "name": "flogs_limit"
+      }
+    ],
+    "global": [
+      {
+        "type": "text",
+        "name": "student_uuid"
       }
     ]
   }
