@@ -95,1287 +95,530 @@
           "if": "{{$_GET.viewtype === 'calendar'}}",
           "then": {
             "steps": {
-              "name": "classdump",
-              "module": "dbupdater",
-              "action": "custom",
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
               "options": {
-                "connection": "db",
-                "sql": {
-                  "query": "SELECT c.uuid,\n       c.id,\n       c.startTimeDecimal,\n       c.endTimeDecimal,\n       c.instructor_uuid,\n       c.classlevel_uuid,\n       c.day,\n       c.startTimeDisplay,\n       c.endTimeDisplay,\n       c.max,\n       c.classtype_uuid,\n       JSON_OBJECT(\n               'active_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 1\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'makeup_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 3\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'trial_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 3\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'casual_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 5\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               )\n           ) AS enrolments\nFROM classes c\nGROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,\n         c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid",
-                  "params": [
+                "try": {
+                  "steps": [
                     {
-                      "name": ":startdate",
-                      "value": "{{$_GET.startdate}}",
-                      "test": "2022-01-09"
+                      "name": "nextavail",
+                      "module": "classAvail",
+                      "action": "classAvail",
+                      "options": {
+                        "weekdate": "{{$_GET.weekdate}}",
+                        "startdate": "{{$_GET.startdate}}",
+                        "enddate": "{{$_GET.enddate}}",
+                        "maxweeks": "{{$_GET.checkavail_max}}",
+                        "classid": "{{id}}",
+                        "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
+                        "datatype": "calendar",
+                        "classdump": "{{classdump}}",
+                        "data_type": "calendar",
+                        "avail_type": "{{$_GET.avails_type}}",
+                        "avail_amount": "{{$_GET.avails_amount}}",
+                        "day_filter": "{{$_GET.filter_days}}",
+                        "instructor_filter": "{{$_GET.filter_instructors}}",
+                        "time_filter": "{{$_GET.filter_times}}",
+                        "level_filter": "{{$_GET.filter_levels}}",
+                        "limit": "{{$_GET.limit.toNumber()}}",
+                        "offset": "{{||0}}",
+                        "startofweek": "{{$_GET.startofweek||'monday'}}"
+                      },
+                      "meta": [
+                        {
+                          "name": "classes",
+                          "type": "array",
+                          "sub": [
+                            {
+                              "name": "classlevel_uuid",
+                              "type": "text"
+                            },
+                            {
+                              "name": "classtype_uuid",
+                              "type": "text"
+                            },
+                            {
+                              "name": "day",
+                              "type": "number"
+                            },
+                            {
+                              "name": "endTimeDecimal",
+                              "type": "number"
+                            },
+                            {
+                              "name": "endTimeDisplay",
+                              "type": "text"
+                            },
+                            {
+                              "name": "id",
+                              "type": "number"
+                            },
+                            {
+                              "name": "instructor_uuid",
+                              "type": "text"
+                            },
+                            {
+                              "name": "max",
+                              "type": "number"
+                            },
+                            {
+                              "name": "optsd",
+                              "type": "text"
+                            },
+                            {
+                              "name": "startTimeDecimal",
+                              "type": "number"
+                            },
+                            {
+                              "name": "startTimeDisplay",
+                              "type": "text"
+                            },
+                            {
+                              "name": "uuid",
+                              "type": "text"
+                            },
+                            {
+                              "name": "waitlists",
+                              "type": "array",
+                              "sub": [
+                                {
+                                  "name": "age",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "classlevel",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "classlevel_uuid",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "dayint",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "dob",
+                                  "type": "date"
+                                },
+                                {
+                                  "name": "endTimeDecimal",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "family",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "firstName",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "fulfil_date",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "id",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "instructor",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "instructor_uuid",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "lastName",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "notes",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "request_date",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "starttimedec",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "student_uuid",
+                                  "type": "text"
+                                },
+                                {
+                                  "name": "studentid",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "uuid",
+                                  "type": "text"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "wed",
+                              "type": "text"
+                            },
+                            {
+                              "name": "baseRate",
+                              "type": "number"
+                            },
+                            {
+                              "name": "shortName",
+                              "type": "text"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "limit",
+                          "type": "number"
+                        },
+                        {
+                          "name": "offset",
+                          "type": "number"
+                        },
+                        {
+                          "name": "last_offset",
+                          "type": "number"
+                        },
+                        {
+                          "name": "next",
+                          "type": "number"
+                        },
+                        {
+                          "name": "prev",
+                          "type": "number"
+                        },
+                        {
+                          "name": "page",
+                          "type": "object",
+                          "sub": [
+                            {
+                              "name": "current",
+                              "type": "number"
+                            },
+                            {
+                              "name": "total",
+                              "type": "number"
+                            },
+                            {
+                              "name": "offset",
+                              "type": "object",
+                              "sub": [
+                                {
+                                  "name": "first",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "last",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "next",
+                                  "type": "number"
+                                },
+                                {
+                                  "name": "prev",
+                                  "type": "number"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "limit",
+                          "type": "number"
+                        },
+                        {
+                          "name": "timesarray",
+                          "type": "array"
+                        }
+                      ],
+                      "output": true
+                    },
+                    {
+                      "name": "calData",
+                      "module": "classCalendarJSON",
+                      "action": "classCalendarJSON",
+                      "options": {
+                        "data": "{{nextavail.classes}}",
+                        "classtimes": "{{nextavail.times_array}}",
+                        "day_filter": "{{$_GET.filter_days}}",
+                        "instructor_filter": "{{$_GET.filter_instructors}}",
+                        "time_filter": "{{$_GET.filter_times}}",
+                        "level_filter": "{{$_GET.filter_levels}}"
+                      },
+                      "meta": [
+                        {
+                          "name": "calData",
+                          "type": "array"
+                        }
+                      ],
+                      "output": true
                     }
                   ]
                 }
-              },
-              "output": true,
-              "meta": [
-                {
-                  "name": "uuid",
-                  "type": "text"
-                },
-                {
-                  "name": "id",
-                  "type": "number"
-                },
-                {
-                  "name": "startTimeDecimal",
-                  "type": "number"
-                },
-                {
-                  "name": "endTimeDecimal",
-                  "type": "number"
-                },
-                {
-                  "name": "instructor_uuid",
-                  "type": "text"
-                },
-                {
-                  "name": "classlevel_uuid",
-                  "type": "text"
-                },
-                {
-                  "name": "day",
-                  "type": "number"
-                },
-                {
-                  "name": "startTimeDisplay",
-                  "type": "text"
-                },
-                {
-                  "name": "endTimeDisplay",
-                  "type": "text"
-                },
-                {
-                  "name": "max",
-                  "type": "number"
-                },
-                {
-                  "name": "classtype_uuid",
-                  "type": "text"
-                },
-                {
-                  "name": "enrolments",
-                  "type": "text"
-                }
-              ],
-              "outputType": "array"
+              }
             }
           },
           "else": {
-            "steps": [
-              {
-                "name": "query_total",
-                "module": "dbconnector",
-                "action": "single",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
+              "options": {
+                "try": {
+                  "steps": {
+                    "name": "nextavail",
+                    "module": "classAvail",
+                    "action": "classAvail",
+                    "options": {
+                      "weekdate": "{{$_GET.weekdate}}",
+                      "startdate": "{{$_GET.startdate}}",
+                      "enddate": "{{$_GET.enddate}}",
+                      "maxweeks": "{{$_GET.checkavail_max}}",
+                      "classid": "{{id}}",
+                      "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
+                      "datatype": "calendar",
+                      "classdump": "{{classdump}}",
+                      "data_type": "list",
+                      "avail_type": "{{$_GET.avails_type}}",
+                      "avail_amount": "{{$_GET.avails_amount}}",
+                      "day_filter": "{{$_GET.filter_days}}",
+                      "instructor_filter": "{{$_GET.filter_instructors}}",
+                      "time_filter": "{{$_GET.filter_times}}",
+                      "level_filter": "{{$_GET.filter_levels}}",
+                      "limit": "{{$_GET.limit.toNumber()}}",
+                      "offset": "{{$_GET.offset.toNumber() || 0}}",
+                      "startofweek": "{{$_GET.startofweek||'monday'}}"
+                    },
+                    "meta": [
                       {
-                        "table": "classes",
-                        "column": "*",
-                        "alias": "total",
-                        "aggregate": "COUNT"
+                        "name": "classes",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "classlevel_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classtype_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "day",
+                            "type": "number"
+                          },
+                          {
+                            "name": "endTimeDecimal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "endTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "id",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "max",
+                            "type": "number"
+                          },
+                          {
+                            "name": "optsd",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startTimeDecimal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "startTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "waitlists",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "age",
+                                "type": "text"
+                              },
+                              {
+                                "name": "classlevel",
+                                "type": "number"
+                              },
+                              {
+                                "name": "classlevel_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "dayint",
+                                "type": "number"
+                              },
+                              {
+                                "name": "dob",
+                                "type": "date"
+                              },
+                              {
+                                "name": "endTimeDecimal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "family",
+                                "type": "text"
+                              },
+                              {
+                                "name": "firstName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "fulfil_date",
+                                "type": "text"
+                              },
+                              {
+                                "name": "id",
+                                "type": "number"
+                              },
+                              {
+                                "name": "instructor",
+                                "type": "number"
+                              },
+                              {
+                                "name": "instructor_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "lastName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "notes",
+                                "type": "text"
+                              },
+                              {
+                                "name": "request_date",
+                                "type": "text"
+                              },
+                              {
+                                "name": "starttimedec",
+                                "type": "number"
+                              },
+                              {
+                                "name": "student_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "studentid",
+                                "type": "number"
+                              },
+                              {
+                                "name": "uuid",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "wed",
+                            "type": "text"
+                          },
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "shortName",
+                            "type": "text"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "limit",
+                        "type": "number"
+                      },
+                      {
+                        "name": "offset",
+                        "type": "number"
+                      },
+                      {
+                        "name": "last_offset",
+                        "type": "number"
+                      },
+                      {
+                        "name": "next",
+                        "type": "number"
+                      },
+                      {
+                        "name": "prev",
+                        "type": "number"
+                      },
+                      {
+                        "name": "page",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "current",
+                            "type": "number"
+                          },
+                          {
+                            "name": "total",
+                            "type": "number"
+                          },
+                          {
+                            "name": "offset",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "first",
+                                "type": "number"
+                              },
+                              {
+                                "name": "last",
+                                "type": "number"
+                              },
+                              {
+                                "name": "next",
+                                "type": "number"
+                              },
+                              {
+                                "name": "prev",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "limit",
+                        "type": "number"
+                      },
+                      {
+                        "name": "timesarray",
+                        "type": "array"
                       }
                     ],
-                    "table": {
-                      "name": "classes"
-                    },
-                    "joins": [],
-                    "groupBy": [],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "id": "classes.isactive",
-                          "field": "classes.isactive",
-                          "type": "boolean",
-                          "operator": "equal",
-                          "value": true,
-                          "data": {
-                            "table": "classes",
-                            "column": "isactive",
-                            "type": "boolean"
-                          },
-                          "operation": "="
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    },
-                    "query": "SELECT COUNT(*) AS total\nFROM classes\nWHERE isactive = true",
-                    "params": []
+                    "output": true
                   }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "text",
-                    "name": "uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "number",
-                    "name": "startTimeDecimal"
-                  },
-                  {
-                    "type": "number",
-                    "name": "endTimeDecimal"
-                  },
-                  {
-                    "type": "boolean",
-                    "name": "isactive"
-                  },
-                  {
-                    "type": "number",
-                    "name": "instructor"
-                  },
-                  {
-                    "type": "text",
-                    "name": "instructor_uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classLevel"
-                  },
-                  {
-                    "type": "text",
-                    "name": "classlevel_uuid"
-                  },
-                  {
-                    "type": "number",
-                    "name": "day"
-                  },
-                  {
-                    "type": "text",
-                    "name": "startTimeDisplay"
-                  },
-                  {
-                    "type": "text",
-                    "name": "endTimeDisplay"
-                  },
-                  {
-                    "type": "number",
-                    "name": "max"
-                  },
-                  {
-                    "type": "number",
-                    "name": "classType"
-                  },
-                  {
-                    "type": "text",
-                    "name": "classtype_uuid"
-                  },
-                  {
-                    "type": "date",
-                    "name": "startdate"
-                  },
-                  {
-                    "type": "date",
-                    "name": "enddate"
-                  }
-                ],
-                "outputType": "object",
-                "disabled": true
-              },
-              {
-                "name": "total",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{query_total.total}}"
-                },
-                "meta": [
-                  {
-                    "name": "uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "id",
-                    "type": "number"
-                  },
-                  {
-                    "name": "startTimeDecimal",
-                    "type": "number"
-                  },
-                  {
-                    "name": "endTimeDecimal",
-                    "type": "number"
-                  },
-                  {
-                    "name": "isactive",
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "instructor",
-                    "type": "number"
-                  },
-                  {
-                    "name": "instructor_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "classLevel",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classlevel_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "day",
-                    "type": "number"
-                  },
-                  {
-                    "name": "startTimeDisplay",
-                    "type": "text"
-                  },
-                  {
-                    "name": "endTimeDisplay",
-                    "type": "text"
-                  },
-                  {
-                    "name": "max",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classType",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classtype_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "startdate",
-                    "type": "date"
-                  },
-                  {
-                    "name": "enddate",
-                    "type": "date"
-                  }
-                ],
-                "outputType": "object",
-                "output": true,
-                "disabled": true
-              },
-              {
-                "name": "limit",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{$_GET.limit.toNumber()}}"
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": true,
-                "disabled": true
-              },
-              {
-                "name": "offset",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{$_GET.offset.toNumber() || 0}}"
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": true,
-                "disabled": true
-              },
-              {
-                "name": "page",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": {
-                    "total": "{{(total / limit).ceil()}}",
-                    "current": "{{((offset + limit)/limit)}}",
-                    "offset": {
-                      "first": "{{0}}",
-                      "last": "{{(total % limit) === 0 ? (total - limit) : (total - (total % limit))}}",
-                      "next": "{{(offset + limit) > total ? last_offset : (offset + limit)}}",
-                      "prev": "{{(offset - limit) <= 0 ? 0 : (offset - limit)}}"
-                    }
-                  }
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": true,
-                "disabled": true
-              },
-              {
-                "name": "last_offset",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{(total % limit) === 0 ? (total - limit) : (total - (total % limit))}}"
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": false,
-                "disabled": true
-              },
-              {
-                "name": "next",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{(offset + limit) > total ? last_offset : (offset + limit)}}"
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": false,
-                "disabled": true
-              },
-              {
-                "name": "prev",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{(offset - limit) <= 0 ? 0 : (offset - limit)}}"
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": false,
-                "disabled": true
-              },
-              {
-                "name": "classdump",
-                "module": "dbupdater",
-                "action": "custom",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "query": "SELECT c.uuid,\n       c.id,\n       c.startTimeDecimal,\n       c.endTimeDecimal,\n       c.instructor_uuid,\n       c.classlevel_uuid,\n       c.day,\n       c.startTimeDisplay,\n       c.endTimeDisplay,\n       c.max,\n       c.classtype_uuid,\n       JSON_OBJECT(\n               'active_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 1\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'makeup_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 3\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'trial_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 3\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               ),\n               'casual_enrols',\n               (\n                   SELECT JSON_ARRAYAGG(\n                                  JSON_OBJECT(\n                                          'age', s.age,\n                                          'class_uuid', e.class_uuid,\n                                          'dob', s.dob,\n                                          'dropDate', e.dropDate,\n                                          'enrolmentType', e.enrolmentType,\n                                          'family', s.family,\n                                          'firstName', s.firstName,\n                                          'isTransferIn', e.isTransferIn,\n                                          'isTransferOut', e.isTransferOut,\n                                          'lastName', s.lastName,\n                                          'startDate', e.startDate,\n                                          'student_uuid', s.uuid,\n                                          'transferToStart', e.transferToStart,\n                                          'uuid', e.uuid\n                                      )\n                              )\n                   FROM enrolments e\n                            LEFT JOIN students s ON e.student_uuid = s.uuid\n                   WHERE e.enrolmentType = 5\n                     AND e.isValid = 1\n                     AND (e.dropDate >= :startdate OR e.dropDate IS NULL)\n                     AND e.class_uuid = c.uuid\n               )\n           ) AS enrolments\nFROM classes c\nGROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,\n         c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid\nORDER BY c.day, c.startTimeDecimal\nLIMIT :offset, :limit ",
-                    "params": [
-                      {
-                        "name": ":startdate",
-                        "value": "{{$_GET.startdate}}",
-                        "test": "2022-01-09"
-                      },
-                      {
-                        "name": ":limit",
-                        "value": "{{limit}}",
-                        "test": "{{20}}"
-                      },
-                      {
-                        "name": ":offset",
-                        "value": "{{offset}}",
-                        "test": "{{0}}"
-                      }
-                    ]
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "name": "uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "id",
-                    "type": "number"
-                  },
-                  {
-                    "name": "startTimeDecimal",
-                    "type": "number"
-                  },
-                  {
-                    "name": "endTimeDecimal",
-                    "type": "number"
-                  },
-                  {
-                    "name": "instructor_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "classlevel_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "day",
-                    "type": "number"
-                  },
-                  {
-                    "name": "startTimeDisplay",
-                    "type": "text"
-                  },
-                  {
-                    "name": "endTimeDisplay",
-                    "type": "text"
-                  },
-                  {
-                    "name": "max",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classtype_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "enrolments",
-                    "type": "text"
-                  }
-                ],
-                "outputType": "array",
-                "disabled": true
-              }
-            ]
-          }
-        },
-        "outputType": "boolean"
-      },
-      {
-        "name": "nextavail",
-        "module": "classAvail",
-        "action": "classAvail",
-        "options": {
-          "weekdate": "{{$_GET.weekdate}}",
-          "startdate": "{{$_GET.startdate}}",
-          "enddate": "{{$_GET.enddate}}",
-          "maxweeks": "{{$_GET.checkavail_max}}",
-          "classid": "{{id}}",
-          "makeup_max_days": "{{$_GET.makeup_max_book_days}}",
-          "datatype": "calendar",
-          "classdump": "{{classdump}}",
-          "data_type": "calendar",
-          "avail_type": "{{$_GET.avails_type}}",
-          "avail_amount": "{{$_GET.avails_amount}}",
-          "day_filter": "{{$_GET.filter_days}}",
-          "instructor_filter": "{{$_GET.filter_instructors}}",
-          "time_filter": "{{$_GET.filter_times}}",
-          "level_filter": "{{$_GET.filter_levels}}",
-          "limit": "{{$_GET.limit.toNumber()}}",
-          "offset": "{{$_GET.offset.toNumber() || 0}}",
-          "startofweek": "{{$_GET.startofweek||'monday'}}"
-        },
-        "meta": [
-          {
-            "name": "classes",
-            "type": "array",
-            "sub": [
-              {
-                "name": "classlevel_uuid",
-                "type": "text"
-              },
-              {
-                "name": "classtype_uuid",
-                "type": "text"
-              },
-              {
-                "name": "day",
-                "type": "number"
-              },
-              {
-                "name": "endTimeDecimal",
-                "type": "number"
-              },
-              {
-                "name": "endTimeDisplay",
-                "type": "text"
-              },
-              {
-                "name": "id",
-                "type": "number"
-              },
-              {
-                "name": "instructor_uuid",
-                "type": "text"
-              },
-              {
-                "name": "max",
-                "type": "number"
-              },
-              {
-                "name": "optsd",
-                "type": "text"
-              },
-              {
-                "name": "startTimeDecimal",
-                "type": "number"
-              },
-              {
-                "name": "startTimeDisplay",
-                "type": "text"
-              },
-              {
-                "name": "uuid",
-                "type": "text"
-              },
-              {
-                "name": "waitlists",
-                "type": "array",
-                "sub": [
-                  {
-                    "name": "age",
-                    "type": "text"
-                  },
-                  {
-                    "name": "classlevel",
-                    "type": "number"
-                  },
-                  {
-                    "name": "classlevel_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "dayint",
-                    "type": "number"
-                  },
-                  {
-                    "name": "dob",
-                    "type": "date"
-                  },
-                  {
-                    "name": "endTimeDecimal",
-                    "type": "number"
-                  },
-                  {
-                    "name": "family",
-                    "type": "text"
-                  },
-                  {
-                    "name": "firstName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "fulfil_date",
-                    "type": "text"
-                  },
-                  {
-                    "name": "id",
-                    "type": "number"
-                  },
-                  {
-                    "name": "instructor",
-                    "type": "number"
-                  },
-                  {
-                    "name": "instructor_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "lastName",
-                    "type": "text"
-                  },
-                  {
-                    "name": "notes",
-                    "type": "text"
-                  },
-                  {
-                    "name": "request_date",
-                    "type": "text"
-                  },
-                  {
-                    "name": "starttimedec",
-                    "type": "number"
-                  },
-                  {
-                    "name": "student_uuid",
-                    "type": "text"
-                  },
-                  {
-                    "name": "studentid",
-                    "type": "number"
-                  },
-                  {
-                    "name": "uuid",
-                    "type": "text"
-                  }
-                ]
-              },
-              {
-                "name": "wed",
-                "type": "text"
-              },
-              {
-                "name": "baseRate",
-                "type": "number"
-              },
-              {
-                "name": "shortName",
-                "type": "text"
-              }
-            ]
-          },
-          {
-            "name": "limit",
-            "type": "number"
-          },
-          {
-            "name": "offset",
-            "type": "number"
-          },
-          {
-            "name": "last_offset",
-            "type": "number"
-          },
-          {
-            "name": "next",
-            "type": "number"
-          },
-          {
-            "name": "prev",
-            "type": "number"
-          },
-          {
-            "name": "page",
-            "type": "object",
-            "sub": [
-              {
-                "name": "current",
-                "type": "number"
-              },
-              {
-                "name": "total",
-                "type": "number"
-              },
-              {
-                "name": "offset",
-                "type": "object",
-                "sub": [
-                  {
-                    "name": "first",
-                    "type": "number"
-                  },
-                  {
-                    "name": "last",
-                    "type": "number"
-                  },
-                  {
-                    "name": "next",
-                    "type": "number"
-                  },
-                  {
-                    "name": "prev",
-                    "type": "number"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "limit",
-            "type": "number"
-          },
-          {
-            "name": "timesarray",
-            "type": "array"
-          }
-        ],
-        "output": true
-      },
-      {
-        "name": "",
-        "module": "core",
-        "action": "condition",
-        "options": {
-          "if": "{{$_GET.viewtype === 'calendar'}}",
-          "then": {
-            "steps": {
-              "name": "calData",
-              "module": "classCalendarJSON",
-              "action": "classCalendarJSON",
-              "options": {
-                "data": "{{nextavail.classes}}",
-                "classtimes": "{{nextavail.timesarray}}",
-                "day_filter": "{{$_GET.filter_days}}",
-                "instructor_filter": "{{$_GET.filter_instructors}}",
-                "time_filter": "{{$_GET.filter_times}}",
-                "level_filter": "{{$_GET.filter_levels}}"
-              },
-              "meta": [
-                {
-                  "name": "calData",
-                  "type": "array"
                 }
-              ],
-              "output": true
+              }
             }
           }
         },
         "outputType": "boolean"
-      },
-      {
-        "name": "",
-        "module": "core",
-        "action": "condition",
-        "options": {
-          "if": "{{$_GET.viewtype === 'list'}}",
-          "then": {
-            "steps": [
-              {
-                "name": "classdump",
-                "module": "dbconnector",
-                "action": "paged",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [],
-                    "table": {
-                      "name": "allClasses_detail",
-                      "alias": "acd"
-                    },
-                    "joins": [],
-                    "query": "SELECT *\nFROM allClasses_detail AS acd\nWHERE (day_int IN ({{$_GET.filter_days.split(',')}})) AND (classLevel IN ({{$_GET.filter_levels.split(',')}})) AND (instructorid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day_int ASC, startTimeDecimal ASC",
-                    "params": [],
-                    "orders": [
-                      {
-                        "table": "acd",
-                        "column": "day_int",
-                        "direction": "ASC",
-                        "recid": 1
-                      },
-                      {
-                        "table": "acd",
-                        "column": "startTimeDecimal",
-                        "direction": "ASC",
-                        "recid": 2
-                      }
-                    ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "acd.day_int",
-                              "field": "acd.day_int",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_days.split(',')}}",
-                              "data": {
-                                "table": "acd",
-                                "column": "day_int",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_days}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "acd.classLevel",
-                              "field": "acd.classLevel",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_levels.split(',')}}",
-                              "data": {
-                                "table": "acd",
-                                "column": "classLevel",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_levels}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "acd.instructorid",
-                              "field": "acd.instructorid",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_instructors.split(',')}}",
-                              "data": {
-                                "table": "acd",
-                                "column": "instructorid",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_instructors}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "acd.startTimeDecimal",
-                              "field": "acd.startTimeDecimal",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_times.split(',')}}",
-                              "data": {
-                                "table": "acd",
-                                "column": "startTimeDecimal",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_times}}"
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    }
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "name": "offset",
-                    "type": "number"
-                  },
-                  {
-                    "name": "limit",
-                    "type": "number"
-                  },
-                  {
-                    "name": "total",
-                    "type": "number"
-                  },
-                  {
-                    "name": "page",
-                    "type": "object",
-                    "sub": [
-                      {
-                        "name": "offset",
-                        "type": "object",
-                        "sub": [
-                          {
-                            "name": "first",
-                            "type": "number"
-                          },
-                          {
-                            "name": "prev",
-                            "type": "number"
-                          },
-                          {
-                            "name": "next",
-                            "type": "number"
-                          },
-                          {
-                            "name": "last",
-                            "type": "number"
-                          }
-                        ]
-                      },
-                      {
-                        "name": "current",
-                        "type": "number"
-                      },
-                      {
-                        "name": "total",
-                        "type": "number"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "data",
-                    "type": "array",
-                    "sub": [
-                      {
-                        "type": "number",
-                        "name": "id"
-                      },
-                      {
-                        "type": "text",
-                        "name": "uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classLevel"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classlevel_uuid"
-                      },
-                      {
-                        "type": "text",
-                        "name": "day_name"
-                      },
-                      {
-                        "type": "number",
-                        "name": "day_int"
-                      },
-                      {
-                        "type": "date",
-                        "name": "startdate"
-                      },
-                      {
-                        "type": "date",
-                        "name": "enddate"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classType"
-                      },
-                      {
-                        "type": "text",
-                        "name": "startTimeDisplay"
-                      },
-                      {
-                        "type": "number",
-                        "name": "startTimeDecimal"
-                      },
-                      {
-                        "type": "text",
-                        "name": "endTimeDisplay"
-                      },
-                      {
-                        "type": "number",
-                        "name": "endTimeDecimal"
-                      },
-                      {
-                        "type": "boolean",
-                        "name": "isactive"
-                      },
-                      {
-                        "type": "number",
-                        "name": "max"
-                      },
-                      {
-                        "type": "number",
-                        "name": "instructorid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrolcount"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrol_active"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrol_makeup"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrol_trial"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrol_waitlist"
-                      },
-                      {
-                        "type": "number",
-                        "name": "enrol_casual"
-                      },
-                      {
-                        "type": "number",
-                        "name": "slots_avail"
-                      }
-                    ]
-                  }
-                ],
-                "outputType": "object",
-                "type": "dbconnector_paged_select",
-                "disabled": true
-              },
-              {
-                "name": "classdump",
-                "module": "dbconnector",
-                "action": "paged",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [],
-                    "table": {
-                      "name": "classes",
-                      "alias": "c"
-                    },
-                    "joins": [],
-                    "query": "SELECT *\nFROM classes AS c\nWHERE (day IN ({{$_GET.filter_days.split(',')}})) AND (classlevel_uuid IN ({{$_GET.filter_levels.split(',')}})) AND (instructor_uuid IN ({{$_GET.filter_instructors.split(',')}})) AND (startTimeDecimal IN ({{$_GET.filter_times.split(',')}}))\nORDER BY day ASC, startTimeDecimal ASC",
-                    "params": [],
-                    "orders": [
-                      {
-                        "table": "c",
-                        "column": "day",
-                        "direction": "ASC"
-                      },
-                      {
-                        "table": "c",
-                        "column": "startTimeDecimal",
-                        "direction": "ASC"
-                      }
-                    ],
-                    "wheres": {
-                      "condition": "AND",
-                      "rules": [
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "c.day",
-                              "field": "c.day",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_days.split(',')}}",
-                              "data": {
-                                "table": "c",
-                                "column": "day",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_days}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "c.classlevel_uuid",
-                              "field": "c.classlevel_uuid",
-                              "type": "string",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_levels.split(',')}}",
-                              "data": {
-                                "table": "c",
-                                "column": "classlevel_uuid",
-                                "type": "text"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_levels}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "c.instructor_uuid",
-                              "field": "c.instructor_uuid",
-                              "type": "string",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_instructors.split(',')}}",
-                              "data": {
-                                "table": "c",
-                                "column": "instructor_uuid",
-                                "type": "text"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_instructors}}"
-                        },
-                        {
-                          "condition": "AND",
-                          "rules": [
-                            {
-                              "id": "c.startTimeDecimal",
-                              "field": "c.startTimeDecimal",
-                              "type": "double",
-                              "operator": "in",
-                              "value": "{{$_GET.filter_times.split(',')}}",
-                              "data": {
-                                "table": "c",
-                                "column": "startTimeDecimal",
-                                "type": "number"
-                              },
-                              "operation": "IN"
-                            }
-                          ],
-                          "conditional": "{{$_GET.filter_times}}"
-                        }
-                      ],
-                      "conditional": null,
-                      "valid": true
-                    }
-                  }
-                },
-                "meta": [
-                  {
-                    "name": "offset",
-                    "type": "number"
-                  },
-                  {
-                    "name": "limit",
-                    "type": "number"
-                  },
-                  {
-                    "name": "total",
-                    "type": "number"
-                  },
-                  {
-                    "name": "page",
-                    "type": "object",
-                    "sub": [
-                      {
-                        "name": "offset",
-                        "type": "object",
-                        "sub": [
-                          {
-                            "name": "first",
-                            "type": "number"
-                          },
-                          {
-                            "name": "prev",
-                            "type": "number"
-                          },
-                          {
-                            "name": "next",
-                            "type": "number"
-                          },
-                          {
-                            "name": "last",
-                            "type": "number"
-                          }
-                        ]
-                      },
-                      {
-                        "name": "current",
-                        "type": "number"
-                      },
-                      {
-                        "name": "total",
-                        "type": "number"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "data",
-                    "type": "array",
-                    "sub": [
-                      {
-                        "type": "text",
-                        "name": "uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "id"
-                      },
-                      {
-                        "type": "number",
-                        "name": "startTimeDecimal"
-                      },
-                      {
-                        "type": "number",
-                        "name": "endTimeDecimal"
-                      },
-                      {
-                        "type": "boolean",
-                        "name": "isactive"
-                      },
-                      {
-                        "type": "number",
-                        "name": "instructor"
-                      },
-                      {
-                        "type": "text",
-                        "name": "instructor_uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classLevel"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classlevel_uuid"
-                      },
-                      {
-                        "type": "number",
-                        "name": "day"
-                      },
-                      {
-                        "type": "text",
-                        "name": "startTimeDisplay"
-                      },
-                      {
-                        "type": "text",
-                        "name": "endTimeDisplay"
-                      },
-                      {
-                        "type": "number",
-                        "name": "max"
-                      },
-                      {
-                        "type": "number",
-                        "name": "classType"
-                      },
-                      {
-                        "type": "text",
-                        "name": "classtype_uuid"
-                      },
-                      {
-                        "type": "date",
-                        "name": "startdate"
-                      },
-                      {
-                        "type": "date",
-                        "name": "enddate"
-                      }
-                    ]
-                  }
-                ],
-                "outputType": "object",
-                "output": true,
-                "type": "dbconnector_paged_select",
-                "disabled": true
-              },
-              {
-                "name": "page",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": {
-                    "limit": "{{classdump.limit}}",
-                    "total": "{{classdump.total}}",
-                    "offset": "{{classdump.offset}}",
-                    "page": "{{classdump.page}}"
-                  }
-                },
-                "meta": [],
-                "outputType": "text",
-                "output": true,
-                "disabled": true
-              },
-              {
-                "name": "enrolmentTypes",
-                "module": "dbconnector",
-                "action": "select",
-                "options": {
-                  "connection": "db",
-                  "sql": {
-                    "type": "SELECT",
-                    "columns": [],
-                    "table": {
-                      "name": "enrolmentTypes"
-                    },
-                    "joins": [],
-                    "query": "SELECT *\nFROM enrolmentTypes",
-                    "params": []
-                  }
-                },
-                "output": true,
-                "meta": [
-                  {
-                    "type": "number",
-                    "name": "id"
-                  },
-                  {
-                    "type": "text",
-                    "name": "type"
-                  }
-                ],
-                "outputType": "array",
-                "disabled": true
-              }
-            ]
-          }
-        },
-        "outputType": "boolean",
-        "disabled": true
       }
     ]
   }

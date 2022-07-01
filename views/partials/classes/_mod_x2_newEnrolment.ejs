@@ -1,0 +1,154 @@
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" moment_2="local with locales" id="new_enrolment_modals" components="{dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap5Modal:{},dmxFormatter:{}}" -->
+<script is="dmx-flow" id="createEnrolment_modal_parent_backdrop" type="text/dmx-flow" src="/app/flows/bootstrap_overrides/modal_parent_backdrop.json" autorun dmx-param:modal="'#enrolmentSearchModal'"></script>
+<div class="modal fade bg-parent" id="enrolmentSearchModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="inp_newEnrolDropDate.setValue(null);queryManager.remove('searchtextfilter');active_enroltype_toggle.disable(false);trial_enroltype_toggle.disable(false);makeup_enroltype_toggle.disable(false);casual_enroltype_toggle.disable(false);waitlist_enroltype_toggle.disable(false)">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-lg-down" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header border-bottom">
+
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2 fa-fw fa-sm"></i>Create New Enrolment</h5>
+            </div>
+            <div class="modal-body light-blue-bg">
+                <dmx-data-detail id="dd_classdetails_searchenrol" dmx-bind:data="classesBase.data.nextavail.classes" key="uuid">
+                    <dmx-value id="var_enroltype" dmx-bind:value="enrolmentSearchModal.active_enroltype_toggle.checked ? 'active' : enrolmentSearchModal.waitlist_enroltype_toggle.checked ? 'waitlist' : enrolmentSearchModal.trial_enroltype_toggle.checked ? 'trial' : enrolmentSearchModal.makeup_enroltype_toggle.checked ? 'makeup' : 'casual'"></dmx-value>
+                </dmx-data-detail>
+                <h5 class="d-flex align-items-center mb-2 pb-2 lh-1 fw-650" dmx-html="'<i class=&quot;bi-arrow-right-circle fs-5 me-2&quot;></i><strong>Class:&nbsp;</strong>  '+appSettings.days_array[dd_classdetails_searchenrol.data.classday]+' - '+dd_classdetails_searchenrol.data.startTimeDisplay+' '+appSettings.classLevelsByID[dd_classdetails_searchenrol.data.classlevel_uuid].name+' - '+appSettings.instructorsById[dd_classdetails_searchenrol.data.instructor_uuid].trunc_name"><i class="bi-arrow-right-circle fs-5 me-2"></i>Class
+                    Details
+                </h5>
+                <section>
+
+                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+
+                            <h6>Enrolment Details</h6>
+                            <div class="row mb-1 pb-2 border-bottom g-0">
+                                <div class="col d-flex justify-content-start">
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="active_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'active'" value="standard">
+                                    <label class="btn btn-sm me-2 btn-active-outline" for="active_enroltype_toggle">Active Enrolment</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="trial_enroltype_toggle" autocomplete="off" checked dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'trial'" value="trial">
+                                    <label class="btn btn-sm me-2 btn-trial-outline" for="trial_enroltype_toggle">Trial Enrolment</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="makeup_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'makeup'" value="makeup" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
+                                    <label class="btn btn-sm me-2 btn-makeup-outline" for="makeup_enroltype_toggle">Makeup</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="casual_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'casual'" value="casual" dmx-bind:disabled="enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 101 || enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup_response.code === 102">
+                                    <label class="btn btn-sm me-2 btn-casual-outline" for="casual_enroltype_toggle">Casual</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="waitlist_enroltype_toggle" autocomplete="off" dmx-bind:checked="enrolmentSearchModal.dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'" value="waitlist">
+                                    <label class="btn btn-sm me-2 btn-outline-dark" for="waitlist_enroltype_toggle">Waitlist</label>
+
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <dmx-value id="var_newenrol_startdate"></dmx-value>
+                                    <label for="inp_searchModal" class="col-form-label">Start Date</label>
+                                    <input id="inp_newEnrolStartDate" class="form-control" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="dateAndTime_days.datetime.addDays(-7)" step="7" dmx-bind:value="enrolmentSearchModal.var_newenrol_startdate.value||dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" dmx-class:border-danger="dateAndTime_days.datetime.toTimestamp() < dd_classdetails_searchenrol.data.details.nextavailable_permanent.formatDate('yyyy-MM-dd').toTimestamp()" dmx-class:border-2="dateAndTime_days.datetime.toTimestamp() < dd_classdetails_searchenrol.data.details.nextavailable_permanent.formatDate('yyyy-MM-dd').toTimestamp()">
+                                    <p class="mb-0 mt-1 small fw-600 text-danger" dmx-show="dateAndTime_days.datetime.toTimestamp()<dd_classdetails_searchenrol.data.details.nextavailable_permanent.formatDate('yyyy-MM-dd').toTimestamp()"><i class="fas fa-exclamation-triangle me-1 fa-fw fa-sm"></i>This enrolment will start on the above date because it's the next available permanent opening. This prevents overbooking.</p>
+                                </div>
+                                <div class="col">
+                                    <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
+                                    <p class="small text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)" dmx-hide="!inp_newEnrolDropDate.value"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
+                                    <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="enrolmentSearchModal.inp_newEnrolStartDate.value" step="7">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-0 mb-3 p-3 bg-white rounded-3 pdl-surface-shadow">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6>Family Search</h6>
+                                    <div class="input-group">
+
+                                        <span class="input-group-text bg-info text-white border-0"><i class="fas fa-search"></i></span>
+                                        <input id="inp_searchModal" name="inp_searchModal" type="text" class="form-control" style="" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:500="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])" placeholder="Search for families or students">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="mb-3 p-3 bg-white rounded-3 pdl-surface-shadow" dmx-show="GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies.length > 0">
+                    <div class="row row-cols-1 gx-0" id="rp_families" is="dmx-repeat" dmx-bind:repeat="GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies">
+                        <div class="col mb-3 ">
+                            <div class="row gx-0">
+
+                                <div class="col">
+                                    <div class="row gx-2">
+
+                                        <div class="col-auto align-self-stretch d-flex"><a href="#" class="btn btn-outline-light text-body rounded-1 d-flex align-items-center" dmx-bs-tooltip="'Go to Family'" data-bs-trigger="hover" data-bs-placement="top" dmx-bind:href="'/families/familydetail/'+family" target="_blank">
+                                                <i class="fas fa-users"></i>
+                                            </a></div>
+                                        <div class="col d-flex flex-column align-items-start justify-content-center">
+                                            <h5 class="mb-0" dmx-text="(primaryGuardian) ? primaryGuardian.firstName+' '+primaryGuardian.lastName : 'No primary guardian found.'">Jane Doe</h5>
+                                            <p class="mb-0 mt-1 small text-muted" style="">{{guardians.values(`' ' + firstName +' '+lastName`)}}</p>
+
+
+
+                                        </div>
+
+                                    </div>
+                                    <div class="row mt-2 g-0">
+                                        <div class="col">
+                                            <table class="table small align-middle table-bordered">
+                                                <thead class="fw-bold border-bottom">
+                                                    <tr>
+                                                        <th scope="row" class="collapse-cell"></th>
+                                                        <th>Student</th>
+                                                        <th>Level</th>
+                                                        <th>Gender</th>
+                                                        <th>Dob</th>
+                                                        <th>Age</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="students" id="tb_es_repeatStudents">
+                                                    <tr>
+                                                        <td class="collapse-cell">
+
+                                                            <dmx-serverconnect id="sc_checkenrolexists" url="/api/classes/enrolments/CHECK_ENROLMENT_exists" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid" dmx-param:startdate="2022-03-23" dmx-param:class_uuid="enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" noload=""></dmx-serverconnect>
+                                                            <button id="addActive" class="btn btn-sm btn-active-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(1);newEnrolmentModal.createEnrolmentForm.inp_hd_ne_dummyenrol_json.setValue([&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify())`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 1,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'), dropDate: inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\')})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'active'"><i class="fas fa-user-plus fa-sm me-1 fa-fw"></i>Add
+
+                                                            </button>
+
+                                                            <button id="addTrial" class="btn btn-sm btn-trial-outline p-1 px-2" dmx-on:click="run([{serverConnect:{url:'/api/classes/enrolments/CHECK_ENROLMENT_exists',site:'SSA-CRM',params:{student_uuid:`uuid`,class_uuid:`enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid`,student_firstname:`firstName`,student_lastname:`lastName`,startdate:`enrolmentSearchModal.inp_newEnrolStartDate.value||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\')`},name:'sc'}},{assign:{value:`false`,name:'var_book_anyway'}},{assign:{value:`false`,name:'var_enrolment_error'}},{condition:{if:`sc.data.exists===true`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Enrolment Conflict',`sc.data.html_response`,'']}},{assign:{value:`true`,name:'var_enrolment_error'}}]}}},{condition:{if:`var_enrolment_error===false`,then:{steps:[{run:{action:`newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_ne_enrolType.setValue(3);newEnrolmentModal.createEnrolmentForm.inp_hd_ne_dummyenrol_json.setValue([&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 3,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify())`}},{run:{action:`newEnrolmentModal.sc_quote.load({enrolmentType: 1, student_uuid: uuid, class_uuid: dd_classdetails_searchenrol.data.uuid, family_uuid: family, enabledummyenrol: 1, dummyenroljson: [&quot;classday&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.classday ,&quot;classType&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;classtype_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classtype_uuid,&quot;baseRate&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.baseRate,&quot;shortName&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.shortName,&quot;firstName&quot;, firstName,&quot;lastName&quot;, lastName,&quot;instructor_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.instructor_uuid,&quot;classlevel_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.classlevel_uuid,&quot;startTimeDisplay&quot;,enrolmentSearchModal.dd_classdetails_searchenrol.data.startTimeDisplay,&quot;enrolmentType&quot;, 3,&quot;dropDate&quot;, enrolmentSearchModal.inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\'),&quot;isValid&quot;, 1,&quot;startDate&quot;, enrolmentSearchModal.inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'),&quot;student_uuid&quot;, uuid,&quot;class_uuid&quot;, enrolmentSearchModal.dd_classdetails_searchenrol.data.uuid,&quot;uuid&quot;,\'dummy\'].objectFromArray().jsonStringify(), startdate: inp_newEnrolStartDate.value.formatDate(\'yyyy-MM-dd\'), dropDate: inp_newEnrolDropDate.value.formatDate(\'yyyy-MM-dd\')})`}},{wait:{delay:200}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_tuitionquote.setValue(sc_quote.data.exec_tuitioncalc.repeat)`}},{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newEnrolmentModal.show()`}}]}}}])"><i class="fas fa-question-circle fa-sm me-1 fa-fw"></i>Add
+                                                            </button>
+                                                            <button id="addMakeup" class="btn btn-sm btn-makeup-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(2)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'makeup'"><i class="fas fa-arrow-alt-circle-up fa-sm me-1 fa-fw"></i>Add
+                                                            </button><button id="addCasual" class="btn btn-sm btn-casual-outline p-1 px-2" dmx-on:click="run([{run:{action:`newEnrolmentModal.createEnrolmentForm.inp_ne_startDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'));newEnrolmentModal.createEnrolmentForm.inp_ne_dropDate.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data.details.makeup[0].date.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`newEnrolmentModal.var_studentDetailsObject.setValue($value);newEnrolmentModal.var_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newEnrolmentModal.var_ne_enrolType.setValue(5)`}},{run:{action:`enrolmentSearchModal.hide();newEnrolmentModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'casual'"><i class="fas fa-bookmark fa-sm me-1 fa-fw"></i>Add
+                                                            </button><button id="addWaitlist" class="btn btn-sm btn-waitlist-outline p-1 px-2" dmx-on:click="run([{run:{action:`enrolmentSearchModal.hide()`}},{run:{action:`newWaitlistModal.var_wl_classDetailsObject.setValue(enrolmentSearchModal.dd_classdetails_searchenrol.data);newWaitlistModal.var_wl_studentDetailsObject.setValue($value)`}},{run:{action:`newWaitlistModal.show()`}}])" dmx-show="dd_classdetails_searchenrol.var_enroltype.value === 'waitlist'"><i class="fas fa-history fa-sm me-1 fa-fw"></i>Add
+                                                            </button>
+
+
+
+                                                        </td>
+                                                        <td dmx-text="firstName +' '+lastName">Jane Doe</td>
+                                                        <td dmx-text="level">Ducklings</td>
+                                                        <td dmx-text="gender">Female</td>
+                                                        <td dmx-text="dob.formatDate('dd-MM-yyyy')">13-12-2019</td>
+                                                        <td dmx-text="age">1y 11m</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" dmx-on:click="inp_searchModal.setValue(null);queryManager.remove('searchtextfilter')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

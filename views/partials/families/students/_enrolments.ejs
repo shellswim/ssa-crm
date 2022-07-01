@@ -1,101 +1,98 @@
-<!-- Wappler include head-page="partials/families/_overview" appConnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" id="_enrolments" components="{dmxSockets:{}}" -->
+<dmx-toggle id="toggle_loading" checked="true"></dmx-toggle>
 <% var _data %>
-<dmx-value id="var_STUDENT_details" dmx-bind:value="<%= _data _%>"></dmx-value>
-<section>
-    <div class="row g-0">
-        <div class="col mb-3 pb-3 border-bottom d-flex align-items-center justify-content-start">
-            <h3 dmx-text="'Enrolments for: '+var_STUDENT_details.value.student_details.firstName+' '+var_STUDENT_details.value.student_details.lastName"
-                class="mb-0 fw-600">Enrolments for: Jane Mary Doe</h3>
-        </div>
-    </div>
-    <div class="row g-0">
-        <div class="col">
-            <div class="row">
-                <div class="col d-flex justify-content-between align-items-stretch flex-column mb-3">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <button id="btn_createNote1" class="btn btn-secondary"><i
-                                    class="bi-plus-circle me-2"></i>New Enrolment</button>
-                        </div>
-                        <div class="col-auto">
-                            <select id="sel_classTimeline" class="form-select form-control-sm">
-                                <option selected="" value="currentandfuture">Current &amp; Future</option>
-                                <option value="current">Current</option>
-                                <option value="past">Past</option>
-                                <option value="all">All</option>
-                                <option value="deleted">Deleted Enrolments</option>
-                            </select>
-                        </div>
-                    </div>
+    <dmx-value id="var_STUDENT_details" dmx-bind:value="<%= _data _%>"></dmx-value>
+    <dmx-serverconnect id="sc_GET_STUDENT_enrolments" url="/api/families/student/enrolments/GET_STUDENT_enrolments" dmx-param:student_uuid="var_STUDENT_details.value.student_details.uuid" dmx-param:enrol_lifetime="sel_classTimeline.value" dmx-on:success="run([{wait:{delay:500}},{run:{action:`toggle_loading.uncheck()`}}])" dmx-on:start="toggle_loading.check()" sockets="true"></dmx-serverconnect>
+    <dmx-serverconnect id="sc_GET_ENROLMENT_detail" url="/api/classes/enrolments/GET_ENROLMENT_single" noload></dmx-serverconnect>
+
+    <%- await include('/partials/classes/_mod_editEnrolment', Object.assign({_enrolment_details: `{{sc_GET_ENROLMENT_detail.data}}`}, locals)) %>
+        <section class="partial-main">
+            <div class="row g-0">
+                <div class="col mb-3 pb-3 border-bottom d-flex align-items-center justify-content-start">
+                    <h3 dmx-text="'Enrolments for: '+var_STUDENT_details.value.student_details.firstName+' '+var_STUDENT_details.value.student_details.lastName" class="mb-0 fw-600">Enrolments for: Jane Mary Doe</h3>
                 </div>
             </div>
-            <div class="row">
+            <div class="row g-0">
                 <div class="col">
-                    <h5 class="mb-0 text-danger text-center p-3 border rounded-3">No enrolments found.</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle border-light"
-                            dmx-hide="var_STUDENT_details.value.enrolments.length === 0">
-                            <thead class="small fw-bold">
-                                <tr>
-                                    <th style="width: 1%; white-space: nowrap;"></th>
-                                    <th style="width: 1%; white-space: nowrap;" class="text-center">Type</th>
-                                    <th style="width: 1%; white-space: nowrap;">Class</th>
-                                    <th style="width: 1%; white-space: nowrap;">Start date</th>
-                                    <th style="width: 1%; white-space: nowrap;">Drop date</th>
+                    <div class="row">
+                        <div class="col d-flex justify-content-between align-items-stretch flex-column mb-3">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <button id="btn_createNote1" class="btn btn-secondary"><i class="bi-plus-circle me-2"></i>New Enrolment</button>
+                                </div>
+                                <div class="col-auto">
+                                    <select id="sel_classTimeline" class="form-select form-control-sm">
+                                        <option selected="" value="currentandfuture">Current &amp; Future</option>
+                                        <option value="current">Current</option>
+                                        <option value="past">Past</option>
+                                        <option value="all">All</option>
+                                        <option value="deleted">Deleted Enrolments</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
-                                    <th>Drop reason</th>
-                                    <th scope="row">Deleted</th>
-                                </tr>
-                            </thead>
-                            <tbody is="dmx-repeat" dmx-generator="bs5table"
-                                dmx-bind:repeat="var_STUDENT_details.value.enrolments" id="enrolmentsRepeat">
-                                <tr>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button id="dd_enr_actions"
-                                                class="btn dropdown-toggle change-chevron border bg-white" type="button"
-                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                                    class="fas fa-ellipsis-v fa-xs"></i></button>
-                                            <div class="dropdown-menu" aria-labelledby="dropdown1">
-                                                <a class="dropdown-item small border-bottom" href="#"><i
-                                                        class="bi-pencil me-2"></i>Edit Enrolment</a><a
-                                                    class="dropdown-item small border-bottom" href="#"><i
-                                                        class="bi-arrow-bar-down me-2"></i>Drop Enrolment</a><a
-                                                    class="dropdown-item small" href="#"><i
-                                                        class="bi-arrow-left-right me-2"></i>Transfer Enrolment</a>
+                </div>
+            </div>
+            <section id="cr_loading_content" is="dmx-if" dmx-bind:condition="!toggle_loading.checked">
+                <div class="row" id="_enrolments">
+                    <div class="col">
+                        <h5 class="mb-0 text-danger text-center p-3 border rounded-3" dmx-hide="sc_GET_STUDENT_enrolments.data.enrolments.length>0">No enrolments found.</h5>
+                        <div class="table-responsive" dmx-show="sc_GET_STUDENT_enrolments.data.enrolments.length>0">
+                            <table class="table table-bordered align-middle border-light" dmx-hide="var_STUDENT_details.value.enrolments.length === 0">
+                                <thead class="small fw-bold">
+                                    <tr>
+                                        <th style="width: 1%; white-space: nowrap;"></th>
+                                        <th style="width: 1%; white-space: nowrap;" class="text-center">Type</th>
+                                        <th style="width: 1%; white-space: nowrap;">Class</th>
+                                        <th style="width: 1%; white-space: nowrap;">Start date</th>
+                                        <th style="width: 1%; white-space: nowrap;">Drop date</th>
 
 
+                                        <th>Drop reason</th>
+                                        <th scope="row">Deleted</th>
+                                    </tr>
+                                </thead>
+                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_STUDENT_enrolments.data.enrolments" id="enrolmentsRepeat">
+                                    <tr>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button id="dd_enr_actions" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i></button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdown1">
+                                                    <a class="dropdown-item border-bottom" href="#" dmx-on:click="sc_GET_ENROLMENT_detail.load({enrolment_uuid: uuid});editEnrolmentModal.show()"><i class="fas fa-pen me-2 fa-sm fa-fw"></i>Edit Enrolment</a>
+                                                    <a class="dropdown-item border-bottom" href="#"><i class="fas fa-arrow-circle-down me-2 fa-sm fa-fw"></i>Drop Enrolment</a>
+                                                    <a class="dropdown-item" href="#"><i class="fas fa-random me-2 fa-sm fa-fw"></i>Transfer Enrolment</a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td dmx-text="appSettings.enrolTypesById[enrolmentType].name"
-                                        class="text-center px-3"
-                                        dmx-class:bg-active="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='active'"
-                                        dmx-class:bg-trial="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='trial'"
-                                        dmx-class:bg-makeup="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='makeup'"
-                                        dmx-class:bg-casual="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='casual'"
-                                        dmx-class:bg-waitlist="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='waitlist'">
-                                        Active</td>
-                                    <td dmx-text="dayname+' - '+startTimeDisplay+' '+levelName+' - '+instructorFirst+' '+instructorLast.trunc(1,true,'.')"
-                                        style="white-space: nowrap;" class="pe-5">Saturday Duckling - 10:30AM - Melanie
-                                        M.</td>
-                                    <td dmx-text="startDate.formatDate('dd-MM-yyyy')" style="white-space: nowrap;">
-                                        12-12-2020</td>
-                                    <td dmx-text="dropDate.formatDate('dd-MM-yyyy')" style="white-space: nowrap;">-</td>
+                                        </td>
+                                        <td dmx-text="appSettings.enrolTypesById[enrolmentType].name" class="text-center px-3" dmx-class:bg-active="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='active'" dmx-class:bg-trial="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='trial'" dmx-class:bg-makeup="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='makeup'" dmx-class:bg-casual="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='casual'" dmx-class:bg-waitlist="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='waitlist'">
+                                            Active</td>
+                                        <td dmx-text="dayname+' - '+startTimeDisplay+' '+levelName+' - '+instructorFirst+' '+instructorLast.trunc(1,true,'.')" style="white-space: nowrap;" class="pe-5">Saturday Duckling - 10:30AM - Melanie
+                                            M.</td>
+                                        <td dmx-text="startDate.formatDate('dd-MM-yyyy')" style="white-space: nowrap;">
+                                            12-12-2020</td>
+                                        <td dmx-text="dropDate.formatDate('dd-MM-yyyy')" style="white-space: nowrap;">-</td>
 
 
-                                    <td dmx-text="dropReason || '-'">-</td>
-                                    <td
-                                        dmx-text="deleted ? deleted_time.toDate().formatDate(appSettings.localization_puddle_dateformat) : '-'">
-                                        -</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        <td dmx-text="dropReason || '-'">-</td>
+                                        <td dmx-text="deleted ? deleted_time.toDate().formatDate(appSettings.localization_puddle_dateformat) : '-'">
+                                            -</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+        <section is="dmx-if" id="cr_loading_spinner" dmx-bind:condition="toggle_loading.checked">
+            <div class="row">
+                <div class="col d-flex flex-row justify-content-center align-items-center">
+                    <div class="spinner-border" role="status">
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
-</section>
+        </section>

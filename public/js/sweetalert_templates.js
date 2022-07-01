@@ -1,6 +1,7 @@
 function swal_confirm(alerticon, alerttitle, showdeny, denytext, showcancel, canceltext, confirmtext, confirmationdialog, denydialog, message) {
   return new Promise(function (resolve, reject) {
     Swal.fire({
+      allowOutsideClick: false,
       title: alerttitle,
       showDenyButton: showdeny,
       showCancelButton: showcancel,
@@ -28,6 +29,7 @@ function swal_confirm(alerticon, alerttitle, showdeny, denytext, showcancel, can
 function swal_alert(icon, title, message, footer) {
   return new Promise(function (resolve,reject) {
     Swal.fire({
+      allowOutsideClick: false,
       icon: icon,
       title: title,
       html: message,

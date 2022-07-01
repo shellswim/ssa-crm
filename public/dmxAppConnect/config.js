@@ -11478,6 +11478,278 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "tableRepeat4": {
+      "meta": [
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "classLevel"
+        },
+        {
+          "type": "text",
+          "name": "classlevel_uuid"
+        },
+        {
+          "type": "text",
+          "name": "day_name"
+        },
+        {
+          "type": "number",
+          "name": "day_int"
+        },
+        {
+          "type": "date",
+          "name": "startdate"
+        },
+        {
+          "type": "date",
+          "name": "enddate"
+        },
+        {
+          "type": "number",
+          "name": "classType"
+        },
+        {
+          "type": "text",
+          "name": "startTimeDisplay"
+        },
+        {
+          "type": "number",
+          "name": "startTimeDecimal"
+        },
+        {
+          "type": "text",
+          "name": "endTimeDisplay"
+        },
+        {
+          "type": "number",
+          "name": "endTimeDecimal"
+        },
+        {
+          "type": "boolean",
+          "name": "isactive"
+        },
+        {
+          "type": "number",
+          "name": "max"
+        },
+        {
+          "type": "number",
+          "name": "instructorid"
+        },
+        {
+          "type": "number",
+          "name": "enrolcount"
+        },
+        {
+          "type": "number",
+          "name": "enrol_active"
+        },
+        {
+          "type": "number",
+          "name": "enrol_makeup"
+        },
+        {
+          "type": "number",
+          "name": "enrol_trial"
+        },
+        {
+          "type": "number",
+          "name": "enrol_waitlist"
+        },
+        {
+          "type": "number",
+          "name": "enrol_casual"
+        },
+        {
+          "type": "number",
+          "name": "slots_avail"
+        },
+        {
+          "type": "number",
+          "name": "instructor"
+        },
+        {
+          "type": "text",
+          "name": "instructor_uuid"
+        },
+        {
+          "type": "number",
+          "name": "day"
+        },
+        {
+          "type": "text",
+          "name": "classtype_uuid"
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_pagination_options": {
+      "meta": [],
+      "outputType": "text"
+    },
+    "var_classlistoffset": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "var_classlistpage": {
+      "meta": null,
+      "outputType": "text"
+    },
+    "dd_classdetails": {
+      "meta": [
+        {
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "classtype_uuid",
+          "type": "text"
+        },
+        {
+          "name": "day",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "endTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "instructor_uuid",
+          "type": "text"
+        },
+        {
+          "name": "max",
+          "type": "number"
+        },
+        {
+          "name": "optsd",
+          "type": "text"
+        },
+        {
+          "name": "startTimeDecimal",
+          "type": "number"
+        },
+        {
+          "name": "startTimeDisplay",
+          "type": "text"
+        },
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "waitlists",
+          "type": "array",
+          "sub": [
+            {
+              "name": "age",
+              "type": "text"
+            },
+            {
+              "name": "classlevel",
+              "type": "number"
+            },
+            {
+              "name": "classlevel_uuid",
+              "type": "text"
+            },
+            {
+              "name": "dayint",
+              "type": "number"
+            },
+            {
+              "name": "dob",
+              "type": "date"
+            },
+            {
+              "name": "endTimeDecimal",
+              "type": "number"
+            },
+            {
+              "name": "family",
+              "type": "text"
+            },
+            {
+              "name": "firstName",
+              "type": "text"
+            },
+            {
+              "name": "fulfil_date",
+              "type": "text"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "instructor",
+              "type": "number"
+            },
+            {
+              "name": "instructor_uuid",
+              "type": "text"
+            },
+            {
+              "name": "lastName",
+              "type": "text"
+            },
+            {
+              "name": "notes",
+              "type": "text"
+            },
+            {
+              "name": "request_date",
+              "type": "text"
+            },
+            {
+              "name": "starttimedec",
+              "type": "number"
+            },
+            {
+              "name": "student_uuid",
+              "type": "text"
+            },
+            {
+              "name": "studentid",
+              "type": "number"
+            },
+            {
+              "name": "uuid",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "wed",
+          "type": "text"
+        },
+        {
+          "name": "baseRate",
+          "type": "number"
+        },
+        {
+          "name": "shortName",
+          "type": "text"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "_classFilterSidebar": {
@@ -13613,5 +13885,123 @@ dmx.config({
         "name": "student_uuid"
       }
     ]
+  },
+  "_student_notes": {
+    "tbl_notesRepeat": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "content"
+        },
+        {
+          "type": "number",
+          "name": "student"
+        },
+        {
+          "type": "text",
+          "name": "student_uuid"
+        },
+        {
+          "type": "number",
+          "name": "priority"
+        },
+        {
+          "type": "text",
+          "name": "subject"
+        },
+        {
+          "type": "text",
+          "name": "status"
+        },
+        {
+          "type": "date",
+          "name": "date_created"
+        },
+        {
+          "type": "date",
+          "name": "date_closed"
+        },
+        {
+          "type": "number",
+          "name": "staff_created"
+        },
+        {
+          "type": "number",
+          "name": "staff_closed"
+        }
+      ],
+      "outputType": "array"
+    }
+  },
+  "_enrolments": {
+    "enrolmentsRepeat": {
+      "meta": [
+        {
+          "type": "date",
+          "name": "startDate"
+        },
+        {
+          "type": "date",
+          "name": "dropDate"
+        },
+        {
+          "type": "text",
+          "name": "dropReason"
+        },
+        {
+          "type": "text",
+          "name": "startTimeDisplay"
+        },
+        {
+          "type": "text",
+          "name": "endTimeDisplay"
+        },
+        {
+          "type": "text",
+          "name": "instructorFirst"
+        },
+        {
+          "type": "text",
+          "name": "instructorLast"
+        },
+        {
+          "type": "text",
+          "name": "levelName"
+        },
+        {
+          "type": "text",
+          "name": "levelColour"
+        },
+        {
+          "type": "text",
+          "name": "dayname"
+        },
+        {
+          "type": "text",
+          "name": "classtype_uuid"
+        },
+        {
+          "type": "boolean",
+          "name": "deleted"
+        },
+        {
+          "type": "number",
+          "name": "deleted_time"
+        },
+        {
+          "type": "number",
+          "name": "enrolmentType"
+        }
+      ],
+      "outputType": "array"
+    }
   }
 });

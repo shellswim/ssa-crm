@@ -20,6 +20,14 @@
       {
         "type": "text",
         "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "log_category"
+      },
+      {
+        "type": "text",
+        "name": "log_type"
       }
     ]
   },
@@ -43,7 +51,7 @@
               {
                 "id": "student_logs.student_uuid",
                 "field": "student_logs.student_uuid",
-                "type": "double",
+                "type": "string",
                 "operator": "equal",
                 "value": "{{$_GET.student_uuid}}",
                 "data": {
@@ -64,6 +72,64 @@
                   }
                 },
                 "operation": "="
+              },
+              {
+                "condition": "AND",
+                "rules": [
+                  {
+                    "id": "student_logs.log_category",
+                    "field": "student_logs.log_category",
+                    "type": "string",
+                    "operator": "equal",
+                    "value": "{{$_GET.log_category}}",
+                    "data": {
+                      "table": "student_logs",
+                      "column": "log_category",
+                      "type": "text",
+                      "columnObj": {
+                        "type": "text",
+                        "maxLength": 65535,
+                        "primary": false,
+                        "nullable": true,
+                        "name": "log_category"
+                      }
+                    },
+                    "operation": "="
+                  }
+                ],
+                "conditional": "{{$_GET.log_category}}"
+              },
+              {
+                "condition": "AND",
+                "rules": [
+                  {
+                    "id": "student_logs.log_type",
+                    "field": "student_logs.log_type",
+                    "type": "string",
+                    "operator": "equal",
+                    "value": "{{$_GET.log_type}}",
+                    "data": {
+                      "table": "student_logs",
+                      "column": "log_type",
+                      "type": "text",
+                      "columnObj": {
+                        "type": "enum",
+                        "enumValues": [
+                          "created",
+                          "updated",
+                          "deleted",
+                          "information"
+                        ],
+                        "maxLength": 11,
+                        "primary": false,
+                        "nullable": false,
+                        "name": "log_type"
+                      }
+                    },
+                    "operation": "="
+                  }
+                ],
+                "conditional": "{{$_GET.log_type}}"
               }
             ],
             "conditional": null,
@@ -76,13 +142,25 @@
               "direction": "DESC"
             }
           ],
-          "query": "SELECT *\nFROM student_logs\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */\nORDER BY logged_at DESC",
+          "query": "SELECT *\nFROM student_logs\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */ AND (log_category = :P2 /* {{$_GET.log_category}} */) AND (log_type = :P3 /* {{$_GET.log_type}} */)\nORDER BY logged_at DESC",
           "params": [
             {
               "operator": "equal",
               "type": "expression",
               "name": ":P1",
               "value": "{{$_GET.student_uuid}}"
+            },
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P2",
+              "value": "{{$_GET.log_category}}"
+            },
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P3",
+              "value": "{{$_GET.log_type}}"
             }
           ]
         },

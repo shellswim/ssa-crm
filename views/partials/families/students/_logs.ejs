@@ -1,10 +1,13 @@
 <!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" id="_logs" components="{dmxBootstrap5Navigation:{}}" -->
-<% var _student_uuid %>
-    <dmx-serverconnect id="GET_STUDENT_logs" url="/api/families/student/GET_STUDENT_logs" dmx-param:offset="query.st_flogs_offset" dmx-param:limit="query.st_flogs_limit" dmx-param:student_uuid="<%= _student_uuid _%>"></dmx-serverconnect>
-    <section>
+
+<% var _data %>
+    <dmx-toggle id="toggle_loading" checked="true"></dmx-toggle>
+    <dmx-value id="var_STUDENT_details" dmx-bind:value="<%= _data _%>"></dmx-value>
+    <dmx-serverconnect id="GET_STUDENT_logs" url="/api/families/student/GET_STUDENT_logs" dmx-param:offset="query.st_flogs_offset" dmx-param:limit="query.st_flogs_limit" dmx-param:student_uuid="var_STUDENT_details.value.student_details.uuid" dmx-on:success="run([{wait:{delay:500}},{run:{action:`toggle_loading.uncheck()`}}])" dmx-on:start="toggle_loading.check()" dmx-param:log_type="sel_st_logs_type.value" dmx-param:log_category="sel_st_logs_category.value"></dmx-serverconnect>
+    <section class="partial-main">
         <div class="row row-cols-1 g-0">
             <div class="col mb-3 pb-3 border-bottom d-flex align-items-center justify-content-start">
-                <h3 dmx-text="'Student Logs: '+GET_STUDENT_details.data.student_details.firstName+' '+GET_STUDENT_details.data.student_details.lastName" class="mb-0 fw-600">Student Logs: Jane Mary Doe</h3>
+                <h3 dmx-text="'Student Logs: '+var_STUDENT_details.value.student_details.firstName+' '+var_STUDENT_details.value.student_details.lastName" class="mb-0 fw-600">Student Logs: Jane Mary Doe</h3>
             </div>
         </div>
         <div class="row mb-3 pb-2 align-items-end">
@@ -26,13 +29,8 @@
                             <label for="sel_st_logs_category" class="form-label col-form-label">Log Category</label>
                             <select id="sel_st_logs_category" class="form-select w-auto">
                                 <option selected="" value="">All</option>
-                                <option value="Guardian">Guardians</option>
-                                <option value="Student">Students</option>
-                                <option value="Payment">Payments</option>
-                                <option value="Charge">Charges</option>
-                                <option value="Stripe">Stripe Billing</option>
-                                <option value="Email">Emails</option>
-                                <option value="Family Note">Family Note</option>
+                                <option value="Enrolment">Enrolment</option>
+                                <option value="Student Note">Student Note</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
@@ -51,8 +49,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col d-flex justify-content-end">
-                <ul class="pagination" dmx-populate="GET_STUDENT_logs.data.logs" dmx-state="queryManager" dmx-offset="st_flogs_offset" dmx-generator="bs5paging">
+            <div class="col d-flex justify-content-end align-items-center flex-row">
+                <ul class="pagination mb-0" dmx-populate="GET_STUDENT_logs.data.logs" dmx-state="queryManager" dmx-offset="st_flogs_offset" dmx-generator="bs5paging">
                     <li class="page-item" dmx-class:disabled="GET_STUDENT_logs.data.logs.page.current == 1" aria-label="First">
                         <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('st_flogs_offset',GET_STUDENT_logs.data.logs.page.offset.first)"><span aria-hidden="true">&lsaquo;&lsaquo;</span></a>
                     </li>
@@ -71,30 +69,45 @@
                 </ul>
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="small fw-bold">
-                        <tr>
-                            <th class="collapse-cell">Date</th>
-                            <th class="collapse-cell">Logged By</th>
-                            <th class="collapse-cell">IP</th>
-                            <th class="collapse-cell">Log Type</th>
-                            <th class="collapse-cell">Log Category</th>
-                            <th>Log</th>
-                        </tr>
-                    </thead>
-                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="GET_STUDENT_logs.data.logs.data" id="rp_studentLogs">
-                        <tr>
-                            <td dmx-html="(logged_at / 1000).toDate().formatDate(appSettings.localization_puddle_dateformat)+'<br>'+(logged_at / 1000).toDate().formatDate(appSettings.localization_timeformat)"></td>
-                            <td dmx-text="logged_by" class="text-nowrap"></td>
-                            <td dmx-text="ip_address"></td>
-                            <td dmx-text="log_type" class="text-nowrap"></td>
-                            <td dmx-text="log_category" class="text-nowrap"></td>
-                            <td dmx-html="log.stripTags().replace('\\n', '<br>')"></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <section id="cr_loading_content" is="dmx-if" dmx-bind:condition="!toggle_loading.checked">
+
+            <div class="row">
+                <div class="col">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="small fw-bold">
+                            <tr>
+                                <th class="collapse-cell">Date</th>
+                                <th class="collapse-cell">Logged By</th>
+                                <th class="collapse-cell">IP</th>
+                                <th class="collapse-cell">Log Type</th>
+                                <th class="collapse-cell">Log Category</th>
+                                <th>Log</th>
+                            </tr>
+                        </thead>
+                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="GET_STUDENT_logs.data.logs.data" id="rp_studentLogs">
+                            <tr>
+                                <td dmx-html="(logged_at / 1000).toDate().formatDate(appSettings.localization_puddle_dateformat)+'<br>'+(logged_at / 1000).toDate().formatDate(appSettings.localization_timeformat)"></td>
+                                <td dmx-text="logged_by" class="text-nowrap"></td>
+                                <td dmx-text="ip_address"></td>
+                                <td dmx-text="log_type" class="text-nowrap"></td>
+                                <td dmx-text="log_category" class="text-nowrap"></td>
+                                <td dmx-html="log.stripTags().replace('\\n', '<br>')"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
+        <section id="cr_loading_spinner" is="dmx-if" dmx-bind:condition="toggle_loading.checked">
+            <div class="row">
+                <div class="col d-flex flex-row justify-content-center align-items-center">
+                    <div class="spinner-border" role="status">
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+
     </section>

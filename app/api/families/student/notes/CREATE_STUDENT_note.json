@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "content"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "number",
+        "name": "priority"
+      },
+      {
+        "type": "text",
+        "name": "subject"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "insert",
+              "module": "dbupdater",
+              "action": "insert",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "insert",
+                  "values": [
+                    {
+                      "table": "student_notes",
+                      "column": "content",
+                      "type": "text",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "student_uuid",
+                      "type": "text",
+                      "value": "{{$_POST.student_uuid}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "priority",
+                      "type": "number",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "subject",
+                      "type": "text",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "status",
+                      "type": "text",
+                      "value": "open"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "created_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "created",
+                      "type": "number",
+                      "value": "{{TIMESTAMP}}"
+                    }
+                  ],
+                  "table": "student_notes",
+                  "returning": "uuid",
+                  "query": "INSERT INTO student_notes\n(content, student_uuid, priority, subject, status, created_by, created) VALUES (:P1 /* {{$_POST.content}} */, :P2 /* {{$_POST.student_uuid}} */, :P3 /* {{$_POST.priority}} */, :P4 /* {{$_POST.subject}} */, 'open', :P5 /* {{identity}} */, :P6 /* {{TIMESTAMP}} */)",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_POST.content}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{$_POST.student_uuid}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{$_POST.priority}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{$_POST.subject}}"
+                    },
+                    {
+                      "name": ":P5",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "name": ":P6",
+                      "type": "expression",
+                      "value": "{{TIMESTAMP}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "identity",
+                  "type": "text"
+                },
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "refresh",
+        "module": "sockets",
+        "action": "refresh",
+        "options": {
+          "action": "families/student/notes/GET_STUDENT_notes"
+        }
+      }
+    ]
+  }
+}

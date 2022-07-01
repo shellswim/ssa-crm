@@ -1,7 +1,6 @@
 const _ = require('underscore');
 
 exports.classCalendarJSON = function(options) {
-
 let data = this.parse(options.data);
 let transdata = {};
 let times = this.parse(options.classtimes);
@@ -11,9 +10,14 @@ let filters = {
   "instructor_filter": this.parse(options.instructor_filter),
   "level_filter": this.parse(options.level_filter)
 }
-
+debugger;
 data = _.groupBy(data, 'startTimeDecimal');
-let inf = filters.instructor_filter.split(',').filter(Boolean).length, lf = filters.level_filter.split(',').filter(Boolean).length, tf = Boolean(filters.time_filter.split(',').filter(Boolean).length);
+let inf, lf, tf;
+if(filters.instructor_filter.length > 0) inf = filters.instructor_filter.filter(Boolean).length;
+if(filters.level_filter.length > 0) lf = filters.level_filter.filter(Boolean).length;
+if(filters.time_filter.length > 0) tf = Boolean(filters.time_filter.filter(Boolean).length);
+
+
 if(!inf && !lf && !tf) {
   for(i=0;i<times.length;i++) {
     if(!data.hasOwnProperty(times[i])) {
@@ -21,10 +25,12 @@ if(!inf && !lf && !tf) {
     }
   }
 }
-
+let performance_array = [];
+let pstart = performance.now();
 for(std in data) {
-  data[std]= _.groupBy(data[std], 'day');
-  if(!filters.day_filter) {
+  data[std]= _.groupBy(data[std], 'classday');
+  if(Array.isArray(data[std]) && data[std].length > 0) data[std].sort((a,b) => a.instructor_uuid - b.instructor_uuid);
+  if(filters.day_filter.length == 0) {
     transdata.days = [];
     for(i=1;i<=7;i++) {
       if(!data[std].hasOwnProperty(i)){
@@ -33,7 +39,7 @@ for(std in data) {
       transdata.days.push(i);
     }
   } else {
-    let df = filters.day_filter.split(',');
+    let df = filters.day_filter;
     transdata.days = df;
     for(i=0;i<df.length;i++) {
       if(!data[std].hasOwnProperty(df[i])){
@@ -42,12 +48,16 @@ for(std in data) {
     }
   }
 }
+let pend = performance.now();
+performance_array.push((pend - pstart) / 1000);
 
 let sortedKeys = Object.keys(data).sort(function(a,b) {return a-b});
 
 transdata.orderedtimes = sortedKeys;
 transdata.classes = data;
 transdata.filters = filters;
+transdata.perf_array = performance_array;
+transdata.perf_total = performance_array.length > 0 ? performance_array.reduce((a,b) => {return a + b}) : [];
 
 return transdata;
 

@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "note_lifetime"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "notes",
+      "module": "dbconnector",
+      "action": "select",
+      "options": {
+        "connection": "db",
+        "sql": {
+          "type": "SELECT",
+          "columns": [
+            {
+              "table": "student_notes",
+              "column": "*"
+            }
+          ],
+          "table": {
+            "name": "student_notes"
+          },
+          "joins": [],
+          "wheres": {
+            "condition": "AND",
+            "rules": [
+              {
+                "id": "student_notes.student_uuid",
+                "field": "student_notes.student_uuid",
+                "type": "string",
+                "operator": "equal",
+                "value": "{{$_GET.student_uuid}}",
+                "data": {
+                  "table": "student_notes",
+                  "column": "student_uuid",
+                  "type": "text"
+                },
+                "operation": "="
+              },
+              {
+                "condition": "OR",
+                "rules": [
+                  {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "student_notes.status",
+                        "field": "student_notes.status",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "open",
+                        "data": {
+                          "table": "student_notes",
+                          "column": "status",
+                          "type": "text"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": "{{$_GET.note_lifetime.lowercase() === 'open'}}"
+                  },
+                  {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "student_notes.status",
+                        "field": "student_notes.status",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "closed",
+                        "data": {
+                          "table": "student_notes",
+                          "column": "status",
+                          "type": "text"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": "{{$_GET.note_lifetime.lowercase() === 'closed'}}"
+                  }
+                ],
+                "conditional": null
+              }
+            ],
+            "conditional": null,
+            "valid": true
+          },
+          "query": "SELECT *\nFROM student_notes\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */ AND ((status = 'open') OR (status = 'closed'))\nORDER BY priority DESC",
+          "params": [
+            {
+              "operator": "equal",
+              "type": "expression",
+              "name": ":P1",
+              "value": "{{$_GET.student_uuid}}"
+            }
+          ],
+          "orders": [
+            {
+              "table": "student_notes",
+              "column": "priority",
+              "direction": "DESC",
+              "condition": "",
+              "recid": 1
+            }
+          ]
+        }
+      },
+      "output": true,
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "content"
+        },
+        {
+          "type": "number",
+          "name": "student"
+        },
+        {
+          "type": "text",
+          "name": "student_uuid"
+        },
+        {
+          "type": "number",
+          "name": "priority"
+        },
+        {
+          "type": "text",
+          "name": "subject"
+        },
+        {
+          "type": "text",
+          "name": "status"
+        },
+        {
+          "type": "date",
+          "name": "date_created"
+        },
+        {
+          "type": "date",
+          "name": "date_closed"
+        },
+        {
+          "type": "number",
+          "name": "staff_created"
+        },
+        {
+          "type": "number",
+          "name": "staff_closed"
+        }
+      ],
+      "outputType": "array"
+    }
+  }
+}

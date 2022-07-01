@@ -4,11 +4,9 @@ const {
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const mathjs = require('mathjs');
-const {
-    isArray
-} = require('underscore');
 
 exports.classAvail = async function (options) {
+    
     options = this.parse(options);
     let startdate = DateTime.fromSQL(options.weekdate).startOf('week');
     let enddate = DateTime.fromSQL(options.weekdate).endOf('week');
@@ -41,6 +39,11 @@ exports.classAvail = async function (options) {
         FROM settings
         WHERE name = 'enrol_availability_max_weeks'
     `)).value;
+    let _max_bookahead_eow_push = dbClientFlat(await db.raw(`
+        SELECT value
+        FROM settings
+        WHERE name = 'enrol_availability_end_of_week'
+    `)).value;
     let _timezone = dbClientFlat(await db.raw(`
         SELECT value
         FROM settings
@@ -54,18 +57,21 @@ exports.classAvail = async function (options) {
     let enrolment_max_date = DateTime.now().plus({
         weeks: _max_bookahead
     }).setZone(_timezone);
+    
+    if(_max_bookahead_eow_push == 1) {
+        enrolment_max_date = enrolment_max_date.endOf('week');
+    }
 
     // Throw out of date range error if weekdate is greater than maximum enrolment date.
     let outofrange = (Number(DateTime.fromSQL(options.weekdate).toSeconds()) > Number(enrolment_max_date.toSeconds()));
     if(outofrange) {
-        throw new RangeError('Date Range Error: Your chosen weekdate is further in the future than allowed. Please choose another date.')
-        return
+        throw new RangeError('Date Range Error: Your chosen weekdate is further in the future than allowed. Please choose another date.');
     };
 
     /** Get calendar settings */
-    let calendar_interval = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value);
-    let calendar_starttime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value);
-    let calendar_endtime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
+    let calendar_interval = Number(dbClientFlat(await db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value);
+    let calendar_starttime = Number(dbClientFlat(await db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value);
+    let calendar_endtime = Number(dbClientFlat(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
     let calendar_timeslots = createCalendarTimeslots(calendar_starttime, calendar_endtime, calendar_interval);
 
     /** Setup Filters */
@@ -157,7 +163,7 @@ exports.classAvail = async function (options) {
         WHEN 'Monday' THEN
             c.day
     END),c.startTimeDecimal,cl.id, i.id
-    ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
+    ${filtered_availabilities || options.data_type === 'calendar' ? `` : `LIMIT `+ offset+`, `+limit}
     `));
 
     // Start Class Details generation.
@@ -243,7 +249,8 @@ exports.classAvail = async function (options) {
         'startofweek': startdate.toISODate(),
         'endofweek': enddate.toISODate(),
         'performance': performance_array,
-        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a,b) => {return a + b}) : []
+        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a,b) => {return a + b}) : [],
+        'times_array': calendar_timeslots
     }
 
     /** Functions */
@@ -359,6 +366,7 @@ exports.classAvail = async function (options) {
             'makeup_availabilities': mu_avail,
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
+            'makeup_avail_indexes': mu_array_indexes,
             'nextavailable_permanent': nextavailable_permanent ? nextavailable_permanent.toISODate() : false,
             'total': Math.max(...weekly_total_enrols),
             'weekday': DateTime.fromISO(weekday).toISODate(),
@@ -369,6 +377,8 @@ exports.classAvail = async function (options) {
     }
 
     async function processEnrolments(classinfo,date) {
+        
+        
         let enrolobject = {
             'active_enrols': [],
             'trial_enrols': [],
@@ -404,6 +414,7 @@ exports.classAvail = async function (options) {
         if (Array.isArray(enrolments)) {
             enrolmenttotal = enrolments.length;
             for (let i = 0; i < enrolments.length; i++) {
+                if(DateTime.fromJSDate(enrolments[i].startDate) > date) enrolmenttotal -= 1;
                 switch (enrolments[i].enrolmentType) {
                     case 1:
                         enrolobject.active_enrols.push(enrolments[i])

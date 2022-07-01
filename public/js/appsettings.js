@@ -1,5 +1,3 @@
-const e = require("express");
-
 function appSettingsObject() {
     var l = dmx.parse('appSettings.data.getSettings'),
         cl = dmx.parse('appSettings.data.query_levels'),

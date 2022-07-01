@@ -1,70 +1,68 @@
-<!-- Wappler include is="dmx-app" id="classesCalendar" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootbox:{},dmxDatastore:{},dmxFormatter:{},dmxStateManagement:{},dmxPreloader:{}}" head-page="layouts/layout2" -->
-<meta name="ac:route" content="/classes/classesCalendar">
+<dmx-toggle id="toggle_classes_loading" checked="true"></dmx-toggle><!-- Wappler include is="dmx-app" id="classesCalendar" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootbox:{},dmxDatastore:{},dmxFormatter:{},dmxStateManagement:{},dmxPreloader:{},dmxSockets:{}}" dmx-on:load="classesQuery.set('limit',20);classesQuery.set('offset',0)" head-page="layouts/layout2" -->
+<dmx-serverconnect id="classesBase" url="/api/classes/classesBase" dmx-param:sort="classesQuery.data.sort" dmx-param:dir="classesQuery.data.dir" dmx-param:offset="query.offset" dmx-param:limit="query.limit" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:viewtype="'calendar'" dmx-param:filter_days="arr_daysfilter.items||[]" dmx-param:filter_times="arr_timesfilter.items||[]" dmx-param:filter_levels="arr_levelsfilter.items||[]" dmx-param:filter_instructors="arr_instructorsfilter.items||[]" dmx-param:avails_amount="class_filter_store.data.availabilities.amount" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-on:success="var_classlist_count.setValue(classesBase.data.nextavail.classes.length)" dmx-param:weekdate="weekrange_todaydate_picker.value" dmx-param:startofweek="appSettings.weekstart" dmx-on:error="run({condition:{if:`classesBase.lastError.response.message.startsWith(\'Date Range Error\')`,then:{steps:[{runJS:{function:'swal_alert',args:['error','Date Range Error',`classesBase.lastError.response.message`]}},{run:{action:`weekrange_todaydate_picker.setValue(dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}}]}}})" dmx-on:start="toggle_classes_loading.check()" dmx-on:done="run([{wait:{delay:1000}},{run:{action:`toggle_classes_loading.uncheck()`}}])" sockets="true">
+</dmx-serverconnect>
+<%- await include('/partials/classes/_mod_classDetails', Object.assign({}, locals)) %>
+
+    <meta name="ac:route" content="/classes/classesCalendar">
 
 
-<dmx-serverconnect id="calendarClasses" url="/api/classes/classesBase" dmx-param:datefrom="'2021-10-31'" dmx-param:dateto="'2021-11-06'" dmx-on:done="calendarloader.hide()" dmx-param:filter_days="class_filter_store.data.filter_days || []" dmx-param:filter_times="class_filter_store.data.filter_times || []" dmx-param:filter_levels="class_filter_store.data.filter_levels || []" dmx-param:filter_instructors="class_filter_store.data.filter_instructors || []" dmx-on:start="calendarloader.show()" dmx-on:unauthorized="toasts.show({message: 'Session expired or your account is unauthorized. Please logout and try again.', delay: 60000, title: 'Server error:'})" dmx-on:forbidden="toasts.show({message: 'Session expired or your account is unauthorized. Please logout and try again.', delay: 60000, title: 'Server error: Forbidden.'})" dmx-param:viewtype="'calendar'" dmx-param:startdate="dr_startDate.value" dmx-param:enddate="dr_endDate.value" dmx-on:start="" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:avails_type="class_filter_store.data.availabilities.type" dmx-param:avails_amount="class_filter_store.data.availabilities.amount"></dmx-serverconnect>
 
 
-<main class="d-flex flex-grow-1 flex-column p-4" dmx-on:keypress.esc="arr_timesfilter.empty();arr_daysfilter.empty();arr_levelsfilter.empty();arr_instructorsfilter.empty()">
-    <div class="row align-items-center">
-        <div class="col d-flex justify-content-start flex-row align-items-center mb-3">
-            <h3 class="fw-bold mb-0 me-3">Classes Calendar</h3>
-            <a href="/classes" class="btn btn-outline-secondary btn-sm bg-white">List View</a>
+
+    <main class="d-flex flex-grow-1 flex-column p-5" dmx-on:keypress.esc="arr_timesfilter.empty();arr_daysfilter.empty();arr_levelsfilter.empty();arr_instructorsfilter.empty()">
+        <div class="row align-items-center">
+            <div class="col-6 d-flex justify-content-start flex-row align-items-center">
+                <h1 class="mb-0 me-3 fw-600"><i class="far fa-calendar-alt me-3 fa-sm fa-fw"></i>Calendar</h1>
+            </div>
         </div>
-    </div>
-    <%- await include('/partials/classes/_weekrange', Object.assign({}, locals)) %>
-        <%- await include('/partials/classes/_classfilters', Object.assign({}, locals)) %>
-            <section class="container-fluid">
+        <%- await include('/partials/classes/_weekrange', Object.assign({}, locals)) %>
+            <%- await include('/partials/classes/_classfilters', Object.assign({}, locals)) %>
+
+                <section class="container-fluid rounded-3 p-3 pdl-surface-shadow bg-white">
 
 
-                <!-- Start Calendar -->
-                <div class="row border-start border-end bg-white g-0">
-                    <div class="col position-relative">
-                        <dmx-preloader id="calendarloader" bgcolor="#fff" color="#474747" spinner="pulse" size="30"></dmx-preloader>
-                        <div class="row p-0 cal-header-top-wrapper">
-                            <div class="col-auto border-end border-bottom border-top cal-header side p-0">
+                    <!-- Start Calendar -->
+                    <div class="row border-start border-end bg-white g-0" dmx-hide="toggle_classes_loading.checked||classesBase.state.processing">
+                        <div class="col position-relative">
+                            <div class="row p-0 cal-header-top-wrapper g-0">
+                                <div class="col-auto border-end border-bottom border-top cal-header side p-0">
 
+                                </div>
+                                <div class="col border-bottom border-top">
+                                    <row class="row row-cols-7 h-100 g-0" is="dmx-repeat" id="rp_daysheader" dmx-bind:repeat="classesBase.data.calData.days">
+                                        <div class="col cal-header py-2 align-self-center">
+                                            <p class="mb-0" dmx-text="appSettings.days_array[$value]">
+                                                Monday
+                                            </p>
+                                        </div>
+                                    </row>
+                                </div>
                             </div>
-                            <div class="col border-bottom border-top">
-                                <row class="row row-cols-7 h-100" is="dmx-repeat" id="rp_daysheader" dmx-bind:repeat="calendarClasses.data.calData.days">
-                                    <div class="col cal-header py-2 align-self-center">
-                                        <p class="mb-0" dmx-text="appSettings.days_array[$value]">
-                                            Monday
-                                        </p>
-                                    </div>
-                                </row>
-                            </div>
-                        </div>
-                        <div id="rp_times" is="dmx-repeat" dmx-bind:repeat="calendarClasses.data.calData.orderedtimes" class="row row-cols-1" dmx-hide="calendarClasses.state.executing">
-                            <div class="col">
-                                <dmx-value id="var_timeslot" dmx-bind:value="appSettings.ct_obj[$value].decimal"></dmx-value>
-                                <dmx-value id="var_timeslot_display" dmx-bind:value="appSettings.ct_obj[$value].display"></dmx-value>
-                                <div class="row p-0" id="timeslot" dmx-bind:id="timeslot_{{$index+'_'+var_timeslot.value}}" dmx-bind:timedecimal="var_timeslot.value">
-                                    <div class="col-auto border-end border-bottom cal-header side" id="timeslot_label" dmx-style:background.important="var_timeslot.value < 12 ? '#d9f3fd' : '#fdf2d9'">
-                                        <p dmx-text="var_timeslot_display.value">5:30 AM</p>
-                                    </div>
-                                    <div class="col border-bottom">
-                                        <div class="row row-cols-7 h-100" id="daysrepeat" dmx-bind:id="daysrepeat_{{var_timeslot.value}}" is="dmx-repeat" dmx-bind:repeat="calendarClasses.data.calData.classes.getValueOrKey(var_timeslot.value)">
-                                            <div class="col" id="daycol" dmx-bind:id="'daycol_'+var_timeslot.value+'_'+$key">
-                                                <div class="row g-2 py-2" is="dmx-repeat" id="rp_classes" dmx-bind:repeat="$value" dmx-class:row-cols-2="arr_daysfilter.count === 3" dmx-class:row-cols-3="arr_daysfilter.count === 2" dmx-class:row-cols-6="arr_daysfilter.count === 1" dmx-class:row-cols-1="arr_daysfilter.count >= 4 || arr_daysfilter.count === 0">
-                                                    <div class="col">
-                                                        <div class="row g-0">
-                                                            <div class="col ps-2 p-1 small border rounded-3 d-flex week-class-block class-block clickable flex-column justify-content-between align-items-start" dmx-style:background-color="'#'+appSettings.classLevelsByID[classlevel_uuid].colour" dmx-bind:hex="appSettings.classLevelsByID[classlevel_uuid].colour">
-                                                                <p class="mb-1 fw-bold" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour">{{appSettings.classLevelsByID[classlevel_uuid].name}} -
-                                                                    {{startTimeDisplay}}<br>
-                                                                    {{instructor_uuid ? appSettings.instructorsById[instructor_uuid].trunc_name : '&lt;&lt;NO INSTRUCTOR FOUND&gt;&gt;'}}</p>
-                                                                <p class="mb-1" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour">
-                                                                    <i class="bi-pentagon me-1"></i>
-                                                                    {{slots_avail +'/'+ max}} available.
-                                                                </p>
-                                                                <p class="mb-1" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour">
-                                                                    <i class="bi-hourglass-split me-1"></i>
-                                                                    {{enrol_waitlist}} waitlisted.
-                                                                </p>
+                            <div id="rp_times" is="dmx-repeat" dmx-bind:repeat="classesBase.data.calData.orderedtimes" class="row row-cols-1 g-0" dmx-hide="classesBase.state.executing">
+                                <div class="col">
+                                    <dmx-value id="var_timeslot" dmx-bind:value="appSettings.ct_obj[$value].decimal"></dmx-value>
+                                    <dmx-value id="var_timeslot_display" dmx-bind:value="appSettings.ct_obj[$value].display"></dmx-value>
+                                    <div class="row p-0 g-0" id="timeslot" dmx-bind:id="timeslot_{{$index+'_'+var_timeslot.value}}" dmx-bind:timedecimal="var_timeslot.value">
+                                        <div class="col-auto border-end border-bottom cal-header side d-flex flex-row justify-content-center align-items-start" id="timeslot_label" dmx-style:background.important="var_timeslot.value < 12 ? '#d9f3fd' : '#fdf2d9'">
+                                            <p dmx-html="var_timeslot_display.value.replace(' ', '<br>')" class="mt-2">5:30 AM</p>
+                                        </div>
+                                        <div class="col border-bottom">
+                                            <div class="row row-cols-7 h-100 g-0 light-grey-hover" id="daysrepeat" dmx-bind:id="daysrepeat_{{var_timeslot.value}}" is="dmx-repeat" dmx-bind:repeat="classesBase.data.calData.classes.getValueOrKey(var_timeslot.value)">
+                                                <div class="col" id="daycol" dmx-bind:id="'daycol_'+var_timeslot.value+'_'+$key">
+                                                    <div class="row g-2 p-2" is="dmx-repeat" id="rp_classes" dmx-bind:repeat="$value" dmx-class:row-cols-2="arr_daysfilter.count === 3" dmx-class:row-cols-3="arr_daysfilter.count === 2" dmx-class:row-cols-6="arr_daysfilter.count === 1" dmx-class:row-cols-1="arr_daysfilter.count >= 4 || arr_daysfilter.count === 0">
+                                                        <div class="col">
+                                                            <div class="row g-0">
+                                                                <div class="col p-2 border rounded-3 d-flex week-class-block class-block clickable flex-column justify-content-between align-items-start m-1" dmx-style:background-color="'#'+appSettings.classLevelsByID[classlevel_uuid].colour" dmx-bind:hex="appSettings.classLevelsByID[classlevel_uuid].colour" dmx-on:click="classDetailsModal.sc_GET_CLASS_details.load({uuid: uuid});classDetailsModal.show();classDetailsModal.dd_classdetails.select(uuid)">
+                                                                    <p class="mb-1 fw-bold" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour" dmx-html="appSettings.classLevelsByID[classlevel_uuid].name+' <br> '+(instructor_uuid ? appSettings.instructorsById[instructor_uuid].trunc_name : '<<NO INSTRUCTOR FOUND>>')">{{appSettings.classLevelsByID[classlevel_uuid].name}} -
+                                                                        {{startTimeDisplay}}<br>
+                                                                        {{instructor_uuid ? appSettings.instructorsById[instructor_uuid].trunc_name : '&lt;&lt;NO INSTRUCTOR FOUND&gt;&gt;'}}</p>
+                                                                    <p class="mb-1 small" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour" dmx-html="'<i class=&quot;far fa-dot-circle me-1 fa-fw fa-sm&quot;></i><strong>'+(max - details.total)+'</strong> / '+max+' avail'"><i class="far fa-dot-circle me-1 fa-sm fa-fw"></i><b>5</b>/10 avail.</p>
+                                                                    <p class="mb-1 small" dmx-style:color="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour"><i class="fas fa-hourglass-start me-1 fa-sm fa-fw"></i><strong>{{waitlists.length}}</strong> waitlisted.</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
 
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -73,6 +71,19 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
-</main>
+                    <div class="row" dmx-hide="!toggle_classes_loading.checked||!classesBase.state.executing">
+                        <div class="col d-flex justify-content-center flex-column align-items-center">
+                            <div class="spinner-border mt-4" style="width: 3rem; height: 3rem;" role="status">
+                            </div>
+                            <p class="my-3">Loading Classes...</p>
+                        </div>
+                    </div>
+                    <div class="row" dmx-show="(classesBase.state.executing !== toggle_classes_loading.checked)">
+                        <div class="col d-flex justify-content-center flex-column align-items-center">
+                            <div class="spinner-border mt-4 text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            </div>
+                            <p class="my-3">Processing Layout...</p>
+                        </div>
+                    </div>
+                </section>
+    </main>
