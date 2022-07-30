@@ -4,9 +4,10 @@ const {
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const mathjs = require('mathjs');
+const { lastIndexOf } = require('underscore');
 
 exports.classAvail = async function (options) {
-    
+    debugger;
     options = this.parse(options);
     let startdate = DateTime.fromSQL(options.weekdate).startOf('week');
     let enddate = DateTime.fromSQL(options.weekdate).endOf('week');
@@ -51,11 +52,11 @@ exports.classAvail = async function (options) {
     `)).value;
 
     /** Set up dates */
-    let makeup_max_date = DateTime.now().plus({
-        days: _makeup_max_days
-    }).setZone(_timezone);
+    let makeup_max_date = DateTime.now().setZone(_timezone).plus({
+        days: (Number(_makeup_max_days) - 1)
+    });
     let enrolment_max_date = DateTime.now().plus({
-        weeks: _max_bookahead
+        weeks: Number(_max_bookahead)
     }).setZone(_timezone);
     
     if(_max_bookahead_eow_push == 1) {
@@ -77,21 +78,31 @@ exports.classAvail = async function (options) {
     /** Setup Filters */
     let filtered_classes = false; // Boolean switch for filters.
     let filters = {
-            "day_filter": this.parse(options.day_filter) == '' ? [] : this.parse(options.day_filter).map((i) => {
+            "day_filter": this.parse(options.day_filter) == '' ? [] : options.day_filter.includes(',') ? this.parse(options.day_filter).split(',').map((i) => {
                 return Number(i)
-            }),
-            "time_filter": this.parse(options.time_filter) == '' ? [] : this.parse(options.time_filter).map((i) => {
-                return Number(i)
-            }),
-            "instructor_filter": this.parse(options.instructor_filter) == '' ? [] : this.parse(options.instructor_filter).map((i) => {
+            }) : [Number(options.day_filter)],
+            "time_filter": this.parse(options.time_filter) == '' ? [] : JSON.parse(`[${options.time_filter}]`),
+            "instructor_filter": this.parse(options.instructor_filter) == '' ? [] : this.parse(options.instructor_filter).split(',').map((i) => {
                 return `'` + i + `'`
             }),
-            "level_filter": this.parse(options.level_filter) == '' ? [] : this.parse(options.level_filter).map((i) => {
+            "level_filter": this.parse(options.level_filter) == '' ? [] : this.parse(options.level_filter).split(',').map((i) => {
                 return `'` + i + `'`
             })
         },
         filters_applied = filters.day_filter.length > 0 || filters.instructor_filter.length > 0 || filters.level_filter.length > 0 || filters.time_filter.length > 0 ? true : false,
         filtered_availabilities = options.avail_type ? true : false;
+
+    // Check if time_filter is used, create min time and max time to create a range.
+    if(filters.time_filter.length > 0) {
+        let final_time_array = [];
+        let tf = filters.time_filter;
+        for(let i=0;i<tf.length;i++) {
+            let decimals = tf[i].decimals;
+            final_time_array.push(decimals.startdecimal);
+            final_time_array.push(decimals.enddecimal);
+        }
+        filters.time_filter = final_time_array;
+    }
 
     /** Setup Pagination for Bootstrap */
     let classcount = dbClientFlat(await db.raw(`
@@ -153,7 +164,7 @@ exports.classAvail = async function (options) {
     ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
     ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
     ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
-    ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
+    ${filters.time_filter.length > 0 ? `c.startTimeDecimal BETWEEN ${Math.min(...filters.time_filter)} AND ${Math.max(...filters.time_filter)}`: ``}
     GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
                 c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
     ORDER BY
@@ -172,15 +183,24 @@ exports.classAvail = async function (options) {
         let c = classdump[i];
         if (startofweek == 'sunday') {
             if (c.classday == 7) {
-                c.weekday = DateTime.fromISO(startdate);
+                c.weekday = DateTime.fromISO(startdate).plus({hours: c.endTimeDecimal}).setZone(_timezone,{keepLocalTime: true});
             } else {
                 c.weekday = DateTime.fromISO(startdate).plus({
-                    days: (c.classday)
-                });
+                    days: (c.classday),
+                    hours: c.endTimeDecimal
+                }).setZone(_timezone,{keepLocalTime: true});
             }
         } else {
             c.weekday = DateTime.fromISO(startdate).plus({
-                days: (c.classday - 1)
+                days: (c.classday - 1),
+                hours: c.endTimeDecimal
+            }).setZone(_timezone,{keepLocalTime: true});
+        }
+
+        // Set calculated class date.
+        if(c.weekday < DateTime.fromISO(options.weekdate) || c.weekday < DateTime.now().setZone(_timezone)) {
+            c.weekday = c.weekday.plus({
+                weeks: 1
             });
         }
 
@@ -194,10 +214,11 @@ exports.classAvail = async function (options) {
 
         c.details = {};
         let pstart = performance.now();
-        c.details = await processClass(c.weekday, c.uuid, c.max, c);
+        c.details = await processClass(c.weekday, c.max, c);
         let pend = performance.now();
         performance_array.push((pend - pstart) / 1000);
         c.waitlists = await processWaitlists(c);
+        c.outofrange = c.weekday > enrolment_max_date;
 
         // for (let i = 0; i < c.details.enrolments.length; i++) {
         //     let e = c.details.enrolments[i];
@@ -239,6 +260,8 @@ exports.classAvail = async function (options) {
         },
         // Paginate classes when they're filtered with slice();
         "classes": filtered_classes ? filtered_classes.slice(offset, (offset + limit)) : classdump,
+        'max_date': enrolment_max_date.toISODate(),
+        'makeup_max_date': makeup_max_date.toISODate(),
         "limit": limit,
         "offset": offset,
         "page": page,
@@ -264,23 +287,41 @@ exports.classAvail = async function (options) {
         return timeslot_array
     }
 
-    async function processClass(weekday, class_uuid, classmax, classinfo) {
+    async function processClass(weekday, classmax, classinfo) {
+        debugger;
         let enrolments, 
-            weekly_total_enrols = [],
+            wea = [], // weekly enrolment array
+            maa = [], // makeup availability array
+            aa, // absence array
+            mea = [], // makeup enrolments array
+            tae = [], // total active enrols array
+            naa, // next active available
+            att = [], // attendance array
+            nextavailable_permanent,
             weekday_arr = [],
-            enrolment_count,
             classprocess_startdate = startdate,
             classprocess_enddate = enddate,
-            classprocess_weekday = weekday,
-            att = [],
-            absence_array = [];
+            classprocess_weekday = weekday;
 
         // Get enrolment counts and availabilities.
         let idx = 0;
-        while(classprocess_weekday.toSeconds() <= enrolment_max_date.toSeconds()) {
+        while(classprocess_weekday <= enrolment_max_date.plus({weeks: 1})) {
+
+            // Break loop if over 1000.
+            if(idx > 1000) break;
+
+            // Get enrolments and attendances.
             let enrolments_processed = await processEnrolments(classinfo,classprocess_weekday);
+
+            // Set all enrolments on first pass. Otherwise, later weeks will overwrite the first loop, thus there will be missing enrolments if there are drop dates on any enrolments.
             if(idx === 0) enrolments = enrolments_processed.enrolments;
-            weekly_total_enrols.push(enrolments_processed.enrolmenttotal);
+            
+            // Set total number of enrolments, absences and makeup availabilities.
+            wea.push(enrolments_processed.total);
+            aa = enrolments_processed.absences;
+            maa.push(classmax - (enrolments_processed.total - enrolments_processed.absences.length));
+            
+            // Push the weekday being calculated. This will be used for calculating dates for availabilities.
             weekday_arr.push(classprocess_weekday);
 
             // Increment the week;
@@ -293,86 +334,165 @@ exports.classAvail = async function (options) {
             classprocess_weekday = classprocess_weekday.plus({
                 days: 7
             });
+
+            // Increase index of the loop by 1.
             idx += 1;
         }
         
         let mu_array_indexes = [],
             mu_avail = [],
-            mu_avail_max;
+            mu_avail_max,
+            mu_weekday_arr = [];
 
-        // Add makeup availability array
-        for (let i = 0; i < weekly_total_enrols.length; i++) {
-            if (weekly_total_enrols[i] < Number(classmax)) {
-                mu_array_indexes.push(i);
+        // Find makeups.
+        for (let i = 0; i < weekday_arr.length; i++) {
+            const day = weekday_arr[i];
+            if(day <= makeup_max_date) { // current day being calulated <= maximum makeup date
+                if(maa[i] > 0) { // if makeup count is > 0  
+                    mu_avail.push({
+                        'date': day,
+                        'availabilities': maa[i],
+                        'total': maa[i]
+                    });
+                }
+            } else {
+                break;
             }
         }
 
-        // Match weekdays with makeup array and check for availabilities.
-        for (let i = 0; i < mu_array_indexes.length; i++) {
-            if (DateTime.fromISO(weekday_arr[mu_array_indexes[i]]).toSeconds() <= makeup_max_date.toSeconds() && DateTime.fromISO(weekday_arr[mu_array_indexes[i]]).toSeconds() >= DateTime.now().setZone(_timezone).toSeconds()) {
-                mu_avail.push({
-                    'date': weekday_arr[mu_array_indexes[i]],
-                    'availabilities': classmax - weekly_total_enrols[mu_array_indexes[i]]
-                });
+        // Create makeup response.
+        if(mu_avail.length > 0) { //check makeups available
+            mu_unavail_response = {
+                "code": 100,
+                "response": "Availabilities found."
+            };
+        } else {
+            mu_unavail_response = { // otherwise no availabilities
+                "code": 101,
+                "response": 'No availabilities.'
+            }
+        }
+        if(weekday > makeup_max_date) { // if current day > maximum makeup date.
+            mu_unavail_response = {
+                "code": 102,
+                "response": `Too far into future.`
+            } 
+        }
+
+        // Find overbookings.
+        let overbooked = () => {
+            let x = wea.find((a) => {
+                return a > classmax;
+            });
+            if(x) return true; else return false;
+        }
+
+        let last_max = wea.lastIndexOf(classmax); // get last found max booking
+
+        if(overbooked() || last_max == (wea.length - 1)) { // if overbooked === true OR last_max is the last week of calculations, class is full.
+            nextavailable_permanent = null; // null response
+        } else {
+            if(last_max === -1) { // if no max booking found.
+                nextavailable_permanent = weekday_arr[0]; // set next available date to first date.
+            } else {
+                nextavailable_permanent = weekday_arr[last_max];
             }
         }
 
-        if (mu_avail.length > 0) {
-            let x = [];
-            for (let i = 0; i < mu_avail.length; i++) {
-                x.push(mu_avail[i].availabilities);
-            }
-            mu_avail_max = Math.max(...x);
-        }
+        // // Add makeup availability array
+        // for (let i = 0; i < wea.length; i++) {
+        //     if (wea[i] < Number(classmax)) {
+        //         mu_array_indexes.push(i);
+        //     }
+        // }
+
+
+        // // Match weekdays with makeup array and check for availabilities.
+        // for (let i = 0; i < mu_array_indexes.length; i++) {
+        //     if(weekday_arr[mu_array_indexes[i]] < DateTime.now().setZone(_timezone)) {
+        //         mu_weekday_arr.push(weekday_arr[mu_array_indexes[i]]);
+        //         continue;
+        //     } else if (weekday_arr[mu_array_indexes[i]] <= makeup_max_date && weekday_arr[mu_array_indexes[i]] >= DateTime.now().setZone(_timezone)) {
+        //         mu_avail.push({
+        //             'date': weekday_arr[mu_array_indexes[i]],
+        //             'availabilities': classmax - wea[mu_array_indexes[i]]
+        //         });
+        //         mu_weekday_arr.push(weekday_arr[mu_array_indexes[i]]);
+        //     }
+        // }
+
+        // if (mu_avail.length > 0) {
+        //     let x = [];
+        //     for (let i = 0; i < mu_avail.length; i++) {
+        //         x.push(mu_avail[i].availabilities);
+        //     }
+        //     mu_avail_max = Math.max(...x);
+        // }
 
         // Set makeup response if no makeups available.
-        mu_unavail_response = DateTime.fromISO(weekday_arr[0]).toSeconds() > makeup_max_date.toSeconds() ? mu_unavail_response = {
-            "code": 102,
-            "response": 'Too far into future.',
-            "total": 0,
-            "date": DateTime.fromISO(weekday_arr[0]).toISODate()
-        } : mu_avail.length == 0 && startdate.toSeconds() < makeup_max_date.toSeconds() ? {
-            "code": 101,
-            "response": 'No availabilities.',
-            "total": 0
-        } : {
-            "code": 100,
-            "response": "Availabilities found.",
-            "total": mu_avail_max
-        };
+
+        // let mu_unavail_response;
+        // debugger;
+        // if((mu_weekday_arr.length > 0 && mu_weekday_arr[0] > makeup_max_date) || (weekday > makeup_max_date)) {
+        //     mu_unavail_response = {
+        //         "code": 102,
+        //         "response": `Too far into future.`,
+        //         "total": 0
+        //     } 
+        // } else if(mu_avail.length == 0 && startdate < makeup_max_date) {
+        //     mu_unavail_response = {
+        //         "code": 101,
+        //         "response": 'No availabilities.',
+        //         "total": 0
+        //     }
+        // } else {
+        //     mu_unavail_response = {
+        //         "code": 100,
+        //         "response": "Availabilities found.",
+        //         "total": mu_avail_max
+        //     };
+        // }
 
         // Get last date with maximum students in class
-        let last_max_week = weekly_total_enrols.lastIndexOf(classmax);
-        let nextavailable_permanent;
-        if(last_max_week == -1) {
-            if(weekday_arr.length > 0 && weekday_arr[0].toSeconds() < DateTime.now().startOf('day').toSeconds()) {
-                nextavailable_permanent = weekday_arr[1];
-            } else {
-                nextavailable_permanent = weekday_arr[0];
-            }
-        } else if(last_max_week + 1 == weekday_arr.length) {
-            nextavailable_permanent = null
-        } else {
-            nextavailable_permanent = weekday_arr[last_max_week + 1];
-        }
+        // let last_max_week = wea.lastIndexOf(classmax);
+        // let nextavailable_permanent;
+        // if(last_max_week == -1) {
+        //     if(weekday_arr.length > 0 && weekday_arr[0] < DateTime.now().startOf('day')) {
+        //         nextavailable_permanent = weekday_arr[1];
+        //     } else {
+        //         nextavailable_permanent = weekday_arr[0];
+        //     }
+        // } else if(last_max_week + 1 == weekday_arr.length) {
+        //     nextavailable_permanent = null
+        // } else {
+        //     nextavailable_permanent = weekday_arr[last_max_week + 1];
+        // }
 
-        if(nextavailable_permanent && nextavailable_permanent.toSeconds() < DateTime.fromSQL(options.weekdate).toSeconds()) {
-            nextavailable_permanent = nextavailable_permanent.plus({weeks: 1})
-        };
+        // if(nextavailable_permanent && nextavailable_permanent < DateTime.fromSQL(options.weekdate)) {
+        //     nextavailable_permanent = nextavailable_permanent.plus({weeks: 1})
+        // };
+
+        // Is class currently running?
+        classinfo.isrunning = false;
+        if(DateTime.now().setZone(_timezone) >= weekday.minus({hours: (classinfo.endTimeDecimal - classinfo.startTimeDecimal)}) && DateTime.now().setZone(_timezone) <= weekday) {
+            classinfo.isrunning = true;
+        }
 
         return {
             'attendance': att,
-            'absence_array': absence_array,
+            'absence_array': aa,
             'makeup_availabilities': mu_avail,
+            'maa': maa,
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
             'makeup_avail_indexes': mu_array_indexes,
             'nextavailable_permanent': nextavailable_permanent ? nextavailable_permanent.toISODate() : false,
-            'total': Math.max(...weekly_total_enrols),
-            'weekday': DateTime.fromISO(weekday).toISODate(),
+            'total': Math.max(...wea),
+            'weekday': weekday.toISODate(),
             'weekday_arr': weekday_arr,
-            'weekly_total_enrols': weekly_total_enrols,
-            'enrolments': enrolments
+            'weekly_total_enrols': wea,
+            'enrolments': enrolments,
+            'outofrange': weekday > enrolment_max_date
         };
     }
 
@@ -410,25 +530,48 @@ exports.classAvail = async function (options) {
             AND (e.dropDate >= '${date.toISODate()}' OR e.dropDate IS NULL)
             AND c.uuid = '${classinfo.uuid}';
         `));
+        let absences = dbClient(await db.raw(`
+            SELECT 
+                a.*, 
+                s.firstName, 
+                s.lastName
+            FROM absences a 
+                LEFT JOIN enrolments e 
+                    on a.enrolment_uuid = e.uuid 
+                LEFT JOIN students s 
+                    on e.student_uuid = s.uuid
+            WHERE 
+                a.class_uuid = '${classinfo.uuid}' AND a.absence_date = ${Number(date.toSeconds())} AND a.status = 'active';
+        `));
+
         // Loop and sort enrolments
         if (Array.isArray(enrolments)) {
             enrolmenttotal = enrolments.length;
-            for (let i = 0; i < enrolments.length; i++) {
-                if(DateTime.fromJSDate(enrolments[i].startDate) > date) enrolmenttotal -= 1;
-                switch (enrolments[i].enrolmentType) {
+            for(let i = 0; i < enrolments.length; i++) {
+                const e = enrolments[i];
+
+                // Minus enrolment total for future enrolments.
+                if(DateTime.fromJSDate(e.startDate) > date) enrolmenttotal -= 1;
+
+                // Create enrolment types array
+                switch (e.enrolmentType) {
                     case 1:
-                        enrolobject.active_enrols.push(enrolments[i])
+                        enrolobject.active_enrols.push(e)
                         break;
                     case 2:
-                        enrolobject.makeup_enrols.push(enrolments[i])
+                        enrolobject.makeup_enrols.push(e)
                         break;
                     case 3:
-                        enrolobject.trial_enrols.push(enrolments[i])
+                        enrolobject.trial_enrols.push(e)
                         break;
                     case 5:
-                        enrolobject.casual_enrols.push(enrolments[i])
+                        enrolobject.casual_enrols.push(e)
                         break;
                 }
+
+                // Mark absences in enrolments array.
+                // Match enrolment with absences.
+                e.absent = Boolean(absences.find(({enrolment_uuid}) => enrolment_uuid = e.uuid));
             }
         }
 
@@ -442,7 +585,8 @@ exports.classAvail = async function (options) {
         return {
             'enrolments': enrolobject,
             'enrolmentcount_bytype': enrolmentcount_bytype,
-            'enrolmenttotal': enrolmenttotal
+            'absences': absences,
+            'total': enrolmenttotal
         };
     }
     async function processWaitlists(c) {

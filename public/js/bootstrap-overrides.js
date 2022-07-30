@@ -1,3 +1,11 @@
+document.addEventListener('DOMContentLoaded', function() {
+    waitfor_el('.offcanvas-backdrop').then((bd)=>{
+        bd.addEventListener('click', (e)=>{
+            e.stopPropagation();
+        });
+    });
+});
+
 // Modal backdrop to parent;
 function modal_parent_backdrop(modalSelector) {
     let modal = modalSelector ? document.querySelectorAll(modalSelector) : document.querySelectorAll('.modal.bg-parent');
@@ -31,3 +39,4 @@ function waitfor_el(selector) {
         });
     });
 }
+

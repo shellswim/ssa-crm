@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "date",
+        "name": "chargedate"
+      },
+      {
+        "type": "date",
+        "name": "duedate"
+      },
+      {
+        "type": "text",
+        "name": "uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "update",
+        "module": "dbupdater",
+        "action": "update",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "update",
+            "values": [
+              {
+                "table": "charges_family",
+                "column": "dueDate",
+                "type": "date",
+                "value": "{{$_POST.duedate}}"
+              },
+              {
+                "table": "charges_family",
+                "column": "chargeDate",
+                "type": "date",
+                "value": "{{$_POST.chargedate}}"
+              },
+              {
+                "table": "charges_family",
+                "column": "updated",
+                "type": "date",
+                "value": "{{TIMESTAMP}}"
+              },
+              {
+                "table": "charges_family",
+                "column": "updatedby",
+                "type": "number",
+                "value": "{{identity}}"
+              },
+              {
+                "table": "charges_family",
+                "column": "uuid",
+                "type": "text",
+                "value": "{{$_POST.uuid}}"
+              }
+            ],
+            "table": "charges_family",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.uuid}}",
+                  "data": {
+                    "column": "uuid"
+                  },
+                  "operation": "="
+                }
+              ]
+            },
+            "returning": "uuid",
+            "query": "UPDATE charges_family\nSET dueDate = :P1 /* {{$_POST.duedate}} */, chargeDate = :P2 /* {{$_POST.chargedate}} */, updated = :P3 /* {{TIMESTAMP}} */, updatedby = :P4 /* {{identity}} */, uuid = :P5 /* {{$_POST.uuid}} */\nWHERE uuid = :P6 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "name": ":P1",
+                "type": "expression",
+                "value": "{{$_POST.duedate}}"
+              },
+              {
+                "name": ":P2",
+                "type": "expression",
+                "value": "{{$_POST.chargedate}}"
+              },
+              {
+                "name": ":P3",
+                "type": "expression",
+                "value": "{{TIMESTAMP}}"
+              },
+              {
+                "name": ":P4",
+                "type": "expression",
+                "value": "{{identity}}"
+              },
+              {
+                "name": ":P5",
+                "type": "expression",
+                "value": "{{$_POST.uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P6",
+                "value": "{{$_POST.uuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "refresh",
+        "module": "sockets",
+        "action": "refresh",
+        "options": {
+          "action": "families/ledger/GET_LEDGER_details"
+        }
+      }
+    ]
+  }
+}

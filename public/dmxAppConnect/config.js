@@ -13627,6 +13627,192 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "dd_studentDetails": {
+      "meta": [
+        {
+          "name": "notes_count",
+          "type": "text"
+        },
+        {
+          "name": "max_note_priority",
+          "type": "number"
+        },
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "dob",
+          "type": "date"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "rollSheetComments",
+          "type": "text"
+        },
+        {
+          "name": "rollSheetMedical",
+          "type": "text"
+        },
+        {
+          "name": "additionalMedical",
+          "type": "text"
+        },
+        {
+          "name": "gender",
+          "type": "text"
+        },
+        {
+          "name": "level",
+          "type": "number"
+        },
+        {
+          "name": "age",
+          "type": "text"
+        },
+        {
+          "name": "familyold",
+          "type": "number"
+        },
+        {
+          "name": "classlevel_uuid",
+          "type": "text"
+        },
+        {
+          "name": "notes_count_message",
+          "type": "text",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "dd_guardianDetails": {
+      "meta": [
+        {
+          "name": "uuid",
+          "type": "text"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "firstName",
+          "type": "text"
+        },
+        {
+          "name": "lastName",
+          "type": "text"
+        },
+        {
+          "name": "family",
+          "type": "number"
+        },
+        {
+          "name": "relationship",
+          "type": "number"
+        },
+        {
+          "name": "family_uuid",
+          "type": "number"
+        },
+        {
+          "name": "default_email",
+          "type": "number"
+        },
+        {
+          "name": "default_phone",
+          "type": "number"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "address",
+          "type": "text"
+        },
+        {
+          "name": "primary",
+          "type": "text",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_tb_guardian_phones": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "phone"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        },
+        {
+          "type": "number",
+          "name": "guardian_uuid"
+        }
+      ],
+      "outputType": "array"
+    },
+    "rp_tb_guardian_emails": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "text",
+          "name": "address"
+        },
+        {
+          "type": "number",
+          "name": "guardianId"
+        },
+        {
+          "type": "text",
+          "name": "guardian_uuid"
+        },
+        {
+          "type": "number",
+          "name": "type"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "_notes": {
@@ -14002,6 +14188,12 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    }
+  },
+  "mod_classdetails": {
+    "var_newtempenrol_selected": {
+      "meta": null,
+      "outputType": "text"
     }
   }
 });

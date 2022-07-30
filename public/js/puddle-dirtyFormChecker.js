@@ -5,10 +5,11 @@ const pddfc = function pd_dirtyFormChecker(input) {
     let dfcc = dmx.app.data.pd_dirtyFormCheck[fid]['els_changed'];
     dmx.app.data.pd_dirtyFormCheck[fid]['els_changed'][input.getAttribute('pddfc')] = input.value;
     for(let i=0;i<dfc.length;i++) {
-        if(dfc[i] !== dfcc[i]) {
+        if(dfc[i] != dfcc[i]) {
             dmx.app.data.pd_dirtyFormCheck[fid].dirty = true;
             break;
          } else {
+            dmx.app.data.pd_dirtyFormCheck[fid].dirty = false;
             continue;
          }
     }
@@ -32,7 +33,7 @@ function pd_dirtyFormCheck_init(formid) {
             dfc.push(e.value || null);
             dmx.app.data.pd_dirtyFormCheck[formid].eventlisteners.push(e);
             e.setAttribute('pddfc', count);
-            e.addEventListener('change',pddfc);
+            e.addEventListener('input',pddfc);
             count += 1;
         }
     }
@@ -41,7 +42,7 @@ function pd_dirtyFormCheck_init(formid) {
 function pd_dirtyFormCheck_destroy() {
     let dfd = dmx.app.data.pd_dirtyFormCheck[dmx.app.data.g_formid];
     for(const el of dfd.eventlisteners) {
-        el.removeEventListener('change', pddfc);
+        el.removeEventListener('input', pddfc);
         el.removeAttribute('pddfc');
     }
     delete dmx.app.data.pd_dirtyFormCheck[dmx.app.data.g_formid];

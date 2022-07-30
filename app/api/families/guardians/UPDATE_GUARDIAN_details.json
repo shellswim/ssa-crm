@@ -1,0 +1,322 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "guardianid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "relationship"
+      },
+      {
+        "type": "text",
+        "name": "firstName"
+      },
+      {
+        "type": "text",
+        "name": "lastName"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": {
+      "name": "",
+      "module": "core",
+      "action": "trycatch",
+      "options": {
+        "try": {
+          "steps": [
+            {
+              "name": "query_relationships",
+              "module": "dbconnector",
+              "action": "select",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [],
+                  "table": {
+                    "name": "relationships"
+                  },
+                  "primary": "id",
+                  "joins": [],
+                  "query": "SELECT *\nFROM relationships",
+                  "params": []
+                }
+              },
+              "output": false,
+              "meta": [
+                {
+                  "type": "number",
+                  "name": "id"
+                },
+                {
+                  "type": "text",
+                  "name": "type"
+                }
+              ],
+              "outputType": "array"
+            },
+            {
+              "name": "query_guardian",
+              "module": "dbconnector",
+              "action": "single",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "SELECT",
+                  "columns": [
+                    {
+                      "table": "guardians",
+                      "column": "*"
+                    },
+                    {
+                      "table": "relationships",
+                      "column": "type",
+                      "alias": "relationship_type"
+                    }
+                  ],
+                  "table": {
+                    "name": "guardians"
+                  },
+                  "primary": "uuid",
+                  "joins": [
+                    {
+                      "table": "relationships",
+                      "column": "*",
+                      "type": "INNER",
+                      "clauses": {
+                        "condition": "AND",
+                        "rules": [
+                          {
+                            "table": "relationships",
+                            "column": "id",
+                            "operator": "equal",
+                            "value": {
+                              "table": "guardians",
+                              "column": "relationship",
+                              "type": "number"
+                            },
+                            "operation": "="
+                          }
+                        ]
+                      },
+                      "primary": "id"
+                    }
+                  ],
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "guardians.uuid",
+                        "field": "guardians.uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_POST.uuid}}",
+                        "data": {
+                          "table": "guardians",
+                          "column": "uuid",
+                          "type": "text",
+                          "columnObj": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "primary": true,
+                            "nullable": false,
+                            "name": "uuid"
+                          }
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "SELECT guardians.*, relationships.type AS relationship_type\nFROM guardians\nINNER JOIN relationships ON (relationships.id = guardians.relationship)\nWHERE guardians.uuid = :P1 /* {{$_POST.uuid}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{$_POST.uuid}}"
+                    }
+                  ]
+                }
+              },
+              "output": false,
+              "meta": [
+                {
+                  "type": "text",
+                  "name": "uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "id"
+                },
+                {
+                  "type": "text",
+                  "name": "firstName"
+                },
+                {
+                  "type": "text",
+                  "name": "lastName"
+                },
+                {
+                  "type": "number",
+                  "name": "family"
+                },
+                {
+                  "type": "number",
+                  "name": "relationship"
+                },
+                {
+                  "type": "number",
+                  "name": "family_uuid"
+                },
+                {
+                  "type": "number",
+                  "name": "default_email"
+                },
+                {
+                  "type": "number",
+                  "name": "default_phone"
+                },
+                {
+                  "type": "text",
+                  "name": "relationship_type"
+                }
+              ],
+              "outputType": "object"
+            },
+            {
+              "name": "update",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "guardians",
+                      "column": "firstName",
+                      "type": "text",
+                      "value": "{{$_POST.firstName}}"
+                    },
+                    {
+                      "table": "guardians",
+                      "column": "lastName",
+                      "type": "text",
+                      "value": "{{$_POST.lastName}}"
+                    },
+                    {
+                      "table": "guardians",
+                      "column": "relationship",
+                      "type": "text",
+                      "value": "{{$_POST.relationship}}"
+                    }
+                  ],
+                  "table": "guardians",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "field": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_POST.uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "query": "UPDATE guardians\nSET firstName = :P1 /* {{$_POST.firstName}} */, lastName = :P2 /* {{$_POST.lastName}} */, relationship = :P3 /* {{$_POST.relationship}} */\nWHERE uuid = :P4 /* {{$_POST.uuid}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_POST.firstName}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{$_POST.lastName}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{$_POST.relationship}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P4",
+                      "value": "{{$_POST.uuid}}"
+                    }
+                  ],
+                  "returning": "uuid"
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ],
+              "output": true
+            },
+            {
+              "name": "log_details",
+              "module": "core",
+              "action": "setvalue",
+              "options": {
+                "value": "Guardian Updated: \n{{(query_guardian.firstName !== $_POST.firstName) ? 'First Name: '+ query_guardian.firstName + ' → ' + $_POST.firstName + '\\\\n' : ''}}\n{{(query_guardian.lastName !== $_POST.lastName) ? 'Last Name: '+ query_guardian.lastName + ' → ' + $_POST.lastName + '\\\\n' : ''}}\n{{(query_guardian.relationship !== $_POST.relationship) ? 'Relationship: ' + query_guardian.relationship_type + ' → ' + query_relationships.where('id', '==', $_POST.relationship).name : ''}}"
+              },
+              "meta": [],
+              "outputType": "text",
+              "output": true
+            },
+            {
+              "name": "exec",
+              "module": "core",
+              "action": "exec",
+              "options": {
+                "exec": "base/logs/CREATE_FAMILY_log",
+                "params": {
+                  "family_uuid": "{{$_POST.family_uuid}}",
+                  "log_category": "Guardian",
+                  "log_type": "update",
+                  "log": "{{log_details}}"
+                }
+              },
+              "output": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

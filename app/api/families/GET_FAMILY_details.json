@@ -107,7 +107,7 @@
               {
                 "table": "family_notes",
                 "column": "*",
-                "type": "INNER",
+                "type": "LEFT",
                 "clauses": {
                   "condition": "AND",
                   "rules": [
@@ -154,7 +154,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName, MAX(family_notes.priority) AS family_note_max\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid) INNER JOIN family_notes ON (family_notes.family_uuid = families.uuid)\nWHERE families.uuid = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName",
+            "query": "SELECT families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName, MAX(family_notes.priority) AS family_note_max\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid) LEFT JOIN family_notes ON (family_notes.family_uuid = families.uuid)\nWHERE families.uuid = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName",
             "params": [
               {
                 "operator": "equal",
@@ -250,6 +250,101 @@
             "type": "text",
             "name": "lastName"
           },
+          {
+            "type": "number",
+            "name": "family_note_max"
+          }
+        ],
+        "type": "dbconnector_single",
+        "outputType": "object"
+      },
+      {
+        "name": "query_max_note_priority",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "family_notes",
+                "column": "priority",
+                "alias": "family_note_max",
+                "aggregate": "MAX"
+              }
+            ],
+            "table": {
+              "name": "family_notes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "groupBy": [],
+            "query": "SELECT MAX(priority) AS family_note_max\nFROM family_notes\nWHERE family_uuid = :P1 /* {{$_GET.family_uuid}} */ AND status = 'open'",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "family_notes.family_uuid",
+                  "field": "family_notes.family_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "family_notes",
+                    "column": "family_uuid",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "families",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "family_uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "id": "family_notes.status",
+                  "field": "family_notes.status",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "open",
+                  "data": {
+                    "table": "family_notes",
+                    "column": "status",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "enum",
+                      "default": "'open'",
+                      "maxLength": 6,
+                      "primary": false,
+                      "nullable": false,
+                      "name": "status"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
           {
             "type": "number",
             "name": "family_note_max"

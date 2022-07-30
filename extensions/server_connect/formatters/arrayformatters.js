@@ -1,4 +1,4 @@
-const { filter } = require("underscore");
+const _ = require("underscore");
 
 module.exports = {
     lastIndex: function(val) {
@@ -26,5 +26,27 @@ module.exports = {
         return val.filter(a => {
             return Object.keys(a).length > 0;
         });
+    },
+    filterArrayObjects: function(val,path,operator,arg) {
+        return val.filter(a => {
+            switch (operator) {
+                case "==":
+                    return _.get(a,path) == arg;
+                case ">=":
+                    return _.get(a,path) >= arg;
+                case "<=":
+                    return _.get(a,path) <= arg;
+                case ">":
+                    return _.get(a,path) > arg;
+                case "<":
+                    return _.get(a,path) < arg;
+                case "length":
+                    return _.get(a,path).length == arg;
+                case "length_greater":
+                    return _.get(a,path).length > arg;
+                case "length_less":
+                    return _.get(a,path).length < arg;
+            }
+        })
     }
 }

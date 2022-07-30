@@ -22,7 +22,7 @@ function addSetKeyedArray(k, v) {
     dmx.app.set('var_' + k, a[k] = v);
 }
 //**  Convert decimal to display time. ****
-function decimalToTime(number) {
+function decimalToTime(number,period = false) {
     // Check sign of given number
     var sign = (number >= 0) ? 1 : -1;
     var ampm = number < 12 ? "AM" : "PM";
@@ -41,7 +41,7 @@ function decimalToTime(number) {
     // Add Sign in final result
     sign = sign == 1 ? '' : '-';
     // Concate hours and minutes
-    time = sign + hour + ':' + minute + " " + ampm;
+    time = `${sign + hour + ':' + minute}${period ? ' ' + ampm : ''}`;
     return time;
 }
 
@@ -224,6 +224,12 @@ dmx.rules.min.validity = function (element, param) {
 dmx.Formatter('object', 'stringify', function (val) {
     return JSON.stringify(val);
 });
+dmx.Formatter('string', 'unstringify', function (val) {
+    let parsed = JSON.parse(val);
+    return parsed;
+});
+
+
 
 function findPropPaths(obj, predicate) {  // The function 
     const discoveredObjects = []; // For checking for cyclic object

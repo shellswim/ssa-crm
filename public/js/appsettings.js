@@ -12,6 +12,7 @@ function appSettingsObject() {
         mx,
         r = false,
         ta = [],
+        tra = [],
         to = {},
         da = [],
         cla = {},
@@ -39,12 +40,35 @@ function appSettingsObject() {
         if (n === "class_max_time") { mx = Number(v) };
         // Loop & create class times
         if (mn && mx && !r) {
+            let idx = 0;
             r = true;
             for (st = mn; st <= mx; st = st + 0.25) {
-                var dt = decimalToTime(st);
+                var dt = decimalToTime(st,true);
                 ta.push({ "display": dt, "decimal": st });
                 to[st] = { "display": dt, "decimal": st };
+                if((st % 1 === 0 && (st + 1) <= mx) || idx === 0) {
+                    tra.push({
+                        "decimals": {
+                            "startdecimal": st,
+                            "enddecimal": Math.floor(st + 1)
+                        },
+                        "display": `${decimalToTime(st)} - ${decimalToTime(Math.floor((st + 1)),true)}` 
+                    })
+                }
+                // Push range where end decimal isn't on the hour.
+                if(mx - st < 1) {
+                    tra.push({
+                        "decimals": {
+                            "startdecimal": Math.floor(st),
+                            "enddecimal": mx
+                        },
+                        "display": `${decimalToTime(st)} - ${decimalToTime(mx,true)}` 
+                    });
+                    break;
+                }
+                idx++;
             }
+            s["ct_range_array"] = tra;
             s["ct_array"] = ta;
             s["ct_obj"] = to;
         }
@@ -58,6 +82,9 @@ function appSettingsObject() {
             }
             s["duration_array"] = da;
         }
+
+        // Class Range by Hour Generator
+
     }
     // Levels
     // Levels By Name

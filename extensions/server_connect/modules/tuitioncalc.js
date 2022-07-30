@@ -105,7 +105,7 @@ exports.tuitioncalc = async function (options) {
     }
     
     /** Students and Enrolments Setup */
-    debugger;
+    
     let dummyenrol = options.dummyEnrolEnabled;
     let dummyJSON = options.dummyEnrolJSON ? JSON.parse(this.parse(options.dummyEnrolJSON)) : null;
     let discount_start_from_timestamp;
@@ -139,7 +139,7 @@ exports.tuitioncalc = async function (options) {
             for (let k = 0; k < se.days.length; k++) {
                 dayint = se.calendar_days[k].dayint;
                 let enrolquery = await getEnrolments(student.uuid, se.start, se.end, dayint);
-                debugger;
+                
                 // Remove enrolments whose dropdate is before current class date.
 
                 enrolquery.enrolments.map(e => {
@@ -452,7 +452,7 @@ exports.tuitioncalc = async function (options) {
                 AND e.deleted = 0
                 ORDER BY c.day, c.startTimeDecimal
         `));
-        if(enrolments.length > 0) debugger;
+        if(enrolments.length > 0) 
         for(let i=0;i<enrolments.length;i++) {
             let e = enrolments[i];
             let add_days = dayint - 1, dropdate = DateTime.fromJSDate(e.dropDate).toSeconds(), startdate = DateTime.fromJSDate(e.startDate).toSeconds();
