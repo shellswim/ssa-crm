@@ -117,13 +117,22 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT guardians.*, phoneNumbers.phone, emails.address\nFROM guardians\nLEFT JOIN phoneNumbers ON (phoneNumbers.uuid = guardians.default_phone) LEFT JOIN emails ON (emails.uuid = guardians.default_email)\nWHERE guardians.family_uuid = :P1 /* {{$_GET.family_uuid}} */",
+            "query": "SELECT guardians.*, phoneNumbers.phone, emails.address\nFROM guardians\nLEFT JOIN phoneNumbers ON (phoneNumbers.uuid = guardians.default_phone) LEFT JOIN emails ON (emails.uuid = guardians.default_email)\nWHERE guardians.family_uuid = :P1 /* {{$_GET.family_uuid}} */\nORDER BY families.primaryGuardian ASC",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
                 "value": "{{$_GET.family_uuid}}"
+              }
+            ],
+            "orders": [
+              {
+                "table": "families",
+                "column": "primaryGuardian",
+                "direction": "ASC",
+                "condition": "",
+                "recid": 1
               }
             ]
           },
@@ -174,6 +183,56 @@
           {
             "type": "text",
             "name": "address"
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      },
+      {
+        "name": "query_guardians",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT g.uuid, g.firstName, g.lastName, g.relationship, g.default_phone, g.default_email, ph.phone, e.address, IF(g.uuid = f.guardian_uuid,true,false) as pg\nFROM guardians g\n\tLEFT JOIN phoneNumbers ph ON g.default_phone = ph.uuid\n    LEFT JOIN emails e ON g.default_email = e.uuid\n    LEFT JOIN families f ON g.family_uuid = f.uuid\nWHERE f.uuid = :P1\nORDER BY FIELD(pg, true,false)",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "relationship",
+            "type": "text"
+          },
+          {
+            "name": "default_phone",
+            "type": "text"
+          },
+          {
+            "name": "default_email",
+            "type": "text"
+          },
+          {
+            "name": "primary",
+            "type": "boolean"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
           }
         ],
         "outputType": "array"
@@ -332,6 +391,11 @@
           {
             "name": "address",
             "type": "text"
+          },
+          {
+            "name": "primary",
+            "type": "text",
+            "sub": []
           }
         ],
         "outputType": "array"

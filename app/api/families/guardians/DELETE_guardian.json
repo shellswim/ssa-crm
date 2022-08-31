@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "guardian_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_guardian",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "guardians"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.uuid",
+                  "field": "guardians.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.guardian_uuid}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardian_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.guardian_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "relationship"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "default_email"
+          },
+          {
+            "type": "number",
+            "name": "default_phone"
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_single"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": [
+              {
+                "name": "delete",
+                "module": "dbupdater",
+                "action": "delete",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "delete",
+                    "table": "guardians",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{$_POST.guardian_uuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "DELETE\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardian_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{$_POST.guardian_uuid}}"
+                      }
+                    ],
+                    "returning": "uuid"
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "exec",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{query_guardian.family_uuid}}",
+                    "log_category": "Guardian",
+                    "log_type": "deleted",
+                    "log": "{{'Guardian '+query_guardian.firstName+' '+query_guardian.lastName+' was deleted.'}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

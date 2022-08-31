@@ -1,0 +1,215 @@
+{
+  "meta": {
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "firstName"
+      },
+      {
+        "type": "text",
+        "name": "lastName"
+      },
+      {
+        "type": "number",
+        "name": "familyid"
+      },
+      {
+        "type": "number",
+        "name": "relationship"
+      },
+      {
+        "type": "number",
+        "name": "familyid"
+      }
+    ],
+    "$_SESSION": [
+      {
+        "type": "number",
+        "name": "newguardianid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "guardian_uuid",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{'guard_'+UUID.replace('-','')}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": [
+              {
+                "name": "insert",
+                "module": "dbupdater",
+                "action": "insert",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "insert",
+                    "values": [
+                      {
+                        "table": "guardians",
+                        "column": "firstName",
+                        "type": "text",
+                        "value": "{{$_POST.firstName}}"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "lastName",
+                        "type": "text",
+                        "value": "{{$_POST.lastName}}"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "relationship",
+                        "type": "number",
+                        "value": "{{$_POST.relationship}}"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "family_uuid",
+                        "type": "text",
+                        "value": "{{$_POST.familyid}}"
+                      },
+                      {
+                        "table": "guardians",
+                        "column": "uuid",
+                        "type": "text",
+                        "value": "{{guardian_uuid}}"
+                      }
+                    ],
+                    "table": "guardians",
+                    "returning": "uuid",
+                    "query": "INSERT INTO guardians\n(firstName, lastName, relationship, family_uuid, uuid) VALUES (:P1 /* {{$_POST.firstName}} */, :P2 /* {{$_POST.lastName}} */, :P3 /* {{$_POST.relationship}} */, :P4 /* {{$_POST.familyid}} */, :P5 /* {{guardian_uuid}} */)",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{$_POST.firstName}}"
+                      },
+                      {
+                        "name": ":P2",
+                        "type": "expression",
+                        "value": "{{$_POST.lastName}}"
+                      },
+                      {
+                        "name": ":P3",
+                        "type": "expression",
+                        "value": "{{$_POST.relationship}}"
+                      },
+                      {
+                        "name": ":P4",
+                        "type": "expression",
+                        "value": "{{$_POST.familyid}}"
+                      },
+                      {
+                        "name": ":P5",
+                        "type": "expression",
+                        "value": "{{guardian_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "identity",
+                    "type": "text"
+                  },
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "exec",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{$_POST.familyid}}",
+                    "log_category": "Guardian",
+                    "log_type": "created",
+                    "log": "{{'Created new guardian: '+$_POST.firstName+' '+$_POST.lastName}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          },
+          "catch": {
+            "steps": [
+              {
+                "name": "delete",
+                "module": "dbupdater",
+                "action": "delete",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "delete",
+                    "table": "guardians",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{guardian_uuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "returning": "uuid",
+                    "query": "DELETE\nFROM guardians\nWHERE uuid = :P1 /* {{guardian_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{guardian_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "response",
+                "options": {
+                  "status": 500,
+                  "data": "{{$_ERROR}}"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

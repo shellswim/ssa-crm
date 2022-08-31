@@ -1,73 +1,10 @@
 <!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{},dmxBootstrap5PagingGenerator:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_slim_35="cdn" -->
+<script is="dmx-flow" id="flow_pagetitle" type="text/dmx-flow" src="/app/flows/utilities/pagetitle.json" dmx-param:title="'Family: '+familyDetails.data.query_family_details.lastName+', '+familyDetails.data.query_family_details.firstName"></script>
 <meta name="ac:route" content="/families/familydetail/:familyid">
 <dmx-preloader id="familyDetail_preloader" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)" style="z-index: 1051;"></dmx-preloader>
-<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
-<script is="dmx-flow" id="checkEmailArray" type="text/dmx-flow">{
-  meta: {
-    $param: [
-      {type: "text", name: "email"},
-      {type: "array", name: "emailArr"}
-    ]
-  },
-  exec: {
-    steps: [
-      {
-        assign: {value: "{{$param.email}}", name: "var_email"}
-      },
-      {
-        condition: {
-          if: "{{$param.emailArr.length > 0}}",
-          then: {
-            steps: {
-              repeat: {
-                repeat: "{{$param.emailArr}}",
-                outputFields: [],
-                exec: {
-                  steps: {
-                    condition: {
-                      if: "{{$value.values().contains(var_email)}}",
-                      then: {
-                        steps: [
-                          {
-                            assign: {value: "false", name: "var_continue", output: true}
-                          },
-                          {
-                            setGlobal: {key: "var_addemail_continue_newGuardian", value: "false"}
-                          }
-                        ]
-                      },
-                      else: {
-                        steps: [
-                          {
-                            assign: {value: "true", name: "var_continue", output: true}
-                          },
-                          {
-                            setGlobal: {key: "var_addemail_continue_newGuardian", value: "true"}
-                          }
-                        ]
-                      }
-                    }
-                  }
-                },
-                name: "repeat"
-              }
-            }
-          },
-          else: {
-            steps: [
-              {
-                assign: {value: "true", name: "var_continue", output: true}
-              },
-              {
-                setGlobal: {key: "var_addemail_continue_newGuardian", value: "true"}
-              }
-            ]
-          }
-        }
-      }
-    ]
-  }
-}</script>
+<dmx-serverconnect id="sc_GET_FAMILY_guardians" url="/api/families/guardians/GET_FAMILY_guardians" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="sc_GET_FAMILY_students" url="/api/families/student/GET_FAMILY_students" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid" dmx-on:done="run([{wait:{delay:150}},{run:{action:`flow_pagetitle.run()`}}])"></dmx-serverconnect>
 <dmx-session-manager id="ledgerStorage"></dmx-session-manager>
 <dmx-value id="topPriorityNotes" dmx-bind:value="familyDetails.data.familyNotes[0].maxPriority == 5 ? 'Has Critical Note/s' : familyDetails.data.familyNotes[0].maxPriority == 4 ? 'Has High Priority Note/s' : familyDetails.data.familyNotes[0].maxPriority == 3 ? 'Has Medium Note/s' : 'Has Notes';">
 </dmx-value>
@@ -86,6 +23,7 @@
 <dmx-serverconnect id="updatePrimaryGuardian" url="api/updateFamilyPrimaryGuardian" dmx-param:familyid="query.familyid" noload=""></dmx-serverconnect>
 <dmx-serverconnect id="getGuardianContactDetails" url="/api/getGuardianContactDetails" noload></dmx-serverconnect>
 
+
 <dmx-serverconnect id="deleteGuardianEmail" url="/api/deleteGuardianEmail" noload></dmx-serverconnect>
 <div class="container d-none" id="countries_states_scs">
     <dmx-serverconnect id="getCountries" url="/api/baseActions/localizations/GET_countries"></dmx-serverconnect>
@@ -96,333 +34,9 @@
     <dmx-serverconnect id="getstateid" url="/api/baseActions/google/places/get_stateid" dmx-param:country="address_createModal.form_createAddress.inp_residenceAutocomplete.components.country.long" dmx-param:state="" noload></dmx-serverconnect>
 </div>
 <dmx-value id="editGuardian" dmx-bind:value="0"></dmx-value>
-<div class="modal" id="address_createOrEdit" is="dmx-bs5-modal" tabindex="-1">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info">
-                <h5 class="modal-title">Create New or Edit Existing Address</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body border-bottom">
-                <div class="row">
-                    <div class="col">
-                        <button id="confirmCreateAddressBtn" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#address_createModal"><i class="bi-plus-circle me-2"></i>Create New Address
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="addressRepeat" is="dmx-repeat" dmx-bind:repeat="familyDetails.data.addresses">
-                <div class="modal-body border-bottom">
-                    <div class="row">
-                        <div class="col">
-                            <p class="mb-1 lh-1" dmx-text="unit" dmx-hide="unit == '' || unit == null">Unit/Suite</p>
-                            <p class="mb-1 lh-1" dmx-text="street1">Street 1</p>
-                            <p class="mb-1 lh-1" dmx-text="street2" dmx-hide="street2 == '' || street2 == null">Street 2
-                            </p>
-                            <p class="mb-1 lh-1" dmx-text="suburb">Suburb</p>
-                            <p class="mb-1 lh-1" dmx-text="state_name+' '+postcode">State ZIP Postal Code</p>
-                            <p class="mb-0 lh-1" dmx-text="country_name">Country</p>
-                        </div>
-                        <div class="d-flex justify-content-end align-items-start col-auto">
-                            <button class="btn btn-sm btn-link p-0"><i class="bi-pencil me-1"></i>Edit
-                            </button>
-                            <form id="form_deleteAddress" is="dmx-serverconnect-form" method="post" action="/api/families/deleteAddress" dmx-bind:id="form_deleteAddress_{{$index}}" dmx-on:success="notifies1.success('Address successfully deleted.');familyDetails.load({familyid: query.familyid})" dmx-on:error="notifies1.danger('Error: '+form_deleteAddress.lastError.status+' - '+form_deleteAddress.lastError.message+' - '+form_deleteAddress.lastError.response)">
-                                <input id="addressId" name="id" type="hidden" class="form-control" dmx-bind:value="id">
-                                <button class="btn btn-sm btn-link p-0 ms-2 text-danger" dmx-show="familyDetails.data.addresses.length > 1" dmx-bs-tooltip="'Double click to delete.'" data-bs-trigger="hover" dmx-on:dblclick="run({'bootbox.confirm':{message:'Are you sure you want to delete this address?\n\n\n\n',title:'Confirm',then:{steps:{run:{action:`form_deleteAddress.submit()`}}}}})"><i class="bi-trash2-fill me-1"></i>Delete
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="address_createModal" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="run([{run:{action:`form_createAddress.reset()`}},{run:{action:`form_createAddress.var_countryid.setValue(null)`}},{run:{action:`form_createAddress.var_stateid.setValue(null)`}},{runJS:{function:'gpReset',args:['address_createModal.form_createAddress.inp_residenceAutocomplete'],name:'resetAutocomplete'}}])">
-    <div class="modal-dialog modal-lg modal-fullscreen-lg-down modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header text-light bg-secondary">
-                <h5 class="modal-title">Create Address</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form is="dmx-serverconnect-form" id="form_createAddress" method="post" action="/api/families/createAddress" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-on:success="familyDetails.load({familyid: query.familyid});address_createModal.hide();notifies1.success('Address created successfully.')" dmx-on:error="notifies1.danger('Error '+address_createModal.form_createAddress.lastError.status+': '+address_createModal.form_createAddress.lastError.message.trunc(100, true, '...')+' - '+address_createModal.form_createAddress.lastError.response)">
-                    <div class="mb-3">
-                        <label for="inp_residenceAutocomplete" class="form-label col-form-label">Search<i class="bi-question-circle-fill ms-2 clickable" dmx-bs-popover="'Search results, by default, are restricted to your country. You can change this in your settings or enter addresses manually.<br><br><span style=&quot;text-danger&quot;>It is not recommended to fill addresses manually, as typos and other errors can occur.</span>'" data-bs-trigger="hover" dmx-bind:popover-title="'Search restricted by default.'" data-bs-html="true"></i></label>
-                        <input type="text" class="form-control" id="inp_residenceAutocomplete" aria-describedby="input1_help" placeholder="Search address" is="dmx-google-autocomplete" types="address" dmx-on:updated="getcountryid.load({country: address_createModal.form_createAddress.inp_residenceAutocomplete.components.country.long});getstateid.load({state: address_createModal.form_createAddress.inp_residenceAutocomplete.components.administrativeAreaLevel1.long})" dmx-bind:country="localization.data.localization.iso2">
-                        <small id="input1_help" class="form-text text-muted">PO Boxes must be input manually.</small>
-                    </div>
-                    <div class="mb-2">
-                        <label for="inp_unit" class="col-form-label">Apartment, unit, suite, or floor #</label>
-                        <input type="text" class="form-control" id="inp_unit" name="unit" aria-describedby="inp_unit_help" dmx-bind:value="address_createModal.form_createAddress.inp_residenceAutocomplete.components.subpremise.long" autocomplete="new-subpremise">
-                    </div>
-                    <div class="mb-2">
-                        <label for="inp_street" class="col-form-label">Street</label>
-                        <input type="text" class="form-control" id="inp_street" name="street1" aria-describedby="inp_street_help" required="" dmx-bind:value="(address_createModal.form_createAddress.inp_residenceAutocomplete.components.streetNumber.long) ? address_createModal.form_createAddress.inp_residenceAutocomplete.components.streetNumber.long+' '+address_createModal.form_createAddress.inp_residenceAutocomplete.components.route.long : ''" autocomplete="new-route">
-                    </div>
-                    <div class="row row-cols-3">
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_suburb" class="col-form-label">Suburb</label>
-                                <input type="text" class="form-control" id="inp_suburb" name="suburb" aria-describedby="inp_suburb_help" dmx-bind:value="address_createModal.form_createAddress.inp_residenceAutocomplete.components.locality.long" autocomplete="new-locality">
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_postcode" class="col-form-label">Postcode</label>
-                                <input type="text" class="form-control" id="inp_postcode" name="postcode" aria-describedby="inp_postcode_help" dmx-bind:value="address_createModal.form_createAddress.inp_residenceAutocomplete.components.postalCode.long" autocomplete="new-postal-code">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row row-cols-3">
-                        <dmx-value id="var_countryid" dmx-bind:value="getcountryid.data.countryid.id"></dmx-value>
-                        <dmx-value id="var_stateid" dmx-bind:value="getstateid.data.stateid.id"></dmx-value>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_country" class="col-form-label">Country</label>
-                                <select id="sel_country" class="form-select" name="country" dmx-bind:options="getCountries.data.countries" optiontext="name" optionvalue="id" dmx-on:updated="run([{wait:{delay:100}},{run:{action:`getCountryStates.load({countryid: value})`}}])" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked">
-                                    <option disabled selected value="" hidden>Please select...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_state" class="col-form-label">State</label>
-                                <select id="sel_state" class="form-select" name="state" dmx-bind:options="getCountryStates.data.states" optiontext="name" optionvalue="id" dmx-bind:readonly="!form_createAddress.switch_manualAddress.checked" dmx-bind:disabled="getCountryStates.data.states.length === 0">
-                                    <option disabled selected value="" hidden>Please select...</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <input type="hidden" class="form-control" id="inp_family" name="family" aria-describedby="inp_family_help" placeholder="Enter Family" dmx-bind:value="query.familyid">
-                    </div>
-                    <div class="mb-3">
-                        <button class="btn btn-primary" dmx-on:click="form_createAddress.submit()"><i class="bi-save2 me-2"></i>Create Address
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
-<div class="modal fade" id="createStudentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="createStudentForm.reset()" dmx-on:show-bs-modal="ns_pageCounter.setValue(1)">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-0 text-light bg-secondary">
-                <h5 class="modal-title">Create New Student</h5>
-                <button type="button" class="btn-close text-white" aria-label="Close" data-bs-dismiss="modal">
-                    <span aria-hidden="true" class="visually-hidden">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-0">
-                    <div class="col mb-3">
-                        <ul class="list-group list-group-horizontal d-flex">
-                            <li class="list-group-item rounded-0 col-4 active" id="li_studentGeneralInformation" dmx-class:active="createStudentModal.ns_pageCounter.value == 1">
-                                <center>General Info</center>
-                            </li>
-                            <li class="list-group-item col-4" id="li_studentClassDetails" dmx-class:active="createStudentModal.ns_pageCounter.value == 2">
-                                <center>Medical Info</center>
-                            </li>
-                            <li class="list-group-item rounded-0 col-4" id="li_studentMedicalInformation" dmx-class:active="createStudentModal.ns_pageCounter.value == 3">
-                                <center>Review</center>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="row">
-                    <section class="position-absolute top-0 start-0 h-100 w-100 d-flex flex-column justify-content-center align-items-center bg-white visually-hidden offcanvas-validate-overlay" id="ns_validationScreen" dmx-class:visually-hidden="var_validationNewStudent.value === false">
-                        <div class="spinner-border text-primary" role="status">
-                        </div>
-                        <p class="mt-2">Validating Information...</p>
-                    </section>
-                    <dmx-value id="ns_pageCounter" dmx-bind:value="1"></dmx-value>
-                    <div is="dmx-animate" id="ar_nsGeneralInfo" showeffect="fadeIn" hideeffect="fadeOut" dmx-bind:visible="createStudentModal.ns_pageCounter.value == 1" dmx-hide="createStudentModal.ns_pageCounter.value != 1">
-                        <section>
-                            <form id="classAndLevelDetailsForm">
-                                <div class="row row-cols-2 pb-3" id="ns_GeneralInfoSection">
-                                    <div class="col-12">
-                                        <h5 class="fw-bold border-bottom pb-1">General Information</h5>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3 small">
-                                            <label for="inp_studentFirstName" class="mb-0 col-form-label-sm form-label">First Name</label>
-                                            <input type="text" class="form-control" id="inp_studentFirstName" aria-describedby="input1_help" placeholder="First Name" required="">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3 small">
-                                            <label for="inp_studentLastName" class="mb-0 col-form-label-sm form-label">Last Name</label>
-                                            <input type="text" class="form-control" id="inp_studentLastName" aria-describedby="input2_help" placeholder="Last Name">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3 small">
-                                            <label for="inp_studentDOB" class="mb-0 col-form-label-sm form-label">Date
-                                                of Birth</label>
-                                            <input type="date" class="form-control" id="inp_studentDOB" aria-describedby="input1_help" placeholder="Date of Birth" required="">
-                                        </div>
-                                    </div>
-                                    <div class="col-break w-100"></div>
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="sel_gender" class="mb-0 col-form-label-sm form-label">Gender</label>
-                                            <select id="sel_gender" class="form-select" required="">
-                                                <option selected="" value="">Select Gender...</option>
-                                                <option value="F">Female</option>
-                                                <option value="M">Male</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row row-cols-1" id="ns_ClassDetailsSection">
-                                    <div class="col-12">
-                                        <h5 class="fw-bold border-bottom pb-1">Class &amp; Level Details</h5>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_studentClassLevel" class="mb-0 col-form-label-sm form-label">Class Level</label>
-                                            <select id="inp_studentClassLevel" class="form-select" dmx-bind:options="appSettings.classLevels_array" optiontext="name" optionvalue="uuid" required="">
-                                                <option selected="" value="">Choose level...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_rollsheetComment" class="mb-0 col-form-label-sm form-label">Rollsheet Comments
-                                                (non-medical)</label>
-                                            <textarea id="inp_rollsheetComment" class="form-control"></textarea>
-                                            <small id="textarea1_Help" class="form-text text-muted">This information
-                                                will be shown on the instructors rollsheets. Please add any information
-                                                the class instructor needs to know.</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </section>
-                    </div>
-                    <div is="dmx-animate" id="ar_nsMedicalDetails" showeffect="fadeIn" hideeffect="fadeOut" dmx-bind:visible="createStudentModal.ns_pageCounter.value == 2" dmx-hide="createStudentModal.ns_pageCounter.value != 2">
-                        <section>
-                            <form id="medicalInfoForm">
-                                <div class="row" id="ns_MedicalInfoSection">
-                                    <div class="col-12">
-                                        <h5 class="fw-bold border-bottom pb-1">Medical Information</h5>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="inp_rollsheetMedical" class="mb-0 col-form-label-sm form-label">Rollsheet Medical
-                                                Information</label>
-                                            <textarea id="inp_rollsheetMedical" class="form-control" rows="4"></textarea>
-                                            <small id="textarea1_Help1" class="form-text text-danger">This information
-                                                will be shown on the instructors rollsheets. <br>Add any important
-                                                medical information the class instructor needs to
-                                                know.</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="inp_additionalMedical" class="mb-0 col-form-label-sm form-label">Additional Medical
-                                                Information</label>
-                                            <textarea id="inp_additionalMedical" class="form-control" rows="8"></textarea>
-                                            <small id="textarea1_Help2" class="form-text text-danger">This information
-                                                will <strong>NOT </strong>be shown on the instructors
-                                                rollsheets.<br></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </section>
-                    </div>
-                    <div is="dmx-animate" id="ar_nsMedicalDetails1" showeffect="fadeIn" hideeffect="fadeOut" dmx-bind:visible="createStudentModal.ns_pageCounter.value == 3" dmx-hide="createStudentModal.ns_pageCounter.value != 3">
-                        <section>
-                            <div class="row row-cols-1">
-                                <div class="col">
-                                    <h4 class="mb-4 fw-bold">Review:</h4>
-                                </div>
-                                <div class="col pb-3 mb-3 border-bottom">
-                                    <h6 class="text-uppercase fw-bold">General Information</h6>
-                                    <div class="row">
-                                        <div class="col">
-                                            <p class="text-muted mb-0">Student Name</p>
-                                            <p dmx-text="createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentFirstName.value+' '+createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentLastName.value" class="mb-2 small">John Doe</p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="text-muted mb-0">Date of Birth</p>
-                                            <p dmx-html="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentDOB.value.toDate().formatDate('dd-MM-yyyy')" class="mb-2 small">16-06-2020</p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="text-muted mb-0">Gender</p>
-                                            <p dmx-html="ar_nsGeneralInfo.classAndLevelDetailsForm.sel_gender.value" class="mb-2 small">Male</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col pb-3 mb-3 border-bottom">
-                                    <h6 class="text-uppercase fw-bold">Class &amp; Level Details</h6>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <p class="text-muted mb-0">Class Level</p>
-                                            <p dmx-html="appSettings.classLevelsByID[ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentClassLevel.value].name" class="small">ClassLevel<br></p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="text-muted mb-0">Rollsheet Comments</p>
-                                            <p class="mb-2 small" dmx-html="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_rollsheetComment.value">
-                                                Lorem ipsum dolor sit amet.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col pb-3 mb-3 border-bottom">
-                                    <h6 class="text-uppercase fw-bold">Medical Information</h6>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <p class="text-muted mb-0">Rollsheet Medical Information</p>
-                                            <p dmx-html="ar_nsMedicalDetails.medicalInfoForm.inp_rollsheetMedical.value" class="small">Lorem ipsum dolor sit amet.<br></p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="text-muted mb-0">Additional Medical Information</p>
-                                            <p dmx-html="ar_nsMedicalDetails.medicalInfoForm.inp_additionalMedical.value" class="small">N/A</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                    <div class="col d-flex justify-content-between mt-4 pt-4 border-top">
-                        <dmx-value id="var_validationNewStudent" dmx-bind:value="false"></dmx-value>
-                        <button id="ns_prevButton" class="btn btn-light me-2" dmx-bind:disabled="ns_pageCounter.value == 1" dmx-on:click="ns_pageCounter.setValue(ns_pageCounter.value - 1)"><i class="bi-arrow-left me-2"></i>Previous</button>
-                        <button id="ns_nextButton" class="btn text-light btn-secondary" dmx-bind:disabled="createStudentModal.ns_pageCounter.value === 3" dmx-on:click="run([{run:{action:`ns_pageCounter.setValue(ns_pageCounter.value +1)`,disabled:true}},{condition:{if:`createStudentModal.ns_pageCounter.value === 1`,then:{steps:[{run:{action:`createStudentModal.var_validationNewStudent.setValue(true)`}},{wait:{delay:500}},{run:{action:`createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentDOB.validate();createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentLastName.validate();createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentFirstName.validate();createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentClassLevel.validate();createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_rollsheetComment.validate();createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.sel_gender.validate()`}},{wait:{delay:500}},{condition:{if:`!createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentFirstName.invalid &amp;&amp; !createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentLastName.invalid &amp;&amp; !createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentDOB.invalid &amp;&amp; !createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentClassLevel.invalid &amp;&amp; !createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_rollsheetComment.invalid &amp;&amp; !createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.sel_gender.invalid`,then:{steps:[{run:{action:`createStudentModal.ns_pageCounter.setValue((createStudentModal.ns_pageCounter.value +1))`}},{run:{action:`createStudentModal.var_validationNewStudent.setValue(false)`}}]},else:{steps:[{run:{action:`notifies1.danger(\'Please fix errors on this page before proceeding.\')`}},{run:{action:`createStudentModal.var_validationNewStudent.setValue(false)`}}]}}}]},else:{steps:{run:{action:`createStudentModal.ns_pageCounter.setValue((createStudentModal.ns_pageCounter.value +1))`}}}}}])">Next<i class="bi-arrow-right ms-2"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-top">
-                <div class="d-flex w-100 justify-content-end flex-column">
-                    <section class="d-flex justify-content-end"><button type="submit" class="btn btn-primary" form="createStudentForm" dmx-bind:disabled="ns_pageCounter.value != 3"><i class="bi-save2 me-2"></i>Create Student
-                        </button></section>
-                    <form id="createStudentForm" method="post" is="dmx-serverconnect-form" action="/api/families/student/createStudent" dmx-on:success="run([{wait:{delay:300}},{run:{action:`createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.reset();createStudentModal.ar_nsMedicalDetails.medicalInfoForm.reset();createStudentModal.ar_nsMedicalDetails1.createStudentForm.reset();createStudentModal.hide();familyDetails.load()`}}])" class="text-end w-100">
-                        <input id="inp_studentFamilyId" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
-                        <input type="hidden" name="firstName" dmx-bind:value="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentFirstName.value">
-                        <input type="hidden" name="lastName" dmx-bind:value="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentLastName.value">
-                        <input type="hidden" name="dob" dmx-bind:value="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentDOB.value">
-                        <input type="hidden" name="gender" dmx-bind:value="ar_nsGeneralInfo.classAndLevelDetailsForm.sel_gender.value">
-                        <input type="hidden" name="level" dmx-bind:value="ar_nsGeneralInfo.classAndLevelDetailsForm.inp_studentClassLevel.value">
-                        <input type="hidden" name="rollsheetComment" dmx-bind:value="createStudentModal.ar_nsGeneralInfo.classAndLevelDetailsForm.inp_rollsheetComment.value">
-                        <input type="hidden" name="rollsheetMedical" dmx-bind:value="ar_nsMedicalDetails.medicalInfoForm.inp_rollsheetMedical.value">
-                        <input type="hidden" name="additionalMedical" dmx-bind:value="ar_nsMedicalDetails.medicalInfoForm.inp_additionalMedical.value">
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div class="modal fade" id="editStudentModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:show-bs-modal="query1.set('studentid',editStudentDataDetail.data.id)" dmx-on:hidden-bs-modal="editStudentDataDetail.editStudentForm.ns_pageCounterEdit.setValue(1)">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -976,232 +590,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="createGuardianModal" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hidden-bs-modal="var_multiform_stepper.setValue(1);newGuardianId.setValue(null);createGuardianModalForm.reset();getNewGuardEmails.reset();familyDetails.load({familyid: query.familyid});ng_guardEmails.form_emailAddress.reset();ng_guardPhones.form_phoneNumbers.reset()">
-    <div class="modal-dialog modal-lg modal-fullscreen-lg-down" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title">Create Guardian</h5>
-                <button type="button" class="btn-close text-white" aria-label="Close" data-bs-dismiss="modal">
-                    <span aria-hidden="true" class="visually-hidden">×</span>
-                </button>
-            </div>
-            <div class="modal-body overflow-x-hidden">
-                <dmx-serverconnect id="ng_getGuardDetails" url="/api/families/guardians/getGuardDetails_base">
-                </dmx-serverconnect>
-                <dmx-value id="var_multiform_stepper" dmx-bind:value="1"></dmx-value>
-                <dmx-value id="newGuardianId" dmx-on:updated="ng_getGuardDetails.load({guardianid: value})"></dmx-value>
-                <div class="container" is="dmx-if" id="cr_ng_name" dmx-bind:condition="createGuardianModal.var_multiform_stepper.value === 1">
-                    <h6 class="fw-bold text-uppercase">name &amp; relationship</h6>
-                    <form id="createGuardianModalForm" method="post" is="dmx-serverconnect-form" action="/api/families/guardians/createGuardian" dmx-on:success="var_multiform_stepper.setValue(2);newGuardianId.setValue(createGuardianModal.cr_ng_name.createGuardianModalForm.data.newguardianid)" dmx-on:error="notifies1.danger('An error occured! - '+createGuardianModal.cr_ng_name.createGuardianModalForm.lastError.status+' '+createGuardianModal.cr_ng_name.createGuardianModalForm.lastError.message+' - '+createGuardianModal.cr_ng_name.createGuardianModalForm.lastError.response)">
-                        <input id="inp_familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid" name="familyid">
-                        <div class="row mb-2">
-                            <div class="col">
-                                <div class="mb-0 form-floating">
-                                    <input id="firstName" name="firstName" type="text" class="form-control" placeholder="First Name" required="" autocomplete="off"><label for="firstName">First Name</label>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="mb-0 form-floating">
-                                    <input id="lastName" name="lastName" type="text" class="form-control" placeholder="Last Name" required="" autocomplete="off"><label for="lastName">Last Name</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-5">
-                                <div class="mb-3 form-floating">
-                                    <select id="relationship" class="form-select" name="relationship" dmx-bind:options="appSettings.relationships.relationshipArray" optiontext="name" optionvalue="id" required="">
-                                        <option value="">Please select...</option>
-                                    </select><label for="relationship" class="mb-0 form-label col-form-label">Relationship</label>
-                                </div>
-                            </div>
-                            <div class="col align-self-end d-flex justify-content-end">
-                                <button id="createGuardBtn" class="btn btn-primary" type="submit"><i class="bi-save me-2"></i>Create &amp; Next
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div is="dmx-animate" id="ng_guardDetails" showEffect="fadeIn" hideEffect="fadeOut" dmx-bind:visible="createGuardianModal.newGuardianId.value" dmx-bind:showduration="500" class="overflow-hidden" dmx-hide="!createGuardianModal.newGuardianId.value">
-                    <section>
-                        <div class="container pb-2 mb-4 border-bottom" is="dmx-animate" dmx-bind:visible="createGuardianModal.newGuardianId.value">
-                            <div class="row">
-                                <div class="col">
-                                    <h5>Guardian Details</h5>
-                                    <p class="small mb-2 pb-1 border-bottom text-danger">Made a mistake? These details
-                                        can be changed after you've saved the guardian.</p>
-                                    <div class="row">
-                                        <div class="col-auto">
-                                            <p class="small text-muted mb-1">Guardian Name:</p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="small mb-1" dmx-text="ng_getGuardDetails.data.query.firstName+' '+ng_getGuardDetails.data.query.lastName">
-                                                John Doe</p>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-auto">
-                                            <p class="small text-muted mb-1">Relationhip:</p>
-                                        </div>
-                                        <div class="col">
-                                            <p class="small mb-1" dmx-text="appSettings.relationships[ng_getGuardDetails.data.query.relationship].name">
-                                                Cousin Twice Removed</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                <div is="dmx-animate" id="ng_guardEmails" class="overflow-hidden" dmx-bind:visible="createGuardianModal.var_multiform_stepper.value === 2" dmx-bind:showduration="500" dmx-hide="createGuardianModal.var_multiform_stepper.value !== 2" showEffect="fadeInRight" hideEffect="fadeOut" dmx-bind:hideduration="250">
-                    <section>
-                        <div class="container">
-                            <h6 class="fw-bold text-uppercase">Email Addresses</h6>
-                            <form id="form_emailAddress" is="dmx-serverconnect-form" method="post" dmx-on:error="dc_errorEmail.show()" dmx-on:success="dc_errorEmail.hide();successNotifies.success('Email created successfully.');getNewGuardEmails.load({guardianid: createGuardianModal.newGuardianId.value});form_emailAddress.reset()" action="/api/families/guardians/checkInsertEmail">
-                                <div class="row mb-2">
-                                    <div class="col-10">
-                                        <dmx-value id="var_checkEmailStatus" dmx-bind:value="checkEmailArray.data.var_continue"></dmx-value>
-                                        <dmx-array id="arr_emailAddresses"></dmx-array>
-                                        <div class="row mb-3 mb-0 small">
-                                            <label for="email" class="mb-0 form-label col-form-label">Email
-                                                Addresses</label>
-                                            <div class="col-6"><input id="email" name="emailaddress" type="email" class="form-control" placeholder="Email" data-rule-email="" required="" data-msg-required="Email required." dmx-on:blur="email.validate()"></div>
-                                            <div class="col-4"><select id="sel_emailType" class="form-select" dmx-bind:options="appSettings.contactTypes.emailContactTypes" optiontext="type" optionvalue="id" style="/* width: 140px */ /* max-width: 140px */" required="" data-msg-required="Email type required." name="type">
-                                                    <option disabled selected value="">Type...</option>
-                                                </select></div>
-                                            <div class="col-auto">
-                                                <input id="hd_guardianidEmail" name="guardianid" type="hidden" class="form-control" dmx-bind:value="createGuardianModal.newGuardianId.value">
-                                                <button id="addEmailToArr" class="btn btn-primary" dmx-bind:disabled="createGuardianModalForm.email.invalid || createGuardianModalForm.email.value === '' || createGuardianModalForm.sel_emailType.invalid || createGuardianModalForm.sel_emailType.value === ''" type="submit">
-                                                    <i class="bi-save2"></i>
-                                                </button>
-                                            </div>
-                                            <legend class="col-form-label col-form-label-sm">*Press the add button to
-                                                add emails.</legend>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                            <div class="collapse bg-danger text-light rounded-3" id="dc_errorEmail" is="dmx-bs5-collapse">
-                                <p class="mb-0 lh-1 py-2 px-3" dmx-html="'<i class=&quot;bi-exclamation-triangle-fill me-2&quot;></i> Error:  '+form_emailAddress.lastError.status+' - '+form_emailAddress.lastError.message+' - '+form_emailAddress.lastError.response">
-                                    <i class="bi-exclamation-triangle-fill me-2"></i>Error 409: Email address already
-                                    exists.
-                                </p>
-                            </div>
-                            <div class="row mt-2">
-                                <dmx-serverconnect id="getNewGuardEmails" url="/api/families/guardians/getGuardEmails" dmx-param:guardianid="createGuardianModal.newGuardianId.value" noload></dmx-serverconnect>
-                                <div class="col-12" is="dmx-if" id="cr_ng_hasemails" dmx-bind:condition="getNewGuardEmails.data.emails.hasItems()">
-                                    <table class="table table-sm small">
-                                        <thead class="text-uppercase fw-bold">
-                                            <tr>
-                                                <th>Address</th>
-                                                <th>Type</th>
-                                                <th scope="row"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getNewGuardEmails.data.emails" id="emailTableRepeat">
-                                            <tr>
-                                                <td dmx-text="address"></td>
-                                                <td dmx-text="appSettings.contactTypes[type].type"></td>
-                                                <td>
-                                                    <form id="form_ng_deleteEmail" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/deleteEmail" dmx-on:success="getNewGuardEmails.load({guardianid: createGuardianModal.newGuardianId.value})" dmx-on:error="">
-                                                        <input id="inp_ng_del_emailid" name="emailid" type="hidden" class="form-control" dmx-bind:value="id">
-                                                    </form>
-                                                    <a href="javascript:void(0);" class="text-danger" dmx-on:click="run({confirm:{message:'Are you sure you want to delete this email?',then:{steps:{run:{action:`form_ng_deleteEmail.submit()`}}}}})">Delete</a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="col-12" is="dmx-if" id="cr_ng_noemails" dmx-bind:condition="!getNewGuardEmails.data.emails.hasItems()">
-                                    <p class="text-center small text-danger p-4 border rounded-3">No emails added. Add
-                                        emails in the form above.</p>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col d-flex justify-content-end"><button id="createGuardBtn1" class="btn btn-secondary" dmx-on:click="var_multiform_stepper.setValue(3)">Next<i class="bi-arrow-right ms-2"></i></button></div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                <div is="dmx-animate" id="ng_guardPhones" showEffect="fadeInRight" hideEffect="fadeOut" dmx-bind:visible="createGuardianModal.var_multiform_stepper.value === 3" dmx-hide="createGuardianModal.var_multiform_stepper.value !== 3" dmx-bind:showduration="500" dmx-bind:hideduration="250">
-                    <section>
-                        <div class="container" dmx-animate-enter.duration:250="fadeInLeft" dmx-animate-leave.duration:250="fadeOutRight" dmx-hide="createGuardianModal.var_multiform_stepper.value !== 3" dmx-show="createGuardianModal.var_multiform_stepper.value === 3">
-                            <h6 class="fw-bold text-uppercase">PHONE NUMBERS</h6>
-                            <div class="row">
-                                <dmx-serverconnect id="getNewGardPhones" url="/api/families/guardians/getGuardPhones" dmx-param:guardianid="createGuardianModal.newGuardianId.value"></dmx-serverconnect>
-                                <div class="col-12">
-                                    <dmx-array id="arr_phoneNumbers"></dmx-array>
-                                    <form action="/api/families/guardians/insertPhone" method="post" id="form_phoneNumbers" is="dmx-serverconnect-form" dmx-on:success="getNewGardPhones.load();form_phoneNumbers.reset()" dmx-on:error="notifies1.danger('Error: '+createGuardianModal.cr_ng_phones.form_phoneNumbers.lastError.status+': '+createGuardianModal.cr_ng_phones.form_phoneNumbers.lastError.message+' - '+createGuardianModal.cr_ng_phones.form_phoneNumbers.lastError.response)">
-                                        <div class="row mb-3 mb-0 small">
-                                            <label for="phone" class="mb-0 form-label col-form-label">Phone
-                                                Numbers</label>
-                                            <div class="col-6"><input id="phone" name="phone" type="text" class="form-control" placeholder="Phone" required="" data-rule-digits="" data-msg-required="Phone number required.">
-                                            </div>
-                                            <div class="col-4"><select id="sel_phoneType" class="form-select" dmx-bind:options="appSettings.contactTypes.phoneContactTypes" optionvalue="id" optiontext="type" style="" required="" data-msg-required="Phone type required." name="type">
-                                                    <option disabled selected value="">Type...</option>
-                                                </select></div>
-                                            <div class="col-auto"><input id="inp_guardianIdPhone" name="guardianId" type="hidden" class="form-control" dmx-bind:value="createGuardianModal.newGuardianId.value">
-                                                <button id="addPhoneToArr" class="btn btn-primary" dmx-on:click="arr_phoneNumbers.addUniq(createGuardianModal.phone.value)" type="submit">
-                                                    <i class="bi-save2"></i>
-                                                </button>
-                                            </div>
-                                            <div class="input-group">
-                                            </div>
-                                            <legend class="col-form-label col-form-label-sm">*Press the add button to
-                                                add phone numbers.</legend>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="col-12" is="dmx-if" id="cr_ng_hasphones" dmx-bind:condition="getNewGardPhones.data.query.hasItems()">
-                                    <div class="row">
-                                        <div class="col">
-                                            <table class="table table-sm small">
-                                                <thead class="fw-bold text-uppercase">
-                                                    <tr>
-                                                        <th>Phone Number</th>
-                                                        <th>Type</th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getNewGardPhones.data.query" id="ng_phonesTableRepeat">
-                                                    <tr>
-                                                        <td dmx-text="phone"></td>
-                                                        <td dmx-text="appSettings.contactTypes[type].type"></td>
-                                                        <td>
-                                                            <form id="form_ng_deletePhone" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/deletePhone" dmx-on:success="getNewGardPhones.load({guardianid: createGuardianModal.newGuardianId.value})" dmx-on:error="notifies1.danger('Error '+createGuardianModal.ng_guardPhones.form_phoneNumbers.lastError.status+': '+createGuardianModal.ng_guardPhones.form_phoneNumbers.lastError.message+' - '+createGuardianModal.ng_guardPhones.form_phoneNumbers.lastError.response)">
-                                                                <input id="inp_ng_delPhoneId" name="phoneid" type="hidden" class="form-control" dmx-bind:value="id">
-                                                            </form>
-                                                            <button id="delPhoneNumber" class="btn btn-link text-danger btn-sm" dmx-on:click="run({confirm:{message:'Are you sure you want to delete this phone number?',then:{steps:{run:{action:`form_ng_deletePhone.submit()`}}}}})">Delete</button>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12" is="dmx-if" id="cr_ng_nophones" dmx-bind:condition="!getNewGardPhones.data.query.hasItems()">
-                                    <p class="text-center small text-danger p-4 border rounded-3">No phone numbers
-                                        added. Add phone numbers in the form above.</p>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col d-flex justify-content-between align-items-end">
-                                    <button class="btn btn-outline-secondary" dmx-on:click="var_multiform_stepper.setValue(2)"><i class="bi-arrow-left me-2"></i>Back</button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-            <div class="modal-footer d-flex justify-content-between border-top">
-                <button type="button" class="btn btn-outline-danger" dmx-on:click="run({confirm:{message:'Are you sure you want to cancel? This will delete the guardian you have just created, including any emails and phone numbers added.',then:{steps:{run:{action:`createGuardianModal.form_ng_cancelDeleteGuardian.submit()`}}},name:'confirmCancelGuardian'}})" dmx-hide="!createGuardianModal.newGuardianId.value">Cancel</button>
-                <form id="form_ng_cancelDeleteGuardian" is="dmx-serverconnect-form" method="post" action="/api/families/guardians/deleteGuardian" dmx-on:success="run({run:{action:`createGuardianModal.hide();toasts.show({message: \'Successfully cancelled guardian creation.\', title: \'Cancelled.\', icon: \'/assets/images/logo/purple/favicon_purple-svg.svg\'})`}})">
-                    <input id="inp_delGuardId" name="guardianid" type="hidden" class="form-control" dmx-bind:disabled="!createGuardianModal.newGuardianId.value" dmx-bind:value="createGuardianModal.newGuardianId.value">
-                </form>
-                <button class="btn btn-primary" dmx-hide="createGuardianModal.var_multiform_stepper.value !== 3" dmx-on:click="createGuardianModal.hide();toasts.show({message: 'Guardian successfully created. Refresh the page if you don\'t see them in the list.', delay: 10000, title: 'Success.', icon: '/assets/images/logo/purple/favicon_purple-svg.svg'})">Finish<i class="bi-check-circle ms-2"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div class="modal fade" id="editStudentNote" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="editNoteForm.reset();getFamilyID.remove('noteid')">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -1570,7 +959,6 @@
     </div>
 </div>
 
-
 <dmx-datetime id="currentDateVariable"></dmx-datetime>
 <section class="bg-white p-5 pb-0 border-bottom">
     <div class="row">
@@ -1579,48 +967,32 @@
                 <div class="col placeholder-glow">
                     <div class="row">
                         <div class="col d-flex">
-                            <h2 class="mb-1 me-3 fw-500" dmx-html="'<i class=&quot;bi-people me-2&quot;></i><span class=&quot;me-3&quot;>Family:</span>'+familyDetails.data.query_family_details.firstName+' '+familyDetails.data.query_family_details.lastName">
-                                <i class="bi-people me-2"></i>Family:
-                            </h2>
+                            <h1 class="mb-2 me-3 fw-900" dmx-html="'<i class=&quot;fas fa-users fa-fw me-2 text-primary&quot;></i><span class=&quot;me-2&quot;>Family:</span>'+familyDetails.data.query_family_details.firstName+' '+familyDetails.data.query_family_details.lastName">
+                                <i class="fas fa-users fa-fw me-2 text-primary"></i>Family:
+                            </h1>
                         </div>
                     </div>
 
 
 
-
-                </div>
-                <div class="col align-self-end d-flex flex-column justify-content-start align-items-start mb-2 pb-2 border-bottom">
-                    <div class="row">
-                        <div class="col" dmx-hide="!familyDetails.data.default_address">
-                            <span dmx-text="familyDetails.data.default_address.unit+' '" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null" class="mb-0 text-end">Unit/Suite</span>
-                            <span dmx-text="familyDetails.data.default_address.street1+', '" class="mb-0 text-end">Street 1</span>
-                            <span dmx-text="familyDetails.data.default_address.street2+', '" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null" class="mb-0 text-end">Street 2</span>
-                            <span dmx-text="familyDetails.data.default_address.suburb+', '" class="mb-0 text-end">Suburb</span>
-                            <span dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-end">State, ZIP Postal Code, Country</span>
-                        </div>
-                        <div class="col" dmx-hide="familyDetails.data.default_address">
-                            <p class="mb-0">No postal address associated with this family.</p>
-                        </div>
-                    </div>
 
                 </div>
             </div>
             <div class="row">
                 <div class="col-auto">
-                    <p class="rounded-3 p-2 mb-0 clickable user-select-none pri-5-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===5 && familyDetails.data.query_max_note_priority.family_note_max">
-                        <i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-5-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===5 && familyDetails.data.query_max_note_priority.family_note_max" dmx-on:click="var_showPartial.setValue('notes')">
+                        <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
                         <i class="fas fa-sticky-note me-2"></i>CRITICAL note found for this family.
                     </p>
-                    <p class="rounded-3 p-2 mb-0 clickable user-select-none pri-4-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===4 && familyDetails.data.query_max_note_priority.family_note_max">
-                        <i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-4-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===4 && familyDetails.data.query_max_note_priority.family_note_max" dmx-on:click="var_showPartial.setValue('notes')">
+                        <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
                         <i class="fas fa-sticky-note me-2"></i>High priority note found for this family.
                     </p>
-                    <p class="rounded-3 p-2 mb-0 clickable user-select-none pri-3-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===3 && familyDetails.data.query_max_note_priority.family_note_max">
-                        <i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-3-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max===3 && familyDetails.data.query_max_note_priority.family_note_max" dmx-on:click="var_showPartial.setValue('notes')">
+                        <i class="fas pdl-warning-white black me-1 ms-2 fs-5"></i>
                         <i class="fas fa-sticky-note me-2"></i>Medium priority note found for this family.
                     </p>
-                    <p class="rounded-3 p-2 mb-0 clickable user-select-none pri-2-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max<3 && familyDetails.data.query_max_note_priority.family_note_max">
-                        <i class="fas fa-exclamation-circle fa-fw me-1"></i>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-2-solid" dmx-show="familyDetails.data.query_max_note_priority.family_note_max<3 && familyDetails.data.query_max_note_priority.family_note_max" dmx-on:click="var_showPartial.setValue('notes')">
                         <i class="fas fa-sticky-note me-2"></i>Notes found for this family.
                     </p>
                 </div>
@@ -1629,25 +1001,25 @@
                 <div class="col mt-3 bg-white text-body d-flex justify-content-between" style="overflow: hidden;">
                     <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 text-body" id="navtabs_parent" role="tablist">
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" dmx-on:click="var_showPartial.setValue('overview')"><i class="bi-people me-2"></i>Overview</a>
+                            <a class="nav-link py-3 px-3 active" id="navTabs1_1_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" style="" data-bs-toggle="tab" data-bs-target="#guardians" dmx-on:click="var_showPartial.setValue('overview')" dmx-class:active="var_showPartial.value==='overview'"><i class="bi-people me-2"></i>Overview</a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3" id="navTabs1_2_tab" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger" dmx-on:click="var_showPartial.setValue('ledger')"><i class="bi-credit-card me-2"></i>Ledger
+                            <a class="nav-link py-3 px-3" id="navTabs1_2_tab" role="tab" aria-controls="navTabs1_2" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#ledger" dmx-on:click="var_showPartial.setValue('ledger')" dmx-class:active="var_showPartial.value==='ledger'"><i class="bi-credit-card me-2"></i>Ledger
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3" id="navTabs1_6_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#paymentinfo" dmx-on:click="var_showPartial.setValue('payment')"><i class="fab fa-stripe-s me-2"></i>Stripe</a>
+                            <a class="nav-link py-3 px-3" id="navTabs1_6_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#paymentinfo" dmx-on:click="var_showPartial.setValue('payment')" dmx-class:active="var_showPartial.value==='payment'"><i class="fab fa-stripe-s me-2"></i>Stripe</a>
                         </li>
                         <li class="nav-item col-auto">
                             <a class="nav-link py-3 px-3" id="navTabs1_3_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#emails"><i class="bi-envelope me-2"></i>Emails
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3" id="navTabs1_4_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes" dmx-on:click="var_showPartial.setValue('notes')"><i class="far fa-sticky-note me-2"></i>Notes
+                            <a class="nav-link py-3 px-3" id="navTabs1_4_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#notes" dmx-on:click="var_showPartial.setValue('notes')" dmx-class:active="var_showPartial.value==='notes'"><i class="far fa-sticky-note me-2"></i>Notes
                             </a>
                         </li>
                         <li class="nav-item col-auto">
-                            <a class="nav-link py-3 px-3" id="navTabs1_5_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs" dmx-on:click="var_showPartial.setValue('logs')"><i class="fas fa-list-ol me-2 fa-sm fa-fw"></i>Logs
+                            <a class="nav-link py-3 px-3" id="navTabs1_5_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" style="" data-bs-toggle="tab" data-bs-target="#logs" dmx-on:click="var_showPartial.setValue('logs')" dmx-class:active="var_showPartial.value==='logs'"><i class="fas fa-list-ol me-2 fa-sm fa-fw"></i>Logs
                             </a>
                         </li>
                         <li class="nav-item col-auto">
@@ -1703,3 +1075,4 @@
 
     </section>
 </main>
+<% page_title="{{familyDetails.data.query_family_details.firstName+' '+familyDetails.data.query_family_details.lastName}}" %>

@@ -13,10 +13,20 @@
     "$_POST": [
       {
         "type": "text",
+        "options": {
+          "rules": {
+            "core:required": {}
+          }
+        },
         "name": "guardian_uuid"
       },
       {
         "type": "text",
+        "options": {
+          "rules": {
+            "core:required": {}
+          }
+        },
         "name": "family_uuid"
       }
     ]
@@ -217,80 +227,163 @@
               "outputType": "object"
             },
             {
-              "name": "update",
-              "module": "dbupdater",
-              "action": "update",
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
               "options": {
-                "connection": "db",
-                "sql": {
-                  "type": "update",
-                  "values": [
+                "try": {
+                  "steps": [
                     {
-                      "table": "families",
-                      "column": "guardian_uuid",
-                      "type": "text",
-                      "value": "{{$_POST.guardian_uuid}}"
-                    }
-                  ],
-                  "table": "families",
-                  "wheres": {
-                    "condition": "AND",
-                    "rules": [
-                      {
-                        "id": "uuid",
-                        "field": "uuid",
-                        "type": "string",
-                        "operator": "equal",
-                        "value": "{{$_POST.family_uuid}}",
-                        "data": {
-                          "column": "uuid"
-                        },
-                        "operation": "="
-                      }
-                    ],
-                    "conditional": null,
-                    "valid": true
-                  },
-                  "returning": "uuid",
-                  "query": "UPDATE families\nSET guardian_uuid = :P1 /* {{$_POST.guardian_uuid}} */\nWHERE uuid = :P2 /* {{$_POST.family_uuid}} */",
-                  "params": [
-                    {
-                      "name": ":P1",
-                      "type": "expression",
-                      "value": "{{$_POST.guardian_uuid}}"
+                      "name": "update",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "families",
+                              "column": "guardian_uuid",
+                              "type": "text",
+                              "value": "{{$_POST.guardian_uuid}}"
+                            }
+                          ],
+                          "table": "families",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "uuid",
+                                "field": "uuid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{$_POST.family_uuid}}",
+                                "data": {
+                                  "column": "uuid"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "returning": "uuid",
+                          "query": "UPDATE families\nSET guardian_uuid = :P1 /* {{$_POST.guardian_uuid}} */\nWHERE uuid = :P2 /* {{$_POST.family_uuid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{$_POST.guardian_uuid}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P2",
+                              "value": "{{$_POST.family_uuid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
                     },
                     {
-                      "operator": "equal",
-                      "type": "expression",
-                      "name": ":P2",
-                      "value": "{{$_POST.family_uuid}}"
+                      "name": "exec",
+                      "module": "core",
+                      "action": "exec",
+                      "options": {
+                        "exec": "base/logs/CREATE_FAMILY_log",
+                        "params": {
+                          "family_uuid": "{{$_POST.family_uuid}}",
+                          "log_category": "Guardian",
+                          "log_type": "updated",
+                          "old_value": "{{query_old_guardian.firstName+' '+query_old_guardian.lastName+' - ID:'+query_old_guardian.uuid}}",
+                          "new_value": "{{query_new_guardian.firstName+' '+query_new_guardian.lastName+' - ID:'+query_new_guardian.uuid}}",
+                          "log": "{{'Primary guardian for this family has been updated.\\\\n '+query_old_guardian.firstName+' '+query_old_guardian.lastName+' → '+query_new_guardian.firstName+' '+query_new_guardian.lastName}}"
+                        }
+                      },
+                      "output": true
+                    }
+                  ]
+                },
+                "catch": {
+                  "steps": [
+                    {
+                      "name": "update",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "families",
+                              "column": "guardian_uuid",
+                              "type": "text",
+                              "value": "{{query_old_guardian.uuid}}"
+                            }
+                          ],
+                          "table": "families",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "uuid",
+                                "field": "uuid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{$_GET.family_uuid}}",
+                                "data": {
+                                  "column": "uuid"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "returning": "uuid",
+                          "query": "UPDATE families\nSET guardian_uuid = :P1 /* {{query_old_guardian.uuid}} */\nWHERE uuid = :P2 /* {{$_GET.family_uuid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{query_old_guardian.uuid}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P2",
+                              "value": "{{$_GET.family_uuid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "",
+                      "module": "core",
+                      "action": "response",
+                      "options": {
+                        "status": 500,
+                        "data": "{{$_ERROR}}"
+                      }
                     }
                   ]
                 }
-              },
-              "meta": [
-                {
-                  "name": "affected",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "name": "exec",
-              "module": "core",
-              "action": "exec",
-              "options": {
-                "exec": "base/logs/CREATE_FAMILY_log",
-                "params": {
-                  "family_uuid": "{{$_POST.family_uuid}}",
-                  "log_category": "Guardian",
-                  "log_type": "updated",
-                  "old_value": "{{query_old_guardian.firstName+' '+query_old_guardian.lastName+' - ID:'+query_old_guardian.uuid}}",
-                  "new_value": "{{query_new_guardian.firstName+' '+query_new_guardian.lastName+' - ID:'+query_new_guardian.uuid}}",
-                  "log": "{{'Primary guardian for this family has been updated.\\\\n '+query_old_guardian.firstName+' '+query_old_guardian.lastName+' → '+query_new_guardian.firstName+' '+query_new_guardian.lastName}}"
-                }
-              },
-              "output": true
+              }
             }
           ]
         }

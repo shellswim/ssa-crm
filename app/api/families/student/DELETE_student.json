@@ -1,0 +1,437 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_student",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "students"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.uuid",
+                  "field": "students.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.student_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 36,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT firstName, lastName\nFROM students\nWHERE uuid = :P1 /* {{$_POST.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_enrolments",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "enrolments"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "enrolments.student_uuid",
+                  "field": "enrolments.student_uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.student_uuid}}",
+                  "data": {
+                    "table": "enrolments",
+                    "column": "student_uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "students",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "referenceType": "string",
+                      "name": "student_uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM enrolments\nWHERE student_uuid = :P1 /* {{$_POST.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "enrolmentType"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          },
+          {
+            "type": "boolean",
+            "name": "isValid"
+          },
+          {
+            "type": "number",
+            "name": "student"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "number",
+            "name": "classId"
+          },
+          {
+            "type": "number",
+            "name": "class_uuid"
+          },
+          {
+            "type": "text",
+            "name": "dropReason"
+          },
+          {
+            "type": "boolean",
+            "name": "isTransferIn"
+          },
+          {
+            "type": "boolean",
+            "name": "isTransferOut"
+          },
+          {
+            "type": "number",
+            "name": "transferTo"
+          },
+          {
+            "type": "number",
+            "name": "transferFrom"
+          },
+          {
+            "type": "date",
+            "name": "transferToStart"
+          },
+          {
+            "type": "boolean",
+            "name": "priceOverride"
+          },
+          {
+            "type": "number",
+            "name": "priceOverrideValue"
+          },
+          {
+            "type": "text",
+            "name": "priceOverrideType"
+          },
+          {
+            "type": "boolean",
+            "name": "deleted"
+          },
+          {
+            "type": "number",
+            "name": "deleted_time"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "repeat",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_enrolments}}",
+          "outputFields": [],
+          "exec": {
+            "steps": {
+              "name": "exec_deleteenrolment",
+              "module": "core",
+              "action": "exec",
+              "options": {
+                "exec": "classes/DELETE_enrolment",
+                "params": {
+                  "student_log": "false",
+                  "enrolment_uuid": "{{uuid}}"
+                }
+              },
+              "output": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "enrolmentType",
+            "type": "number"
+          },
+          {
+            "name": "dropDate",
+            "type": "date"
+          },
+          {
+            "name": "isValid",
+            "type": "boolean"
+          },
+          {
+            "name": "student",
+            "type": "number"
+          },
+          {
+            "name": "student_uuid",
+            "type": "number"
+          },
+          {
+            "name": "startDate",
+            "type": "date"
+          },
+          {
+            "name": "classId",
+            "type": "number"
+          },
+          {
+            "name": "class_uuid",
+            "type": "number"
+          },
+          {
+            "name": "dropReason",
+            "type": "text"
+          },
+          {
+            "name": "isTransferIn",
+            "type": "boolean"
+          },
+          {
+            "name": "isTransferOut",
+            "type": "boolean"
+          },
+          {
+            "name": "transferTo",
+            "type": "number"
+          },
+          {
+            "name": "transferFrom",
+            "type": "number"
+          },
+          {
+            "name": "transferToStart",
+            "type": "date"
+          },
+          {
+            "name": "priceOverride",
+            "type": "boolean"
+          },
+          {
+            "name": "priceOverrideValue",
+            "type": "number"
+          },
+          {
+            "name": "priceOverrideType",
+            "type": "text"
+          },
+          {
+            "name": "deleted",
+            "type": "boolean"
+          },
+          {
+            "name": "deleted_time",
+            "type": "number"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "delete_student",
+        "module": "dbupdater",
+        "action": "delete",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "delete",
+            "table": "students",
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "uuid",
+                  "field": "uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.student_uuid}}",
+                  "data": {
+                    "column": "uuid"
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "returning": "uuid",
+            "query": "DELETE\nFROM students\nWHERE uuid = :P1 /* {{$_POST.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "name": "affected",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_FAMILY_log",
+          "params": {
+            "family_uuid": "{{$_POST.family_uuid}}",
+            "log_category": "Student",
+            "log_type": "deleted",
+            "log": "{{'Student Deleted: '+query_student.firstName+' '+query_student.lastName}}"
+          }
+        },
+        "output": true
+      }
+    ]
+  }
+}

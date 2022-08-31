@@ -1,0 +1,200 @@
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" moment_2="local with locales" id="oc_editclassdetails" components="{dmxDataTraversal:{},dmxBootstrap5Collapse:{},dmxBootstrap5Offcanvas:{},dmxDatePicker:{}}" -->
+<div class="offcanvas offcanvas-end" id="oc_editclassdetails" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="dd_editClass.editClassForm.reset();sc_classdetails.reset()">
+    <div class="offcanvas-header pdl-main-bg">
+        <h5 class="offcanvas-title"><i class="fas fa-pencil-alt text-primary me-2 fa-fw"></i>
+            <i class="fas fa-chalkboard-teacher me-2 fa-fw"></i>Edit Class Details
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <dmx-value id="var_classDetails"></dmx-value>
+        <dmx-value id="var_timeslotCheck" dmx-bind:value="checkClassTimeslot.data.classTSAvailability.length > 0"></dmx-value>
+        <dmx-serverconnect id="sc_classdetails" url="/api/classes/GET_CLASS_details" noload></dmx-serverconnect>
+        <dmx-data-detail id="dd_editClass" dmx-bind:data="classesBase.data.rp_enrols" key="id">
+            <form id="editClassForm" is="dmx-serverconnect-form" method="post" action="/api/classes/UPDATE_CLASS_details" dmx-on:success="flow_swal_toast_colored.run({icon: 'success', title: 'Class Successfully Updated', timer: 5000, timerprogressbar: true});classesBase.load({},true);sc_GET_CLASS_details.load({uuid: sc_classdetails.data.query.uuid})" dmx-param:classid="getClassDetails.data.getClassDetails.id">
+                <fieldset dmx-bind:disabled="ecm_timeslotError.collapsed ? false : true">
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <p class="fw-900 text-primary">Schedule</p>
+                                </div>
+                            </div>
+                            <div class="row gx-3 row row-cols-lg-4 row-cols-md-3 row-cols-sm-2 row-cols-xs-1">
+
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="ecm_daySelect" class="col-form-label form-label">Day</label>
+                                        <select id="ecm_daySelect" class="form-select" dmx-bind:value="sc_classdetails.data.query.day" dmx-bind:options="appSettings.days_obj" optiontext="dayname" optionvalue="dayint">
+                                            <option selected="" value="" disabled="">Select Day</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="ecm_startTimeSelect" class="col-form-label form-label">Start Time:</label>
+                                        <select id="ecm_startTimeSelect" class="form-select" dmx-bind:options="appSettings.ct_array" optiontext="display" optionvalue="decimal" dmx-bind:value="sc_classdetails.data.query.startTimeDecimal" dmx-on:updated="run([{runJS:{function:'decimalToTime',args:[`value`,`true`],name:'decimaltotime'}},{run:{action:`oc_editclassdetails.dd_editClass.editClassForm.ec_hd_inputClassStartDisplay.setValue(decimaltotime)`}}])">
+                                            <option selected="" value="">Select Start Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="ecm_durationSelect" class="col-form-label form-label">Duration</label>
+                                        <select id="ecm_durationSelect" class="form-select" dmx-bind:options="appSettings.duration_array" optiontext="display" optionvalue="value" dmx-bind:value="(sc_classdetails.data.query.endTimeDecimal - sc_classdetails.data.query.startTimeDecimal)" dmx-on:updated="run([{assign:{value:`(ecm_startTimeSelect.value.toNumber() + ecm_durationSelect.value.toNumber())`,name:'var_endtime'}},{runJS:{function:'decimalToTime',args:[`var_endtime`,`true`],name:'decimaltotime'}},{run:{action:`editClassForm.ecm_endTimeInput.setValue(decimaltotime)`}}])">
+                                            <option selected="" value="">Select Class Duration</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col">
+
+                                    <div class="mb-3">
+                                        <label for="ecm_endTimeInput1" class="col-form-label form-label">End Time:</label>
+                                        <input type="text" class="form-control" id="ecm_endTimeInput" aria-describedby="inp_class_enddate_help" dmx-bind:value="oc_editclassdetails.sc_classdetails.data.query.endTimeDisplay" readonly="true">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <p class="fw-900 text-primary">Class Details</p>
+
+                                </div>
+                            </div>
+                            <div class="row gx-3 row row-cols-lg-4 row-cols-md-3 row-cols-sm-2 row-cols-xs-1">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="ecm_daySelect1" class="col-form-label form-label">Instructor</label>
+                                        <select id="ecm_instructorSelect" class="form-select" dmx-bind:value="sc_classdetails.data.query.instructor_uuid" required="" dmx-bind:options="appSettings.instructors" optionvalue="id" optiontext="trunc_name">
+                                            <option selected="" value="">Select Instructor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="ecm_daySelect1" class="col-form-label form-label">Class Level</label>
+                                        <select id="ecm_classLevelSelect" class="form-select" dmx-bind:value="sc_classdetails.data.query.classlevel_uuid" required="" dmx-bind:options="appSettings.classLevels_array" optiontext="name" optionvalue="uuid">
+                                            <option selected="" value="">Select Level</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-end pb-3 mb-3 border-bottom gx-0">
+                        <div class="col d-flex w-100 justify-content-start flex-column">
+                            <div class="row">
+                                <div class="col">
+                                    <p class="fw-900 text-primary">Class Active Dates</p>
+                                    <p>Please enter the dates this class will be available from and to.&nbsp;</p>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-auto">
+                                    <div class="form-group mb-3"> <label for="inp_class_startdate" class="form-label col-form-label">Start Date:</label>
+                                        <input type="text" class="form-control w-auto" id="inp_class_startdate" name="startdate" aria-describedby="inp_class_enddate_help" placeholder="DD/MM/YYYY" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" onkeydown="event.preventDefault();" dmx-bind:value="oc_editclassdetails.sc_classdetails.data.query.startdate">
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-group mb-3"> <label for="inp_class_enddate" class="form-label col-form-label">End Date:</label>
+                                        <input type="text" class="form-control w-auto" id="inp_class_enddate" name="enddate" aria-describedby="inp_class_enddate_help" placeholder="DD/MM/YYYY" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" onkeydown="event.preventDefault();" dmx-bind:value="oc_editclassdetails.sc_classdetails.data.query.enddate">
+                                        <small id="inp_class_enddate_help" class="form-text text-muted">Leave blank to run indefinitely.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="flex-row" id="input1_group" is="dmx-checkbox-group">
+                                <div class="col-sm-10 align-self-center ps-0">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="ec_checkboxIsActive" dmx-bind:checked="sc_classdetails.data.query.isactive" dmx-bind:value="checked ? true : false" required="" value="true">
+                                        <label class="form-check-label clickable fw-bold" for="ec_checkboxIsActive" dmx-text="ec_checkboxIsActive.checked ? &quot;Active&quot; : &quot;Inactive&quot;" dmx-class:text-primary="ec_checkboxIsActive.checked">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="row">
+                    <div class="col-auto d-flex justify-content-start flex-row">
+                        <button id="btn_editclassdetails_submit" class="btn btn-primary me-2" dmx-on:click="editClassForm.submit()">Save</button>
+                        <button id="btn_editclassdetails_submit_close" class="btn btn-outline-primary" dmx-on:click="editClassForm.submit();oc_editclassdetails.hide()">Save &amp; Close</button>
+
+
+                    </div>
+                    <div class="col d-flex flex-row justify-content-end"><button id="btn_editclassdetails_cancel" class="btn btn-danger" dmx-on:click="oc_editclassdetails.hide()"><span style="font-family: inherit; font-size: 1rem; font-weight: var(--bs-body-font-weight) ;">Cancel</span></button></div>
+                </div>
+                <div class="row">
+                    <div class="col">
+
+                        <input id="ec_hd_inputClassID" name="uuid" type="hidden" class="form-control" dmx-bind:value="sc_classdetails.data.query.uuid">
+                        <input id="ec_hd_inputClassDay" name="day" type="hidden" class="form-control" dmx-bind:value="ecm_daySelect.value"><input id="ec_hd_inputClassStart" name="startTimeDecimal" type="hidden" class="form-control" dmx-bind:value="ecm_startTimeSelect.value">
+                        <input id="ec_hd_inputClassEnd" name="endTimeDecimal" type="hidden" class="form-control" dmx-bind:value="(ecm_startTimeSelect.value.toNumber() + ecm_durationSelect.value.toNumber())">
+                        <input id="ec_hd_inputClassStartDisplay" name="startTimeDisplay" class="form-control" dmx-bind:value="ec_var_startTimeDisplay.value" type="hidden">
+                        <input id="ec_hd_inputClassEndDisplay" name="endTimeDisplay" class="form-control" dmx-bind:value="ecm_endTimeInput.value" type="hidden">
+                        <input id="ec_hd_inputInstructor" name="instructor" type="hidden" class="form-control" dmx-bind:value="ecm_instructorSelect.value">
+                        <input id="ec_hd_inputLevel" name="classLevel" type="hidden" class="form-control" dmx-bind:value="ecm_classLevelSelect.value">
+                        <input id="ec_hd_inputIsActive" name="isactive" class="form-control" dmx-bind:value="input1_group.ec_checkboxIsActive.checked ? 1 : 0" type="hidden">
+                    </div>
+                </div>
+            </form>
+            <div class="collapse" id="ecm_timeslotError" is="dmx-bs5-collapse" dmx-bind:show="var_timeslotCheck.value">
+                <hr>
+                <div class="d-flex align-items-stretch flex-column">
+                    <div class="card text-white bg-danger">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">{{checkClassTimeslot.data.classTSAvailability[0].instructorName}} already has classes at this time.</h5>
+                        </div>
+                        <div class="card-body bg-light">
+                            <div class="d-flex">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Id</th>
+                                                <th>Day</th>
+                                                <th>Level</th>
+                                                <th>Start</th>
+                                                <th>End</th>
+                                                <th>Instructor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="checkClassTimeslot.data.classTSAvailability" id="tableRepeat1">
+                                            <tr>
+                                                <td dmx-text="id"></td>
+                                                <td dmx-text="dayName"></td>
+                                                <td dmx-text="levelName"></td>
+                                                <td dmx-text="startTimeDisplay"></td>
+                                                <td dmx-text="endTimeDisplay"></td>
+                                                <td dmx-text="instructorName"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button id="btn3" class="btn btn-outline-light" dmx-on:click="run([{run:{action:`ecm_timeslotError.hide()`}},{wait:{delay:300}},{run:{action:`checkClassTimeslot.reset()`}}])"><i class="fas fa-undo-alt  fa-fw me-1"></i>Change</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dmx-data-detail>
+        <div class="row gx-0 position-fixed bottom-0 mb-2">
+            <div class="col">
+                <small class="text-muted text-end" dmx-text="'Class ID: '+sc_classdetails.data.query.uuid.substring(0,11)+'-'+sc_classdetails.data.query.uuid.substring(11,14)+'-'+sc_classdetails.data.query.uuid.substring(15,18)+'-'+sc_classdetails.data.query.uuid.substring(19,22)+'-'+sc_classdetails.data.query.uuid.substring(23,40)">ClassID: 12345</small>
+            </div>
+        </div>
+    </div>
+</div>

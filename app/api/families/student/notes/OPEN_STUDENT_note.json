@@ -1,0 +1,372 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      }
+    ],
+    "$_POST": [
+      {
+        "type": "text",
+        "name": "uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_note",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "student_notes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "student_notes.uuid",
+                  "field": "student_notes.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.uuid}}",
+                  "data": {
+                    "table": "student_notes",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM student_notes\nWHERE uuid = :P1 /* {{$_GET.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "content"
+          },
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "priority"
+          },
+          {
+            "type": "text",
+            "name": "subject"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "number",
+            "name": "created"
+          },
+          {
+            "type": "date",
+            "name": "closed"
+          },
+          {
+            "type": "number",
+            "name": "created_by"
+          },
+          {
+            "type": "number",
+            "name": "closed_by"
+          },
+          {
+            "type": "number",
+            "name": "updated"
+          },
+          {
+            "type": "number",
+            "name": "updated_by"
+          }
+        ],
+        "outputType": "object",
+        "type": "dbconnector_single"
+      },
+      {
+        "name": "query_student",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "students"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.uuid",
+                  "field": "students.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{query_note.student_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 36,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM students\nWHERE uuid = :P1 /* {{query_note.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{query_note.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "date",
+            "name": "dob"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetComments"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetMedical"
+          },
+          {
+            "type": "text",
+            "name": "additionalMedical"
+          },
+          {
+            "type": "text",
+            "name": "gender"
+          },
+          {
+            "type": "number",
+            "name": "level"
+          },
+          {
+            "type": "text",
+            "name": "age"
+          },
+          {
+            "type": "number",
+            "name": "familyold"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "boolean",
+            "name": "trialLesson"
+          }
+        ],
+        "type": "dbconnector_single",
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "update",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "student_notes",
+                      "column": "status",
+                      "type": "text",
+                      "value": "{{'open'}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "closed",
+                      "type": "date",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "table": "student_notes",
+                      "column": "closed_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    }
+                  ],
+                  "table": "student_notes",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_POST.uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ]
+                  },
+                  "returning": "uuid",
+                  "query": "UPDATE student_notes\nSET status = :P1 /* {{'open'}} */, closed = :P2 /* {{TIMESTAMP}} */, closed_by = :P3 /* {{identity}} */\nWHERE uuid = :P4 /* {{$_POST.uuid}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{'open'}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P4",
+                      "value": "{{$_POST.uuid}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_STUDENT_log",
+          "params": {
+            "family_uuid": "{{query_student.family}}",
+            "log_category": "Student Note",
+            "log_type": "updated",
+            "log": "{{'Note Opened \\\\nSubject: '+query_note.subject}}",
+            "student_uuid": "{{query_note.student_uuid}}",
+            "family_log_category": "Student",
+            "family_log_type": "updated"
+          }
+        },
+        "output": true
+      }
+    ]
+  }
+}

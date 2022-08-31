@@ -1,12 +1,12 @@
 function appSettingsObject() {
-    var l = dmx.parse('appSettings.data.getSettings'),
-        cl = dmx.parse('appSettings.data.query_levels'),
-        et = dmx.parse('appSettings.data.query_enroltypes'),
-        rl = dmx.parse('appSettings.data.query_relationships'),
-        ct = dmx.parse('appSettings.data.query_contacttypes'),
-        ins = dmx.parse('appSettings.data.query_instructors'),
-        ab = dmx.parse('appSettings.data.query_absencetypes'),
-        clt = dmx.parse('appSettings.data.query_classtypes'),
+    var l = dmx.parse('sc_appSettings.data.getSettings'),
+        cl = dmx.parse('sc_appSettings.data.query_levels'),
+        et = dmx.parse('sc_appSettings.data.query_enroltypes'),
+        rl = dmx.parse('sc_appSettings.data.query_relationships'),
+        ct = dmx.parse('sc_appSettings.data.query_contacttypes'),
+        ins = dmx.parse('sc_appSettings.data.query_instructors'),
+        ab = dmx.parse('sc_appSettings.data.query_absencetypes'),
+        clt = dmx.parse('sc_appSettings.data.query_classtypes'),
         s = {},
         mn,
         mx,
@@ -52,7 +52,7 @@ function appSettingsObject() {
                             "startdecimal": st,
                             "enddecimal": Math.floor(st + 1)
                         },
-                        "display": `${decimalToTime(st)} - ${decimalToTime(Math.floor((st + 1)),true)}` 
+                        "display": `${st % 1 == 0 ? decimalToTime(st) : decimalToTime(st)} - ${decimalToTime(Math.floor((st + 1)),true)}` 
                     })
                 }
                 // Push range where end decimal isn't on the hour.
@@ -62,7 +62,7 @@ function appSettingsObject() {
                             "startdecimal": Math.floor(st),
                             "enddecimal": mx
                         },
-                        "display": `${decimalToTime(st)} - ${decimalToTime(mx,true)}` 
+                        "display": `${st % 1 == 0 ? decimalToTime(st) : decimalToTime(st)} - ${decimalToTime(mx,true)}` 
                     });
                     break;
                 }
@@ -190,4 +190,10 @@ function appSettingsObject() {
 
     //Set appSettings
     dmx.app.set('appSettings', s);
+}
+
+function reloadAppSettingsObject() {
+    dmx.parse('sc_appSettings.load({})');
+    dmx.app.set('appSettings', null);
+    appSettingsObject();
 }

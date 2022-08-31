@@ -22,6 +22,10 @@
       {
         "type": "text",
         "name": "uuid"
+      },
+      {
+        "type": "boolean",
+        "name": "convertTrial"
       }
     ]
   },
@@ -317,6 +321,10 @@
             "name": "deleted_time"
           },
           {
+            "type": "boolean",
+            "name": "trialConverted"
+          },
+          {
             "type": "text",
             "name": "firstName"
           },
@@ -347,6 +355,252 @@
           {
             "type": "text",
             "name": "classlevel"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_class_details",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "classes",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "levelname"
+              },
+              {
+                "table": "staff",
+                "column": "firstName"
+              },
+              {
+                "table": "staff",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "classes"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "classes",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "query": "SELECT classes.startTimeDisplay, days.dayname, classLevels.name AS levelname, staff.firstName, staff.lastName\nFROM classes\nLEFT JOIN days ON (days.id = classes.day) LEFT JOIN classLevels ON (classLevels.uuid = classes.classlevel_uuid) LEFT JOIN staff ON (staff.uuid = classes.instructor_uuid)",
+            "params": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "text",
+            "name": "levelname"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_student",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "students"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.uuid",
+                  "field": "students.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{query_enrolment.student_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 36,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM students\nWHERE uuid = :P1 /* {{query_enrolment.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{query_enrolment.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "date",
+            "name": "dob"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetComments"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetMedical"
+          },
+          {
+            "type": "text",
+            "name": "additionalMedical"
+          },
+          {
+            "type": "text",
+            "name": "gender"
+          },
+          {
+            "type": "number",
+            "name": "level"
+          },
+          {
+            "type": "text",
+            "name": "age"
+          },
+          {
+            "type": "number",
+            "name": "familyold"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "boolean",
+            "name": "trialLesson"
           }
         ],
         "outputType": "object"
@@ -437,6 +691,29 @@
             }
           }
         }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_POST.convertTrial}}",
+          "then": {
+            "steps": {
+              "name": "exec1",
+              "module": "core",
+              "action": "exec",
+              "options": {
+                "exec": "classes/enrolments/MARK_ENROLMENT_TRIAL_converted",
+                "params": {
+                  "uuid": "{{$_POST.uuid}}"
+                }
+              },
+              "output": true
+            }
+          }
+        },
+        "outputType": "boolean"
       },
       {
         "name": "query_fees_recalculation",

@@ -2,15 +2,16 @@
 <dmx-toggle id="toggle_loading" checked="true"></dmx-toggle>
 <% var _data %>
     <dmx-value id="var_STUDENT_details" dmx-bind:value="<%= _data _%>"></dmx-value>
-    <dmx-serverconnect id="sc_studentdetails_notes" url="/api/families/student/notes/GET_STUDENT_notes" dmx-param:student_uuid="var_STUDENT_details.value.student_details.uuid" dmx-param:note_lifetime="sel_notesTimeline.value" dmx-on:success="run([{wait:{delay:500}},{run:{action:`toggle_loading.uncheck()`}}])" dmx-on:start="toggle_loading.check()" sockets="true" dmx-on:error="flow_swal_alert.run({icon: 'danger', title: 'An error occured.', message: sc_studentdetails_notes.lastError.response})"></dmx-serverconnect>
+    <dmx-serverconnect id="sc_studentdetails_notes" url="/api/families/student/notes/GET_STUDENT_notes" dmx-param:student_uuid="var_STUDENT_details.value.student_details.uuid" dmx-param:note_lifetime="sel_notesTimeline.value" dmx-on:success="run([{wait:{delay:500}},{run:{action:`toggle_loading.uncheck()`}}])" dmx-on:start="toggle_loading.check()" dmx-on:error="flow_swal_alert.run({icon: 'danger', title: 'An error occured.', message: sc_studentdetails_notes.lastError.response})"></dmx-serverconnect>
     <%- await include('/partials/families/students/elements/_createStudentNote', Object.assign({_student_uuid: `{{var_STUDENT_details.value.student_details.uuid}}`}, locals)) %>
-        <%- await include('/partials/families/students/elements/_editStudentNote', Object.assign({_student_uuid: `{{var_STUDENT_details.value.student_details.uuid}}`}, locals)) %>
+        <%- await include('/partials/families/students/elements/_editStudentNote', Object.assign({}, locals, {student_uuid:_('var_STUDENT_details.value.uuid'),note_uuid:_('uuid')})) %>
             <section class="partial-main">
                 <div class="row g-0 row-cols-1 align-items-stretch">
                     <div class="col">
                         <div class="row g-0">
                             <div class="col mb-3 pb-3 border-bottom d-flex align-items-center justify-content-start">
-                                <h3 dmx-text="'Notes for: '+var_STUDENT_details.value.student_details.firstName+' '+var_STUDENT_details.value.student_details.lastName" class="mb-0 fw-600">Notes for: Jane Mary Doe</h3>
+                                <h3 class="mb-0 fw-900"><i class="fas fa-sticky-note  me-3 fa-fw"></i>Notes for: {{GET_STUDENT_details.data.student_details.firstName+' '+GET_STUDENT_details.data.student_details.lastName}}
+                                </h3>
                             </div>
                         </div>
                         <div class="row">
@@ -37,10 +38,9 @@
                             <div class="row" dmx-hide="sc_studentdetails_notes.state.executing">
                                 <div class="col">
                                     <h5 class="mb-0 text-danger text-center p-3 border rounded-3" dmx-hide="sc_studentdetails_notes.data.notes.length>0">No notes found.</h5>
-                                    <table class="table table-lg align-middle table-bordered" dmx-hide="sc_studentdetails_notes.data.notes.length===0">
-                                        <thead class="fw-bold border-bottom">
+                                    <table class="table table-lg align-middle table-bordered big-small" dmx-hide="sc_studentdetails_notes.data.notes.length===0">
+                                        <thead class="pdl-main-bg">
                                             <tr>
-                                                <th scope="row" style="width: 1%;"></th>
                                                 <th class="collapse-cell text-center">Priority</th>
                                                 <th class="collapse-cell">Subject</th>
                                                 <th>Content</th>
@@ -48,23 +48,11 @@
                                             </tr>
                                         </thead>
                                         <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_studentdetails_notes.data.notes" id="tbl_notesRepeat">
-                                            <tr>
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <button id="dd_noteAction" class="btn dropdown-toggle btn-outline-secondary change-chevron btn-sm" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                            <i class="bi-three-dots-vertical"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu" aria-labelledby="dropdown1">
-                                                            <a class="dropdown-item border-bottom small" href="#" dmx-on:click="run([{run:{action:`view_edit_notesModal.dd_studentNote.select(id)`}},{wait:{delay:100}},{run:{action:`view_edit_notesModal.show()`}}])"><i class="bi-pencil me-2"></i>Edit Note</a>
-                                                            <a class="dropdown-item border-bottom small" href="#" dmx-on:click="GET_STUDENT_details.load({},true)"><i class="bi-box-arrow-in-left me-2"></i>Close Note</a>
-                                                            <a class="dropdown-item small" href="#" dmx-on:click="GET_STUDENT_details.load({})"><i class="bi-box-arrow-right me-2"></i>Reopen Note</a>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                            <tr class="user-select-none clickable" dmx-on:click="mod_editStudentNote.dd_editStudentNote.select(uuid);mod_editStudentNote.show()">
                                                 <td class="collapse-cell text-center" dmx-text="priority == 1 ? 'Lowest' : priority == 2 ? 'Low' : priority == 3 ? 'Medium' : priority == 4 ? 'High' : 'Critical'" dmx-class:bg-note-pri-1="priority === 1" dmx-class:bg-note-pri-2="priority === 2" dmx-class:bg-note-pri-3="priority === 3" dmx-class:bg-note-pri-4="priority === 4" dmx-class:bg-note-pri-5="priority === 5">Medium</td>
                                                 <td dmx-text="subject" class="collapse-cell">Some subject</td>
                                                 <td dmx-html="content.replace(/<[^>]+>/g, ' ')">Lorem ipsum dolor sit amet. Consecuter something when this happens.</td>
-                                                <td dmx-text="status.uppercase()" class="collapse-cell text-end" dmx-class:text-danger="status.lowercase() === 'closed'"></td>
+                                                <td dmx-text="status.uppercase()" class="collapse-cell text-center" dmx-class:text-danger="status.lowercase() === 'closed'"></td>
                                             </tr>
                                         </tbody>
                                     </table>

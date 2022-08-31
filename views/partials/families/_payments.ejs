@@ -20,30 +20,28 @@
             <p>Puddle partners with online payments processor Stripe to allow our customers to securely
                 pay online.</p>
             <div class="modal fade" id="modal_CREATE_STRIPE_customer" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="form_newStripeCustomer.reset()">
-                <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-dialog modal-lg modal-fullscreen-lg-down" role="document">
                     <div class="modal-content">
                         <div class="modal-header border-bottom pe-4">
                             <img src="/assets/images/Stripe%20wordmark%20-%20slate.svg" loading="lazy" width="150"><img src="/assets/images/logo/purple/ls_logo_purple-svg.svg" loading="lazy" width="150" class="me-2">
                         </div>
                         <div class="modal-body">
-                            <p class="fw-450">To set this customer up with Stripe payments, you must
-                                create them as a new 'Stripe Customer'.</p>
-                            <p class="mb-4">You can add a payment method to this file after you have
-                                finished creating the Stripe Customer Account.</p>
-                            <form id="form_newStripeCustomer" method="post" is="dmx-serverconnect-form" action="/api/stripe/customers/CREATE_CUST_stripe" dmx-on:success="modal_CREATE_STRIPE_customer.hide()">
-                                <input id="inp_customer_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="familyDetails.data.familyDetails.uuid">
-                                <dmx-data-detail id="dd_selectedGuardian" dmx-bind:data="familyDetails.data.getGuardiansWContacts" key="id">
+                            <p>To set this customer up with Stripe payments, you must
+                                create them as a new 'Stripe Customer'.<br>You can add a payment method to this file after you have finished creating the Stripe Customer Account.</p>
+                            <form id="form_newStripeCustomer" method="post" is="dmx-serverconnect-form" action="/api/stripe/customers/CREATE_CUST_stripe" dmx-on:success="run([{run:{action:`modal_CREATE_STRIPE_customer.hide()`}},{run:{action:`familyDetails.load({},true)`}},{wait:{delay:300}},{run:{action:`CONNECT_CUST_stripe.load({stripe_cust_id: modal_CREATE_STRIPE_customer.form_newStripeCustomer.data.createCustomer.id})`}}])">
+                                <input id="inp_customer_uuid" name="uuid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                                <dmx-data-detail id="dd_selectedGuardian" dmx-bind:data="sc_GET_FAMILY_guardians.data.guardians" key="uuid">
                                 </dmx-data-detail>
-                                <h4 class="fw-500 mb-2 pb-2 border-bottom">Create Customer</h4>
+                                <h4 class="fw-900 ">Create Customer</h4>
                                 <div class="mb-3 pb-3 border-bottom">
-                                    <h6 class="fw-400">Use existing guardian details?</h6>
+                                    <h6 class="fw-700 text-primary">Use existing guardian details?</h6>
                                     <p id="bs5-form-group-help1" class="form-text text-muted">Prefill
                                         customer details by selecting from the guardian drop list.</p>
-                                    <select id="sel_chooseGuardian" class="form-select" dmx-bind:options="familyDetails.data.getGuardiansWContacts" optiontext="firstName +' '+lastName" optionvalue="id" dmx-on:updated="dd_selectedGuardian.select(sel_chooseGuardian.value.toNumber())">
+                                    <select id="sel_chooseGuardian" class="form-select" dmx-bind:options="sc_GET_FAMILY_guardians.data.guardians" optiontext="firstName +' '+lastName" optionvalue="uuid" dmx-on:updated="dd_selectedGuardian.select(value);sc_getGuardianContacts.load({uuid: value})">
                                         <option value="">Select Guardian...</option>
                                     </select>
                                 </div>
-                                <h6 class="fw-400">Customer Details</h6>
+                                <h6 class="fw-700 text-primary">Customer Details</h6>
                                 <div class="mb-3">
                                     <label for="inp_customer_name" class="form-label col-form-label">Full Name *</label>
                                     <input type="text" class="form-control" id="inp_customer_name" name="customer_name" aria-describedby="input1_help" placeholder="John Doe" required="" dmx-bind:value="dd_selectedGuardian.data ? dd_selectedGuardian.data.firstName +' '+dd_selectedGuardian.data.lastName : null">
@@ -54,7 +52,8 @@
                                         existing email address for selected customer, or add a new one.
                                     </p>
                                     <div class="row">
-                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_chooseEmail" class="form-select" dmx-bind:options="dd_selectedGuardian.data.emailAddressesArray" dmx-on:updated="inp_customer_email.setValue(value)" optiontext="address" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="address">
+                                        <dmx-serverconnect id="sc_getGuardianContacts" url="/api/families/guardians/GET_GUARDIAN_contacts" dmx-param:uuid="modal_CREATE_STRIPE_customer.form_newStripeCustomer.sel_chooseGuardian.value" noload></dmx-serverconnect>
+                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_chooseEmail" class="form-select" dmx-bind:options="modal_CREATE_STRIPE_customer.form_newStripeCustomer.sc_getGuardianContacts.data.query_emails" dmx-on:updated="inp_customer_email.setValue(value)" optiontext="address" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="address">
                                                 <option value="">Select Email Address...</option>
                                             </select>
                                         </div>
@@ -68,7 +67,7 @@
                                         existing phone number for selected customer, or add a new one.
                                     </p>
                                     <div class="row">
-                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_choosePhone" class="form-select" dmx-bind:options="dd_selectedGuardian.data.phoneNumbersArray" dmx-on:updated="inp_customer_phone.setValue(value)" optiontext="phone" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="phone">
+                                        <div class="col-5" dmx-hide="!dd_selectedGuardian.data"> <select id="sel_choosePhone" class="form-select" dmx-bind:options="modal_CREATE_STRIPE_customer.form_newStripeCustomer.sc_getGuardianContacts.data.query_phones" dmx-on:updated="inp_customer_phone.setValue(value)" optiontext="phone" dmx-bind:disabled="!dd_selectedGuardian.data" dmx-bind:value="!dd_selectedGuardian.data ? null : value" optionvalue="phone">
                                                 <option value="">Select Phone Number...</option>
                                             </select>
                                         </div>

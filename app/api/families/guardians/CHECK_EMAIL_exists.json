@@ -1,5 +1,11 @@
 {
   "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "email"
+      }
+    ],
     "$_POST": [
       {
         "type": "text",
@@ -30,11 +36,18 @@
                   "field": "emails.address",
                   "type": "string",
                   "operator": "equal",
-                  "value": "{{$_POST.emailaddress}}",
+                  "value": "{{$_GET.email}}",
                   "data": {
                     "table": "emails",
                     "column": "address",
-                    "type": "text"
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 255,
+                      "primary": false,
+                      "nullable": false,
+                      "name": "address"
+                    }
                   },
                   "operation": "="
                 }
@@ -42,18 +55,23 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT *\nFROM emails\nWHERE address = :P1 /* {{$_POST.emailaddress}} */",
+            "query": "SELECT *\nFROM emails\nWHERE address = :P1 /* {{$_GET.email}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{$_POST.emailaddress}}"
+                "value": "{{$_GET.email}}"
               }
-            ]
+            ],
+            "primary": "uuid"
           }
         },
         "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
           {
             "type": "number",
             "name": "id"
@@ -65,6 +83,10 @@
           {
             "type": "number",
             "name": "guardianId"
+          },
+          {
+            "type": "text",
+            "name": "guardian_uuid"
           },
           {
             "type": "number",
@@ -85,6 +107,10 @@
         },
         "meta": [
           {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
             "name": "id",
             "type": "number"
           },
@@ -97,11 +123,16 @@
             "type": "number"
           },
           {
+            "name": "guardian_uuid",
+            "type": "text"
+          },
+          {
             "name": "type",
             "type": "number"
           }
         ],
-        "outputType": "array"
+        "outputType": "array",
+        "disabled": true
       },
       {
         "name": "",
@@ -115,7 +146,7 @@
               "module": "core",
               "action": "response",
               "options": {
-                "status": 409,
+                "status": 500,
                 "data": "This email address already exists."
               }
             }
@@ -131,7 +162,8 @@
             }
           }
         },
-        "outputType": "boolean"
+        "outputType": "boolean",
+        "disabled": true
       }
     ]
   }

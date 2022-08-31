@@ -2,36 +2,57 @@
   "meta": {
     "options": {
       "linkedFile": "/views/partials/families/_overview.ejs",
-      "linkedForm": "form_INSERT_GUARDIAN_emails"
+      "linkedForm": "form_addPhone"
     },
     "$_POST": [
       {
-        "type": "array",
-        "name": "form_rp_emails",
-        "sub": [
-          {
-            "type": "text",
-            "fieldName": "form_rp_emails[{{$index}}][email]",
-            "options": {
-              "rules": {
-                "core:email": {
-                  "param": ""
-                }
-              }
-            },
-            "name": "email"
+        "type": "text",
+        "fieldName": "phone",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            }
           }
-        ]
+        },
+        "name": "phone"
       },
       {
         "type": "text",
-        "fieldName": "guardian_uuid",
-        "name": "guardian_uuid"
+        "fieldName": "primary",
+        "name": "primary"
+      },
+      {
+        "type": "text",
+        "fieldName": "guardianuuid",
+        "name": "guardianuuid"
+      },
+      {
+        "type": "text",
+        "fieldName": "type",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            }
+          }
+        },
+        "name": "type"
       }
     ]
   },
   "exec": {
     "steps": [
+      {
+        "name": "phone_uuid",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{'ph_'+UUID.replace('-','')}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
       {
         "name": "query_guardian",
         "module": "dbconnector",
@@ -54,7 +75,7 @@
                   "field": "guardians.uuid",
                   "type": "string",
                   "operator": "equal",
-                  "value": "{{$_POST.guardian_uuid}}",
+                  "value": "{{$_POST.guardianuuid}}",
                   "data": {
                     "table": "guardians",
                     "column": "uuid",
@@ -73,13 +94,13 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT *\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardian_uuid}} */",
+            "query": "SELECT *\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardianuuid}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
-                "value": "{{$_POST.guardian_uuid}}"
+                "value": "{{$_POST.guardianuuid}}"
               }
             ]
           }
@@ -126,26 +147,24 @@
         "outputType": "object"
       },
       {
-        "name": "repeat",
+        "name": "old_default_phone",
         "module": "core",
-        "action": "repeat",
+        "action": "setvalue",
         "options": {
-          "repeat": "{{$_POST.form_rp_emails}}",
-          "outputFields": [],
-          "exec": {
+          "value": "{{query_guardian.default_phone}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
             "steps": [
               {
-                "name": "email_uuid",
-                "module": "core",
-                "action": "setvalue",
-                "options": {
-                  "value": "{{'em_'+UUID.replace('-','')}}"
-                },
-                "meta": [],
-                "outputType": "text"
-              },
-              {
-                "name": "insert",
+                "name": "insert_phone",
                 "module": "dbupdater",
                 "action": "insert",
                 "options": {
@@ -154,42 +173,53 @@
                     "type": "insert",
                     "values": [
                       {
-                        "table": "emails",
-                        "column": "address",
+                        "table": "phoneNumbers",
+                        "column": "phone",
                         "type": "text",
-                        "value": "{{email}}"
+                        "value": "{{$_POST.phone}}"
                       },
                       {
-                        "table": "emails",
+                        "table": "phoneNumbers",
+                        "column": "type",
+                        "type": "number",
+                        "value": "{{$_POST.type}}"
+                      },
+                      {
+                        "table": "phoneNumbers",
                         "column": "guardian_uuid",
-                        "type": "text",
-                        "value": "{{$_POST.guardian_uuid}}"
+                        "type": "number",
+                        "value": "{{$_POST.guardianuuid}}"
                       },
                       {
-                        "table": "emails",
+                        "table": "phoneNumbers",
                         "column": "uuid",
                         "type": "text",
-                        "value": "{{email_uuid}}"
+                        "value": "{{phone_uuid}}"
                       }
                     ],
-                    "table": "emails",
+                    "table": "phoneNumbers",
                     "returning": "uuid",
-                    "query": "INSERT INTO emails\n(address, guardian_uuid, uuid) VALUES (:P1 /* {{email}} */, :P2 /* {{$_POST.guardian_uuid}} */, :P3 /* {{email_uuid}} */)",
+                    "query": "INSERT INTO phoneNumbers\n(phone, type, guardian_uuid, uuid) VALUES (:P1 /* {{$_POST.phone}} */, :P2 /* {{$_POST.type}} */, :P3 /* {{$_POST.guardianuuid}} */, :P4 /* {{phone_uuid}} */)",
                     "params": [
                       {
                         "name": ":P1",
                         "type": "expression",
-                        "value": "{{email}}"
+                        "value": "{{$_POST.phone}}"
                       },
                       {
                         "name": ":P2",
                         "type": "expression",
-                        "value": "{{$_POST.guardian_uuid}}"
+                        "value": "{{$_POST.type}}"
                       },
                       {
                         "name": ":P3",
                         "type": "expression",
-                        "value": "{{email_uuid}}"
+                        "value": "{{$_POST.guardianuuid}}"
+                      },
+                      {
+                        "name": ":P4",
+                        "type": "expression",
+                        "value": "{{phone_uuid}}"
                       }
                     ]
                   }
@@ -206,14 +236,99 @@
                 ]
               },
               {
+                "name": "exec",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{query_guardian.family_uuid}}",
+                    "log_category": "Guardian",
+                    "log_type": "created",
+                    "log": "{{'Created phone number for '+query_guardian.firstName+' '+query_guardian.lastName+': '+$_POST.phone}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          },
+          "catch": {
+            "steps": [
+              {
+                "name": "delete_phone",
+                "module": "dbupdater",
+                "action": "delete",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "delete",
+                    "table": "phoneNumbers",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{phone_uuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "returning": "uuid",
+                    "query": "DELETE\nFROM phoneNumbers\nWHERE uuid = :P1 /* {{phone_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{phone_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
                 "name": "",
                 "module": "core",
-                "action": "condition",
+                "action": "response",
                 "options": {
-                  "if": "{{!query_guardian.default_email&&$index==0}}",
-                  "then": {
-                    "steps": {
-                      "name": "update",
+                  "status": 500,
+                  "data": "{{$_ERROR}}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_POST.primary==1||!query_guardian.default_phone}}",
+          "then": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
+              "options": {
+                "try": {
+                  "steps": [
+                    {
+                      "name": "update_guardian_default_phone",
                       "module": "dbupdater",
                       "action": "update",
                       "options": {
@@ -223,9 +338,9 @@
                           "values": [
                             {
                               "table": "guardians",
-                              "column": "default_email",
+                              "column": "default_phone",
                               "type": "text",
-                              "value": "{{email_uuid}}"
+                              "value": "{{phone_uuid}}"
                             }
                           ],
                           "table": "guardians",
@@ -237,7 +352,7 @@
                                 "field": "uuid",
                                 "type": "string",
                                 "operator": "equal",
-                                "value": "{{$_POST.guardian_uuid}}",
+                                "value": "{{$_POST.guardianuuid}}",
                                 "data": {
                                   "column": "uuid"
                                 },
@@ -248,18 +363,18 @@
                             "valid": true
                           },
                           "returning": "uuid",
-                          "query": "UPDATE guardians\nSET default_email = :P1 /* {{email_uuid}} */\nWHERE uuid = :P2 /* {{$_POST.guardian_uuid}} */",
+                          "query": "UPDATE guardians\nSET default_phone = :P1 /* {{phone_uuid}} */\nWHERE uuid = :P2 /* {{$_POST.guardianuuid}} */",
                           "params": [
                             {
                               "name": ":P1",
                               "type": "expression",
-                              "value": "{{email_uuid}}"
+                              "value": "{{phone_uuid}}"
                             },
                             {
                               "operator": "equal",
                               "type": "expression",
                               "name": ":P2",
-                              "value": "{{$_POST.guardian_uuid}}"
+                              "value": "{{$_POST.guardianuuid}}"
                             }
                           ]
                         }
@@ -270,38 +385,101 @@
                           "type": "number"
                         }
                       ]
+                    },
+                    {
+                      "name": "exec",
+                      "module": "core",
+                      "action": "exec",
+                      "options": {
+                        "exec": "base/logs/CREATE_FAMILY_log",
+                        "params": {
+                          "family_uuid": "{{query_guardian.family_uuid}}",
+                          "log_category": "Guardian",
+                          "log_type": "updated",
+                          "log": "{{'Update primary phone number for '+query_guardian.firstName+' '+query_guardian.lastName+' to '+$_POST.phone+'.'}}"
+                        }
+                      },
+                      "output": true
                     }
-                  }
+                  ]
                 },
-                "outputType": "boolean"
+                "catch": {
+                  "steps": [
+                    {
+                      "name": "restore_old_default_phone",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "guardians",
+                              "column": "default_phone",
+                              "type": "text",
+                              "value": "{{query_guardian.default_phone}}"
+                            }
+                          ],
+                          "table": "guardians",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "uuid",
+                                "field": "uuid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{$_POST.guardianuuid}}",
+                                "data": {
+                                  "column": "uuid"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "returning": "uuid",
+                          "query": "UPDATE guardians\nSET default_phone = :P1 /* {{query_guardian.default_phone}} */\nWHERE uuid = :P2 /* {{$_POST.guardianuuid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{query_guardian.default_phone}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P2",
+                              "value": "{{$_POST.guardianuuid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "",
+                      "module": "core",
+                      "action": "response",
+                      "options": {
+                        "status": 500,
+                        "data": "{{$_ERROR}}"
+                      }
+                    }
+                  ]
+                }
               }
-            ]
+            }
           }
         },
-        "output": true,
-        "meta": [
-          {
-            "name": "$index",
-            "type": "number"
-          },
-          {
-            "name": "$number",
-            "type": "number"
-          },
-          {
-            "name": "$name",
-            "type": "text"
-          },
-          {
-            "name": "$value",
-            "type": "object"
-          },
-          {
-            "name": "email",
-            "type": "text"
-          }
-        ],
-        "outputType": "array"
+        "outputType": "boolean"
       }
     ]
   }

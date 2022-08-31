@@ -32,6 +32,10 @@
       {
         "type": "number",
         "name": "family"
+      },
+      {
+        "type": "text",
+        "name": "primary"
       }
     ]
   },
@@ -164,7 +168,8 @@
             "columns": [
               {
                 "table": "families",
-                "column": "address"
+                "column": "default_address",
+                "alias": "address"
               }
             ],
             "table": {
@@ -199,7 +204,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT address\nFROM families\nWHERE uuid = :P1 /* {{$_POST.family}} */",
+            "query": "SELECT default_address AS address\nFROM families\nWHERE uuid = :P1 /* {{$_POST.family}} */",
             "params": [
               {
                 "operator": "equal",
@@ -214,7 +219,7 @@
         "output": false,
         "meta": [
           {
-            "type": "number",
+            "type": "text",
             "name": "address"
           }
         ],
@@ -225,7 +230,7 @@
         "module": "core",
         "action": "condition",
         "options": {
-          "if": "{{!familyRecord.address || familyRecord.address == ''}}",
+          "if": "{{(!familyRecord.address||familyRecord.address=='')||$_POST.primary==1}}",
           "then": {
             "steps": [
               {
@@ -304,8 +309,8 @@
                     "values": [
                       {
                         "table": "families",
-                        "column": "address",
-                        "type": "number",
+                        "column": "default_address",
+                        "type": "text",
                         "value": "{{GET_NEW_ADDR_uuid.uuid}}"
                       }
                     ],
@@ -328,7 +333,7 @@
                       "conditional": null,
                       "valid": true
                     },
-                    "query": "UPDATE families\nSET address = :P1 /* {{GET_NEW_ADDR_uuid.uuid}} */\nWHERE uuid = :P2 /* {{$_POST.family}} */",
+                    "query": "UPDATE families\nSET default_address = :P1 /* {{GET_NEW_ADDR_uuid.uuid}} */\nWHERE uuid = :P2 /* {{$_POST.family}} */",
                     "params": [
                       {
                         "name": ":P1",

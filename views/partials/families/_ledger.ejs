@@ -1,4 +1,4 @@
-<!-- Wappler include is="dmx-app" id="_testpartial" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Offcanvas:{},dmxPreloader:{},dmxAnimateCSS:{},dmxSockets:{},dmxFormatter:{},dmxDatePicker:{}}" moment_2="cdn" -->
+<!-- Wappler include is="dmx-app" id="ledger" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxBootstrap5Navigation:{},dmxBootstrap5Collapse:{},dmxBootstrap5Offcanvas:{},dmxPreloader:{},dmxAnimateCSS:{},dmxSockets:{},dmxFormatter:{},dmxDatePicker:{}}" moment_2="cdn" -->
 <script is="dmx-flow" id="flow_setledger_paging" type="text/dmx-flow" autorun dmx-on:done="run({run:{action:`familyLedger.load()`}})">{
   condition: {
     if: "{{!query.ledgerinfo_limit&&!query.ledgerinfo_offset}}",
@@ -189,10 +189,10 @@
             <div class="row row-cols-2 gy-3 row-cols-lg-1">
                 <div class="col">
                     <div class="row g-0" dmx-animate-enter.duration:250.delay:150="fadeInUp">
-                        <div class="p-4 pdl-surface-shadow rounded-3 bg-white col" id="paymentsCol">
-                            <div class="row">
+                        <div class="p-4 rounded-3 bg-white col" id="paymentsCol">
+                            <div class="row pb-2">
                                 <div class="col">
-                                    <h3 class="mb-3 fw-700"><i class="far fa-credit-card me-3 text-primary fa-sm"></i>Payments
+                                    <h3 class="fw-900"><i class="far fa-credit-card me-3 text-primary"></i>Payments
                                     </h3>
                                 </div>
                                 <div class="col d-flex justify-content-end align-items-start"><a id="btn4" class="btn border btn-secondary" dmx-bind:href="'/families/familydetail/'+query.familyid+'/payment'" dmx-on:click="selectedChargesStore.clear()"><i class="far fa-credit-card me-2 fa-sm"></i>New Payment
@@ -237,60 +237,73 @@
                                     <p class="mb-0 text-muted small text-center">Once a payment is made,
                                         the information will show up here.</p>
                                 </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="row g-0" dmx-animate-enter.duration:250.delay:150="fadeInUp">
-                        <div class="p-4 pdl-surface-shadow rounded-3 bg-white col-12">
-                            <div class="row">
+                        <div class="p-4 rounded-3 bg-white col-12">
+                            <div class="row pb-2">
                                 <div class="col">
-                                    <h3 class="mb-3 fw-700"><i class="fas fa-hand-holding-usd me-3 text-primary fa-sm"></i>Charges
+                                    <h3 class="fw-900"><i class="fas fa-hand-holding-usd me-3 text-primary"></i>Charges
                                     </h3>
                                 </div>
                                 <div class="col d-flex justify-content-end align-items-start"><button id="btnrunCharge" class="btn border btn-secondary" data-bs-toggle="modal" data-bs-target="#ledger_runCharge"><i class="fas fa-hand-holding-usd me-2 fa-sm"></i>Run a Charge
                                     </button></div>
                             </div>
+                            <div class="row" is="dmx-if" id="cr_charges_yes" dmx-bind:condition="familyLedger.data.charges_family.length>0">
+                                <div class="col">
+                                    <table class="table table-hover user-select-none table-bordered align-middle big-small">
+                                        <thead>
+                                            <tr class="small fw-bold">
+                                                <th class="collapse-cell"></th>
+                                                <th>Charge</th>
+                                                <th>Remaining</th>
+                                                <th>Paid</th>
+                                                <th>Due</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="familyLedger.data.charges_family">
+                                            <tr class="clickable" dmx-on:click="oc_chargeBreakdown.GET_CHARGE_detail.load({charge_uuid: uuid});oc_chargeBreakdown.show()">
+                                                <td class="col-auto align-self-center">
+                                                    <h5 class="mb-0 text-center">
+                                                        <i class="fas pdl-warning text-warning fa-fw fa-sm" dmx-show="overdue === false &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'Unpaid'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                        <i class="fas pdl-error text-danger clickable user-select-none fa-sm fa-fw" dmx-show="overdue === true &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'OVERDUE'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                        <i class="fas fa-check-circle text-success clickable user-select-none fa-fw fa-sm" dmx-show="balance.owing == 0" dmx-bs-tooltip="'Paid'" data-bs-trigger="hover" data-bs-placement="left"></i>
+                                                    </h5>
+                                                </td>
+                                                <td class="col align-self-center">
+                                                    <p class="mb-0 fw-400" dmx-text="title">
+                                                        August 2021</p>
+                                                </td>
+                                                <td class="col align-self-center">
+                                                    <p wappler-command="editContent" class="mb-0" dmx-text="balance.paid == balance.total ? 'PAID' : balance.owing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="balance.owing > 0" dmx-class:fw-bold="balance.owing > 0">75.54</p>
+                                                </td>
+                                                <td class="col align-self-center">
+                                                    <p class="mb-0" dmx-text="balance.paid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
+                                                        0.00</p>
+                                                </td>
+                                                <td class="col align-self-center">
+                                                    <p class="mb-0" dmx-text="dueDate.formatDate('dd MMM y') ">
+                                                        31 July 2021</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row" is="dmx-if" id="cr_charges_no" dmx-bind:condition="familyLedger.data.charges_family==0">
+                                <div class="col align-self-center p-3 border rounded-1 position-relative bg-white g-0">
+                                    <h6 class="mb-0 text-center text-danger">No charges found.</h6>
+                                    <p class="mb-0 text-muted small text-center">Once a charge is created,
+                                        the information will show up here.</p>
+                                </div>
+                            </div>
 
 
-                            <table class="table table-hover user-select-none table-bordered align-middle big-small">
-                                <thead>
-                                    <tr class="small fw-bold">
-                                        <th class="collapse-cell"></th>
-                                        <th>Charge</th>
-                                        <th>Remaining</th>
-                                        <th>Paid</th>
-                                        <th>Due</th>
-                                    </tr>
-                                </thead>
-                                <tbody is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="familyLedger.data.charges_family">
-                                    <tr class="clickable" dmx-on:click="oc_chargeBreakdown.GET_CHARGE_detail.load({charge_uuid: uuid});oc_chargeBreakdown.show()">
-                                        <td class="col-auto align-self-center">
-                                            <h5 class="mb-0 text-center">
-                                                <i class="fas fa-exclamation-circle text-warning fa-fw fa-sm" dmx-show="overdue === false &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'Unpaid'" data-bs-trigger="hover" data-bs-placement="left"></i>
-                                                <i class="fas fa-exclamation-triangle text-danger clickable user-select-none fa-sm fa-fw" dmx-show="overdue === true &amp;&amp; balance.owing > 0" dmx-bs-tooltip="'OVERDUE'" data-bs-trigger="hover" data-bs-placement="left"></i>
-                                                <i class="fas fa-check-circle text-success clickable user-select-none fa-fw fa-sm" dmx-show="balance.owing == 0" dmx-bs-tooltip="'Paid'" data-bs-trigger="hover" data-bs-placement="left"></i>
-                                            </h5>
-                                        </td>
-                                        <td class="col align-self-center">
-                                            <p class="mb-0 fw-400" dmx-text="title">
-                                                August 2021</p>
-                                        </td>
-                                        <td class="col align-self-center">
-                                            <p wappler-command="editContent" class="mb-0" dmx-text="balance.paid == balance.total ? 'PAID' : balance.owing.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-class:text-danger="balance.owing > 0" dmx-class:fw-bold="balance.owing > 0">75.54</p>
-                                        </td>
-                                        <td class="col align-self-center">
-                                            <p class="mb-0" dmx-text="balance.paid.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">
-                                                0.00</p>
-                                        </td>
-                                        <td class="col align-self-center">
-                                            <p class="mb-0" dmx-text="dueDate.formatDate('dd MMM y') ">
-                                                31 July 2021</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
                             <ul class="pagination justify-content-end" dmx-populate="familyLedger.data.query_charges_family" dmx-state="queryManager" dmx-offset="ledgerinfo_offset" dmx-generator="bs5paging">
                                 <li class="page-item" dmx-class:disabled="familyLedger.data.query_charges_family.page.current == 1" aria-label="Previous">
                                     <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('ledgerinfo_offset',familyLedger.data.query_charges_family.page.offset.prev)"><span aria-hidden="true">&lsaquo;</span></a>

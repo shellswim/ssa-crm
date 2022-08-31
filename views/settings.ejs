@@ -1,116 +1,29 @@
 <!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="settings" appconnect="local" jquery_slim_35="local" components="{dmxDatastore:{},dmxBootstrap4Modal:{},dmxDataTraversal:{},dmxFormatter:{},dmxStripe:{},dmxBootstrap5TableGenerator:{},dmxBootbox:{},dmxBootstrap5Navigation:{},dmxBootstrap5Modal:{}}" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5pro="cdn" -->
-<div class="modal fade" id="classLevelEditModal" is="dmx-bs5-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <dmx-data-detail id="dd_editClassLevel" dmx-bind:data="getLevels.data.query" key="id"></dmx-data-detail>
-            <div class="modal-header bg-secondary text-light">
-                <h5 class="modal-title">Edit Level: {{dd_editClassLevel.data.name}}</h5>
-                <button type="button" class="btn-close text-light" aria-label="Close" data-bs-dismiss="modal">
-                    <span aria-hidden="true" class="visually-hidden">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form is="dmx-serverconnect-form" id="form_updateClassLevel" method="post" action="/api/updateLevels" dmx-generator="bootstrap5" dmx-form-type="vertical" dmx-populate="classLevelEditModal.dd_editClassLevel.data" dmx-param:levelid="dd_editClassLevel.data.id" dmx-on:success="run([{run:{action:`classLevelEditModal.hide()`}},{wait:{delay:100}},{run:{action:`form_updateClassLevel.reset()`}},{run:{action:`getLevels.load()`}}])">
-                    <div class="row gx-3">
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="inp_name" class="col-form-label form-label">Level Name</label>
-                                <input type="text" class="form-control" id="inp_name" name="name" dmx-bind:value="classLevelEditModal.dd_editClassLevel.data.name" aria-describedby="inp_name_help" placeholder="Enter Name">
-                            </div>
-                        </div>
-                    </div>
+<%- await include('/partials/elements/_topbar', Object.assign({contentTitle: '<i class="fas fa-cogs fa-fw me-2"></i> Settings' }, locals)) %>
 
-                    <div class="row gx-3">
-                        <div class="col">
-                            <div class="mb-3">
-                                <input id="inp_hd_colour" name="colour" type="hidden" class="form-control" dmx-bind:value="inp_colour.value.replace('#', '')">
-                                <label for="inp_colour" class="col-form-label form-label">Colour</label>
-                                <input type="color" class="form-control p-0 border-0" id="inp_colour" name="colourPicker" dmx-bind:value="'#'+classLevelEditModal.dd_editClassLevel.data.colour" aria-describedby="inp_colour_help" placeholder="Enter Colour">
-                                <small id="bs4-form-group-help1" class="form-text text-muted">Choose a meaningful colour. It will be shown throughout the program.</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row gx-3">
-                        <div class="col">
-                            <div class="mb-3 mt-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input clickable" type="checkbox" value="" id="inp_isValid" name="isValid" dmx-bind:value="classLevelEditModal.dd_editClassLevel.data.isValid" dmx-bind:checked="'value = 1 ? true : false'">
-                                    <label class="form-check-label clickable" for="inp_isValid">Active</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="form_updateClassLevel" class="btn btn-primary">Save changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-<dmx-datastore id="settingsUpdatedDS" session="true"></dmx-datastore>
+    <dmx-datastore id="settingsUpdatedDS" session="true"></dmx-datastore>
 
 
-<meta name="ac:route" content="/settings">
-<main class="d-flex flex-grow-1 flex-column">
-    <h1 class="fw-300 mb-0 p-4"><i class="bi-gear me-3"></i>Settings
-    </h1>
-    <div class="row gx-0 d-flex flex-grow-1">
-        <div class="col-2 align-self-stretch border-end bg-white border-top">
-            <dmx-value id="var_selectedSettings" dmx-bind:value="'general'"></dmx-value>
-            <div class="nav flex-column settings-nav">
-                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'general'" dmx-on:click="var_selectedSettings.setValue('general')">General</li>
-                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'classlevels'" dmx-on:click="var_selectedSettings.setValue('classlevels')">Class Levels
-                </li>
-                <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'stripe'" dmx-on:click="var_selectedSettings.setValue('stripe')">Stripe Payments</li>
-            </div>
-        </div>
-        <div class="p-4 col-10 bg-white border-top">
-            <div class="row" is="dmx-if" id="cr_generalSettings" dmx-bind:condition="var_selectedSettings.value === 'general'">
-                <form id="updateLocaleForm" is="dmx-serverconnect-form" method="post" action="/api/baseActions/updates/updateAppSettings">
-                    <dmx-array id="settingsArray" dmx-on:updated="settingsUpdated.set('settings',items)">
-                        <dmx-value id="key"></dmx-value>
-                        <dmx-value id="value"></dmx-value>
-                    </dmx-array>
-
-
-                    <div class="row row-cols-4">
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="sel_defaultCountry" class="col-form-label form-label">Select default
-                                    country</label>
-                                <select id="sel_defaultCountry" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_country" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="mb-3">
-                                <label for="sel_defaultTimezone" class="col-form-label form-label">Select default time zone</label>
-                                <select id="sel_defaultTimezone" class="form-select clickable" dmx-bind:options="getCountries.data.countries" optiontext="iso3+' - '+name" optionvalue="id" name="default_timezone" dmx-bind:value="appSettings.default_country" dmx-on:changed="run([{runJS:{function:'addSetKeyedArray',args:['default_greeting',value],name:'addSetKeyedArray'}},{run:{action:`settingsUpdatedDS.upsert({key: \'default_country\'},{key: \'default_country\', value: var_default_country})`}}])"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <button id="localeSubmitBtn" class="btn btn-primary" type="submit">Save</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="row" is="dmx-if" id="cr_classlevelsSettings" dmx-bind:condition="var_selectedSettings.value === 'classlevels'">
-                <div class="col">
-                    <h2 class="fw-400">Class Level Settings</h2>
-                    <div class="row row-cols-4 g-3 mt-2" dmx-bind:repeat="getLevels.data.query" is="dmx-repeat" id="rp_classLevels">
-                        <div class="col" dmx-bind:id="classLevel_{{id}}">
-                            <div class="d-flex card-list bg-white align-self-center position-relative clickable border rounded-3 pt-2 pb-2 ps-2 pe-2 flex-row justify-content-start align-items-center" dmx-on:click="classLevelEditModal.dd_editClassLevel.select(id);classLevelEditModal.show()" dmx-style:background-color.important="'#'+colour">
-                                <p dmx-text="name+' - '+shortName" class="m-0 fw-400 ps-3" dmx-style:color.important="'#'+textcolour">Fancy display heading</p>
-                            </div>
-                        </div>
-                    </div>
+    <meta name="ac:route" content="/settings">
+    <main class="d-flex flex-grow-1 flex-column">
+        <div class="row gx-0 d-flex flex-grow-1">
+            <div class="col-2 align-self-stretch border-end bg-white border-top">
+                <dmx-value id="var_selectedSettings" dmx-bind:value="'general'"></dmx-value>
+                <div class="nav flex-column settings-nav">
+                    <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'general'" dmx-on:click="var_selectedSettings.setValue('general')">General</li>
+                    <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'classlevels'" dmx-on:click="var_selectedSettings.setValue('classlevels')">Class Settings</li>
+                    <li class="nav-item nav-link user-select-none clickable py-3" href="#" dmx-class:active="var_selectedSettings.value == 'stripe'" dmx-on:click="var_selectedSettings.setValue('stripe')">Stripe Payments</li>
                 </div>
             </div>
-            <%- await include('/partials/settings/stripe/_stripeGeneral', Object.assign({}, locals)) %>
+            <div class="p-4 col-10 bg-white border-top">
+                <section is="dmx-if" id="cr_generalSettings" dmx-bind:condition="var_selectedSettings.value === 'general'">
+                    <%- await include('/partials/settings/_general', Object.assign({}, locals)) %>
+                </section>
+
+                <section is="dmx-if" id="cr_classlevels" dmx-bind:condition="var_selectedSettings.value=='classlevels'">
+                    <%- await include('/partials/settings/_classlevels', Object.assign({}, locals)) %>
+                </section>
+                <%- await include('/partials/settings/stripe/_stripeGeneral', Object.assign({}, locals)) %>
+            </div>
         </div>
-    </div>
-</main>
+    </main>

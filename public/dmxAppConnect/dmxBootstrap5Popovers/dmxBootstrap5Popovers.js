@@ -23,7 +23,7 @@ dmx.Attribute('bs-popover', 'mounted', function(node, attr) {
 
 document.addEventListener('DOMContentLoaded', function(event) {
   return new bootstrap.Popover(document.body, {
-    selector: '[popover-title]:not([data-trigger]), [data-bs-content]:not([data-trigger])',
+    selector: '[popover-title]:not([data-bs-trigger]), [data-bs-content]:not([data-bs-trigger])',
     placement: function(node) {
       var pexpression = node.getAttribute('dmx-bs-placement') || '';
       return dmx.parse(pexpression) || node.getAttribute('data-bs-placement') || 'auto';

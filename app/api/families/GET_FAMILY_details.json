@@ -49,10 +49,6 @@
               },
               {
                 "table": "families",
-                "column": "address"
-              },
-              {
-                "table": "families",
                 "column": "stripe_cust_id"
               },
               {
@@ -154,7 +150,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName, MAX(family_notes.priority) AS family_note_max\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid) LEFT JOIN family_notes ON (family_notes.family_uuid = families.uuid)\nWHERE families.uuid = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.address, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName",
+            "query": "SELECT families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName, MAX(family_notes.priority) AS family_note_max\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid) LEFT JOIN family_notes ON (family_notes.family_uuid = families.uuid)\nWHERE families.uuid = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY families.uuid, families.id, families.primaryGuardian, families.specialDiscount, families.stripe_cust_id, families.guardian_uuid, families.default_address, guardians.firstName, guardians.lastName",
             "params": [
               {
                 "operator": "equal",
@@ -179,10 +175,6 @@
               {
                 "table": "families",
                 "column": "specialDiscount"
-              },
-              {
-                "table": "families",
-                "column": "address"
               },
               {
                 "table": "families",
@@ -225,10 +217,6 @@
           {
             "type": "number",
             "name": "specialDiscount"
-          },
-          {
-            "type": "number",
-            "name": "address"
           },
           {
             "type": "text",
@@ -519,6 +507,133 @@
           }
         ],
         "outputType": "object"
+      },
+      {
+        "name": "addresses",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "addresses"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "addresses.family_uuid",
+                  "field": "addresses.family_uuid",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "addresses",
+                    "column": "family_uuid",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "families",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "family_uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM addresses\nWHERE family_uuid = :P1 /* {{$_GET.family_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": false,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "street1"
+          },
+          {
+            "type": "text",
+            "name": "street2"
+          },
+          {
+            "type": "text",
+            "name": "unit"
+          },
+          {
+            "type": "text",
+            "name": "suburb"
+          },
+          {
+            "type": "text",
+            "name": "postcode"
+          },
+          {
+            "type": "number",
+            "name": "country"
+          },
+          {
+            "type": "number",
+            "name": "state"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "text",
+            "name": "uuid"
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      },
+      {
+        "name": "addresses",
+        "module": "dbupdater",
+        "action": "custom",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "query": "SELECT a.*, IF(a.uuid = f.default_address, 1, 0) AS da, s.name AS state_name, c.name AS country_name\nFROM addresses a LEFT JOIN families f ON a.family_uuid = f.uuid LEFT JOIN countries c ON a.country = c.id LEFT JOIN states s on a.state = s.id\nWHERE a.family_uuid = :P1 \nORDER BY FIELD(da, 1,0)",
+            "params": [
+              {
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}",
+                "test": "'fam_a4eb27ec625211ecae3e0242ac160002'"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [],
+        "outputType": "array"
       }
     ]
   }

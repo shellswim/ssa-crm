@@ -136,46 +136,7 @@ exports.classAvail = async function (options) {
         prev = (offset - limit) <= 0 ? 0 : (offset - limit);
 
     /** Classes */
-
-    let classdump = dbClient(await db.raw(`
-    SELECT c.uuid,
-        c.id,
-        c.uuid,
-        c.startTimeDecimal,
-        c.endTimeDecimal,
-        c.instructor_uuid,
-        c.classlevel_uuid,
-        c.day AS classday,
-        c.startTimeDisplay,
-        c.endTimeDisplay,
-        c.max,
-        c.classtype_uuid,
-        c.classType,
-        ct.shortName,
-        ct.id,
-        i.id,
-        cl.id
-
-    FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
-    ${filters_applied ? `WHERE` : ``}
-    ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
-    ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-    ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
-    ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-    ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
-    ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
-    ${filters.time_filter.length > 0 ? `c.startTimeDecimal BETWEEN ${Math.min(...filters.time_filter)} AND ${Math.max(...filters.time_filter)}`: ``}
-    GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
-                c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
-    ORDER BY
-    (CASE (SELECT value FROM settings WHERE name = 'weekstart')
-        WHEN 'Sunday' THEN
-            FIELD(day, 7, 1, 2, 3, 4, 5, 6)
-        WHEN 'Monday' THEN
-            c.day
-    END),c.startTimeDecimal,cl.id, i.id
-    ${filtered_availabilities || options.data_type === 'calendar' ? `` : `LIMIT `+ offset+`, `+limit}
-    `));
+    let classdump = await getclasses();
 
     // Start Class Details generation.
     let performance_array = [];
@@ -199,6 +160,7 @@ exports.classAvail = async function (options) {
 
         // Set calculated class date.
         if(c.weekday < DateTime.fromISO(options.weekdate) || c.weekday < DateTime.now().setZone(_timezone)) {
+            c.current_week_day = c.weekday;
             c.weekday = c.weekday.plus({
                 weeks: 1
             });
@@ -259,7 +221,7 @@ exports.classAvail = async function (options) {
             "level": filters.level_filter
         },
         // Paginate classes when they're filtered with slice();
-        "classes": filtered_classes ? filtered_classes.slice(offset, (offset + limit)) : classdump,
+        "classes": filtered_classes.length > 0 ? filtered_classes.slice(offset, (offset + limit)) : options.class_uuid ? classdump[0] : classdump,
         'max_date': enrolment_max_date.toISODate(),
         'makeup_max_date': makeup_max_date.toISODate(),
         "limit": limit,
@@ -395,82 +357,9 @@ exports.classAvail = async function (options) {
             if(last_max === -1) { // if no max booking found.
                 nextavailable_permanent = weekday_arr[0]; // set next available date to first date.
             } else {
-                nextavailable_permanent = weekday_arr[last_max];
+                nextavailable_permanent = weekday_arr[last_max + 1];
             }
         }
-
-        // // Add makeup availability array
-        // for (let i = 0; i < wea.length; i++) {
-        //     if (wea[i] < Number(classmax)) {
-        //         mu_array_indexes.push(i);
-        //     }
-        // }
-
-
-        // // Match weekdays with makeup array and check for availabilities.
-        // for (let i = 0; i < mu_array_indexes.length; i++) {
-        //     if(weekday_arr[mu_array_indexes[i]] < DateTime.now().setZone(_timezone)) {
-        //         mu_weekday_arr.push(weekday_arr[mu_array_indexes[i]]);
-        //         continue;
-        //     } else if (weekday_arr[mu_array_indexes[i]] <= makeup_max_date && weekday_arr[mu_array_indexes[i]] >= DateTime.now().setZone(_timezone)) {
-        //         mu_avail.push({
-        //             'date': weekday_arr[mu_array_indexes[i]],
-        //             'availabilities': classmax - wea[mu_array_indexes[i]]
-        //         });
-        //         mu_weekday_arr.push(weekday_arr[mu_array_indexes[i]]);
-        //     }
-        // }
-
-        // if (mu_avail.length > 0) {
-        //     let x = [];
-        //     for (let i = 0; i < mu_avail.length; i++) {
-        //         x.push(mu_avail[i].availabilities);
-        //     }
-        //     mu_avail_max = Math.max(...x);
-        // }
-
-        // Set makeup response if no makeups available.
-
-        // let mu_unavail_response;
-        // debugger;
-        // if((mu_weekday_arr.length > 0 && mu_weekday_arr[0] > makeup_max_date) || (weekday > makeup_max_date)) {
-        //     mu_unavail_response = {
-        //         "code": 102,
-        //         "response": `Too far into future.`,
-        //         "total": 0
-        //     } 
-        // } else if(mu_avail.length == 0 && startdate < makeup_max_date) {
-        //     mu_unavail_response = {
-        //         "code": 101,
-        //         "response": 'No availabilities.',
-        //         "total": 0
-        //     }
-        // } else {
-        //     mu_unavail_response = {
-        //         "code": 100,
-        //         "response": "Availabilities found.",
-        //         "total": mu_avail_max
-        //     };
-        // }
-
-        // Get last date with maximum students in class
-        // let last_max_week = wea.lastIndexOf(classmax);
-        // let nextavailable_permanent;
-        // if(last_max_week == -1) {
-        //     if(weekday_arr.length > 0 && weekday_arr[0] < DateTime.now().startOf('day')) {
-        //         nextavailable_permanent = weekday_arr[1];
-        //     } else {
-        //         nextavailable_permanent = weekday_arr[0];
-        //     }
-        // } else if(last_max_week + 1 == weekday_arr.length) {
-        //     nextavailable_permanent = null
-        // } else {
-        //     nextavailable_permanent = weekday_arr[last_max_week + 1];
-        // }
-
-        // if(nextavailable_permanent && nextavailable_permanent < DateTime.fromSQL(options.weekdate)) {
-        //     nextavailable_permanent = nextavailable_permanent.plus({weeks: 1})
-        // };
 
         // Is class currently running?
         classinfo.isrunning = false;
@@ -497,7 +386,7 @@ exports.classAvail = async function (options) {
     }
 
     async function processEnrolments(classinfo,date) {
-        
+        debugger;
         
         let enrolobject = {
             'active_enrols': [],
@@ -505,7 +394,7 @@ exports.classAvail = async function (options) {
             'makeup_enrols': [],
             'casual_enrols': []
         };
-        let enrolmenttotal = 0;
+        let enrolmenttotal = options.trial_convert ? -1 : 0;
 
         let enrolments = dbClient(await db.raw(`
             SELECT
@@ -546,12 +435,12 @@ exports.classAvail = async function (options) {
 
         // Loop and sort enrolments
         if (Array.isArray(enrolments)) {
-            enrolmenttotal = enrolments.length;
+            enrolmenttotal += enrolments.length;
             for(let i = 0; i < enrolments.length; i++) {
                 const e = enrolments[i];
 
                 // Minus enrolment total for future enrolments.
-                if(DateTime.fromJSDate(e.startDate) > date) enrolmenttotal -= 1;
+                if(DateTime.fromJSDate(e.startDate).setZone(_timezone,{keepLocalTime:true}) > date) enrolmenttotal -= 1;
 
                 // Create enrolment types array
                 switch (e.enrolmentType) {
@@ -619,6 +508,75 @@ exports.classAvail = async function (options) {
             ORDER BY absence_date DESC
         `));
         return att;
+    }
+
+    async function getclasses() {
+        if(options.class_uuid) {
+            return dbClient(await db.raw(`
+            SELECT c.uuid,
+                c.id,
+                c.uuid,
+                c.startTimeDecimal,
+                c.endTimeDecimal,
+                c.instructor_uuid,
+                c.classlevel_uuid,
+                c.day AS classday,
+                c.startTimeDisplay,
+                c.endTimeDisplay,
+                c.max,
+                c.classtype_uuid,
+                c.classType,
+                c.startdate,
+                c.enddate,
+                ct.shortName,
+                ct.id,
+                i.id,
+                cl.id
+            FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
+            WHERE c.uuid = '${options.class_uuid}'`));
+        } else {
+            return dbClient(await db.raw(`
+            SELECT c.uuid,
+                c.id,
+                c.uuid,
+                c.startTimeDecimal,
+                c.endTimeDecimal,
+                c.instructor_uuid,
+                c.classlevel_uuid,
+                c.day AS classday,
+                c.startTimeDisplay,
+                c.endTimeDisplay,
+                c.max,
+                c.classtype_uuid,
+                c.classType,
+                c.startdate,
+                c.enddate,
+                ct.shortName,
+                ct.id,
+                i.id,
+                cl.id
+        
+            FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
+            WHERE c.startdate <= '${enddate.toISODate()}' AND (c.enddate >= '${startdate.toISODate()}' OR ISNULL(c.enddate)) ${filters_applied ? 'AND':''}
+            ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
+            ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
+            ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
+            ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
+            ${filters.time_filter.length > 0 ? `c.startTimeDecimal BETWEEN ${Math.min(...filters.time_filter)} AND ${Math.max(...filters.time_filter)}`: ``}
+            GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
+                        c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
+            ORDER BY
+            (CASE (SELECT value FROM settings WHERE name = 'weekstart')
+                WHEN 'Sunday' THEN
+                    FIELD(day, 7, 1, 2, 3, 4, 5, 6)
+                WHEN 'Monday' THEN
+                    c.day
+            END),c.startTimeDecimal,cl.id, i.id
+            ${filtered_availabilities || options.data_type === 'calendar' ? `` : `LIMIT `+ offset+`, `+limit}
+            `));
+        }
     }
 
     /** Database Utilities */

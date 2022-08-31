@@ -3,84 +3,21 @@ const {DateTime} = require('luxon');
 
 module.exports = {
     startMonth: function(val,reformat,reformat_type,custom_format) {
+        debugger;
         let date = DateTime.fromSQL(val).startOf('month');
-        if(reformat === true) {
-            switch (reformat_type.toLowerCase()) {
-                case 'ISO':
-                    date = date.toISODate()
-                    break;
-                case 'seconds':
-                    date = date.toSeconds()
-                    break;
-                case 'sql': 
-                    date = date.toSQLDate()
-                    break;
-                case 'custom': 
-                    date = date.toFormat(custom_format)
-                    break;
-            }
-        }
-        return date;
+        return date.toISODate();
     },
     startWeek: function(val,reformat,reformat_type,custom_format) {
         let date = DateTime.fromSQL(val).startOf('week');
-        if(reformat === true) {
-            switch (reformat_type.toLowerCase()) {
-                case 'ISO':
-                    date = date.toISODate()
-                    break;
-                case 'seconds':
-                    date = date.toSeconds()
-                    break;
-                case 'sql': 
-                    date = date.toSQLDate()
-                    break;
-                case 'custom': 
-                    date = date.toFormat(custom_format)
-                    break;
-            }
-        }
-        return date;
+        return date.toISODate();
     },
     endMonth: function(val,reformat,reformat_type,custom_format) {
         let date = DateTime.fromSQL(val).endOf('month');
-        if(reformat === true) {
-            switch (reformat_type.toLowerCase()) {
-                case 'ISO':
-                    date = date.toISODate()
-                    break;
-                case 'seconds':
-                    date = date.toSeconds()
-                    break;
-                case 'sql': 
-                    date = date.toSQLDate()
-                    break;
-                case 'custom': 
-                    date = date.toFormat(custom_format)
-                    break;
-            }
-        }
-        return date;
+        return date.toISODate();
     },
     endWeek: function(val,reformat,reformat_type,custom_format) {
         let date = DateTime.fromSQL(val).endOf('week');
-        if(reformat === true) {
-            switch (reformat_type.toLowerCase()) {
-                case 'ISO':
-                    date = date.toISODate()
-                    break;
-                case 'seconds':
-                    date = date.toSeconds()
-                    break;
-                case 'sql': 
-                    date = date.toSQLDate()
-                    break;
-                case 'custom': 
-                    date = date.toFormat(custom_format)
-                    break;
-            }
-        }
-        return date;
+        return date.toISODate();
     },
     fromMilliseconds: function(val) {
         return DateTime.fromMillis(val).toFormat('yyyy-MM-dd HH:MM:ss');

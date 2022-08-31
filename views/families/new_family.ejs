@@ -1,0 +1,425 @@
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="new_family" appConnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxFormRepeat:{},dmxBootstrap5Tooltips:{},dmxDatePicker:{},dmxBootstrap5Collapse:{},dmxValidator:{},dmxDatastore:{},dmxFormatter:{},dmxBootstrap5Modal:{},dmxTyped:{},dmxBootstrap5TableGenerator:{}}" moment_2="cdn" -->
+<dmx-datastore id="ds_guardian_phones"></dmx-datastore>
+<script is="dmx-flow" id="flow_uuid_generator" type="text/dmx-flow" autorun>{
+  serverConnect: {
+    url: "/api/utilities/GENERATE_UUID",
+    site: "SSA-CRM",
+    name: "sc_uuid",
+    output: true
+  }
+}</script>
+<dmx-datastore id="ds_guardian_emails"></dmx-datastore>
+<div class="modal fade" id="mod_addphone" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header pdl-main-bg">
+                <h5 class="modal-title">Add Phone Numbers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input id="inp_phone_guardian_uuid" name="phoneguardianuuid" type="hidden" class="form-control">
+                <input id="inp_phone_guardian_index" name="phoneguardianindex" type="hidden" class="form-control">
+                <dmx-value id="var_guardian_name"></dmx-value>
+
+                <h5 class="fw-900 mb-0" dmx-text="mod_addphone.var_guardian_name.value">Guardian #1</h5>
+
+                <form id="form_submit_guardianphone" dmx-on:submit="ds_guardian_phones.insert({guardian_index: (inp_phone_guardian_index.value || 0), phone: form_submit_guardianphone.inp_phone.value, phonetype: form_submit_guardianphone.sel_phonetype.value, guardian_uuid: mod_addphone.inp_phone_guardian_uuid.value});form_submit_guardianphone.reset()" is="dmx-serverconnect-form" method="post">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <div class="form-group"> <label for="inp_phone" class="form-label col-form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="inp_phone" name="mod_phone" size="20" aria-describedby="input1_help" required="" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-group">
+                                <label for="sel_phonetype" class="form-label col-form-label">Contact Type</label>
+                                <select id="sel_phonetype" class="form-select" dmx-bind:options="appSettings.contactTypes.phoneContactTypes" optiontext="type" optionvalue="id" required="" name="mod_phonetype">
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex flex-row justify-content-end align-items-end">
+                            <button id="btn_add_phone" class="btn btn-primary" type="submit"><i class="fas fa-plus-circle me-2"></i>Add</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="row">
+                    <div class="col">
+                        <table class="table table-bordered table-sm" dmx-hide="ds_guardian_phones.data.where('guardian_uuid', inp_phone_guardian_uuid.value, '==').length==0">
+                            <thead class="fw-900">
+                                <tr>
+                                    <th>Phone</th>
+                                    <th>Type</th>
+                                    <th class="collapse-cell"></th>
+                                </tr>
+                            </thead>
+                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="ds_guardian_phones.data.where('guardian_index', (mod_addphone.inp_phone_guardian_index.value || 0), '==')" id="rp_guardianphones">
+                                <tr>
+                                    <td dmx-text="phone">0430000000</td>
+                                    <td dmx-text="appSettings.contactTypes[phonetype].type">Home</td>
+                                    <td class="small text-decoration-underline align-middle text-danger clickable user-select-none" dmx-on:click="ds_guardian_phones.delete({$id: $id})"><i class="fas fa-minus-circle"></i></td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mod_addemail" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header pdl-main-bg">
+                <h5 class="modal-title">Add Email Addresses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input id="inp_email_guardian_uuid" name="emailguardianuuid" type="hidden" class="form-control">
+                <input id="inp_email_guardian_index" name="emailguardianindex" type="hidden" class="form-control">
+                <dmx-value id="var_guardian_name"></dmx-value>
+                <h5 class="fw-900 mb-0" dmx-text="mod_addphone.var_guardian_name.value">Guardian #1</h5>
+                <form id="form_submit_guardianemail" is="dmx-serverconnect-form" method="post" dmx-on:submit="ds_guardian_emails.insert({guardian_index: (inp_email_guardian_index.value || 0), email: form_submit_guardianemail.inp_email.value, emailtype: form_submit_guardianemail.sel_emailtype.value, guardian_uuid: mod_addemail.inp_email_guardian_uuid.value});form_submit_guardianemail.reset()">
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <div class="form-group"> <label for="inp_email" class="form-label col-form-label">Email Address</label>
+                                <input type="text" class="form-control" id="inp_email" name="mod_email" size="20" aria-describedby="input1_help" required="" autocomplete="off" data-rule-email="">
+                            </div>
+
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-group">
+                                <label for="sel_emailtype" class="form-label col-form-label">Contact Type</label>
+                                <select id="sel_emailtype" class="form-select" dmx-bind:options="appSettings.contactTypes.emailContactTypes" optiontext="type" optionvalue="id" required="" name="mod_emailtype">
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex flex-row justify-content-end align-items-end">
+                            <button id="btn_add_email" class="btn btn-primary" type="submit"><i class="fas fa-plus-circle me-2"></i>Add</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row">
+                    <div class="col">
+                        <table class="table table-bordered table-sm" dmx-hide="ds_guardian_emails.data.where('guardian_uuid', inp_email_guardian_uuid.value, '==').length==0">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th class="collapse-cell"></th>
+                                </tr>
+                            </thead>
+                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="ds_guardian_emails.data.where('guardian_index', mod_addemail.inp_email_guardian_index.value,'==')" id="rp_guardianemails">
+                                <tr>
+                                    <td dmx-text="email"></td>
+                                    <td dmx-text="emailtype"></td>
+                                    <td class="small text-decoration-underline align-middle text-danger clickable user-select-none" dmx-on:click="ds_guardian_emails.delete({$id: $id})"><i class="fas fa-minus-circle"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<meta name="ac:route" content="/families/new_family">
+
+<%- await include('/partials/elements/_topbar', Object.assign({contentTitle: '<i class="fas fa-users fa-fw fa-fw me-2"></i> New Family' }, locals)) %>
+
+
+    <main class="d-flex flex-grow-1 flex-column p-5">
+        <section class="p-4 bg-white rounded-3 mb-3 standard-max-width">
+            <button id="btn1" class="btn btn-secondary" dmx-on:click="form_newFamily.submit()"><i class="far fa-save me-2"></i>Create New Family</button>
+        </section>
+        <section>
+            <form method="post" id="form_newFamily" is="dmx-serverconnect-form" action="/api/families/CREATE_FAMILY" dmx-on:success="run([{run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Family Created\', message: \'Redirecting to family file.\', timer: 4000, timerprogressbar: true})`}},{wait:{delay:4000}},{run:{action:`browser1.goto(\'/families/familydetail/\'+form_newFamily.data.family_uuid)`}}])">
+                <section class="p-4 bg-white rounded-3 mb-3 standard-max-width">
+                    <h4 class="fw-900 mb-2"><i class="fas fa-user me-2 text-primary fa-sm fa-fw"></i>Guardians
+                    </h4>
+                    <p class="mb-3 small text-muted">Use the <i class="fas fa-grip-horizontal fa-fw text-black-50 form-sort"></i> icon to rearrange the order of guardians. The first guardian will be set as the <i class="fas fa-award text-primary-main fa-fw fa-lg"></i> primary guardian on saving.</p>
+
+                    <div is="dmx-form-repeat" id="formRepeat_guardians" dmx-bind:items="1" sortable="true" handle=".form-sort" animation="250" min="1">
+
+                        <section class="p-4 border rounded-3 mb-4">
+                            <input id="inp_guardian_index" name="guardianindex" type="hidden" dmx-bind:value="$index">
+                            <input type="hidden" id="inp_guardian_uuid" name="guardianuuid">
+                            <div class="row align-items-center mb-3 gx-0">
+                                <div class="col-auto p-0 align-self-center" style="">
+                                    <i class="fas fa-award text-primary-main fa-fw fa-lg me-2" dmx-bs-tooltip="'Primary Guardian'" data-bs-trigger="hover" dmx-on:click="run({condition:{if:`$index>0`,then:{steps:{run:{action:`formRepeat_guardians.remove($index)`}}}}})" dmx-class:d-none="$index!=0" style="/* line-height: 38px */" data-bs-placement="top"></i><i class="fas fa-grip-horizontal fa-fw text-black-50 form-sort me-2" style="cursor: grab; /* line-height: 38px */" dmx-class:d-none="$index==0"></i>
+                                </div>
+
+                                <div class="col-auto">
+                                    <h5 dmx-text="(inp_guardian_firstname.value == '' || inp_guardian_lastname.value == '') ? 'Guardian #'+($index + 1) : inp_guardian_firstname.value+' '+inp_guardian_lastname.value" class="fw-900 mb-0">Guardian #1</h5>
+                                </div>
+                                <div class="col d-flex flex-row align-items-center justify-content-start">
+                                    <p class="btn btn-sm clickable mb-0 text-decoration-underline text-danger fst-italic small ms-3" dmx-hide="$index===0" dmx-on:click="formRepeat_guardians.remove($index)"><i class="fas fa-minus-circle me-2"></i>Remove
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row g-0">
+
+                                <div class="col">
+                                    <input id="inp_primaryguardian" name="primaryguardian" class="form-control" dmx-bind:value="($index == 0 ? true : false)" type="hidden">
+                                    <div class="row row-cols-4">
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+
+                                                <label dmx-bind:for="'inp_guardian_firstname_'+$index" for="inp_guardian_firstname" class="form-label col-form-label">First Name</label>
+                                                <input dmx-bind:id="'inp_guardian_firstname_'+$index" class="form-control" id="inp_guardian_firstname" name="guardianfirstname" aria-describedby="input1_help" required="">
+                                            </div>
+
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label for="inp_guardian_lastname" class="form-label col-form-label" dmx-bind:for="'inp_guardian_lastname_'+$index">Last Name</label>
+                                                <input dmx-bind:id="'inp_guardian_lastname_'+$index" type="text" class="form-control" id="inp_guardian_lastname" name="guardianlastname" aria-describedby="input1_help" required="">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label for="sel_relationship" dmx-bind:for="'sel_relationship_'+$index" class="form-label col-form-label">Relationship</label>
+                                                <select id="sel_relationship" dmx-bind:id="'sel_relationship_'+$index" class="form-select" dmx-bind:options="appSettings.relationships.relationshipArray" optiontext="name" optionvalue="id" name="guardianrelationship" required="">
+                                                    <option value="">Please Select...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group mb-3">
+                                        <legend class="col-form-label mb-1">Add Contact Information?</legend>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="cb_add_contact_info" name="cbaddcontactinfo">
+                                            <label class="form-check-label" dmx-text="cb_add_contact_info.checked ? 'Yes' : 'No'">Yes/No</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-5 row-cols-2" is="dmx-if" id="cr_guardian_contacts" dmx-bind:condition="cb_add_contact_info.checked">
+                                <div class="col-12">
+                                    <p class="mb-3 small text-muted">The first phone and email items will be set as the <i class="far fa-check-circle fa-fw text-body"></i> primary contacts for this guardian.</p>
+                                </div>
+                                <div class="col">
+                                    <div class="row mb-2">
+                                        <div class="col">
+                                            <h6 class="fw-700">Phones</h6><button id="btn_addguardphones" class="btn btn-sm btn-primary" data-bs-target="#mod_addphone" dmx-on:click="run([{condition:{if:`(inp_guardian_uuid.value==\'\')`,then:{steps:[{serverConnect:{url:'/api/utilities/GENERATE_UUID',site:'SSA-CRM',name:'sc_uuid'}},{run:{action:`mod_addphone.inp_phone_guardian_uuid.setValue(sc_uuid.data.uuid);inp_guardian_uuid.setValue(sc_uuid.data.uuid)`}}]},else:{steps:{run:{action:`mod_addphone.inp_phone_guardian_uuid.setValue(inp_guardian_uuid.value)`}}}}},{run:{action:`mod_addphone.inp_phone_guardian_index.setValue(($index == 0) ? \'0\' : $index)`}},{run:{action:`mod_addphone.var_guardian_name.setValue((inp_guardian_firstname.value == \'\' || inp_guardian_lastname.value == \'\') ? \'Guardian #\'+($index + 1) : inp_guardian_firstname.value+\' \'+inp_guardian_lastname.value)`}},{run:{action:`mod_addphone.show()`}}])"><i class="fas fa-plus-circle me-2"></i>Add Phones
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <table class="table table-bordered table-sm" dmx-hide="ds_guardian_phones.data.where('guardian_uuid', inp_guardian_uuid.value, '==').length==0">
+                                        <thead class="fw-900">
+                                            <tr>
+                                                <th>Phone</th>
+                                                <th>Type</th>
+                                                <th class="collapse-cell"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="ds_guardian_phones.data.where('guardian_uuid', inp_guardian_uuid.value, '==')" id="rp_guardianphones">
+                                            <tr>
+                                                <td dmx-text="phone">0430000000</td>
+                                                <td dmx-text="phonetype">Home</td>
+                                                <td class="small text-decoration-underline align-middle text-danger clickable user-select-none" dmx-on:click="ds_guardian_phones.delete({$id: $id})"><i class="fas fa-minus-circle"></i></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col">
+                                    <div class="row mb-2">
+                                        <div class="col">
+                                            <h6 class="fw-700">Emails</h6>
+                                            <button id="btn_addguardemails" class="btn btn-sm btn-primary" data-bs-target="#mod_addphone" dmx-on:click="run([{condition:{if:`(inp_guardian_uuid.value==\'\')`,then:{steps:[{serverConnect:{url:'/api/utilities/GENERATE_UUID',site:'SSA-CRM',name:'sc_uuid'}},{run:{action:`mod_addemail.inp_email_guardian_uuid.setValue(sc_uuid.data.uuid);inp_guardian_uuid.setValue(sc_uuid.data.uuid)`}}]},else:{steps:{run:{action:`mod_addemail.inp_email_guardian_uuid.setValue(inp_guardian_uuid.value)`}}}}},{run:{action:`mod_addemail.inp_email_guardian_index.setValue(($index == 0) ? \'0\' : $index)`}},{run:{action:`mod_addemail.var_guardian_name.setValue((inp_guardian_firstname.value == \'\' || inp_guardian_lastname.value == \'\') ? \'Guardian #\'+($index + 1) : inp_guardian_firstname.value+\' \'+inp_guardian_lastname.value)`}},{run:{action:`mod_addemail.show()`}}])"><i class="fas fa-plus-circle me-2"></i>Add Emails</button>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered table-sm" dmx-hide="ds_guardian_emails.data.where('guardian_uuid', inp_guardian_uuid.value, '==').length==0">
+                                        <thead class="fw-900">
+                                            <tr>
+                                                <th>Email</th>
+                                                <th>Type</th>
+                                                <th class="collapse-cell"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="ds_guardian_emails.data.where('guardian_uuid', inp_guardian_uuid.value, '==')" id="rp_guardianemails">
+                                            <tr>
+                                                <td dmx-text="email">testemail@example.com.au</td>
+                                                <td dmx-text="emailtype">Home</td>
+                                                <td class="small text-decoration-underline align-middle text-danger clickable user-select-none" dmx-on:click="ds_guardian_emails.delete({$id: $id})"><i class="fas fa-minus-circle"></i></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="row">
+                        <div class="col d-flex justify-content-start"><button id="btn_addGuardian" class="btn btn-primary" dmx-on:click="formRepeat_guardians.add();flow_uuid_generator.run()"><i class="fas fa-plus-circle me-2"></i>Add Guardian
+                            </button></div>
+                    </div>
+                    <div id="rp_hd_guardianphones" is="dmx-repeat" dmx-bind:repeat="ds_guardian_phones.data">
+                        <input type="hidden" id="inp_hd_phone" name="phone" dmx-bind:name="'formRepeat_guardians['+(guardian_index || 0)+'][phones]['+$index+'][phone]'" dmx-bind:value="phone">
+                        <input type="hidden" id="inp_hd_phonetype" name="phonetype" dmx-bind:name="'formRepeat_guardians['+(guardian_index || 0)+'][phones]['+$index+'][phonetype]'" dmx-bind:value="phonetype">
+                    </div>
+                    <div id="rp_hd_guardianemails" is="dmx-repeat" dmx-bind:repeat="ds_guardian_emails.data">
+                        <input type="hidden" id="inp_hd_emailaddress" name="emailaddress" dmx-bind:name="'formRepeat_guardians['+(guardian_index || 0)+'][emails]['+$index+'][email]'" dmx-bind:value="email">
+                        <input type="hidden" id="inp_hd_emailtype" name="emailtype" dmx-bind:name="'formRepeat_guardians['+(guardian_index || 0)+'][emails]['+$index+'][emailtype]'" dmx-bind:value="emailtype">
+                    </div>
+                </section>
+
+
+                <section class="p-4 bg-white rounded-3 mb-3 standard-max-width">
+                    <h4 class="fw-900"><i class="fas fa-user-graduate fa-fw me-2 text-primary"></i>Students
+                    </h4>
+                    <div is="dmx-form-repeat" class="mt-3" id="formRepeat_students" dmx-bind:items="1">
+                        <section class="p-4 border rounded-3 mb-4">
+                            <div class="row align-items-center mb-3">
+                                <div class="col-auto">
+                                    <h6 dmx-text="(inp_student_firstname.value == '' || inp_student_lastname.value == '') ? 'Student \#'+($index + 1) : inp_student_firstname.value+' '+inp_student_lastname.value" class="fw-900 mb-0">Student #1
+                                    </h6>
+                                </div>
+                                <div class="col d-flex flex-row justify-content-end align-items-center">
+                                    <p class="btn btn-sm clickable mb-0 text-decoration-underline text-danger fst-italic small" dmx-hide="$index===0" dmx-on:click="formRepeat_students.remove($index)"><i class="fas fa-minus-circle me-2"></i>Remove
+                                    </p>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="mb-0 fw-700 text-primary">Personal Information</h6>
+
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="form-group mb-3"> <label class="form-label col-form-label">First Name</label>
+                                                <input type="text" class="form-control" id="inp_student_firstname" name="studentfirstname" aria-describedby="input3_help" required="">
+                                            </div>
+
+
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label col-form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="inp_student_lastname" name="studentlastname" aria-describedby="input3_help" required="">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label col-form-label">Date of Birth</label>
+                                                <input class="form-control" id="inp_dob" name="dob" aria-describedby="input3_help" placeholder="DD MM YYYY" type="text" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" required="">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label col-form-label">Sex</label>
+                                                <select id="sel_studentsex" class="form-select" name="sex" required="">
+                                                    <option value="">Please Select...</option>
+                                                    <option value="F">Female</option>
+                                                    <option value="M">Male</option>
+                                                    <option value="U">Unspecified</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="mb-0 fw-700 text-primary">Class Information</h6>
+                                    <div class="row">
+                                        <div class="col-auto">
+                                            <div class="form-group mb-3"> <label class="form-label col-form-label">Class Level</label>
+                                                <select id="sel_classlevel" class="form-select w-auto" dmx-bind:options="appSettings.classLevels_array" optiontext="name" optionvalue="uuid" name="classlevel" required="">
+                                                    <option value="">Please Select...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-break w-100"></div>
+                                        <div class="col">
+                                            <div class="form-group mb-3"> <label class="form-label col-form-label">Rollsheet Comments</label>
+                                                <textarea id="ta_rollsheetcomments" class="form-control" name="rollsheetcomments"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label col-form-label">
+                                                    <i class="fas fa-heartbeat text-danger me-1 fa-fw"></i>Rollsheet Medical
+                                                </label>
+                                                <textarea id="ta_rollsheetmedical" class="form-control" name="rollsheetmedical"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="mb-0 fw-700 text-primary">Medical Information</h6>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="form-group mb-3">
+                                                <legend class="col-form-label mb-1">Does this student have a reportable medical condition?</legend>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" value="" id="cb_medical_condition" name="cbmedicalcondition">
+                                                    <label class="form-check-label" dmx-text="cb_medical_condition.checked ? 'Yes' : 'No'">Yes/No</label>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-break w-100"></div>
+                                        <div id="cr_medical_condition" is="dmx-if" dmx-bind:condition="cb_medical_condition.checked">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label class="form-label col-form-label">Medical Condition</label>
+                                                    <textarea id="ta_additionalmedical" class="form-control" name="additionalmedical"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col d-flex justify-content-start"><button id="btn_addStudent" class="btn btn-primary" dmx-on:click="formRepeat_students.add()"><i class="fas fa-plus-circle me-2"></i>Add Student</button></div>
+                    </div>
+                </section>
+
+            </form>
+        </section>
+    </main>
+    <script>
+        let forms = document.querySelectorAll('form');
+        forms.forEach((o) => {
+            o.addEventListener('submit', e => {
+                window.removeEventListener('beforeunload', beforeunload)
+            });
+        });        
+        function beforeunload(e) {
+            e.preventDefault();
+            return e.returnValue = "Are you sure you want to exit?";
+        }
+        function unload() {
+            dmx.parse('content.ds_guardian_phones.clear()');
+            dmx.parse('content.ds_guardian_emails.clear()');
+        }
+        window.addEventListener('beforeunload', beforeunload);
+        window.addEventListener('unload', unload);
+
+    </script>

@@ -1,0 +1,489 @@
+{
+  "meta": {
+    "options": {
+      "linkedFile": "/views/partials/families/_overview.ejs",
+      "linkedForm": "form_addEmail"
+    },
+    "$_POST": [
+      {
+        "type": "text",
+        "fieldName": "email",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            },
+            "core:email": {
+              "param": ""
+            }
+          }
+        },
+        "name": "email"
+      },
+      {
+        "type": "text",
+        "fieldName": "primary",
+        "name": "primary"
+      },
+      {
+        "type": "text",
+        "fieldName": "guardianuuid",
+        "name": "guardianuuid"
+      },
+      {
+        "type": "text",
+        "fieldName": "type",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            }
+          }
+        },
+        "name": "type"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "email_uuid",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{'em_'+UUID.replace('-','')}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "query_guardian",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "guardians"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.uuid",
+                  "field": "guardians.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.guardianuuid}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardianuuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.guardianuuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "relationship"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "default_email"
+          },
+          {
+            "type": "number",
+            "name": "default_phone"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "old_default_email",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{query_guardian.default_email}}"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": [
+              {
+                "name": "insert_email",
+                "module": "dbupdater",
+                "action": "insert",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "insert",
+                    "values": [
+                      {
+                        "table": "emails",
+                        "column": "address",
+                        "type": "text",
+                        "value": "{{$_POST.email}}"
+                      },
+                      {
+                        "table": "emails",
+                        "column": "guardian_uuid",
+                        "type": "text",
+                        "value": "{{$_POST.guardianuuid}}"
+                      },
+                      {
+                        "table": "emails",
+                        "column": "type",
+                        "type": "number",
+                        "value": "{{$_POST.type}}"
+                      },
+                      {
+                        "table": "emails",
+                        "column": "uuid",
+                        "type": "text",
+                        "value": "{{email_uuid}}"
+                      }
+                    ],
+                    "table": "emails",
+                    "returning": "uuid",
+                    "query": "INSERT INTO emails\n(address, guardian_uuid, type, uuid) VALUES (:P1 /* {{$_POST.email}} */, :P2 /* {{$_POST.guardianuuid}} */, :P3 /* {{$_POST.type}} */, :P4 /* {{email_uuid}} */)",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{$_POST.email}}"
+                      },
+                      {
+                        "name": ":P2",
+                        "type": "expression",
+                        "value": "{{$_POST.guardianuuid}}"
+                      },
+                      {
+                        "name": ":P3",
+                        "type": "expression",
+                        "value": "{{$_POST.type}}"
+                      },
+                      {
+                        "name": ":P4",
+                        "type": "expression",
+                        "value": "{{email_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "identity",
+                    "type": "text"
+                  },
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "exec",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{query_guardian.family_uuid}}",
+                    "log_category": "Guardian",
+                    "log_type": "created",
+                    "log": "{{'Created email address for '+query_guardian.firstName+' '+query_guardian.lastName+': '+$_POST.email}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          },
+          "catch": {
+            "steps": [
+              {
+                "name": "delete_email",
+                "module": "dbupdater",
+                "action": "delete",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "delete",
+                    "table": "emails",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{email_uuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "returning": "uuid",
+                    "query": "DELETE\nFROM emails\nWHERE uuid = :P1 /* {{email_uuid}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{email_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "response",
+                "options": {
+                  "status": 500,
+                  "data": "{{$_ERROR}}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_POST.primary==1||!query_guardian.default_email}}",
+          "then": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "trycatch",
+              "options": {
+                "try": {
+                  "steps": [
+                    {
+                      "name": "update_guardian",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "guardians",
+                              "column": "default_email",
+                              "type": "text",
+                              "value": "{{email_uuid}}"
+                            }
+                          ],
+                          "table": "guardians",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "uuid",
+                                "field": "uuid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{$_POST.guardianuuid}}",
+                                "data": {
+                                  "column": "uuid"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "returning": "uuid",
+                          "query": "UPDATE guardians\nSET default_email = :P1 /* {{email_uuid}} */\nWHERE uuid = :P2 /* {{$_POST.guardianuuid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{email_uuid}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P2",
+                              "value": "{{$_POST.guardianuuid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "exec",
+                      "module": "core",
+                      "action": "exec",
+                      "options": {
+                        "exec": "base/logs/CREATE_FAMILY_log",
+                        "params": {
+                          "family_uuid": "{{query_guardian.family_uuid}}",
+                          "log_category": "Guardian",
+                          "log_type": "updated",
+                          "log": "{{'Updated primary email address for '+query_guardian.firstName+' '+query_guardian.lastName+' to '+$_POST.email+'.'}}"
+                        }
+                      },
+                      "output": true
+                    }
+                  ]
+                },
+                "catch": {
+                  "steps": [
+                    {
+                      "name": "update_guardian",
+                      "module": "dbupdater",
+                      "action": "update",
+                      "options": {
+                        "connection": "db",
+                        "sql": {
+                          "type": "update",
+                          "values": [
+                            {
+                              "table": "guardians",
+                              "column": "default_email",
+                              "type": "text",
+                              "value": "{{old_default_email}}"
+                            }
+                          ],
+                          "table": "guardians",
+                          "wheres": {
+                            "condition": "AND",
+                            "rules": [
+                              {
+                                "id": "uuid",
+                                "field": "uuid",
+                                "type": "string",
+                                "operator": "equal",
+                                "value": "{{$_POST.guardianuuid}}",
+                                "data": {
+                                  "column": "uuid"
+                                },
+                                "operation": "="
+                              }
+                            ],
+                            "conditional": null,
+                            "valid": true
+                          },
+                          "returning": "uuid",
+                          "query": "UPDATE guardians\nSET default_email = :P1 /* {{old_default_email}} */\nWHERE uuid = :P2 /* {{$_POST.guardianuuid}} */",
+                          "params": [
+                            {
+                              "name": ":P1",
+                              "type": "expression",
+                              "value": "{{old_default_email}}"
+                            },
+                            {
+                              "operator": "equal",
+                              "type": "expression",
+                              "name": ":P2",
+                              "value": "{{$_POST.guardianuuid}}"
+                            }
+                          ]
+                        }
+                      },
+                      "meta": [
+                        {
+                          "name": "affected",
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "",
+                      "module": "core",
+                      "action": "response",
+                      "options": {
+                        "status": 500,
+                        "data": "{{$_ERROR}}"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}

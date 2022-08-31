@@ -1,0 +1,494 @@
+{
+  "meta": {
+    "options": {
+      "linkedFile": "/views/partials/families/_overview.ejs",
+      "linkedForm": "form_editPhone"
+    },
+    "$_POST": [
+      {
+        "type": "text",
+        "fieldName": "phone",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            }
+          }
+        },
+        "name": "phone"
+      },
+      {
+        "type": "text",
+        "fieldName": "primary",
+        "name": "primary"
+      },
+      {
+        "type": "text",
+        "fieldName": "guardianuuid",
+        "name": "guardianuuid"
+      },
+      {
+        "type": "text",
+        "fieldName": "uuid",
+        "name": "uuid"
+      },
+      {
+        "type": "text",
+        "fieldName": "type",
+        "options": {
+          "rules": {
+            "core:required": {
+              "param": ""
+            }
+          }
+        },
+        "name": "type"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_old_phone",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "phoneNumbers"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "query": "SELECT *\nFROM phoneNumbers\nWHERE uuid = :P1 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.uuid}}"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "phoneNumbers.uuid",
+                  "field": "phoneNumbers.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.uuid}}",
+                  "data": {
+                    "table": "phoneNumbers",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "phone"
+          },
+          {
+            "type": "number",
+            "name": "guardianId"
+          },
+          {
+            "type": "number",
+            "name": "type"
+          },
+          {
+            "type": "number",
+            "name": "guardian_uuid"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_guardian",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "guardians"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "guardians.uuid",
+                  "field": "guardians.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.guardianuuid}}",
+                  "data": {
+                    "table": "guardians",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM guardians\nWHERE uuid = :P1 /* {{$_POST.guardianuuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.guardianuuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "number",
+            "name": "relationship"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "default_email"
+          },
+          {
+            "type": "number",
+            "name": "default_phone"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "contactTypes",
+                "column": "type"
+              }
+            ],
+            "table": {
+              "name": "contactTypes"
+            },
+            "primary": "id",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "contactTypes.id",
+                  "field": "contactTypes.id",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.type}}",
+                  "data": {
+                    "table": "contactTypes",
+                    "column": "id",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "increments",
+                      "primary": true,
+                      "nullable": false,
+                      "name": "id"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT type\nFROM contactTypes\nWHERE id = :P1 /* {{$_POST.type}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.type}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "type": "dbconnector_single",
+        "meta": [
+          {
+            "type": "text",
+            "name": "type"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": [
+              {
+                "name": "update_phone",
+                "module": "dbupdater",
+                "action": "update",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "update",
+                    "values": [
+                      {
+                        "table": "phoneNumbers",
+                        "column": "phone",
+                        "type": "text",
+                        "value": "{{$_POST.phone}}"
+                      },
+                      {
+                        "table": "phoneNumbers",
+                        "column": "type",
+                        "type": "number",
+                        "value": "{{$_POST.type}}"
+                      }
+                    ],
+                    "table": "phoneNumbers",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{$_POST.uuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ]
+                    },
+                    "returning": "uuid",
+                    "query": "UPDATE phoneNumbers\nSET phone = :P1 /* {{$_POST.phone}} */, type = :P2 /* {{$_POST.type}} */\nWHERE uuid = :P3 /* {{$_POST.uuid}} */",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{$_POST.phone}}"
+                      },
+                      {
+                        "name": ":P2",
+                        "type": "expression",
+                        "value": "{{$_POST.type}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P3",
+                        "value": "{{$_POST.uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "log",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "Updated phone for {{query_guardian.firstName}} {{query_guardian.lastName}}.\\n\n{{(query_old_phone.phone != $_POST.phone) ? query_old_phone.phone +' → '+ $_POST.phone : ''}}\n{{(query_old_phone.type != $_POST.type) ? 'Type: '+ query.type +' → '+ $_POST.type : ''}}"
+                },
+                "meta": [],
+                "outputType": "text"
+              },
+              {
+                "name": "exec_copy",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{query_guardian.family_uuid}}",
+                    "log_category": "Guardian",
+                    "log_type": "updated",
+                    "log": "{{log}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "condition",
+        "options": {
+          "if": "{{$_POST.primary==1&&$_POST.uuid!=query_guardian.default_phone}}",
+          "then": {
+            "steps": [
+              {
+                "name": "update_guardian_default_phone",
+                "module": "dbupdater",
+                "action": "update",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "update",
+                    "values": [
+                      {
+                        "table": "guardians",
+                        "column": "default_phone",
+                        "type": "text",
+                        "value": "{{$_POST.uuid}}"
+                      }
+                    ],
+                    "table": "guardians",
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "uuid",
+                          "field": "uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{$_POST.guardianuuid}}",
+                          "data": {
+                            "column": "uuid"
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "returning": "uuid",
+                    "query": "UPDATE guardians\nSET default_phone = :P1 /* {{$_POST.uuid}} */\nWHERE uuid = :P2 /* {{$_POST.guardianuuid}} */",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{$_POST.uuid}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{$_POST.guardianuuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "exec",
+                "module": "core",
+                "action": "exec",
+                "options": {
+                  "exec": "base/logs/CREATE_FAMILY_log",
+                  "params": {
+                    "family_uuid": "{{query_guardian.family_uuid}}",
+                    "log_category": "Guardian",
+                    "log_type": "updated",
+                    "log": "{{'Default phone updated for '+query_guardian.firstName+' '+query_guardian.lastName+' to '+$_POST.phone}}"
+                  }
+                },
+                "output": true
+              }
+            ]
+          }
+        },
+        "outputType": "boolean"
+      }
+    ]
+  }
+}
