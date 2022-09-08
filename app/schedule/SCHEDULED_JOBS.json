@@ -1,0 +1,184 @@
+{
+  "settings": {
+    "options": {
+      "rule": "*/10 * * * * *"
+    }
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "query_jobs",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "scheduled_server_jobs"
+            },
+            "joins": [],
+            "primary": "job_uuid",
+            "query": "SELECT *\nFROM scheduled_server_jobs",
+            "params": []
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "job_uuid"
+          },
+          {
+            "type": "text",
+            "name": "server_action"
+          },
+          {
+            "type": "number",
+            "name": "started"
+          },
+          {
+            "type": "number",
+            "name": "completed"
+          },
+          {
+            "type": "text",
+            "name": "createdby"
+          }
+        ],
+        "outputType": "array",
+        "disabled": true
+      },
+      {
+        "name": "exec",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "test_scheduler"
+        },
+        "output": true,
+        "disabled": true
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "Test",
+              "module": "read_sc_json",
+              "action": "readServerConnect",
+              "options": {
+                "api": "/app/api/test_scheduler.json"
+              },
+              "meta": [],
+              "output": true
+            }
+          },
+          "catch": {
+            "steps": [
+              {
+                "name": "insert",
+                "module": "dbupdater",
+                "action": "insert",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "insert",
+                    "values": [
+                      {
+                        "table": "scheduled_server_jobs",
+                        "column": "server_action",
+                        "type": "text",
+                        "value": "{{'Test Failed'}}"
+                      },
+                      {
+                        "table": "scheduled_server_jobs",
+                        "column": "started",
+                        "type": "number",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "table": "scheduled_server_jobs",
+                        "column": "completed",
+                        "type": "number",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "table": "scheduled_server_jobs",
+                        "column": "createdby",
+                        "type": "text",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "table": "scheduled_server_jobs",
+                        "column": "job_uuid",
+                        "type": "text",
+                        "value": "{{'job_'+UUID.replace('-','')}}"
+                      }
+                    ],
+                    "table": "scheduled_server_jobs",
+                    "returning": "job_uuid",
+                    "query": "INSERT INTO scheduled_server_jobs\n(server_action, started, completed, createdby, job_uuid) VALUES (:P1 /* {{'Test Failed'}} */, :P2 /* {{TIMESTAMP}} */, :P3 /* {{TIMESTAMP}} */, :P4 /* {{TIMESTAMP}} */, :P5 /* {{'job_'+UUID.replace('-','')}} */)",
+                    "params": [
+                      {
+                        "name": ":P1",
+                        "type": "expression",
+                        "value": "{{'Test Failed'}}"
+                      },
+                      {
+                        "name": ":P2",
+                        "type": "expression",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "name": ":P3",
+                        "type": "expression",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "name": ":P4",
+                        "type": "expression",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "name": ":P5",
+                        "type": "expression",
+                        "value": "{{'job_'+UUID.replace('-','')}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "name": "identity",
+                    "type": "text"
+                  },
+                  {
+                    "name": "affected",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "response",
+                "options": {
+                  "data": "{{$_ERROR}}",
+                  "status": 500
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

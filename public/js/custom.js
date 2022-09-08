@@ -1,7 +1,22 @@
 // JavaScript Document
 // Find Key in Array of Objects
 
-
+// Utilities
+const isRegExp = (string) => {
+    try {
+        return new Function(`
+            "use strict";
+            try {
+                new RegExp(${string});
+                return true;
+            } catch (e) {
+                return false;
+            }
+        `)();
+    } catch(e) {
+        return false;
+    }
+};
 
 // Function to add "please select..." before dynamic optgroups -- Must be run from app root finished loading.
 function payTypesPsel() {
@@ -521,4 +536,48 @@ document.addEventListener('focusin', (e) => {
 
 function setpagetitle(pagetitle) {
     document.title = pagetitle + ' - Puddle CRM';
+}
+
+// Before unload events
+function beforeunload(e) {
+    e.preventDefault();
+    return e.returnValue = returnvalue;
+}
+
+function beforeunloadlistener(returnvalue = "Are you sure you want to exit?") {
+    window.addEventListener('beforeunload', beforeunload);
+}
+
+function removebeforeunload() {
+    window.removeEventListener('beforeunload', beforeunload, false);
+}
+
+// Input key restrictions
+function restrictCharacters() {
+    let els = document.querySelectorAll('[character-restrict]');
+    for(let i=0;i<els.length;i++){
+        el = els[i];
+        let regex;
+        regex_bool = el.getAttribute('is-regex') == "true" ? true : false;
+        regex_bool == true ? regex = new RegExp(el.getAttribute('character-restrict').replace('/',''),'g') : regex = el.getAttribute('character-restrict');
+        el.addEventListener('beforeinput', (e) => {
+            if(regex_bool) {
+                console.log(regex);
+                if(e.data && regex.test(e.data)){
+                    console.log('stopping input')
+                    e.preventDefault();
+                    return;
+                } else {
+                    console.log('Didn\'t Work!')
+                }
+            } else {
+                let str = regex.split(',');
+                for(let i=0;i<str.length;i++) {
+                    if (!e.data.match(str[i])) {
+                        e.preventDefault();
+                    }
+                }
+            }
+        }, true)
+    }
 }

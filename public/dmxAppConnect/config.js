@@ -787,6 +787,74 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "rp_createnewstudent_familieslist": {
+      "meta": [
+        {
+          "name": "family",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "primaryGuardian"
+            },
+            {
+              "type": "number",
+              "name": "specialDiscount"
+            },
+            {
+              "type": "text",
+              "name": "stripe_cust_id"
+            },
+            {
+              "type": "text",
+              "name": "guardian_uuid"
+            },
+            {
+              "type": "text",
+              "name": "default_address"
+            },
+            {
+              "type": "number",
+              "name": "address_old"
+            }
+          ]
+        },
+        {
+          "name": "phone_number",
+          "type": "object",
+          "sub": [
+            {
+              "type": "text",
+              "name": "phone"
+            }
+          ]
+        },
+        {
+          "name": "email",
+          "type": "object",
+          "sub": [
+            {
+              "type": "text",
+              "name": "address"
+            }
+          ]
+        },
+        {
+          "name": "student_names",
+          "type": "text",
+          "sub": []
+        }
+      ],
+      "outputType": "array"
     }
   },
   "editStudent": {
@@ -2644,6 +2712,14 @@ dmx.config({
       {
         "type": "text",
         "name": "ledgerinfo_limit"
+      },
+      {
+        "type": "text",
+        "name": "newstudent"
+      },
+      {
+        "type": "text",
+        "name": "newstudent_uuid"
       }
     ],
     "rp_phoneNumbers": {
@@ -13829,7 +13905,27 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "flow_open_student_details": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "tab_to_show"
+          },
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "text",
+            "name": "max_note_priority"
+          }
+        ]
+      }
+    ]
   },
   "_notes": {
     "rp_familynotes": {

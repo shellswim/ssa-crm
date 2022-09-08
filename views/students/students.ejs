@@ -1,133 +1,175 @@
-<!-- Wappler include head-page="layouts/layout2" fontawesome_4="local" is="dmx-app" id="students" appconnect="local" fontawesome_5="cdn" dmx-on:load="run([{wait:{delay:300}},{run:{action:`queryManager.removeAll()`}},{run:{action:`queryManager.set(\'limit\',10)`}},{run:{action:`queryManager.set(\'sort\',\'firstName\')`}},{run:{action:`queryManager.set(\'dir\',\'asc\')`}},{run:{action:`queryManager.set(\'offset\',0)`}}])" components="{dmxBootstrap4PagingGenerator:{},dmxBootstrap5Navigation:{},dmxPreloader:{},dmxBootstrap5Collapse:{}}" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" -->
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="students" appconnect="local" dmx-on:load="run([{wait:{delay:300}},{run:{action:`queryManager.removeAll()`}},{run:{action:`queryManager.set(\'limit\',10)`}},{run:{action:`queryManager.set(\'sort\',\'firstName\')`}},{run:{action:`queryManager.set(\'dir\',\'asc\')`}},{run:{action:`queryManager.set(\'offset\',0)`}}])" components="{dmxBootstrap4PagingGenerator:{},dmxBootstrap5Navigation:{},dmxPreloader:{},dmxBootstrap5Collapse:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5Modal:{},dmxBootstrap5TableGenerator:{},dmxFormatter:{},dmxValidator:{}}" bootstrap5="local" bootstrap_icons="cdn" jquery_35="cdn" fontawesome_5="cdn" -->
 <meta name="ac:route" content="/students_list">
-<dmx-serverconnect id="getAllStudentsPaged" url="/api/students/getAllStudents_paged" dmx-param:textfilter="query.textfilter" dmx-param:levelsfilter="query.levelsfilter" dmx-param:offset="query.offset" dmx-param:dir="query.dir" dmx-param:sort="query.sort" dmx-param:limit="query.limit"></dmx-serverconnect>
+<script is="dmx-flow" id="flow_pagetitle" type="text/dmx-flow" src="/app/flows/utilities/pagetitle.json" dmx-param:title="'Students'" autorun></script>
+<%- await include('/partials/elements/_topbar', Object.assign({contentTitle: '<i class="fas fa-user-graduate fa-fw pe-2"></i> Students' }, locals)) %>
+    <%- await include('/partials/families/students/_oc_studentDetails', Object.assign({}, locals)) %>
+        <%- await include('/partials/families/students/_mod_createStudent', Object.assign({}, locals)) %>
 
-<dmx-serverconnect id="getClassLevels" url="api/getLevels"></dmx-serverconnect>
-<main class="d-flex flex-grow-1 flex-column p-4">
-    <div class="row">
-        <div class="col">
-            <h3 class="fw-bold mb-0">Students</h3>
-        </div>
-    </div>
-    <div class="row g-0">
-        <div class="col my-3 p-3 bg-white border rounded-3 text-body">
-            <div class="row">
-                <div class="col">
-                    <input type="text" class="form-control" id="inp_namefilter" name="namefilter" aria-describedby="input1_help" placeholder="Filter students" dmx-on:updated="queryManager.set('textfilter',value)">
-                </div>
-                <div class="d-flex col-auto flex-row align-items-center">
-                    <label for="selectLimit" class="mb-0 form-label">Display</label>
-                    <select id="selectLimit" class="form-select ms-2" dmx-bind:value="10" dmx-on:updated="queryManager.set('limit',value)" width="50">
-                        <option selected="" value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="150">150</option>
-                        <option value="200">200</option>
-                        <option value="250">250</option>
-                    </select>
+            <dmx-serverconnect id="GET_STUDENTS_list" url="/api/students/GET_STUDENT_list" dmx-param:textfilter="query.textfilter" dmx-param:levelsfilter="query.levelsfilter" dmx-param:offset="query.offset" dmx-param:dir="query.dir" dmx-param:sort="query.sort" dmx-param:limit="query.limit"></dmx-serverconnect>
+
+            <dmx-serverconnect id="getClassLevels" url="api/getLevels"></dmx-serverconnect>
+            <div class="modal fade" id="mod_selectFamily" is="dmx-bs5-modal" tabindex="-1" dmx-on:hidden-bs-modal="inp_newstudent_familysearch.setValue(null);sc_familySearch.reset()" nocloseonclick="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header pdl-main-bg">
+                            <h5 class="modal-title"><i class="fas fa-hand-point-right me-2 text-primary fa-fw"></i>
+                                <i class="fas fa-users me-2 fa-fw"></i>Select Family
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <dmx-serverconnect id="sc_familySearch" url="/api/families/GET_FAMILY_LIST_search" noload dmx-param:textfilter="mod_selectFamily.inp_newstudent_familysearch.value"></dmx-serverconnect>
+                            <p class="mb-3">Please search for the family you would like to create this new student for, or, create a new family.</p>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="input-group mb-3 d-flex flex-nowrap">
+                                        <span class="input-group-text text-white bg-secondary"><i class="fas fa-search"></i></span>
+                                        <input id="inp_newstudent_familysearch" name="familysearch" type="text" class="form-control" placeholder="Family Search" dmx-on:changed.debounce:150="run({condition:{if:`!mod_selectFamily.inp_newstudent_familysearch.value`,then:{steps:{run:{action:`mod_selectFamily.sc_familySearch.reset()`}}},else:{steps:{run:{action:`mod_selectFamily.sc_familySearch.load({textfilter: mod_selectFamily.inp_newstudent_familysearch.value})`}}}}})" autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-0" is="dmx-if" id="cr_hasfamilies" dmx-bind:condition="sc_familySearch.data.familylist">
+                                <div class="col">
+                                    <table class="table big-small table-bordered table-hover align-middle" style="">
+                                        <thead class="pdl-main-bg">
+                                            <tr>
+                                                <th scope="col">Family Guardians</th>
+                                                <th scope="col">Phone</th>
+                                                <th scope="col">Email</th>
+                                                <th scope="col">Students</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" id="rp_createnewstudent_familieslist" dmx-bind:repeat="mod_selectFamily.sc_familySearch.data.familylist">
+                                            <tr>
+                                                <td class="pt-0">
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <i class="fas fa-hand-point-right text-primary fa-lg fa-fw"></i>
+                                                            <span dmx-text="guardian.lastName+', '+guardian.firstName" class="lh-lg fw-900 text-decoration-underline clickable user-select-none w-auto" dmx-on:click="run([{wait:{delay:150}},{run:{action:`mod_createStudent.form_createStudent.var_createstudent_family_uuid.setValue(family.uuid);mod_createStudent.form_createStudent.var_isfamilypage.setValue(0)`}},{run:{action:`mod_selectFamily.hide();mod_createStudent.show()`}}])">Doe, Jane</span>
+                                                        </div>
+                                                    </div>
+                                                    <div id="cr_other_guardians" is="dmx-if" dmx-bind:condition="all_guardians.length>0">
+                                                        <hr class="light">
+                                                        <div class="row">
+                                                            <div id="rp_otherguardians" class="col-auto text-nowrap" is="dmx-repeat" dmx-bind:repeat="all_guardians">
+                                                                <small dmx-text="(all_guardians.length > ($index+1))?firstName+' '+lastName+', ':firstName+' '+lastName">Doe, John</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td dmx-text="guardian.phone">0400 000 000<br></td>
+                                                <td dmx-text="guardian.address.trunc(20, true, '...')">jdoe@shellswim.com.au</td>
+                                                <td dmx-text="student_names">Jane, Jill, Jack</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row gx-0" is="dmx-if" id="cr_nofamilies" dmx-bind:condition="!sc_familySearch.data.familylist&amp;&amp;!!inp_newstudent_familysearch.value">
+                                <div class="col">
+                                    <p class="text-danger p-4 border rounded-3 text-center">No families match your search.</p>
+                                </div>
+                            </div>
+                            <div class="row gx-0" is="dmx-if" id="cr_nofamilies_searchempty" dmx-bind:condition="!inp_newstudent_familysearch.value">
+                                <div class="col">
+                                    <p class="p-4 border rounded-3 text-center">Start typing in the text field above to find families.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <a href="#" class="btn btn-secondary" dmx-bind:href="'/families/new_family'" target="_blank" dmx-on:click="mod_selectFamily.hide()"><i class="fas fa-plus-circle me-2"></i>Create New Family<i class="fas fa-external-link-alt ms-2 fa-xs text-white-50"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="container-fluid border rounded-3 p-4 bg-white">
-        <div class="row">
-            <div class="col">
-                <table class="table small align-middle" style="">
-                    <thead class="fw-bold">
-                        <tr>
-                            <th class="collapse-cell"></th>
-                            <th class="sorting" dmx-on:click="pagedQueries.set('sort','firstName');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='firstName' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='firstName' &amp;&amp; pagedQueries.data.dir == 'desc'">Student</th>
-                            <th class="sorting" dmx-on:click="pagedQueries.set('sort','levelName');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='levelName' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='levelName' &amp;&amp; pagedQueries.data.dir == 'desc'">
-                                Level</th>
-                            <th scope="row">Age</th>
-                            <th class="sorting" dmx-on:click="pagedQueries.set('sort','dob');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='dob' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='dob' &amp;&amp; pagedQueries.data.dir == 'desc'">Date
-                                of
-                                Birth</th>
+            <main class="d-flex flex-grow-1 flex-column p-5">
 
-                        </tr>
-                    </thead>
-                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="getAllStudentsPaged.data.query.data" id="tableRepeat2" dmx-state="pagedQueries" dmx-sort="sort" dmx-order="dir">
-                        <tr>
-                            <td class="text-center">
+
+                <div class="row g-0">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col">
+                                <button id="btn_newStudent" class="btn btn-secondary" dmx-on:click="mod_selectFamily.show()"><i class="fas fa-plus-circle me-2"></i>New Student
+                                </button>
+                            </div>
+                            <div class="d-flex align-items-center flex-row justify-content-end col">
+                                <p class="mb-0 me-2">View</p>
                                 <div class="dropdown">
-                                    <button id="dd_studentInformation" class="btn dropdown-toggle btn-sm btn-outline-secondary change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="bi-three-dots-vertical"></i>
+                                    <button id="dropdown_limit" class="btn dropdown-toggle change-chevron btn-outline-link p-0 text-decoration-underline" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" dmx-html="GET_STUDENTS_list.data.query.limit + '<i class=&quot;fas fa-chevron-down fa-fw ms-1 fa-xs&quot;></i>'">
+                                        Limit <i class="fas fa-chevron-down fa-fw ms-1 fa-xs"></i>
                                     </button>
-                                    <div class="dropdown-menu" aria-labelledby="dd_studentInformation">
-                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+family+'/studentdetail/'+id">Student Details</a>
-                                        <a class="dropdown-item small" href="#" dmx-bind:href="'/families/familydetail/'+family">Family Details</a>
+                                    <div class="dropdown-menu" aria-labelledby="dropdown_limit">
+                                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',25);queryManager.set('offset',0)" href="#">25</a>
+                                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',50);queryManager.set('offset',0)" href="#">50</a>
+                                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',75);queryManager.set('offset',0)" href="#">75</a>
+                                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',100);queryManager.set('offset',0)" href="#">100</a>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="align-middle">
-                                <a href="#" dmx-text="firstName+' '+lastName" dmx-bind:href="'/families/familydetail/'+family+'/studentdetail/'+id" class="text-body fw-bold">Jane Doe</a>
-                            </td>
-                            <td dmx-text="levelName" class="align-middle">Duckling</td>
-                            <td dmx-text="age">3y 5m</td>
-                            <td dmx-text="dob.formatDate('dd MMM yyyy')" class="align-middle">27/5/2018<br></td>
+                            </div>
+                        </div>
+                        <div class="row align-items-center my-3">
 
-                        </tr>
-                        <tr>
-                            <td class="border-0 p-0 mw-100" colspan="5">
-                                <div class="collapse" id="notesCollapseContainer" is="dmx-bs5-collapse">
-                                    <div class="row align-items-center p-2 pt-4 pb-4 no-gutters">
-                                        <div class="col-auto">
-                                            <button id="btn1" class="btn"><i class="fas fa-edit"></i></button>
-                                        </div>
-                                        <div class="col-8">
-                                            <h6 class="fw-bold mb-0 text-danger">NOTE PRIORITY: CRITICAL</h6>
-                                            <p class="mb-0">This is a note attached to the student, not the family. Family notes can be found in the family details screen or the index page.</p>
-                                        </div>
-                                        <div class="col-auto ms-auto">
-                                            <p class="small mb-1"><i class="fas fa-info-circle clickable" dmx-bs-tooltip="'2021-04-06 1:27pm'"></i>&nbsp; Created by: Michael Z.</p>
-                                            <p class="small mb-1"><i class="fas fa-info-circle clickable" dmx-bs-tooltip="'2021-04-06 2:27pm'">&nbsp;&nbsp;</i>Updated by: Michael Z.</p>
-                                        </div>
-                                    </div>
+                            <div class="col d-flex flex-row flex-nowrap">
+                                <div class="mb-0 input-group d-flex flex-nowrap">
+                                    <span class="input-group-text bg-secondary text-white">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="inp_namefilter" name="namefilter" aria-describedby="input1_help" placeholder="Search students" dmx-on:updated="run({condition:{if:`!value`,then:{steps:{run:{action:`queryManager.remove(\'textfilter\')`}}},else:{steps:{run:{action:`inp_namefilter.setValue(inp_namefilter.value.replace(' ',''));queryManager.set(\'textfilter\',value)`}}}}})" dmx-bind:value="query.textfilter">
                                 </div>
-                                <div class="collapse" id="enrolmentsCollapseContainer" is="dmx-bs5-collapse">
-                                    <div class="container pt-2 pb-2 border-top border-bottom">
-                                        <div class="row align-items-center">
-                                            <div class="col-1">
-                                                <button id="btn2" class="btn"><i class="fas fa-edit"></i></button>
+                            </div>
+                            <div class="col d-flex flex-row justify-content-end">
+                                <ul class="pagination justify-content-center m-0" dmx-populate="GET_STUDENTS_list.data.query" dmx-state="queryManager" dmx-offset="offset" dmx-generator="bs5paging">
+                                    <li class="page-item" dmx-class:disabled="GET_STUDENTS_list.data.query.page.current == 1" aria-label="Previous">
+                                        <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',GET_STUDENTS_list.data.query.page.offset.prev)"><span aria-hidden="true">&lsaquo;</span></a>
+                                    </li>
+                                    <li class="page-item" dmx-class:active="title == GET_STUDENTS_list.data.query.page.current" dmx-class:disabled="!active" dmx-repeat="GET_STUDENTS_list.data.query.getServerConnectPagination(0,1,'...')">
+                                        <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',(page-1)*GET_STUDENTS_list.data.query.limit)">{{title}}</a>
+                                    </li>
+                                    <li class="page-item" dmx-class:disabled="GET_STUDENTS_list.data.query.page.current ==  GET_STUDENTS_list.data.query.page.total" aria-label="Next">
+                                        <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',GET_STUDENTS_list.data.query.page.offset.next)"><span aria-hidden="true">&rsaquo;</span></a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <table class="table align-middle big-small table-bordered table-hover bg-white" style="table-layout: fixed;">
+                            <thead class="pdl-main-bg">
+                                <tr>
+                                    <th class="sorting" dmx-on:click="pagedQueries.set('sort','firstName');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='firstName' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='firstName' &amp;&amp; pagedQueries.data.dir == 'desc'">Student</th>
+                                    <th class="sorting" dmx-on:click="pagedQueries.set('sort','levelName');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='levelName' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='levelName' &amp;&amp; pagedQueries.data.dir == 'desc'">
+                                        Level</th>
+                                    <th scope="row">Age</th>
+                                    <th class="sorting" dmx-on:click="pagedQueries.set('sort','dob');pagedQueries.set('dir',pagedQueries.data.dir == 'asc' ? 'desc' : 'asc')" dmx-class:sorting_desc="pagedQueries.data.sort=='dob' &amp;&amp; pagedQueries.data.dir == 'asc'" dmx-class:sorting_asc="pagedQueries.data.sort=='dob' &amp;&amp; pagedQueries.data.dir == 'desc'">Date
+                                        of
+                                        Birth</th>
+
+                                </tr>
+                            </thead>
+                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="GET_STUDENTS_list.data.query.data" id="rp_studentlist" dmx-state="pagedQueries" dmx-sort="sort" dmx-order="dir">
+                                <tr dmx-on:click="">
+                                    <td class="align-middle">
+                                        <div class="dropdown d-inline">
+                                            <button id="dd_studentInformation" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-chevron-circle-down"></i>
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="dd_studentInformation">
+                                                <a class="dropdown-item" href="#" dmx-on:click="run([{run:{action:`oc_studentDetails.var_studentdetails_uuid.setValue(uuid)`}},{wait:{delay:150}},{run:{action:`oc_studentDetails.GET_STUDENT_details.load({});oc_studentDetails.var_studentNotePriority.setValue(max_note_priority)`}},{run:{action:`oc_studentDetails.show()`}}])"><i class="fas fa-user-graduate me-2 fa-fw"></i>Student Details</a>
+                                                <a class="dropdown-item" href="#" dmx-bind:href="'/families/familydetail/'+family" target="_blank"><i class="fa fa-users me-2"></i>Family Details<i class="fas fa-external-link-alt ms-2 fa-xs text-muted fa-fw"></i></a>
                                             </div>
-                                            <div class="col-8">
-                                                <div class="row">
-                                                    <div class="align-self-center col-5">
-                                                        <p class="mb-0">Duckling: 5:30-6:00pm | Ron S.</p>
-                                                    </div>
-                                                    <div class="align-self-center col-3">
-                                                        <h6 class="mb-0 fw-bold text-center text-success">ACTIVE</h6>
-                                                    </div>
-                                                    <div class="align-self-center col-4">
-                                                        <p class="mb-1 text-center">Start: 06-04-2021</p>
-                                                        <p class="mb-1 text-center">Drop: 06-04-2021</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                <p class="small mb-1"><i class="fas fa-info-circle clickable" dmx-bs-tooltip="'2021-04-06 1:27pm'"></i>&nbsp; Created by: Michael Z.</p>
-                                                <p class="small mb-1"><i class="fas fa-info-circle clickable" dmx-bs-tooltip="'2021-04-06 2:27pm'">&nbsp;&nbsp;</i>Updated by: Michael Z.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <ul class="pagination justify-content-center mt-3" dmx-populate="getAllStudentsPaged.data.query" dmx-state="queryManager" dmx-offset="offset" dmx-generator="bs5paging">
-            <li class="page-item" dmx-class:disabled="getAllStudentsPaged.data.query.page.current == 1" aria-label="Previous">
-                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllStudentsPaged.data.query.page.offset.prev)"><span aria-hidden="true" class="visually-hidden">&lsaquo;</span></a>
-            </li>
-            <li class="page-item" dmx-class:active="title == getAllStudentsPaged.data.query.page.current" dmx-class:disabled="!active" dmx-repeat="getAllStudentsPaged.data.query.getServerConnectPagination(0,1,'...')">
-                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',(page-1)*getAllStudentsPaged.data.query.limit)">{{title}}</a>
-            </li>
-            <li class="page-item" dmx-class:disabled="getAllStudentsPaged.data.query.page.current ==  getAllStudentsPaged.data.query.page.total" aria-label="Next">
-                <a href="javascript:void(0)" class="page-link" dmx-on:click="queryManager.set('offset',getAllStudentsPaged.data.query.page.offset.next)"><span aria-hidden="true" class="visually-hidden">&rsaquo;</span></a>
-            </li>
-        </ul>
-    </div>
-</main>
+                                        </div> <span dmx-html="'<strong>'+lastName+'</strong>'+', '+firstName">Jane Doe</span>
+                                    </td>
+                                    <td dmx-text="appSettings.classLevelsByID[classlevel_uuid].name" class="align-middle">Duckling</td>
+                                    <td dmx-text="age" class="align-middle">3y 5m</td>
+                                    <td dmx-text="dob.formatDate('dd MMM yyyy')" class="align-middle">27/5/2018<br></td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>

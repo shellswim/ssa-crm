@@ -1,7 +1,36 @@
 <!-- Wappler include is="dmx-app" id="_overview" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" components="{dmxDataTraversal:{},dmxBootstrap5Offcanvas:{},dmxPreloader:{},dmxAnimateCSS:{},dmxBootstrap5Navigation:{},dmxDatePicker:{},dmxBootstrap5TableGenerator:{},dmxValidator:{},dmxStateManagement:{},dmxBootstrap5PagingGenerator:{},dmxBootstrap5Modal:{},dmxFormRepeat:{},dmxBootstrap5Tooltips:{},dmxGooglePlaces:{},dmxBootstrap5Collapse:{}}" head-page="layouts/layout2" moment_2="cdn" -->
-<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,0.9)"></dmx-preloader>
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)"></dmx-preloader>
 <script is="dmx-flow" id="flow_modaltoparent" type="text/dmx-flow" autorun>{
   runJS: {function: "modal_parent_backdrop"}
+}</script>
+<script is="dmx-flow" id="flow_open_student_details" type="text/dmx-flow">{
+  meta: {
+    $param: [
+      {type: "text", name: "tab_to_show"},
+      {type: "text", name: "student_uuid"},
+      {type: "text", name: "max_note_priority"}
+    ]
+  },
+  exec: {
+    steps: [
+      {
+        run: {
+          action: "{{oc_studentDetails.var_studentdetails_uuid.setValue($param.student_uuid)}}"
+        }
+      },
+      {
+        wait: {delay: 150}
+      },
+      {
+        run: {
+          action: "{{oc_studentDetails.GET_STUDENT_details.load({});oc_studentDetails.var_studentNotePriority.setValue($param.max_note_priority);oc_studentDetails.var_studentdetail_showpartial.setValue($param.tab_to_show)}}"
+        }
+      },
+      {
+        run: {action: "{{oc_studentDetails.show()}}"}
+      }
+    ]
+  }
 }</script>
 <div class="offcanvas offcanvas-end border-start-0 pdl-surface-shadow" id="oc_GET_GUARDIAN_details" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="run([{run:{action:`GET_ABSENCES.reset();oc_GET_GUARDIAN_details.sc_GET_GUARDIAN_contacts.reset()`}},{runJS:{function:'pd_dirtyFormCheck_destroy'}}])" scroll="true" dmx-on:show-bs-offcanvas="overflowHidden.check();flow_dirtyformchecker.run({formid: 'form_guardian_details'});" dmx-on:shown-bs-offcanvas="form_guardian_details.var_DIRTYFORM_guardian_details.setValue(pd_dirtyFormCheck.form_guardian_details.dirty)" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
     <div class="modal bg-parent fade" id="mod_addemail" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:show-bs-modal="form_addEmail.inp_email_guardianuuid.setValue(oc_GET_GUARDIAN_details.dd_guardianDetails.data.uuid)" dmx-on:hidden-bs-modal="form_addEmail.reset()">
@@ -860,440 +889,251 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="mod_createStudent" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="form_createStudent.reset()" dmx-on:show-bs-modal="ns_pageCounter.setValue(1)">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header pdl-main-bg">
-                <h5 class="modal-title"><i class="fas fa-plus-circle text-primary me-2"></i>
-                    <i class="fas fa-user-graduate me-2"></i>Create New Student
-                </h5>
-                <button type="button" class="btn-close text-white" aria-label="Close" data-bs-dismiss="modal">
-                    <span aria-hidden="true" class="visually-hidden">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
+<%- await include('/partials/families/students/_mod_createStudent', Object.assign({}, locals)) %>
+    <section>
+        <div class="row">
+            <div class="col">
+                <div class="row row-cols-1">
                     <div class="col">
-                        <form id="form_createStudent" method="post" is="dmx-serverconnect-form" action="/api/families/student/CREATE_student" dmx-on:success="run({run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Student Created: \'+mod_createStudent.form_createStudent.inp_studentFirstName.value+\' \'+mod_createStudent.form_createStudent.inp_studentLastName.value, timer: true});familyDetails.load();sc_GET_FAMILY_students.load({family_uuid: query.familyid});oc_studentDetails.GET_STUDENT_details.load({student_uuid: mod_createStudent.form_createStudent.data.student_uuid});mod_createStudent.hide();oc_studentDetails.show()`}})" dmx-on:error="flow_swal_toast_colored.run({icon: 'error', title: 'An error occurred.', message: mod_createStudent.form_createStudent.lastError.response, timer: 5000, timerprogressbar: true})">
-                            <input id="inp_studentFamilyId" name="familyid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
-                            <div class="row">
-                                <div class="col-12">
-                                    <h6 class="fw-700 text-primary">General Information</h6>
+                        <div class="row row-cols-1 g-0">
+                            <div class="col p-4 d-flex flex-column mb-4 bg-white rounded-3">
+                                <div class="row pb-3">
+                                    <div class="col align-self-start">
+                                        <h3 class="mb-0 fw-900"><i class="fas fa-user-alt me-3 text-primary"></i>Guardians
+                                        </h3>
+                                    </div>
+                                    <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#mod_createGuardian"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Guardian</button></div>
                                 </div>
-                            </div>
-                            <section class="p-3 pb-4 border rounded-3 mb-3">
-                                <div class="row row-cols-2" id="ns_GeneralInfoSection">
-
+                                <div class="row">
                                     <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_studentFirstName" class="col-form-label">First Name</label>
-                                            <input type="text" class="form-control" id="inp_studentFirstName" aria-describedby="input1_help" placeholder="First Name" required="" name="firstName">
+                                        <div class="table-responsive">
+                                            <table class="table align-middle table-hover big-small table-bordered">
+                                                <thead class="table-white text-capitalize pdl-main-bg">
+                                                    <tr>
+                                                        <th scope="row" style="width: 1%; white-space: nowrap;">
+                                                        </th>
+                                                        <th style="">name</th>
+                                                        <th style="">Relationship</th>
+                                                        <th scope="row">Phone</th>
+                                                        <th scope="row">Email</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_guardians.data.guardians" id="guardianTableRepeat" class="table-white">
+                                                    <tr class="text-nowrap">
+                                                        <td class="text-center align-middle text-primary-main">
+                                                            <i class="fas fa-award clickable user-select-none fa-lg" dmx-hide="pg==false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover"></i>
+                                                        </td>
+                                                        <td style="white-space: nowrap;" dmx-on:click="oc_GET_GUARDIAN_details.dd_guardianDetails.select(uuid);oc_GET_GUARDIAN_details.sc_GET_GUARDIAN_contacts.load({uuid: uuid});oc_GET_GUARDIAN_details.show()" class="clickable">
+                                                            <p class="mb-0 text-decoration-underline" dmx-text="firstName+' '+lastName">John Doe</p>
+                                                        </td>
+                                                        <td dmx-text="appSettings.relationships[relationship].name">
+                                                            Father</td>
+                                                        <td dmx-text="phone">0430000000</td>
+                                                        <td dmx-text="address">tester_email@testing.com</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_studentLastName" class="col-form-label">Last Name</label>
-                                            <input type="text" class="form-control" id="inp_studentLastName" aria-describedby="input2_help" placeholder="Last Name" name="lastName" required="">
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="mb-3">
-                                            <label for="inp_studentDOB" class="col-form-label">Date
-                                                of Birth</label>
-                                            <input class="form-control w-auto" id="inp_studentDOB" aria-describedby="input1_help" required="" type="text" is="dmx-date-picker" placeholder="DD/MM/YYYY" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" name="dob" showdropdowns="true">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="">
-                                            <label for="sel_gender" class="col-form-label">Sex</label>
-                                            <select id="sel_gender" class="form-select w-auto" required="" name="gender">
-                                                <option selected="" value="">Select Sex...</option>
-                                                <option value="F">Female</option>
-                                                <option value="M">Male</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                            <div class="row">
-                                <div class="col-12">
-                                    <h6 class="fw-700 text-primary">Class &amp; Level Details</h6>
-                                </div>
-                            </div>
-                            <section class="p-3 pb-4 border rounded-3 mb-3">
-                                <div class="row row-cols-1" id="ns_ClassDetailsSection">
 
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_studentClassLevel" class="col-form-label">Class Level</label>
-                                            <select id="inp_studentClassLevel" class="form-select w-auto" dmx-bind:options="appSettings.classLevels_array" optiontext="name" optionvalue="uuid" required="" name="level">
-                                                <option selected="" value="">Choose level...</option>
-                                            </select>
-                                        </div>
                                     </div>
-                                    <div class="col">
-                                        <div class="mb-3">
-                                            <label for="inp_rollsheetComment" class="col-form-label">Rollsheet Comments
-                                                (non-medical)</label>
-                                            <textarea id="inp_rollsheetComment" class="form-control" name="rollsheetComment"></textarea>
-                                            <small id="textarea1_Help" class="form-text text-muted">This information
-                                                will be shown on the instructors rollsheets. Please add any information
-                                                the class instructor needs to know.</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                            <div class="row">
-                                <div class="col-12">
-                                    <h6 class="fw-700 text-primary"><i class="fas fa-heartbeat me-2 text-danger"></i>Medical Information
-                                    </h6>
-                                </div>
-                            </div>
-                            <section class="p-3 pb-4 border rounded-3 mb-3">
-                                <div class="row" id="ns_MedicalInfoSection">
-
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="inp_rollsheetMedical" class="col-form-label">Rollsheet Medical
-                                                Information</label>
-                                            <textarea id="inp_rollsheetMedical" class="form-control" rows="4" name="rollsheetMedical"></textarea>
-                                            <small id="textarea1_Help1" class="form-text text-danger">This information
-                                                will be shown on the instructors rollsheets. Add
-                                                medical information the class instructor needs to
-                                                know.</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="inp_additionalMedical" class="col-form-label">Additional Medical
-                                                Information</label>
-                                            <textarea id="inp_additionalMedical" class="form-control" rows="8" name="additionalMedical"></textarea>
-                                            <small id="textarea1_Help2" class="form-text text-danger">This information
-                                                will <strong>NOT </strong>be shown on the instructors
-                                                rollsheets.<br></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-top">
-                <button type="submit" class="btn btn-primary" form="form_createStudent" dmx-on:click="">Create Student
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<section>
-    <div class="row">
-        <div class="col">
-            <div class="row row-cols-1">
-                <div class="col">
-                    <div class="row row-cols-1 g-0">
-                        <div class="col p-4 d-flex flex-column mb-4 bg-white rounded-3">
-                            <div class="row pb-3">
-                                <div class="col align-self-start">
-                                    <h3 class="mb-0 fw-900"><i class="fas fa-user-alt me-3 text-primary"></i>Guardians
-                                    </h3>
-                                </div>
-                                <div class="col-auto"><button id="addGuardianButton" class="btn align-self-end d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#mod_createGuardian"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Guardian</button></div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="table-responsive">
-                                        <table class="table align-middle table-hover big-small">
-                                            <thead class="table-white fw-700 border-bottom text-capitalize small">
-                                                <tr>
-                                                    <th scope="row" style="width: 1%; white-space: nowrap;">
-                                                    </th>
-                                                    <th style="">name</th>
-                                                    <th style="">Relationship</th>
-                                                    <th scope="row">Phone</th>
-                                                    <th scope="row">Email</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_guardians.data.guardians" id="guardianTableRepeat" class="table-white">
-                                                <tr class="text-nowrap">
-                                                    <td class="text-center align-middle text-primary-main">
-                                                        <i class="fas fa-award clickable user-select-none fa-lg" dmx-hide="pg==false" dmx-bs-tooltip="'Primary Guardian'" data-bs-animation="false" data-bs-placement="top" data-bs-trigger="hover"></i>
-                                                    </td>
-                                                    <td style="white-space: nowrap;" dmx-on:click="oc_GET_GUARDIAN_details.dd_guardianDetails.select(uuid);oc_GET_GUARDIAN_details.sc_GET_GUARDIAN_contacts.load({uuid: uuid});oc_GET_GUARDIAN_details.show()" class="clickable">
-                                                        <p class="mb-0 text-decoration-underline" dmx-text="firstName+' '+lastName">John Doe</p>
-                                                    </td>
-                                                    <td dmx-text="appSettings.relationships[relationship].name">
-                                                        Father</td>
-                                                    <td dmx-text="phone">0430000000</td>
-                                                    <td dmx-text="address">tester_email@testing.com</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col">
-                    <div class="row g-0">
-                        <div class="col bg-white p-4 rounded-3 mb-4">
-                            <div class="offcanvas offcanvas-end" id="oc_student_absences" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset();sel_absence_types_filter.setValue('active');var_studentuuid_absenceview.setValue(null)" data-bs-scroll="false" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
-                                <div class="offcanvas-header border-bottom">
-                                    <h4 class="offcanvas-title fw-450"><i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit Absences
-                                    </h4>
-                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    <div class="col">
+                        <div class="row g-0">
+                            <div class="col bg-white p-4 rounded-3 mb-4">
+                                <div class="offcanvas offcanvas-end" id="oc_student_absences" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="GET_ABSENCES.reset();sel_absence_types_filter.setValue('active');var_studentuuid_absenceview.setValue(null)" data-bs-scroll="false" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck()">
+                                    <div class="offcanvas-header border-bottom">
+                                        <h4 class="offcanvas-title fw-450"><i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit Absences
+                                        </h4>
+                                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                    </div>
+                                    <div class="offcanvas-header border-bottom">
+                                        <h5 class="offcanvas-title fw-500" dmx-text="oc_student_absences.GET_ABSENCES.data.query_student_name.firstName +' '+oc_student_absences.GET_ABSENCES.data.query_student_name.lastName">
+                                            Johnathan Doe</h5>
+                                        <div class="d-flex flex-row w-auto justify-content-end"><select id="sel_absence_types_filter" class="form-select form-control-lg" dmx-bind:options="appSettings.absence_status" optiontext="$value.capitalize()" optionvalue="$value" dmx-on:updated.debounce:150="GET_ABSENCES.load({},true)" dmx-bind:value="'active'">
+                                                <option value="all">All</option>
+                                            </select></div>
+                                    </div>
+                                    <div class="offcanvas-body">
+                                        <dmx-value id="var_studentuuid_absenceview"></dmx-value>
+                                        <dmx-serverconnect id="GET_ABSENCES" noload url="/api/families/student/absences/GET_ABSENCES" dmx-param:status_filter="oc_student_absences.sel_absence_types_filter.value" dmx-param:student_uuid="oc_student_absences.var_studentuuid_absenceview.value">
+                                        </dmx-serverconnect>
+                                        <p class="fs-6 fw-450 text-muted mb-2 pb-1 border-bottom" dmx-text="oc_student_absences.sel_absence_types_filter.value.capitalize() +' Absences:'">
+                                            Current Absences:</p>
+                                        <div class="row gx-0" is="dmx-if" id="cr_hasAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length > 0">
+                                            <div class="col">
+                                                <div class="table-responsive">
+                                                    <table class="table big-small table-hover table-bordered">
+                                                        <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                            <tr>
+                                                                <th scope="row" style="" class="collapse-cell"></th>
+                                                                <th scope="col" class="collapse-cell">Status</th>
+                                                                <th scope="col">Date</th>
+                                                                <th scope="col">Class</th>
+                                                                <th scope="col">Makeup Token</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody is="dmx-repeat" id="rp_student_absences_list" dmx-bind:repeat="oc_student_absences.GET_ABSENCES.data.rp_absences" class="align-middle">
+                                                            <tr>
+                                                                <th scope="row">
+                                                                    <button id="btn_edit_absence" class="btn btn-sm fw-500 text-primary">EDIT</button>
+                                                                </th>
+                                                                <td dmx-text="status.capitalize()">
+                                                                    Active<br></td>
+                                                                <td dmx-text="absence_date.toDate().formatDate(appSettings.localization_puddle_dateformat)">
+                                                                    21/01/2022<br></td>
+                                                                <td dmx-text="appSettings.days_array[dayint].trunc('3', 'true', '.') +' - '+startTimeDisplay +' '+appSettings.classLevelsByID[classlevel_uuid].name +' - '+appSettings.instructorsById[instructor_uuid].trunc_name">
+                                                                    Sun. - 10:30 AM Duckling - Rhonda J</td>
+                                                                <td dmx-html="query_makeup_token.uuid ? ((query_makeup_token.status == 'active' ? '<i class=&quot;fas fa-dot-circle text-makeup me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'used' ? '<i class=&quot;fas fa-dot-circle text-muted me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'expired' ? '<i class=&quot;fas fa-times-circle text-muted me-1 fa-fw&quot;></i>' : '<i class=&quot;fas fa-dot-circle text-danger me-1 fa-fw&quot;></i>') + query_makeup_token.status.capitalize()) : '<i class=&quot;fas fa-times-circle text-danger me-1 fa-fw&quot;></i> Not Issued'">
+                                                                    Active</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row gx-0" is="dmx-if" id="cr_noAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length == 0">
+                                            <div class="col border rounded-3 d-flex align-items-center justify-content-center p-4 flex-column">
+                                                <p class="mb-0 fw-500 text-danger" dmx-text="'There are no '+(oc_student_absences.sel_absence_types_filter.value === 'all' ? '' : oc_student_absences.sel_absence_types_filter.value +' ') +'absences for this student.'">
+                                                    There are no current absences for this student.</p>
+                                                <p class="mb-0">To view other absences, please select from the
+                                                    dropdown.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="offcanvas-header border-bottom">
-                                    <h5 class="offcanvas-title fw-500" dmx-text="oc_student_absences.GET_ABSENCES.data.query_student_name.firstName +' '+oc_student_absences.GET_ABSENCES.data.query_student_name.lastName">
-                                        Johnathan Doe</h5>
-                                    <div class="d-flex flex-row w-auto justify-content-end"><select id="sel_absence_types_filter" class="form-select form-control-lg" dmx-bind:options="appSettings.absence_status" optiontext="$value.capitalize()" optionvalue="$value" dmx-on:updated.debounce:150="GET_ABSENCES.load({},true)" dmx-bind:value="'active'">
-                                            <option value="all">All</option>
-                                        </select></div>
-                                </div>
-                                <div class="offcanvas-body">
-                                    <dmx-value id="var_studentuuid_absenceview"></dmx-value>
-                                    <dmx-serverconnect id="GET_ABSENCES" noload url="/api/families/student/absences/GET_ABSENCES" dmx-param:status_filter="oc_student_absences.sel_absence_types_filter.value" dmx-param:student_uuid="oc_student_absences.var_studentuuid_absenceview.value">
-                                    </dmx-serverconnect>
-                                    <p class="fs-6 fw-450 text-muted mb-2 pb-1 border-bottom" dmx-text="oc_student_absences.sel_absence_types_filter.value.capitalize() +' Absences:'">
-                                        Current Absences:</p>
-                                    <div class="row gx-0" is="dmx-if" id="cr_hasAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length > 0">
+                                <%- await include('/partials/families/students/_oc_studentDetails', Object.assign({}, locals)) %>
+                                    <div class="row pb-4 align-items-center">
+                                        <div class="col align-self-center">
+                                            <h3 class="mb-0 fw-900"><i class="fas fa-user-graduate me-3 text-primary fa-sm"></i>Students
+                                            </h3>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button id="createStudentButton" class="btn align-self-end d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#mod_createStudent"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Student</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col">
                                             <div class="table-responsive">
-                                                <table class="table big-small table-hover table-bordered">
-                                                    <thead class="table-white fw-450 text-black-50 border-bottom text-capitalize">
+                                                <table class="table align-middle table-hover big-small table-bordered">
+                                                    <thead class="table-white text-capitalize pdl-main-bg">
                                                         <tr>
-                                                            <th scope="row" style="" class="collapse-cell"></th>
-                                                            <th scope="col" class="collapse-cell">Status</th>
-                                                            <th scope="col">Date</th>
-                                                            <th scope="col">Class</th>
-                                                            <th scope="col">Makeup Token</th>
+                                                            <th style="width: 1%; white-space: nowrap;"></th>
+                                                            <th style="">Student</th>
+                                                            <th>Age</th>
+                                                            <th>Level</th>
+                                                            <th class="collapse-cell">Notes</th>
+                                                            <th class="collapse-cell">Priority</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody is="dmx-repeat" id="rp_student_absences_list" dmx-bind:repeat="oc_student_absences.GET_ABSENCES.data.rp_absences" class="align-middle">
-                                                        <tr>
-                                                            <th scope="row">
-                                                                <button id="btn_edit_absence" class="btn btn-sm fw-500 text-primary">EDIT</button>
-                                                            </th>
-                                                            <td dmx-text="status.capitalize()">
-                                                                Active<br></td>
-                                                            <td dmx-text="absence_date.toDate().formatDate(appSettings.localization_puddle_dateformat)">
-                                                                21/01/2022<br></td>
-                                                            <td dmx-text="appSettings.days_array[dayint].trunc('3', 'true', '.') +' - '+startTimeDisplay +' '+appSettings.classLevelsByID[classlevel_uuid].name +' - '+appSettings.instructorsById[instructor_uuid].trunc_name">
-                                                                Sun. - 10:30 AM Duckling - Rhonda J</td>
-                                                            <td dmx-html="query_makeup_token.uuid ? ((query_makeup_token.status == 'active' ? '<i class=&quot;fas fa-dot-circle text-makeup me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'used' ? '<i class=&quot;fas fa-dot-circle text-muted me-1 fa-fw&quot;></i>' : query_makeup_token.status == 'expired' ? '<i class=&quot;fas fa-times-circle text-muted me-1 fa-fw&quot;></i>' : '<i class=&quot;fas fa-dot-circle text-danger me-1 fa-fw&quot;></i>') + query_makeup_token.status.capitalize()) : '<i class=&quot;fas fa-times-circle text-danger me-1 fa-fw&quot;></i> Not Issued'">
-                                                                Active</td>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_students.data.students" id="studentTableRepeat" class="table-white">
+                                                        <tr class="text-nowrap">
+                                                            <td class="no-padding">
+                                                                <div class="dropdown">
+                                                                    <button id="drd_students" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="fas fa-chevron-circle-down"></i>
+                                                                    </button>
+                                                                    <div class="dropdown-menu dropup" aria-labelledby="drd_students">
+                                                                        <h6 class="dropdown-header">Enrolments</h6>
+                                                                        <div class="dropdown-item clickable user-select-none">
+                                                                            <i class="fas fa-calendar-plus fa-fw me-2"></i>Create
+                                                                            Enrolment
+                                                                        </div>
+                                                                        <div class="dropdown-item clickable user-select-none">
+                                                                            <i class="far fa-calendar-check fa-fw me-2"></i>View
+                                                                            Enrolments
+                                                                        </div>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <h6 class="dropdown-header">Absences</h6>
+                                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="run({run:{action:`CREATE_ABSENCE.dd_studentDetails.select(uuid);CREATE_ABSENCE.show()`}})" href="javascript:void(0);"><i class="far fa-calendar-times me-2 fa-fw"></i>Create
+                                                                            Absence</div>
+                                                                        <div class="dropdown-item clickable user-select-none" dmx-on:click="oc_student_absences.var_studentuuid_absenceview.setValue(uuid);oc_student_absences.GET_ABSENCES.load({});oc_student_absences.show()">
+                                                                            <i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit
+                                                                            Absences
+                                                                        </div>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <h6 class="dropdown-header">Makeups</h6>
+                                                                        <div class="dropdown-item clickable user-select-none" href="#"><i class="fas fa-dot-circle me-2 fa-fw"></i>
+                                                                            View/Edit Tokens</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td dmx-text="firstName+' '+lastName" class="text-decoration-underline clickable user-select-none" dmx-on:click="flow_open_student_details.run({tab_to_show: 'overview', student_uuid: uuid, max_note_priority: query_student_notes.priority})">Some Child</td>
+                                                            <td dmx-text="age">3y 4m</td>
+                                                            <td dmx-text="appSettings.classLevelsByID[classlevel_uuid].name">
+                                                                Duckling</td>
+                                                            <td dmx-text="notes_count_message" class="clickable text-nowrap" dmx-style:text-decoration-underline.important="notes_count>0">1 Note</td>
+                                                            <td>
+                                                                <span class="d-flex align-items-center justify-content-center badge rounded-pill clickable user-select-none pri-5-solid text-center" dmx-show="query_student_notes.priority===5" dmx-on:click="flow_open_student_details.run({tab_to_show: 'notes', student_uuid: uuid, max_note_priority: query_student_notes.priority})">
+                                                                    <i class="fas pdl-warning-white me-1"></i>
+                                                                    CRITICAL
+                                                                </span>
+                                                                <span class="d-flex align-items-center justify-content-center badge rounded-pill clickable user-select-none pri-4-solid text-center" dmx-show="query_student_notes.priority===4" dmx-on:click="flow_open_student_details.run({tab_to_show: 'notes', student_uuid: uuid, max_note_priority: query_student_notes.priority})">
+                                                                    <i class="fas pdl-warning-white me-1"></i>
+                                                                    HIGH
+                                                                </span>
+                                                                <span class="d-flex align-items-center justify-content-center badge rounded-pill clickable user-select-none pri-3-solid text-center" dmx-show="query_student_notes.priority===3" dmx-on:click="flow_open_student_details.run({tab_to_show: 'notes', student_uuid: uuid, max_note_priority: query_student_notes.priority})">
+                                                                    <i class="fas pdl-warning-white black me-1"></i>
+                                                                    MEDIUM
+                                                                </span>
+                                                                <span class="d-flex align-items-center justify-content-center badge rounded-pill clickable user-select-none pri-2-solid text-center" dmx-show="query_student_notes.priority<3&&query_student_notes.priority!==null" dmx-on:click="flow_open_student_details.run({tab_to_show: 'notes', student_uuid: uuid, max_note_priority: query_student_notes.priority})">
+                                                                    LOW
+                                                                </span>
+                                                            </td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row gx-0" is="dmx-if" id="cr_noAbsences_view" dmx-bind:condition="oc_student_absences.GET_ABSENCES.data.rp_absences.length == 0">
-                                        <div class="col border rounded-3 d-flex align-items-center justify-content-center p-4 flex-column">
-                                            <p class="mb-0 fw-500 text-danger" dmx-text="'There are no '+(oc_student_absences.sel_absence_types_filter.value === 'all' ? '' : oc_student_absences.sel_absence_types_filter.value +' ') +'absences for this student.'">
-                                                There are no current absences for this student.</p>
-                                            <p class="mb-0">To view other absences, please select from the
-                                                dropdown.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="offcanvas extra-wide offcanvas-end" id="oc_studentDetails" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="editStudent.reset();sel_classTimeline.setSelectedIndex(0);sel_notesTimeline.setSelectedIndex(0);queryManager.remove('st_flogs_limit');queryManager.remove('st_flogs_offset');var_STUDENT_details.setValue(null)" dmx-on:show-bs-offcanvas="toggle_studentdetail_oc_open.check()">
-                                <dmx-value id="var_studentNotePriority" dmx-bind:value="null"></dmx-value>
-                                <dmx-value id="var_studentdetails_uuid"></dmx-value>
-                                <dmx-value id="var_studentdetail_showpartial" dmx-bind:value="'overview'"></dmx-value>
-                                <dmx-serverconnect id="GET_STUDENT_details" url="/api/families/student/GET_STUDENT_details" noload dmx-param:enrol_lifetime="oc_studentDetails.sel_classTimeline.value" dmx-param:note_lifetime="oc_studentDetails.sel_notesTimeline.value" dmx-param:logs_limit="" dmx-param:logs_offset="" dmx-param:student_uuid="oc_studentDetails.var_studentdetails_uuid.value"></dmx-serverconnect>
-
-                                <div class="offcanvas-header pdl-main-bg">
-                                    <h5 class="offcanvas-title"><i class="fas fa-user-graduate me-2"></i>Student Details: {{oc_studentDetails.GET_STUDENT_details.data.student_details.firstName+' '+oc_studentDetails.GET_STUDENT_details.data.student_details.lastName}}
-                                    </h5>
-                                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                                </div>
-                                <div class="offcanvas-body light-blue-bg p-4">
-                                    <dmx-toggle id="toggle_studentdetail_oc_open"></dmx-toggle>
-                                    <section is="dmx-if" id="cr_student_notes_indicator" dmx-bind:condition="oc_studentDetails.GET_STUDENT_details.data.student_details.max_note_priority!=null">
-                                        <div class="row mb-3">
-                                            <div class="col">
-                                                <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-5-solid" dmx-show="GET_STUDENT_details.data.student_details.max_note_priority===5" dmx-on:click="var_studentdetail_showpartial.setValue('notes')">
-                                                    <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
-                                                    <i class="fas fa-sticky-note me-2"></i>CRITICAL note found.
-                                                </p>
-                                                <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-4-solid" dmx-show="GET_STUDENT_details.data.student_details.max_note_priority===4" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
-                                                    <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
-                                                    <i class="fas fa-sticky-note me-2"></i>High priority note found.
-                                                </p>
-                                                <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-3-solid" dmx-show="GET_STUDENT_details.data.student_details.max_note_priority===3" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
-                                                    <i class="fas pdl-warning-white black me-1 ms-2 fs-5"></i>
-                                                    <i class="fas fa-sticky-note me-2"></i>Medium priority note found.
-                                                </p>
-                                                <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-2-solid" dmx-show="GET_STUDENT_details.data.student_details.max_note_priority<3" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
-                                                    <i class="fas fa-sticky-note me-2"></i>Notes found.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </section>
-                                    <section class="p-4 pt-1 bg-white pdl-surface-shadow rounded-3" is="dmx-if" id="cr_studentdetails_oc_closed" dmx-bind:condition="oc_studentDetails.toggle_studentdetail_oc_open.checked">
-                                        <div class="row row-cols-1 g-0 mb-3 bg-white position-sticky" style="top: -1.8rem;">
-                                            <div class="col bg-white text-body d-flex justify-content-between border-bottom">
-                                                <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 text-body" id="navtabs_parent" role="tablist">
-                                                    <li class="nav-item col-auto">
-                                                        <a class="nav-link active py-3 px-3" id="navTabs1_overview_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" dmx-on:click="var_studentdetail_showpartial.setValue('overview')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='overview'"><i class="fas fa-user-graduate me-2"></i>Student Overview</a>
-                                                    </li>
-                                                    <li class="nav-item col-auto">
-                                                        <a class="nav-link py-3 px-3" id="navTabs1_enrolments_tab" role="tab" aria-controls="navTabs1_2" aria-selected="false" dmx-on:click="var_studentdetail_showpartial.setValue('enrols')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='enrols'"><i class="fas fa-book-open me-2 fa-fw"></i>Enrolments</a>
-                                                    </li>
-                                                    <li class="nav-item col-auto">
-                                                        <a class="nav-link py-3 px-3" id="navTabs1_notes_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="var_studentdetail_showpartial.setValue('notes')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='notes'"><i class="fas fa-sticky-note me-2"></i>Notes
-                                                        </a>
-                                                    </li>
-                                                    <li class="nav-item col-auto">
-                                                        <a class="nav-link py-3 px-3" id="navTabs1_logs_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="run([{run:{action:`queryManager.set(\'st_flogs_limit\',25)`}},{run:{action:`queryManager.set(\'st_flogs_offset\',0)`}},{run:{action:`oc_studentDetails.var_studentdetail_showpartial.setValue(\'logs\')`}}])" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='logs'"><i class="fas fa-list-ol me-2 fa-fw"></i>Logs
-                                                        </a>
-                                                    </li>
-                                                    <li class="nav-item col-auto">
-                                                        <a class="nav-link py-3 px-3" id="navTabs1_misc_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="run({run:{action:`oc_studentDetails.var_studentdetail_showpartial.setValue(\'misc\')`}})" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='misc'"><i class="fas fa-spinner me-2 fa-fw"></i>Misc</a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col">
-                                                <section is="dmx-if" id="cr_studentoverview" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='overview'">
-                                                    <%- await include('/partials/families/students/_overview', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
-                                                </section>
-                                                <section is="dmx-if" id="cr_studentenrols" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='enrols'">
-                                                    <%- await include('/partials/families/students/_enrolments', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
-                                                </section>
-                                                <section is="dmx-if" id="cr_studentnotes" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='notes'">
-                                                    <%- await include('/partials/families/students/_notes', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
-                                                </section>
-                                                <section is="dmx-if" id="cr_studentlogs" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='logs'">
-                                                    <%- await include('/partials/families/students/_logs', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
-                                                </section>
-                                                <section is="dmx-if" id="cr_studentmiscellaneous" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='misc'">
-                                                    <%- await include('/partials/families/students/_miscellaneous', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
-                                                </section>
-                                            </div>
-                                        </div>
-
-
-                                    </section>
-                                </div>
-                            </div>
-                            <div class="row pb-4 align-items-center">
-                                <div class="col align-self-center">
-                                    <h3 class="mb-0 fw-900"><i class="fas fa-user-graduate me-3 text-primary fa-sm"></i>Students
-                                    </h3>
-                                </div>
-                                <div class="col-auto">
-                                    <button id="createStudentButton" class="btn align-self-end d-flex align-items-center btn-secondary" data-bs-toggle="modal" data-bs-target="#mod_createStudent"><i class="fas fa-plus-circle me-2 fa-xs"></i>New Student</button>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="table-responsive">
-                                        <table class="table align-middle table-hover big-small">
-                                            <thead class="table-white fw-700 border-bottom text-capitalize small">
-                                                <tr>
-                                                    <th style="width: 1%; white-space: nowrap;"></th>
-                                                    <th style="">Student</th>
-                                                    <th>Age</th>
-                                                    <th>Level</th>
-                                                    <th class="collapse-cell">Notes</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_FAMILY_students.data.students" id="studentTableRepeat" class="table-white">
-                                                <tr class="text-nowrap">
-                                                    <td class="no-padding">
-                                                        <div class="dropdown">
-                                                            <button id="drd_students" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                <i class="fas fa-chevron-circle-down"></i>
-                                                            </button>
-                                                            <div class="dropdown-menu dropup" aria-labelledby="drd_students">
-                                                                <h6 class="dropdown-header">Enrolments</h6>
-                                                                <div class="dropdown-item clickable user-select-none">
-                                                                    <i class="fas fa-calendar-plus fa-fw me-2"></i>Create
-                                                                    Enrolment
-                                                                </div>
-                                                                <div class="dropdown-item clickable user-select-none">
-                                                                    <i class="far fa-calendar-check fa-fw me-2"></i>View
-                                                                    Enrolments
-                                                                </div>
-                                                                <div class="dropdown-divider"></div>
-                                                                <h6 class="dropdown-header">Absences</h6>
-                                                                <div class="dropdown-item clickable user-select-none" dmx-on:click="run({run:{action:`CREATE_ABSENCE.dd_studentDetails.select(uuid);CREATE_ABSENCE.show()`}})" href="javascript:void(0);"><i class="far fa-calendar-times me-2 fa-fw"></i>Create
-                                                                    Absence</div>
-                                                                <div class="dropdown-item clickable user-select-none" dmx-on:click="oc_student_absences.var_studentuuid_absenceview.setValue(uuid);oc_student_absences.GET_ABSENCES.load({});oc_student_absences.show()">
-                                                                    <i class="far fa-calendar-times me-2 fa-fw"></i>View/Edit
-                                                                    Absences
-                                                                </div>
-                                                                <div class="dropdown-divider"></div>
-                                                                <h6 class="dropdown-header">Makeups</h6>
-                                                                <div class="dropdown-item clickable user-select-none" href="#"><i class="fas fa-dot-circle me-2 fa-fw"></i>
-                                                                    View/Edit Tokens</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td dmx-text="firstName+' '+lastName" class="text-decoration-underline clickable user-select-none" dmx-on:click="run([{run:{action:`oc_studentDetails.var_studentdetails_uuid.setValue(uuid)`}},{wait:{delay:150}},{run:{action:`oc_studentDetails.GET_STUDENT_details.load({});oc_studentDetails.var_studentNotePriority.setValue(max_note_priority)`}},{run:{action:`oc_studentDetails.show()`}}])">Some Child</td>
-                                                    <td dmx-text="age">3y 4m</td>
-                                                    <td dmx-text="appSettings.classLevelsByID[classlevel_uuid].name">
-                                                        Duckling</td>
-                                                    <td dmx-text="notes_count_message" class="clickable text-nowrap" dmx-style:text-decoration-underline.important="notes_count>0">1 Note</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-12 col-xl-4">
-            <div class="row gx-0">
-                <div class="col p-4 d-flex mb-4  bg-white rounded-3 flex-wrap flex-column">
-                    <div class="row gx-0">
-                        <div class="col text-nowrap d-flex pe-3">
-                            <h3 class="fw-900"><i class="far fa-map text-primary me-3"></i>Address
-                            </h3>
-                        </div>
+            <div class="col-12 col-xl-4">
+                <div class="row gx-0">
+                    <div class="col p-4 d-flex mb-4  bg-white rounded-3 flex-wrap flex-column">
+                        <div class="row gx-0">
+                            <div class="col text-nowrap d-flex pe-3">
+                                <h3 class="fw-900"><i class="far fa-map text-primary me-3"></i>Address
+                                </h3>
+                            </div>
 
-                        <div class="col-auto d-flex flex-nowrap flex-row mb-2 align-items-center">
-                            <button id="btn_addresses" class="btn d-flex align-items-center btn-secondary" data-bs-target="#mod_createaddress" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`mod_showaddresses.show()`}}},else:{steps:{run:{action:`mod_createaddress.show()`}}}}})"><i class="fas fa-plus-circle me-2"></i>Add/Edit</button>
+                            <div class="col-auto d-flex flex-nowrap flex-row mb-2 align-items-center">
+                                <button id="btn_addresses" class="btn d-flex align-items-center btn-secondary" data-bs-target="#mod_createaddress" dmx-on:click="run({condition:{if:`familyDetails.data.addresses.length > 0`,then:{steps:{run:{action:`mod_showaddresses.show()`}}},else:{steps:{run:{action:`mod_createaddress.show()`}}}}})"><i class="fas fa-plus-circle me-2"></i>Add/Edit</button>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-0">Addresses are used in receipts and other documents sent to the family.</p>
+                        <div class="row gx-0" is="dmx-if" id="cr_noaddress" dmx-bind:condition="!familyDetails.data.default_address">
+                            <div class="col mt-2 bg-danger d-flex align-items-center p-3 text-white rounded-3">
+                                <i class="fas fs-5 pdl-warning-white me-1"></i>
+                                <i class="far fa-map fa-fw me-2"></i>
+                                <span class="text-wrap">
+                                    No address for this family found.
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row" is="dmx-if" id="cr_address" dmx-bind:condition="familyDetails.data.default_address">
+                            <div class="col">
+                                <hr class="light my-3">
+                                <p class="fw-900">Default</p>
+                                <p dmx-text="familyDetails.data.default_address.unit+','" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null" class="mb-0 text-start">Unit/Suite</p>
+                                <p dmx-text="familyDetails.data.default_address.street1+', '" class="mb-0 text-start">Street 1</p>
+                                <p dmx-text="familyDetails.data.default_address.street2+', '" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null" class="mb-0 text-start">Street 2</p>
+                                <p dmx-text="familyDetails.data.default_address.suburb+', '" class="mb-0 text-start">Suburb</p>
+                                <p dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-muted fst-italic text-start">State, ZIP Postal Code, Country</p>
+                            </div>
                         </div>
                     </div>
-                    <p class="text-muted small mb-0">Addresses are used in receipts and other documents sent to the family.</p>
-                    <div class="row gx-0" is="dmx-if" id="cr_noaddress" dmx-bind:condition="!familyDetails.data.default_address">
-                        <div class="col mt-2 bg-danger d-flex align-items-center p-3 text-white rounded-3">
-                            <i class="fas fs-5 pdl-warning-white me-1"></i>
-                            <i class="far fa-map fa-fw me-2"></i>
-                            <span class="text-wrap">
-                                No address for this family found.
-                            </span>
-                        </div>
-                    </div>
-                    <div class="row" is="dmx-if" id="cr_address" dmx-bind:condition="familyDetails.data.default_address">
-                        <div class="col">
-                            <hr class="light my-3">
-                            <p class="fw-900">Default</p>
-                            <p dmx-text="familyDetails.data.default_address.unit+','" dmx-hide="familyDetails.data.default_address.unit == '' || familyDetails.data.default_address.unit == null" class="mb-0 text-start">Unit/Suite</p>
-                            <p dmx-text="familyDetails.data.default_address.street1+', '" class="mb-0 text-start">Street 1</p>
-                            <p dmx-text="familyDetails.data.default_address.street2+', '" dmx-hide="familyDetails.data.default_address.street2 == '' || familyDetails.data.default_address.street2 == null" class="mb-0 text-start">Street 2</p>
-                            <p dmx-text="familyDetails.data.default_address.suburb+', '" class="mb-0 text-start">Suburb</p>
-                            <p dmx-text="familyDetails.data.default_address.state_name+', '+familyDetails.data.default_address.postcode+' '+familyDetails.data.default_address.country_name" class="mb-0 text-muted fst-italic text-start">State, ZIP Postal Code, Country</p>
-                        </div>
-                    </div>
+
+
                 </div>
-
 
             </div>
 
+
         </div>
-
-
-    </div>
-</section>
+    </section>

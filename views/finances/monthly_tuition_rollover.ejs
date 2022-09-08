@@ -4,35 +4,34 @@
     <script is="dmx-flow" id="flow_pagetitle" type="text/dmx-flow" src="/app/flows/utilities/pagetitle.json" dmx-param:title="'Monthly Charge Rollover - Finances'" autorun></script>
     <main class="d-flex flex-grow-1 flex-column p-5 pt-3">
         <section>
-            <div class="row row-cols-xl-2 row-cols-1 gy-3">
+            <div class="row row-cols-1 gy-3">
                 <div class="col">
                     <div class="row g-0">
                         <div class="col bg-white rounded-3 p-4">
                             <div class="row">
                                 <div class="col">
                                     <h3 class="fw-900">Monthly Tuition Rollover</h3>
-                                    <p>The Monthly Tuition Rollover is a tool to charge all active families for the specified month.</p>
-                                    <p>You can specify any month below and the tool will search all families with an active/chargeable enrolment for that month.</p>
-                                    <hr class="light my-3">
+                                    <p>The Monthly Tuition Rollover is a tool to charge all active families for the specified month. You can specify any month below and the tool will search all families with an active/chargeable enrolment for that month.</p>
                                     <p><i class="fas me-1 pdl-warning"></i>Note: If you choose a month in the past, there may be currently inactive families that were active in the specified month. These families will have their charges recalculated.</p>
                                     <hr class="light my-3">
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col">
-                                    <form id="form_monthly_tuition_rollover" autocomplete="off" is="dmx-serverconnect-form" method="post" action="/api/finances/rollovers/CALCULATE_MONTHLY_rollover">
+                                <div class="col-xl-8">
+                                    <form id="form_monthly_tuition_rollover" autocomplete="off" is="dmx-serverconnect-form" method="post" action="/api/finances/rollovers/CALCULATE_MONTHLY_rollover" dmx-on:success="run({condition:{if:`form_monthly_tuition_rollover.inp_hdn_tocharge.value==1`,then:{steps:{run:{action:`flow_swal_confirm.run({alerticon: \'question\', alerttitle: \'Process Charges\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Process Charges\', message: \'<p>Are you sure you want to process charges?</p><br><p>Families: <strong></strong></p><p>Total of Charges: <strong></strong></p>\'})`}}}}})" dmx-on:start="run({runJS:{function:'beforeunloadlistener',args:['Are you sure you want to leave? You have a process running that will stop.']}})" dmx-on:done="run({runJS:{function:'removebeforeunload'}})">
 
                                         <div class="row row-cols-2 mb-3">
                                             <div class="col-12">
                                                 <p class="text-primary fw-700">Month to Charge</p>
 
                                                 <input id="inp_hdn_monthtocharge" name="monthtocharge" type="hidden" class="form-control" dmx-bind:value="form_monthly_tuition_rollover.inp_monthtocharge_year.value+'-'+form_monthly_tuition_rollover.sel_monthtocharge.value+'-01'">
+                                                <input id="inp_hdn_tocharge" name="charge" type="hidden" class="form-control" dmx-bind:value="(form_monthly_tuition_rollover.data.rollover_charges) ? 1 : 0">
                                             </div>
 
                                             <div class="col">
 
                                                 <div class="form-group mb-3"> <label for="input2" class="form-label col-form-label">Month</label>
-                                                    <select id="sel_monthtocharge" class="form-select" name="monthtochargemonth" required="">
+                                                    <select id="sel_monthtocharge" class="form-select" name="monthtochargemonth" required="" dmx-bind:readonly="form_monthly_tuition_rollover.data.rollover_charges">
                                                         <option value="" selected>Please Select...</option>
                                                         <option value="01">January</option>
                                                         <option value="02">February</option>
@@ -51,7 +50,7 @@
                                             </div>
                                             <div class="col">
                                                 <div class="form-group mb-3"> <label for="input2" class="form-label col-form-label">Year</label>
-                                                    <input id="inp_monthtocharge_year" type="text" name="monthtochargeyear" class="form-control" required="true" dmx-bind:value="dateAndTime_days.datetime.formatDate('yyyy')">
+                                                    <input id="inp_monthtocharge_year" type="text" name="monthtochargeyear" class="form-control" required="true" dmx-bind:value="dateAndTime_days.datetime.formatDate('yyyy')" dmx-bind:readonly="form_monthly_tuition_rollover.data.rollover_charges">
                                                 </div>
                                             </div>
                                         </div>
@@ -62,18 +61,20 @@
                                             </div>
                                             <div class="col">
                                                 <div class="form-group mb-3"> <label for="inp_charge_date" class="form-label col-form-label">Charge Date</label>
-                                                    <input type="text" class="form-control" id="inp_charge_date" name="chargedate" placeholder="DD/MM/YYYY" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" is="dmx-date-picker" dmx-bind:value="dateAndTime_days.datetime.formatDate('yyyy-MM-dd')">
+                                                    <input type="text" class="form-control" id="inp_charge_date" name="chargedate" placeholder="DD/MM/YYYY" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" is="dmx-date-picker" dmx-bind:value="dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" dmx-bind:readonly="form_monthly_tuition_rollover.data.rollover_charges">
                                                 </div>
                                             </div>
                                             <div class="col">
                                                 <div class="form-group mb-3"> <label for="inp_due_date" class="form-label col-form-label">Due Date</label>
-                                                    <input type="text" class="form-control" id="inp_due_date" name="duedate" placeholder="DD/MM/YYYY" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" is="dmx-date-picker">
+                                                    <input type="text" class="form-control" id="inp_due_date" name="duedate" placeholder="DD/MM/YYYY" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:format="appSettings.localization_dateformat" is="dmx-date-picker" dmx-bind:readonly="form_monthly_tuition_rollover.data.rollover_charges">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col d-flex flex-row justify-content-end">
-                                                <button id="btn_calculate_monthly_rollover" class="btn btn-primary" type="submit">Calculate Rollover</button>
+                                            <div class="col d-flex flex-row justify-content-between">
+                                                <button id="btn_reset_form_data" class="btn btn-secondary" dmx-show="form_monthly_tuition_rollover.data.rollover_charges" dmx-on:click="run([{runJS:{function:'clearformdata',args:[`\'form_monthly_tuition_rollover\'`]}},{run:{action:`form_monthly_tuition_rollover.reset()`}}])"><i class="fas fa-undo me-2"></i>Reset
+                                                </button>
+                                                <button id="btn_calculate_monthly_rollover" class="btn btn-primary" type="submit" dmx-hide="form_monthly_tuition_rollover.data.rollover_charges">Calculate Rollover</button>
                                             </div>
                                         </div>
                                     </form>
@@ -98,8 +99,25 @@
                                 </div>
                             </div>
                             <div class="row" is="dmx-if" id="cr_calculated_data" dmx-bind:condition="form_monthly_tuition_rollover.data.rollover_charges">
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col">
+                                            <p>Month to Charge: <strong>{{form_monthly_tuition_rollover.sel_monthtocharge.selectedText+' '+form_monthly_tuition_rollover.inp_monthtocharge_year.value}}</strong></p>
+                                            <p>Families Processed: <strong>{{form_monthly_tuition_rollover.data.rollover_charges.length}}</strong></p>
+                                            <p>Total Charge Amount: <strong>{{form_monthly_tuition_rollover.data.combined_total_final.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)}}</strong></p>
+                                            <hr class="light my-3">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col"><button id="btn_submit_charges" class="btn mb-3 btn-primary" dmx-on:click="run([{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'Are you sure you want to process all charges?\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Process Charges\', message: \'<p>Month: <strong>\'+form_monthly_tuition_rollover.sel_monthtocharge.selectedText+\' \'+form_monthly_tuition_rollover.inp_monthtocharge_year.value+\'</strong></p><p>Total Families: <strong>\'+form_monthly_tuition_rollover.data.rollover_charges.length+\'</strong></p><p>Total Charge Amount: <strong>\'+form_monthly_tuition_rollover.data.combined_total_final.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)+\'</strong></p>\'})`}},{condition:{if:`flow_swal_confirm.data.confirm`,then:{steps:{run:{action:`form_monthly_tuition_rollover.submit()`}}}}}])">Process Charges</button></div>
+                                    </div>
+
+
+
+                                </div>
                                 <div class="col">
-                                    <table class="table table-bordered align-middle table-hover">
+
+                                    <table class="table table-bordered align-middle table-hover standard-max-width">
                                         <thead class="pdl-main-bg">
                                             <tr>
                                                 <th scope="col" class="collapse-cell">#</th>
@@ -110,7 +128,7 @@
                                         </thead>
                                         <tbody is="dmx-repeat" id="rp_family_charges" dmx-bind:repeat="form_monthly_tuition_rollover.data.rollover_charges">
                                             <tr>
-                                                <td class="text-center">{{$index + 1}}</td>
+                                                <td class="text-center" dmx-text="$index+1">1<br></td>
                                                 <td dmx-text="lastName+', '+firstName">Mark Otto</td>
                                                 <td class="text-center" dmx-text="student_count">3</td>
                                                 <td dmx-text="calculate_charges.tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$55.00</td>

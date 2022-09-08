@@ -19,6 +19,6 @@ COPY ./ /opt/node_app/
 
 ENV PATH /opt/node_app/node_modules/.bin:$PATH
 WORKDIR /opt/node_app
-RUN npm install --no-optional --production
+RUN npm install --no-optional --production --no-package-lock
 
 CMD [ "nodemon", "./index.js" ]

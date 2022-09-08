@@ -1,0 +1,88 @@
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" moment_2="cdn" id="studentdetails_oc" components="{dmxBootstrap5Navigation:{},dmxBootstrap5Offcanvas:{}}" -->
+<script is="dmx-flow" id="flow_update_student" type="text/dmx-flow">{
+  run: {
+    action: "{{familyDetails.load({},true);sc_GET_FAMILY_students.load({},true);oc_studentDetails.GET_STUDENT_details.load({},true)}}"
+  }
+}</script>
+<div class="offcanvas extra-wide offcanvas-end" id="oc_studentDetails" is="dmx-bs5-offcanvas" tabindex="-1" dmx-on:hidden-bs-offcanvas="editStudent.reset();sel_classTimeline.setSelectedIndex(0);sel_notesTimeline.setSelectedIndex(0);queryManager.remove('st_flogs_limit');queryManager.remove('st_flogs_offset');var_STUDENT_details.setValue(null)" dmx-on:show-bs-offcanvas="toggle_studentdetail_oc_open.check()">
+    <dmx-value id="var_studentNotePriority" dmx-bind:value="null"></dmx-value>
+    <dmx-value id="var_studentdetails_uuid"></dmx-value>
+    <dmx-value id="var_studentdetail_showpartial" dmx-bind:value="'overview'"></dmx-value>
+    <dmx-serverconnect id="GET_STUDENT_details" url="/api/families/student/GET_STUDENT_details" noload dmx-param:enrol_lifetime="oc_studentDetails.sel_classTimeline.value" dmx-param:note_lifetime="oc_studentDetails.sel_notesTimeline.value" dmx-param:logs_limit="" dmx-param:logs_offset="" dmx-param:student_uuid="oc_studentDetails.var_studentdetails_uuid.value"></dmx-serverconnect>
+
+    <div class="offcanvas-header pdl-main-bg">
+        <h5 class="offcanvas-title"><i class="fas fa-user-graduate me-2"></i>Student Details: {{oc_studentDetails.GET_STUDENT_details.data.student_details.firstName+' '+oc_studentDetails.GET_STUDENT_details.data.student_details.lastName}}
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body light-blue-bg p-4">
+        <dmx-toggle id="toggle_studentdetail_oc_open"></dmx-toggle>
+        <section is="dmx-if" id="cr_student_notes_indicator" dmx-bind:condition="GET_STUDENT_details.data.max_notes_priority.priority!=null">
+            <div class="row mb-3">
+                <div class="col">
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-5-solid" dmx-show="GET_STUDENT_details.data.max_notes_priority.priority===5" dmx-on:click="var_studentdetail_showpartial.setValue('notes')">
+                        <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
+                        <i class="fas fa-sticky-note me-2"></i>CRITICAL note found.
+                    </p>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-4-solid" dmx-show="GET_STUDENT_details.data.max_notes_priority.priority===4" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
+                        <i class="fas pdl-warning-white me-1 ms-2 fs-5"></i>
+                        <i class="fas fa-sticky-note me-2"></i>High priority note found.
+                    </p>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-3-solid" dmx-show="GET_STUDENT_details.data.max_notes_priority.priority===3" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
+                        <i class="fas pdl-warning-white black me-1 ms-2 fs-5"></i>
+                        <i class="fas fa-sticky-note me-2"></i>Medium priority note found.
+                    </p>
+                    <p class="d-flex align-items-center rounded-3 p-2 mb-0 clickable user-select-none pri-2-solid" dmx-show="GET_STUDENT_details.data.max_notes_priority.priority<3" dmx-on:click="var_studentdetail_showPartial.setValue('notes')">
+                        <i class="fas fa-sticky-note me-2"></i>Notes found.
+                    </p>
+                </div>
+            </div>
+        </section>
+        <section class="p-4 pt-1 bg-white pdl-surface-shadow rounded-3" is="dmx-if" id="cr_studentdetails_oc_closed" dmx-bind:condition="oc_studentDetails.toggle_studentdetail_oc_open.checked">
+            <div class="row row-cols-1 g-0 mb-3 bg-white position-sticky" style="top: -1.8rem;">
+                <div class="col bg-white text-body d-flex justify-content-between border-bottom">
+                    <ul class="nav detail-tabs align-items-stretch flex-row justify-content-start gx-2 text-body" id="navtabs_parent" role="tablist">
+                        <li class="nav-item col-auto">
+                            <a class="nav-link active py-3 px-3" id="navTabs1_overview_tab" role="tab" aria-controls="navTabs1_1" aria-selected="true" dmx-on:click="var_studentdetail_showpartial.setValue('overview')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='overview'"><i class="fas fa-user-graduate me-2"></i>Student Overview</a>
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-3" id="navTabs1_enrolments_tab" role="tab" aria-controls="navTabs1_2" aria-selected="false" dmx-on:click="var_studentdetail_showpartial.setValue('enrols')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='enrols'"><i class="fas fa-book-open me-2 fa-fw"></i>Enrolments</a>
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-3" id="navTabs1_notes_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="var_studentdetail_showpartial.setValue('notes')" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='notes'"><i class="fas fa-sticky-note me-2"></i>Notes
+                            </a>
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-3" id="navTabs1_logs_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="run([{run:{action:`queryManager.set(\'st_flogs_limit\',25)`}},{run:{action:`queryManager.set(\'st_flogs_offset\',0)`}},{run:{action:`oc_studentDetails.var_studentdetail_showpartial.setValue(\'logs\')`}}])" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='logs'"><i class="fas fa-list-ol me-2 fa-fw"></i>Logs
+                            </a>
+                        </li>
+                        <li class="nav-item col-auto">
+                            <a class="nav-link py-3 px-3" id="navTabs1_misc_tab" role="tab" aria-controls="navTabs1_3" aria-selected="false" dmx-on:click="run({run:{action:`oc_studentDetails.var_studentdetail_showpartial.setValue(\'misc\')`}})" data-bs-toggle="tab" dmx-class:active="var_studentdetail_showpartial.value==='misc'"><i class="fas fa-spinner me-2 fa-fw"></i>Misc</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <section is="dmx-if" id="cr_studentoverview" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='overview'">
+                        <%- await include('/partials/families/students/_overview', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
+                    </section>
+                    <section is="dmx-if" id="cr_studentenrols" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='enrols'">
+                        <%- await include('/partials/families/students/_enrolments', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
+                    </section>
+                    <section is="dmx-if" id="cr_studentnotes" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='notes'">
+                        <%- await include('/partials/families/students/_notes', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
+                    </section>
+                    <section is="dmx-if" id="cr_studentlogs" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='logs'">
+                        <%- await include('/partials/families/students/_logs', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
+                    </section>
+                    <section is="dmx-if" id="cr_studentmiscellaneous" dmx-bind:condition="oc_studentDetails.var_studentdetail_showpartial.value=='misc'">
+                        <%- await include('/partials/families/students/_miscellaneous', Object.assign({_data: `{{GET_STUDENT_details.data}}`, locals})) %>
+                    </section>
+                </div>
+            </div>
+
+
+        </section>
+    </div>
+</div>

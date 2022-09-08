@@ -26,18 +26,6 @@
             "type": "SELECT",
             "columns": [
               {
-                "table": "student_notes",
-                "column": "uuid",
-                "alias": "notes_count",
-                "aggregate": "COUNT"
-              },
-              {
-                "table": "student_notes",
-                "column": "priority",
-                "alias": "max_note_priority",
-                "aggregate": "MAX"
-              },
-              {
                 "table": "students",
                 "column": "uuid"
               },
@@ -98,36 +86,14 @@
               "name": "students"
             },
             "primary": "uuid",
-            "joins": [
-              {
-                "table": "student_notes",
-                "column": "*",
-                "type": "LEFT",
-                "clauses": {
-                  "condition": "AND",
-                  "rules": [
-                    {
-                      "table": "student_notes",
-                      "column": "student_uuid",
-                      "operator": "equal",
-                      "value": {
-                        "table": "students",
-                        "column": "uuid"
-                      },
-                      "operation": "="
-                    }
-                  ]
-                },
-                "primary": "id"
-              }
-            ],
+            "joins": [],
             "wheres": {
               "condition": "AND",
               "rules": [
                 {
                   "id": "students.family",
                   "field": "students.family",
-                  "type": "double",
+                  "type": "string",
                   "operator": "equal",
                   "value": "{{$_GET.family_uuid}}",
                   "data": {
@@ -143,6 +109,7 @@
                       "onUpdate": "CASCADE",
                       "onDelete": "CASCADE",
                       "maxLength": 36,
+                      "referenceType": "string",
                       "name": "family"
                     }
                   },
@@ -152,7 +119,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT COUNT(student_notes.uuid) AS notes_count, MAX(student_notes.priority) AS max_note_priority, students.uuid, students.id, students.firstName, students.lastName, students.dob, students.family, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.gender, students.level, students.age, students.familyold, students.classlevel_uuid\nFROM students\nLEFT JOIN student_notes ON (student_notes.student_uuid = students.uuid)\nWHERE students.family = :P1 /* {{$_GET.family_uuid}} */\nGROUP BY students.uuid, students.id, students.firstName, students.lastName, students.dob, students.family, students.rollSheetComments, students.rollSheetMedical, students.additionalMedical, students.gender, students.level, students.age, students.familyold, students.classlevel_uuid",
+            "query": "SELECT uuid, id, firstName, lastName, dob, family, rollSheetComments, rollSheetMedical, additionalMedical, gender, level, age, familyold, classlevel_uuid\nFROM students\nWHERE family = :P1 /* {{$_GET.family_uuid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -160,78 +127,12 @@
                 "name": ":P1",
                 "value": "{{$_GET.family_uuid}}"
               }
-            ],
-            "groupBy": [
-              {
-                "table": "students",
-                "column": "uuid"
-              },
-              {
-                "table": "students",
-                "column": "id"
-              },
-              {
-                "table": "students",
-                "column": "firstName"
-              },
-              {
-                "table": "students",
-                "column": "lastName"
-              },
-              {
-                "table": "students",
-                "column": "dob"
-              },
-              {
-                "table": "students",
-                "column": "family"
-              },
-              {
-                "table": "students",
-                "column": "rollSheetComments"
-              },
-              {
-                "table": "students",
-                "column": "rollSheetMedical"
-              },
-              {
-                "table": "students",
-                "column": "additionalMedical"
-              },
-              {
-                "table": "students",
-                "column": "gender"
-              },
-              {
-                "table": "students",
-                "column": "level"
-              },
-              {
-                "table": "students",
-                "column": "age"
-              },
-              {
-                "table": "students",
-                "column": "familyold"
-              },
-              {
-                "table": "students",
-                "column": "classlevel_uuid"
-              }
             ]
           },
           "connection": "db"
         },
         "output": false,
         "meta": [
-          {
-            "type": "text",
-            "name": "notes_count"
-          },
-          {
-            "type": "number",
-            "name": "max_note_priority"
-          },
           {
             "type": "text",
             "name": "uuid"
@@ -300,17 +201,124 @@
           "outputFields": [],
           "outputFilter": "exclude",
           "exec": {
-            "steps": {
-              "name": "notes_count_message",
-              "module": "core",
-              "action": "setvalue",
-              "options": {
-                "value": "{{(notes_count > 0) ? pluralize('Note', notes_count, true) : '-'}}"
+            "steps": [
+              {
+                "name": "query_student_notes",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [
+                      {
+                        "table": "student_notes",
+                        "column": "student_uuid",
+                        "alias": "note_count",
+                        "aggregate": "COUNT"
+                      },
+                      {
+                        "table": "student_notes",
+                        "column": "priority",
+                        "alias": "priority",
+                        "aggregate": "MAX"
+                      }
+                    ],
+                    "table": {
+                      "name": "student_notes"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "groupBy": [],
+                    "query": "SELECT COUNT(student_uuid) AS note_count, MAX(priority) AS priority\nFROM student_notes\nWHERE student_uuid = :P1 /* {{uuid}} */ AND status = 'open'",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{uuid}}"
+                      }
+                    ],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "student_notes.student_uuid",
+                          "field": "student_notes.student_uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{uuid}}",
+                          "data": {
+                            "table": "student_notes",
+                            "column": "student_uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": true,
+                              "name": "student_uuid"
+                            }
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "student_notes.status",
+                          "field": "student_notes.status",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "open",
+                          "data": {
+                            "table": "student_notes",
+                            "column": "status",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "enum",
+                              "default": "'open'",
+                              "maxLength": 6,
+                              "primary": false,
+                              "comment": "status to be 'open' or 'closed'",
+                              "nullable": false,
+                              "enumValues": [
+                                "open",
+                                "closed"
+                              ],
+                              "name": "status"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    }
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "note_count"
+                  },
+                  {
+                    "type": "number",
+                    "name": "priority"
+                  }
+                ],
+                "outputType": "object"
               },
-              "meta": [],
-              "outputType": "text",
-              "output": true
-            }
+              {
+                "name": "notes_count_message",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{(query_student_notes.note_count.toNumber() > 0) ? pluralize('Note', query_student_notes.note_count, true) : '-'}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              }
+            ]
           }
         },
         "output": true,
@@ -330,14 +338,6 @@
           {
             "name": "$value",
             "type": "object"
-          },
-          {
-            "name": "notes_count",
-            "type": "text"
-          },
-          {
-            "name": "max_note_priority",
-            "type": "number"
           },
           {
             "name": "uuid",
@@ -394,6 +394,25 @@
           {
             "name": "classlevel_uuid",
             "type": "text"
+          },
+          {
+            "name": "query_student_notes",
+            "type": "object",
+            "sub": [
+              {
+                "type": "text",
+                "name": "note_count"
+              },
+              {
+                "type": "number",
+                "name": "priority"
+              }
+            ]
+          },
+          {
+            "name": "notes_count_message",
+            "type": "text",
+            "sub": []
           }
         ],
         "outputType": "array"

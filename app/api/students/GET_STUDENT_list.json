@@ -38,99 +38,90 @@
           "type": "SELECT",
           "columns": [
             {
-              "table": "students",
-              "column": "id"
-            },
-            {
-              "table": "students",
-              "column": "firstName"
-            },
-            {
-              "table": "students",
-              "column": "lastName"
-            },
-            {
-              "table": "students",
-              "column": "dob"
-            },
-            {
-              "table": "students",
-              "column": "rollSheetComments"
-            },
-            {
-              "table": "students",
-              "column": "rollSheetMedical"
-            },
-            {
-              "table": "students",
-              "column": "additionalMedical"
-            },
-            {
-              "table": "students",
-              "column": "family"
-            },
-            {
-              "table": "students",
-              "column": "gender"
-            },
-            {
-              "table": "students",
-              "column": "level"
-            },
-            {
-              "table": "students",
-              "column": "age"
-            },
-            {
-              "table": "students",
-              "column": "fullname"
-            },
-            {
-              "table": "students",
-              "column": "levelName"
+              "table": "s",
+              "column": "*"
             }
           ],
           "table": {
-            "name": "allStudentsW-FullName",
-            "alias": "students"
+            "name": "students",
+            "alias": "s"
           },
           "joins": [],
-          "query": "SELECT id, firstName, lastName, dob, rollSheetComments, rollSheetMedical, additionalMedical, family, gender, level, age, fullname, levelName\nFROM \"allStudentsW-FullName\" AS students\nWHERE (fullname LIKE :P1 /* {{$_GET.textfilter}} */)",
+          "query": "SELECT *\nFROM students AS s\nWHERE firstName LIKE :P1 /* {{$_GET.textfilter}} */ OR lastName LIKE :P2 /* {{$_GET.textfilter}} */\nORDER BY lastName ASC, firstName ASC",
           "params": [
             {
               "operator": "contains",
               "type": "expression",
               "name": ":P1",
               "value": "{{$_GET.textfilter}}"
+            },
+            {
+              "operator": "contains",
+              "type": "expression",
+              "name": ":P2",
+              "value": "{{$_GET.textfilter}}"
             }
           ],
+          "orders": [
+            {
+              "table": "s",
+              "column": "lastName",
+              "direction": "ASC"
+            },
+            {
+              "table": "s",
+              "column": "firstName",
+              "direction": "ASC"
+            }
+          ],
+          "primary": "uuid",
           "wheres": {
-            "condition": "AND",
+            "condition": "OR",
             "rules": [
               {
-                "condition": "OR",
-                "rules": [
-                  {
-                    "id": "students.fullname",
-                    "field": "students.fullname",
+                "id": "s.firstName",
+                "field": "s.firstName",
+                "type": "string",
+                "operator": "contains",
+                "value": "{{$_GET.textfilter}}",
+                "data": {
+                  "table": "s",
+                  "column": "firstName",
+                  "type": "text",
+                  "columnObj": {
                     "type": "string",
-                    "operator": "contains",
-                    "value": "{{$_GET.textfilter}}",
-                    "data": {
-                      "table": "students",
-                      "column": "fullname",
-                      "type": "text"
-                    },
-                    "operation": "LIKE"
+                    "maxLength": 255,
+                    "primary": false,
+                    "nullable": true,
+                    "name": "firstName"
                   }
-                ],
-                "conditional": "{{$_GET.textfilter.length > 0}}"
+                },
+                "operation": "LIKE"
+              },
+              {
+                "id": "s.lastName",
+                "field": "s.lastName",
+                "type": "string",
+                "operator": "contains",
+                "value": "{{$_GET.textfilter}}",
+                "data": {
+                  "table": "s",
+                  "column": "lastName",
+                  "type": "text",
+                  "columnObj": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "primary": false,
+                    "nullable": true,
+                    "name": "lastName"
+                  }
+                },
+                "operation": "LIKE"
               }
             ],
-            "conditional": null,
+            "conditional": "{{$_GET.textfilter}}",
             "valid": true
-          },
-          "orders": []
+          }
         }
       },
       "output": true,
@@ -188,6 +179,10 @@
           "type": "array",
           "sub": [
             {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
               "type": "number",
               "name": "id"
             },
@@ -204,6 +199,10 @@
               "name": "dob"
             },
             {
+              "type": "number",
+              "name": "family"
+            },
+            {
               "type": "text",
               "name": "rollSheetComments"
             },
@@ -214,10 +213,6 @@
             {
               "type": "text",
               "name": "additionalMedical"
-            },
-            {
-              "type": "number",
-              "name": "family"
             },
             {
               "type": "text",
@@ -232,12 +227,16 @@
               "name": "age"
             },
             {
-              "type": "text",
-              "name": "fullname"
+              "type": "number",
+              "name": "familyold"
             },
             {
               "type": "text",
-              "name": "levelName"
+              "name": "classlevel_uuid"
+            },
+            {
+              "type": "boolean",
+              "name": "trialLesson"
             }
           ]
         }

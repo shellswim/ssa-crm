@@ -12,14 +12,14 @@
   }
 }</script>
 <dmx-value id="var_ledgerexecuted" dmx-bind:value="false"></dmx-value>
-<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,0.9)"></dmx-preloader>
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)"></dmx-preloader>
 <dmx-serverconnect id="familyLedger" url="/api/families/ledger/GET_LEDGER_details" dmx-param:familyid="" dmx-param:family_uuid="query.familyid" dmx-param:offset="query.ledgerinfo_offset" dmx-param:limit="query.ledgerinfo_limit" dmx-on:success="var_ledgerexecuted.setValue(true)"></dmx-serverconnect>
 <section class="standard-max-width">
     <div class="row row-cols-1 g-0" id="chargeCol">
         <div class="offcanvas offcanvas-end p-0" id="oc_chargeBreakdown" is="dmx-bs5-offcanvas" tabindex="-1" scroll="true" dmx-on:show-bs-offcanvas="overflowHidden.check()" dmx-on:hide-bs-offcanvas="overflowHidden.uncheck();collapse_studentenrolcharge_details.hide()" dmx-on:hidden-bs-offcanvas="GET_CHARGE_detail.reset()">
-            <div class="offcanvas-header border-bottom">
-                <h4 class="offcanvas-title fw-700">
-                    <i class="fas fa-hand-holding-usd me-2 text-primary"></i>Charge
+            <div class="offcanvas-header pdl-main-bg">
+                <h4 class="offcanvas-title">
+                    <i class="fas fa-hand-holding-usd me-2"></i>Charge
                     Detail - <span style="font-weight: 400;">{{oc_chargeBreakdown.GET_CHARGE_detail.data.family_charge.title}}</span>
                 </h4>
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -32,34 +32,40 @@
                     <div class="row row-cols-1 px-3 pt-2 pb-0">
                         <div class="col px-3 py-2 mb-3 pdl-surface-shadow rounded-3 bg-white">
                             <form id="form_chargedates" is="dmx-serverconnect-form" method="post" action="/api/families/ledger/charges/UPDATE_CHARGE_dates" dmx-on:success="flow_swal_toast_colored.run({icon: 'success', title: 'Updated', message: 'Charge successfully update', timer: 3000, timerprogressbar: true})" dmx-on:error="flow_swal_toast_colored.run({icon: 'error', title: 'Error', message: 'Something went wrong. Please try again later. If the problem persists, please submit a help ticket.', timer: 10000, timerprogressbar: true})" dmx-on:done="toggle_CD_loading.uncheck();familyLedger.load({},true)">
-                                <div class="row mb-4 border-bottom">
+                                <div class="row">
                                     <div class="col">
                                         <input type="hidden" dmx-bind:value="GET_CHARGE_detail.data.family_charge.uuid" name="uuid" id="inp_CD_due_date">
-                                        <div class="form-group mb-3">
+                                        <div class="form-group mb-1">
                                             <label for="inp_CD_charge_date" class="form-label col-form-label">Charge Date</label>
                                             <input type="text" class="form-control" id="inp_CD_charge_date" name="chargedate" aria-describedby="input1_help" is="dmx-date-picker" format="Do MMM YYYY" dmx-bind:value="GET_CHARGE_detail.data.family_charge.chargeDate.formatDate('yyyy-MM-dd')" dmx-bind:readonly="oc_chargeBreakdown.toggle_CD_loading.checked" dmx-on:changed="run([{run:{action:`toggle_CD_loading.check()`}},{wait:{delay:2000}},{run:{action:`form_chargedates.submit()`}}])">
                                         </div>
                                     </div>
                                     <div class="col">
-                                        <div class="form-group mb-3">
+                                        <div class="form-group mb-1">
                                             <label for="inp_CD_due_date" class="form-label col-form-label">Due Date</label>
-                                            <input type="text" class="form-control" id="inp_CD_due_date" name="duedate" aria-describedby="input1_help" is="dmx-date-picker" format="Do MMM YYYY" dmx-bind:value="GET_CHARGE_detail.data.family_charge.dueDate.formatDate('yyyy-MM-dd')" dmx-bind:readonly="oc_chargeBreakdown.toggle_CD_loading.checked" dmx-on:changed="run([{run:{action:`toggle_CD_loading.check()`}},{wait:{delay:2000}},{run:{action:`form_chargedates.submit()`}}])">
+                                            <input type="text" class="form-control" id="inp_CD_due_date" name="duedate" aria-describedby="input1_help" is="dmx-date-picker" format="Do MMM YYYY" dmx-bind:value="GET_CHARGE_detail.data.family_charge.dueDate.formatDate('yyyy-MM-dd')" dmx-bind:readonly="oc_chargeBreakdown.toggle_CD_loading.checked" dmx-on:changed="run({run:{action:`form_chargedates.submit()`}})">
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-0 text-muted small">Changing dates will automatically save new values.</p>
+                                    </div>
+                                </div>
+                                <hr class="light my-3">
                             </form>
 
                             <div class="row">
                                 <div class="col">
-                                    <p class="fw-600">Charge Breakdown</p>
+                                    <h4 class="fw-900">Charge Breakdown</h4>
                                 </div>
                             </div>
-                            <div id="rp_chargeStudents" class="row row-cols-1" is="dmx-repeat" dmx-bind:repeat="GET_CHARGE_detail.data.students" key="uuid">
+                            <div id="rp_chargeStudents" class="row row-cols-1 gx-0" is="dmx-repeat" dmx-bind:repeat="GET_CHARGE_detail.data.students" key="uuid">
 
-                                <div class="col" dmx-animate-enter.delay:100.duration:250="fadeInUp">
+                                <div class="col border-bottom mb-3" dmx-animate-enter.delay:100.duration:250="fadeInUp">
                                     <div class="row g-0 fw-650 mt-2 py-2 border-bottom clickable user-select-none align-items-center justify-content-start">
                                         <div class="col-auto align-self-center pe-2">
-                                            <h5 dmx-html="'<i class=&quot;fas fa-child text-primary me-2&quot;></i>'+firstName+' '+lastName+' - '+student_total.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-on:click="collapse_studentenrolcharge_details.toggle()" class="mb-0"><i class="fas fa-child text-primary me-2"></i>Student
+                                            <h5 dmx-html="'<i class=&quot;fas fa-user-graduate text-primary me-2 fa-fw&quot;></i>'+firstName+' '+lastName+' - '+student_total.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)" dmx-on:click="collapse_studentenrolcharge_details.toggle()" class="mb-0 fw-800"><i class="fas fa-user-graduate text-primary me-2 fa-fw"></i>Student
                                                 Name
                                             </h5>
                                         </div>
@@ -78,7 +84,7 @@
                                                         <div class="col clickable" dmx-on:click="collapse_enrolmentcharge_details.toggle()">
                                                             <p dmx-text="appSettings.days_array[classday].trunc(3, true, ' ')+' - '+appSettings.classLevelsByID[classlevel_uuid].name+' '+startTimeDisplay+' - '+appSettings.instructorsById[instructor_uuid].trunc_name" class="fw-700 mb-1">Sunday
                                                                 - Duckling 9:30am - Troy F.</p>
-                                                            <div class="row mb-3 fst-italic small">
+                                                            <div class="row mb-2 text-muted small">
                                                                 <div class="col-auto">
                                                                     <p dmx-text="'Start Date: '+startDate.formatDate(appSettings.localization_puddle_dateformat)" class="mb-0">Start Date:
                                                                     </p>
@@ -94,8 +100,8 @@
                                                             <div class="collapse" id="collapse_enrolmentcharge_details" is="dmx-bs5-collapse">
                                                                 <div class="row">
                                                                     <div class="col">
-                                                                        <table class="table table-hover table-sm user-select-none table-bordered align-middle bg-white">
-                                                                            <thead class="small fw-bold">
+                                                                        <table class="table table-hover table-sm user-select-none table-bordered align-middle bg-white big-small">
+                                                                            <thead class="pdl-main-bg">
                                                                                 <tr>
                                                                                     <th>Class Date
                                                                                     </th>
@@ -186,7 +192,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="row row-cols-2 gy-3 row-cols-lg-1">
+            <div class="row row-cols-1 gy-3">
                 <div class="col">
                     <div class="row g-0" dmx-animate-enter.duration:250.delay:150="fadeInUp">
                         <div class="p-4 rounded-3 bg-white col" id="paymentsCol">

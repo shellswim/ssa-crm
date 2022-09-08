@@ -1,15 +1,15 @@
-<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{},dmxBootstrap5PagingGenerator:{}}" moment_2="cdn with locales" bootstrap5="local" bootstrap_icons="cdn" jquery_slim_35="cdn" -->
-<script is="dmx-flow" id="flow_pagetitle" type="text/dmx-flow" src="/app/flows/utilities/pagetitle.json" dmx-param:title="'Family: '+familyDetails.data.query_family_details.lastName+', '+familyDetails.data.query_family_details.firstName"></script>
+<!-- Wappler include head-page="layouts/layout2" is="dmx-app" id="familyDetails" appconnect="local" fontawesome_5="cdn" components="{dmxBootbox:{},dmxDataTraversal:{},dmxDatePicker:{},dmxBootstrap4Modal:{},dmxValidator:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxCalendar:{},dmxBootstrap5Collapse:{},dmxBootstrap5Modal:{},dmxBootstrap5Navigation:{},dmxAnimateCSS:{},dmxNotifications:{},dmxPreloader:{},dmxStateManagement:{},dmxBootstrap5TableGenerator:{},dmxMasonry:{},dmxBootstrap5Tooltips:{},dmxBrowser:{},dmxMoment:{},dmxDownload:{},dmxDatastore:{},dmxBootstrap5Alert:{},dmxBootstrap5Toasts:{},dmxMediumEditor:{},dmxSummernote:{},dmxSummernoteFileUpload:{},dmxGooglePlaces:{},dmxAutocomplete:{},dmxBootstrap5Popovers:{},dmxTyped:{},dmxSockets:{},dmxStripe:{},dmxBootstrap5PagingGenerator:{},dmxBootbox5:{}}" moment_2="cdn with locales" jquery_slim_35="cdn" bootstrap5="local" -->
 <meta name="ac:route" content="/families/familydetail/:familyid">
+<script is="dmx-flow" id="flow_pagetitle" type="text/dmx-flow" src="/app/flows/utilities/pagetitle.json" dmx-param:title="'Family: '+familyDetails.data.query_family_details.lastName+', '+familyDetails.data.query_family_details.firstName"></script>
 <dmx-preloader id="familyDetail_preloader" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)" style="z-index: 1051;"></dmx-preloader>
 <dmx-serverconnect id="sc_GET_FAMILY_guardians" url="/api/families/guardians/GET_FAMILY_guardians" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
 <dmx-serverconnect id="sc_GET_FAMILY_students" url="/api/families/student/GET_FAMILY_students" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
-<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid" dmx-on:done="run([{wait:{delay:150}},{run:{action:`flow_pagetitle.run()`}}])"></dmx-serverconnect>
+<dmx-serverconnect id="familyDetails" url="api/families/GET_FAMILY_details" dmx-param:familyid="query.familyid" dmx-param:familyuuid="query.familyid" dmx-on:start="toggle_loadingplaceholders.check()" dmx-param:family_uuid="query.familyid" dmx-on:done="run([{run:{action:`flow_pagetitle.run()`}},{wait:{delay:150}},{condition:{if:`query.newstudent`,then:{steps:[{run:{action:`cr_familyoverview.oc_studentDetails.var_studentdetails_uuid.setValue(query.newstudent_uuid);cr_familyoverview.oc_studentDetails.GET_STUDENT_details.load({student_uuid:query.newstudent_uuid});cr_familyoverview.oc_studentDetails.show()`}},{run:{action:`qm_familydetails.remove(\'newstudent\');qm_familydetails.remove(\'newstudent_uuid\')`}}]}}}])"></dmx-serverconnect>
 <dmx-session-manager id="ledgerStorage"></dmx-session-manager>
 <dmx-value id="topPriorityNotes" dmx-bind:value="familyDetails.data.familyNotes[0].maxPriority == 5 ? 'Has Critical Note/s' : familyDetails.data.familyNotes[0].maxPriority == 4 ? 'Has High Priority Note/s' : familyDetails.data.familyNotes[0].maxPriority == 3 ? 'Has Medium Note/s' : 'Has Notes';">
 </dmx-value>
 <div class="section overlay" dmx-class:overlay-show="editGuardian.value === 1"></div>
-<dmx-query-manager id="getFamilyID"></dmx-query-manager>
+<dmx-query-manager id="qm_familydetails"></dmx-query-manager>
 <dmx-serverconnect id="checkEmail" noload url="/api/families/checkEmail" dmx-on:success="createGuardianModalForm.arr_emailAddresses.addUniq(createGuardianModalForm.hd_emailObj.value)">
 </dmx-serverconnect>
 <dmx-serverconnect id="deleteGuardianPhone" url="/api/deleteGuardianPhone" noload></dmx-serverconnect>
@@ -591,7 +591,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="editStudentNote" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="editNoteForm.reset();getFamilyID.remove('noteid')">
+<div class="modal fade" id="editStudentNote" is="dmx-bs5-modal" tabindex="-1" role="dialog" nocloseonclick="true" dmx-on:hide-bs-modal="editNoteForm.reset();qm_familydetails.remove('noteid')">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -965,7 +965,9 @@
         <div class="col d-flex flex-column">
             <div class="row row-cols-1 g-0">
                 <div class="col placeholder-glow">
-                    <div class="row">
+                    <a href="/families" class="text-body fw-800 mb-3"><i class="fas fa-arrow-left me-2"></i>Back to families list
+                    </a>
+                    <div class="row mt-3">
                         <div class="col d-flex">
                             <h1 class="mb-2 me-3 fw-900" dmx-html="'<i class=&quot;fas fa-users fa-fw me-2 text-primary&quot;></i><span class=&quot;me-2&quot;>Family:</span>'+familyDetails.data.query_family_details.firstName+' '+familyDetails.data.query_family_details.lastName">
                                 <i class="fas fa-users fa-fw me-2 text-primary"></i>Family:
@@ -1032,6 +1034,7 @@
     </div>
 </section>
 <main class="d-flex flex-grow-1 flex-column justify-content-start p-5 pt-4 pb-5 mb-5 position-relative" style="">
+
 
     <dmx-value id="var_showPartial" dmx-bind:value="'overview'"></dmx-value>
     <section is="dmx-if" id="cr_familyoverview" dmx-bind:condition="var_showPartial.value=='overview'">

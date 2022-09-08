@@ -43,6 +43,7 @@ function pdl_image_upload_handler(blobInfo, success, failure, progress) {
 
 function pdl_tinymce_reset(editor) {
     tinymce.get(editor).setContent('');
+    pdl_tinymce_destroy(editor);
 }
 function pdl_tinymce_destroy(editor) {
     tinymce.get(editor).destroy();

@@ -19,17 +19,36 @@
         "type": "text",
         "fieldName": "monthtocharge",
         "multiple": true,
+        "options": {
+          "rules": {
+            "core:required": {}
+          }
+        },
         "name": "monthtocharge"
       },
       {
         "type": "text",
         "fieldName": "chargedate",
+        "options": {
+          "rules": {
+            "core:required": {}
+          }
+        },
         "name": "chargedate"
       },
       {
         "type": "text",
         "fieldName": "duedate",
+        "options": {
+          "rules": {
+            "core:required": {}
+          }
+        },
         "name": "duedate"
+      },
+      {
+        "type": "text",
+        "name": "charge"
       }
     ]
   },
@@ -234,6 +253,31 @@
           }
         ],
         "outputType": "array"
+      },
+      {
+        "name": "combined_total",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "key": "combined_total",
+          "value": 0
+        },
+        "meta": [],
+        "outputType": "number",
+        "output": false
+      },
+      {
+        "name": "user",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": {
+            "user": "{{identity}}",
+            "ip_address": "{{ipadd}}"
+          }
+        },
+        "meta": [],
+        "outputType": "text"
       },
       {
         "name": "rollover_charges",
@@ -1060,6 +1104,39 @@
                 ],
                 "outputType": "text",
                 "output": true
+              },
+              {
+                "name": "combined_total",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "key": "combined_total",
+                  "value": "{{(combined_total+calculate_charges.tuitiontotals.enrolgrandtotal)}}"
+                },
+                "meta": [],
+                "outputType": "number"
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{$_POST.charge==1}}",
+                  "then": {
+                    "steps": {
+                      "name": "charge",
+                      "module": "tuitioncharge",
+                      "action": "tuitioncharge",
+                      "options": {
+                        "details": "{{calculate_charges}}",
+                        "charge_date": "{{$_POST.chargedate}}",
+                        "due_date": "{{$_POST.duedate}}",
+                        "user": "{{user}}"
+                      }
+                    }
+                  }
+                },
+                "outputType": "boolean"
               }
             ]
           }
@@ -1093,9 +1170,824 @@
           {
             "name": "uuid",
             "type": "text"
+          },
+          {
+            "name": "calculate_charges",
+            "type": "text",
+            "sub": [
+              {
+                "name": "chargefor",
+                "type": "text"
+              },
+              {
+                "name": "monthlychargeexists",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "exists",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "charge_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "status",
+                    "type": "number"
+                  },
+                  {
+                    "name": "created",
+                    "type": "date"
+                  }
+                ]
+              },
+              {
+                "name": "students",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "additionalMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "age",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classlevel_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dob",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "familyold",
+                    "type": "number"
+                  },
+                  {
+                    "name": "familyorder",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "level",
+                    "type": "number"
+                  },
+                  {
+                    "name": "rollSheetComments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "rollSheetMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "total_enrolments",
+                    "type": "number"
+                  },
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolments",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "end",
+                        "type": "text"
+                      },
+                      {
+                        "name": "start",
+                        "type": "text"
+                      },
+                      {
+                        "name": "total_enrolments",
+                        "type": "number"
+                      },
+                      {
+                        "name": "items",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classId",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "class_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classdate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classdate_timestamp",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classday",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classlevel_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classtype_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "deleted",
+                            "type": "number"
+                          },
+                          {
+                            "name": "deleted_time",
+                            "type": "number"
+                          },
+                          {
+                            "name": "dropDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "dropReason",
+                            "type": "text"
+                          },
+                          {
+                            "name": "enrolmentType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "firstName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "id",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "isTransferIn",
+                            "type": "number"
+                          },
+                          {
+                            "name": "isTransferOut",
+                            "type": "number"
+                          },
+                          {
+                            "name": "isValid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "lastName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "priceOverride",
+                            "type": "number"
+                          },
+                          {
+                            "name": "priceOverrideType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "priceOverrideValue",
+                            "type": "number"
+                          },
+                          {
+                            "name": "shortName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "student",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferFrom",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferTo",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferToStart",
+                            "type": "text"
+                          },
+                          {
+                            "name": "uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "pricing",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "baseRate",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enrolgrandtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "family_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "familydiscount_description",
+                                "type": "text"
+                              },
+                              {
+                                "name": "familydiscount_subtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "holding_fee",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_discount_description",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_subtotal",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "tuitiontotals",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolgrandtotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "family_discount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "familydiscount_subtotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "holding_fee",
+                            "type": "number"
+                          },
+                          {
+                            "name": "multienrol_discount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "multienrol_subtotal",
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "tuitiontotals",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "baseRate",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolgrandtotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "family_discount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "familydiscount_subtotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "holding_fee",
+                        "type": "number"
+                      },
+                      {
+                        "name": "multienrol_discount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "multienrol_subtotal",
+                        "type": "number"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "tuitiontotals",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "baseRate",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolgrandtotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "family_discount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "familydiscount_subtotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "holding_fee",
+                    "type": "number"
+                  },
+                  {
+                    "name": "multienrol_discount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "multienrol_subtotal",
+                    "type": "number"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "student_count",
+            "type": "text",
+            "sub": [
+              {
+                "name": "chargefor",
+                "type": "text"
+              },
+              {
+                "name": "monthlychargeexists",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "exists",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "charge_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "status",
+                    "type": "number"
+                  },
+                  {
+                    "name": "created",
+                    "type": "date"
+                  }
+                ]
+              },
+              {
+                "name": "students",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "additionalMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "age",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classlevel_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dob",
+                    "type": "text"
+                  },
+                  {
+                    "name": "family",
+                    "type": "text"
+                  },
+                  {
+                    "name": "familyold",
+                    "type": "number"
+                  },
+                  {
+                    "name": "familyorder",
+                    "type": "number"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text"
+                  },
+                  {
+                    "name": "level",
+                    "type": "number"
+                  },
+                  {
+                    "name": "rollSheetComments",
+                    "type": "text"
+                  },
+                  {
+                    "name": "rollSheetMedical",
+                    "type": "text"
+                  },
+                  {
+                    "name": "total_enrolments",
+                    "type": "number"
+                  },
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "enrolments",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "end",
+                        "type": "text"
+                      },
+                      {
+                        "name": "start",
+                        "type": "text"
+                      },
+                      {
+                        "name": "total_enrolments",
+                        "type": "number"
+                      },
+                      {
+                        "name": "items",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classId",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "class_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classdate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classdate_timestamp",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classday",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classlevel_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classtype_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "deleted",
+                            "type": "number"
+                          },
+                          {
+                            "name": "deleted_time",
+                            "type": "number"
+                          },
+                          {
+                            "name": "dropDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "dropReason",
+                            "type": "text"
+                          },
+                          {
+                            "name": "enrolmentType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "firstName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "id",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "isTransferIn",
+                            "type": "number"
+                          },
+                          {
+                            "name": "isTransferOut",
+                            "type": "number"
+                          },
+                          {
+                            "name": "isValid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "lastName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "priceOverride",
+                            "type": "number"
+                          },
+                          {
+                            "name": "priceOverrideType",
+                            "type": "number"
+                          },
+                          {
+                            "name": "priceOverrideValue",
+                            "type": "number"
+                          },
+                          {
+                            "name": "shortName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startDate",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "student",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferFrom",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferTo",
+                            "type": "text"
+                          },
+                          {
+                            "name": "transferToStart",
+                            "type": "text"
+                          },
+                          {
+                            "name": "uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "pricing",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "baseRate",
+                                "type": "number"
+                              },
+                              {
+                                "name": "enrolgrandtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "family_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "familydiscount_description",
+                                "type": "text"
+                              },
+                              {
+                                "name": "familydiscount_subtotal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "holding_fee",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_discount",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_discount_description",
+                                "type": "number"
+                              },
+                              {
+                                "name": "multienrol_subtotal",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "tuitiontotals",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "enrolgrandtotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "family_discount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "familydiscount_subtotal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "holding_fee",
+                            "type": "number"
+                          },
+                          {
+                            "name": "multienrol_discount",
+                            "type": "number"
+                          },
+                          {
+                            "name": "multienrol_subtotal",
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "tuitiontotals",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "baseRate",
+                        "type": "number"
+                      },
+                      {
+                        "name": "enrolgrandtotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "family_discount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "familydiscount_subtotal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "holding_fee",
+                        "type": "number"
+                      },
+                      {
+                        "name": "multienrol_discount",
+                        "type": "number"
+                      },
+                      {
+                        "name": "multienrol_subtotal",
+                        "type": "number"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "tuitiontotals",
+                "type": "object",
+                "sub": [
+                  {
+                    "name": "baseRate",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enrolgrandtotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "family_discount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "familydiscount_subtotal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "holding_fee",
+                    "type": "number"
+                  },
+                  {
+                    "name": "multienrol_discount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "multienrol_subtotal",
+                    "type": "number"
+                  }
+                ]
+              }
+            ]
           }
         ],
         "outputType": "array"
+      },
+      {
+        "name": "combined_total_final",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{combined_total}}"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
       }
     ]
   }

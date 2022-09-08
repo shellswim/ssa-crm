@@ -19,5 +19,5 @@ ENV NODE_ENV development
 WORKDIR /opt/node_app
 COPY index.js .
 COPY package.json .
-RUN npm install --no-optional
+RUN npm install --no-optional --no-package-lock
 CMD [ "nodemon", "--legacy-watch", "./index.js" ]

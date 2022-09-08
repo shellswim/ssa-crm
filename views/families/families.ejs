@@ -56,7 +56,7 @@
 
     <dmx-session-manager id="ss_FamilyFilters"></dmx-session-manager>
     <dmx-serverconnect id="createFamily" url="api/createFamilyWithGuardians" noload=""></dmx-serverconnect>
-    <dmx-serverconnect id="getAllFamilies" url="/api/GET_FAMILY_LIST_paged" dmx-param:offset="query.offset||0" dmx-param:limit="query.limit||25" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch" dmx-on:done="var_listcount.setValue(getAllFamilies.data.rp_family.length)">
+    <dmx-serverconnect id="getAllFamilies" url="/api/families/GET_FAMILY_list" dmx-param:offset="query.offset||0" dmx-param:limit="query.limit||25" dmx-param:sort="query.sort" dmx-param:dir="query.dir" dmx-param:textfilter="ss_FamilyFilters.data.textsearch" dmx-on:done="var_listcount.setValue(getAllFamilies.data.rp_family.length)">
     </dmx-serverconnect>
     <dmx-serverconnect id="getRelationships" url="api/getRelationships"></dmx-serverconnect>
 
@@ -422,7 +422,6 @@
                                     <div class="col d-flex flex-column flex-grow-1">
                                         <label for="inp_guard_phone" class="form-label col-form-label">Phone Number</label>
                                         <input type="text" class="form-control" id="inp_guard_phone" name="phonenumber" aria-describedby="input1_help" placeholder="0400123456" required="" data-rule-digits="">
-
                                     </div>
                                     <div class="col-auto">
                                         <label for="sel_guard_phonetype" class="form-label col-form-label">Type</label>
@@ -435,7 +434,6 @@
                                             <i class="bi-save2 me-2"></i> Add
                                         </button>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -473,9 +471,7 @@
                                                 <td>
                                                     <button id="btn_deletePhone" class="btn btn-link btn-sm text-danger" dmx-on:click="phone_holding.delete({$id: $id})" dmx-hide="var_editingRowPhones.value === true">Delete</button>
                                                     <button id="btn_cancelPhoneEdit" class="btn btn-link btn-sm text-danger" dmx-on:click="var_editingRowPhones.setValue(false);inp_editphone.setValue(phone);sel_guard_editphonetype.setValue(type)" dmx-hide="var_editingRowPhones.value !== true">Cancel</button>
-
                                                 </td>
-
                                             </tr>
                                         </tbody>
                                     </table>
@@ -491,42 +487,41 @@
             </div>
         </div>
     </div>
-
     <main class="d-flex flex-grow-1 flex-column p-5">
-        <div class="container-fluid p-0 mb-3 ">
-            <div class="row g-0">
-                <div class="col ">
-                    <div class="row row-cols-xs-1 justify-content-between">
-                        <div class="col-auto offset-0">
-                            <a id="createFamilyBtn" class="btn btn-secondary" href="/families/new_family"><i class="fa fa-plus-circle me-2"></i>New Family</a>
-                        </div>
-                        <div class="col"><input size="80" id="text1" name="familysearch" type="text" class="form-control w-auto" placeholder="Search Families"></div>
+        <div class="row g-0">
+            <div class="col ">
+                <div class="row row-cols-xs-1 justify-content-between align-items-center">
+                    <div class="col">
+                        <a id="createFamilyBtn" class="btn btn-secondary" href="/families/new_family"><i class="fa fa-plus-circle me-2"></i>New Family</a>
+                    </div>
 
-
-
-
+                </div>
+            </div>
+            <div class="d-flex flex-row align-self-center align-items-center col-auto offset-0 justify-content-end">
+                <div class="dropdown">
+                    <dmx-value id="var_familyoffset" dmx-bind:value="query.offset" dmx-on:updated="classesQuery.set('offset',value);queryManager.set('offset',value)"></dmx-value>
+                    <dmx-value id="var_familylistpage" dmx-bind:value="(query.offset==0) ? 1 : ((query.offset/query.limit)+1)"></dmx-value>
+                    <button id="dropdown_class_pagination" class="btn dropdown-toggle change-chevron btn-outline-link p-0 text-decoration-underline" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" dmx-html="'View:&nbsp;&nbsp;<strong>'+getAllFamilies.data.family.limit+'</strong><i class=&quot;fas fa-chevron-down fa-fw fa-sm ms-1&quot;></i>'">
+                        View:&nbsp;&nbsp; <strong>1</strong><i class="fas fa-chevron-down fa-fw ms-1 fa-xs"></i>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdown_limit">
+                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',10);queryManager.set('offset',0)" href="#">10</a>
+                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',25);queryManager.set('offset',0)" href="#">25</a>
+                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',50);queryManager.set('offset',0)" href="#">50</a>
+                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',75);queryManager.set('offset',0)" href="#">75</a>
+                        <a class="dropdown-item" dmx-on:click="queryManager.set('limit',100);queryManager.set('offset',0)" href="#">100</a>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col">
-                <div class="row mb-3">
+                <div class="row my-3">
 
-                    <div class="d-flex flex-row align-self-center align-items-center col-auto offset-0 justify-content-end">
-                        <div class="dropdown">
-                            <dmx-value id="var_familyoffset" dmx-bind:value="query.offset" dmx-on:updated="classesQuery.set('offset',value);queryManager.set('offset',value)"></dmx-value>
-                            <dmx-value id="var_familylistpage" dmx-bind:value="(query.offset==0) ? 1 : ((query.offset/query.limit)+1)"></dmx-value>
-                            <button id="dropdown_class_pagination" class="btn dropdown-toggle change-chevron btn-outline-link p-0 text-decoration-underline" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" dmx-html="'View:&nbsp;&nbsp;<strong>'+getAllFamilies.data.family.limit+'</strong><i class=&quot;fas fa-chevron-down fa-fw fa-sm ms-1&quot;></i>'">
-                                View:&nbsp;&nbsp; <strong>1</strong><i class="fas fa-chevron-down fa-fw ms-1 fa-xs"></i>
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdown_limit">
-                                <a class="dropdown-item" dmx-on:click="queryManager.set('limit',10);queryManager.set('offset',0)" href="#">10</a>
-                                <a class="dropdown-item" dmx-on:click="queryManager.set('limit',25);queryManager.set('offset',0)" href="#">25</a>
-                                <a class="dropdown-item" dmx-on:click="queryManager.set('limit',50);queryManager.set('offset',0)" href="#">50</a>
-                                <a class="dropdown-item" dmx-on:click="queryManager.set('limit',75);queryManager.set('offset',0)" href="#">75</a>
-                                <a class="dropdown-item" dmx-on:click="queryManager.set('limit',100);queryManager.set('offset',0)" href="#">100</a>
-                            </div>
+                    <div class="col d-flex flex-row justify-content-end">
+                        <div class="input-group flex-nowrap">
+                            <label class="input-group-text bg-secondary text-white" for="familysearch"><i class="fa fa-search fa-fw"></i></label>
+                            <input size="80" id="familysearch" type="text" class="form-control w-auto" placeholder="Search Families">
                         </div>
                     </div>
                     <div class="col align-self-center d-flex flex-row justify-content-end">
