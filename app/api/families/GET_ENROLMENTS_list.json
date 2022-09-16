@@ -1,0 +1,595 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "family_uuid"
+      },
+      {
+        "type": "text",
+        "name": "enrolment_timeline"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "enrolment_type"
+      },
+      {
+        "type": "boolean",
+        "name": "show_deleted"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/restrictredirect"
+        }
+      },
+      {
+        "name": "query_enrolments",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
+              },
+              {
+                "table": "classes",
+                "column": "day",
+                "alias": "class_day"
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "classes",
+                "column": "classlevel_uuid"
+              },
+              {
+                "table": "classes",
+                "column": "instructor_uuid"
+              },
+              {
+                "table": "e",
+                "column": "enrolmentType"
+              },
+              {
+                "table": "e",
+                "column": "startDate"
+              },
+              {
+                "table": "e",
+                "column": "dropDate"
+              },
+              {
+                "table": "e",
+                "column": "deleted_time"
+              }
+            ],
+            "table": {
+              "name": "enrolments",
+              "alias": "e"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "families",
+                "column": "*",
+                "alias": "f",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "f",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "s",
+                        "column": "family"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "classes",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classes",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "class_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "f.uuid",
+                  "field": "f.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.family_uuid}}",
+                  "data": {
+                    "table": "f",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "comment": "families uuid column for later use",
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "e.enrolmentType",
+                      "field": "e.enrolmentType",
+                      "type": "double",
+                      "operator": "equal",
+                      "value": "{{$_GET.enrolment_type}}",
+                      "data": {
+                        "table": "e",
+                        "column": "enrolmentType",
+                        "type": "number",
+                        "columnObj": {
+                          "type": "integer",
+                          "default": "'1'",
+                          "primary": false,
+                          "nullable": false,
+                          "comment": "1: Active\n2: Makeup\n3: Trial\n5: Casual\n\n// type 4 missing - was waitlist. Waitlists have now been moved as their own table and function.",
+                          "name": "enrolmentType"
+                        }
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.enrolment_type}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "s.uuid",
+                      "field": "s.uuid",
+                      "type": "string",
+                      "operator": "equal",
+                      "value": "{{$_GET.student_uuid}}",
+                      "data": {
+                        "table": "s",
+                        "column": "uuid",
+                        "type": "text",
+                        "columnObj": {
+                          "type": "string",
+                          "maxLength": 36,
+                          "primary": true,
+                          "nullable": false,
+                          "name": "uuid"
+                        }
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.student_uuid}}"
+                },
+                {
+                  "condition": "OR",
+                  "rules": [
+                    {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "e.dropDate",
+                          "field": "e.dropDate",
+                          "type": "date",
+                          "operator": "less",
+                          "value": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                          "data": {
+                            "table": "e",
+                            "column": "dropDate",
+                            "type": "date",
+                            "columnObj": {
+                              "type": "date",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "dropDate"
+                            }
+                          },
+                          "operation": "<"
+                        }
+                      ],
+                      "conditional": "{{$_GET.enrolment_timeline == 'past'}}"
+                    },
+                    {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "e.startDate",
+                          "field": "e.startDate",
+                          "type": "date",
+                          "operator": "greater",
+                          "value": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                          "data": {
+                            "table": "e",
+                            "column": "startDate",
+                            "type": "date",
+                            "columnObj": {
+                              "type": "date",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "startDate"
+                            }
+                          },
+                          "operation": ">"
+                        }
+                      ],
+                      "conditional": "{{$_GET.enrolment_timeline == 'future'}}"
+                    },
+                    {
+                      "condition": "OR",
+                      "rules": [
+                        {
+                          "id": "e.dropDate",
+                          "field": "e.dropDate",
+                          "type": "date",
+                          "operator": "is_null",
+                          "value": null,
+                          "data": {
+                            "table": "e",
+                            "column": "dropDate",
+                            "type": "date",
+                            "columnObj": {
+                              "type": "date",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "dropDate"
+                            }
+                          },
+                          "operation": "IS NULL"
+                        },
+                        {
+                          "id": "e.dropDate",
+                          "field": "e.dropDate",
+                          "type": "date",
+                          "operator": "greater_or_equal",
+                          "value": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                          "data": {
+                            "table": "e",
+                            "column": "dropDate",
+                            "type": "date",
+                            "columnObj": {
+                              "type": "date",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "dropDate"
+                            }
+                          },
+                          "operation": ">="
+                        }
+                      ],
+                      "conditional": "{{$_GET.enrolment_timeline=='currentfuture'}}"
+                    },
+                    {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "e.startDate",
+                          "field": "e.startDate",
+                          "type": "date",
+                          "operator": "less_or_equal",
+                          "value": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                          "data": {
+                            "table": "e",
+                            "column": "startDate",
+                            "type": "date",
+                            "columnObj": {
+                              "type": "date",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "startDate"
+                            }
+                          },
+                          "operation": "<="
+                        },
+                        {
+                          "condition": "OR",
+                          "rules": [
+                            {
+                              "id": "e.dropDate",
+                              "field": "e.dropDate",
+                              "type": "date",
+                              "operator": "is_null",
+                              "value": null,
+                              "data": {
+                                "table": "e",
+                                "column": "dropDate",
+                                "type": "date",
+                                "columnObj": {
+                                  "type": "date",
+                                  "primary": false,
+                                  "nullable": true,
+                                  "name": "dropDate"
+                                }
+                              },
+                              "operation": "IS NULL"
+                            },
+                            {
+                              "id": "e.dropDate",
+                              "field": "e.dropDate",
+                              "type": "date",
+                              "operator": "greater_or_equal",
+                              "value": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                              "data": {
+                                "table": "e",
+                                "column": "dropDate",
+                                "type": "date",
+                                "columnObj": {
+                                  "type": "date",
+                                  "primary": false,
+                                  "nullable": true,
+                                  "name": "dropDate"
+                                }
+                              },
+                              "operation": ">="
+                            }
+                          ],
+                          "conditional": null
+                        }
+                      ],
+                      "conditional": "{{$_GET.enrolment_timeline=='current'}}"
+                    }
+                  ],
+                  "conditional": "{{$_GET.enrolment_timeline}}"
+                },
+                {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "id": "e.deleted",
+                      "field": "e.deleted",
+                      "type": "boolean",
+                      "operator": "equal",
+                      "value": "\"0\"",
+                      "data": {
+                        "table": "e",
+                        "column": "deleted",
+                        "type": "boolean",
+                        "columnObj": {
+                          "type": "boolean",
+                          "default": "'0'",
+                          "primary": false,
+                          "nullable": false,
+                          "name": "deleted"
+                        }
+                      },
+                      "operation": "="
+                    }
+                  ],
+                  "conditional": "{{$_GET.show_deleted==\"0\"}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT s.firstName, s.lastName, classes.day AS class_day, classes.startTimeDisplay, classes.classlevel_uuid, classes.instructor_uuid, e.enrolmentType, e.startDate, e.dropDate, e.deleted_time\nFROM enrolments AS e\nLEFT JOIN students AS s ON (s.uuid = e.student_uuid) LEFT JOIN families AS f ON (f.uuid = s.family) LEFT JOIN classes ON (classes.uuid = e.class_uuid)\nWHERE f.uuid = :P1 /* {{$_GET.family_uuid}} */ AND (e.enrolmentType = :P2 /* {{$_GET.enrolment_type}} */) AND (s.uuid = :P3 /* {{$_GET.student_uuid}} */) AND ((e.dropDate < :P4 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate > :P5 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.dropDate IS NULL OR e.dropDate >= :P6 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate <= :P7 /* {{NOW.formatDate('yyyy-MM-dd')}} */ AND (e.dropDate IS NULL OR e.dropDate >= :P8 /* {{NOW.formatDate('yyyy-MM-dd')}} */))) AND (e.deleted = '\"0\"')\nORDER BY classes.day ASC, e.startDate ASC, e.dropDate ASC, s.lastName ASC, s.firstName ASC, classes.day ASC, classes.startTimeDecimal ASC, classes.endTimeDecimal ASC",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.family_uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.enrolment_type}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P3",
+                "value": "{{$_GET.student_uuid}}"
+              },
+              {
+                "operator": "less",
+                "type": "expression",
+                "name": ":P4",
+                "value": "{{NOW.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "greater",
+                "type": "expression",
+                "name": ":P5",
+                "value": "{{NOW.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "greater_or_equal",
+                "type": "expression",
+                "name": ":P6",
+                "value": "{{NOW.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "less_or_equal",
+                "type": "expression",
+                "name": ":P7",
+                "value": "{{NOW.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "greater_or_equal",
+                "type": "expression",
+                "name": ":P8",
+                "value": "{{NOW.formatDate('yyyy-MM-dd')}}"
+              }
+            ],
+            "orders": [
+              {
+                "table": "classes",
+                "column": "day",
+                "direction": "ASC",
+                "recid": 1
+              },
+              {
+                "table": "e",
+                "column": "startDate",
+                "direction": "ASC",
+                "recid": 2
+              },
+              {
+                "table": "e",
+                "column": "dropDate",
+                "direction": "ASC",
+                "recid": 3
+              },
+              {
+                "table": "s",
+                "column": "lastName",
+                "direction": "ASC",
+                "recid": 4
+              },
+              {
+                "table": "s",
+                "column": "firstName",
+                "direction": "ASC",
+                "recid": 5
+              },
+              {
+                "table": "classes",
+                "column": "day",
+                "direction": "ASC",
+                "recid": 6
+              },
+              {
+                "table": "classes",
+                "column": "startTimeDecimal",
+                "direction": "ASC",
+                "recid": 7
+              },
+              {
+                "table": "classes",
+                "column": "endTimeDecimal",
+                "direction": "ASC",
+                "recid": 8
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "class_day"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "text",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "number",
+            "name": "enrolmentType"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          },
+          {
+            "type": "number",
+            "name": "deleted_time"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

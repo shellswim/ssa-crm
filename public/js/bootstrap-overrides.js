@@ -18,6 +18,18 @@ function modal_parent_backdrop(modalSelector = '.modal.bg-parent') {
     });
 };
 
+// Modal backdrop above offcanvas
+function modal_above_oc_backdrop(modalSelector = '.modal.bg-above-oc') {
+    let modal = document.querySelectorAll(modalSelector);
+    modal.forEach(e => {
+        e.addEventListener('show.bs.modal', function(ev) {
+            waitfor_el('.modal-backdrop').then((elm) => {
+                elm.style.zIndex = 1051;
+            });
+        });
+    });
+} 
+
 // Utilities
 // Wait for element;
 function waitfor_el(selector) {

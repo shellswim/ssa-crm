@@ -1,0 +1,293 @@
+<!-- Wappler include is="dmx-app" id="_mod_familyDetails_createEnrolment" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5Modal:{},dmxFormRepeat:{},dmxDataTraversal:{},dmxStateManagement:{},dmxBootstrap5Tooltips:{},dmxBootstrap5Popovers:{},dmxBootbox5:{},dmxDatePicker:{},dmxValidator:{},dmxAnimateCSS:{}}" moment_2="cdn" -->
+<%- await include('/partials/classes/_oc_quote_details', Object.assign({}, locals)) %><script is="dmx-flow" id="flow_modalbg_above_oc" type="text/dmx-flow" src="/app/flows/bootstrap_overrides/modal_above_oc_backdrop.json" dmx-param:modal="'#mod_familyDetails_createEnrolment'" autorun></script>
+
+<dmx-session-manager id="class_filter_store"></dmx-session-manager>
+
+<div class="modal fade" id="mod_familyDetails_createEnrolment" is="dmx-bs5-modal" tabindex="-1" nocloseonclick="true" dmx-on:hidden-bs-modal="arr_daysfilter.empty();arr_timesfilter.empty();arr_instructorsfilter.empty();arr_levelsfilter.empty();sel_fd_newenrolment_studentpicker.setValue(null);var_enrolmenttype.setValue('null');var_pagecount.setValue(1);sel_fd_newenrolment_enrolmenttype.setValue('active')">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-fullscreen-xxl-down" role="document">
+        <div class="modal-content">
+            <div class="modal-header pdl-main-bg">
+                <h5 class="modal-title"><i class="fas fa-plus-circle text-primary fa-fw me-2"></i>
+                    <i class="fas fa-book-open fa-fw me-2"></i>Create Enrolment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 light-blue-bg">
+                <dmx-value id="var_pagecount" dmx-bind:value="1"></dmx-value>
+                <dmx-value id="var_enrolmenttype" dmx-bind:value="1"></dmx-value>
+                <section dmx-show="mod_familyDetails_createEnrolment.var_pagecount.value==1" class="p-4 bg-white rounded-3" dmx-animate-leave.duration:5000="fadeOut">
+                    <dmx-data-detail id="dd_fd_newenrol_selectedstudent" dmx-bind:data="sc_GET_FAMILY_students.data.students" key="uuid"></dmx-data-detail>
+                    <dmx-data-detail id="dd_classdetails" dmx-bind:data="mod_familyDetails_createEnrolment.cr_classfilters_studentselected.sc_classeslist.data.nextavail.classes" key="uuid">
+
+                    </dmx-data-detail>
+                    <dmx-array id="arr_daysfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'fd_newenrol_filter_days\',items.sortarray(false));queryManager.set(\'offset\',0);calendarClasses.load({},true)`}})"></dmx-array>
+                    <dmx-array id="arr_timesfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'fd_newenrol_filter_times\',items.sortarray(true,\'decimals.startdecimal\'))`}})" dmx-bind:items="class_filter_store.data.fd_newenrol_filter_times"></dmx-array>
+                    <dmx-array id="arr_instructorsfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'fd_newenrol_filter_instructors\',arr_instructorsfilter.items);queryManager.set(\'offset\',0);calendarClasses.load({},true)`}})"></dmx-array>
+                    <dmx-array id="arr_levelsfilter" dmx-on:updated="run({run:{action:`class_filter_store.set(\'fd_newenrol_filter_levels\',arr_levelsfilter.items);queryManager.set(\'offset\',0);calendarClasses.load({},true)`}})"></dmx-array>
+                    <section>
+                        <p class="fw-900 mb-1">Enrolment Details</p>
+                        <div class="row">
+                            <div class="col-auto">
+                                <div class="form-group mb-3">
+                                    <label for="sel_fd_newenrolment_studentpicker" class="form-label col-form-label">Student</label>
+                                    <select id="sel_fd_newenrolment_studentpicker" class="form-select w-auto" dmx-bind:options="sc_GET_FAMILY_students.data.students" optiontext="firstName+' '+lastName" optionvalue="uuid" dmx-on:updated="run([{run:{action:`mod_familyDetails_createEnrolment.dd_fd_newenrol_selectedstudent.select(mod_familyDetails_createEnrolment.sel_fd_newenrolment_studentpicker.value)`}},{condition:{if:`mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cb_restrict_level_to_student.checked`,then:{steps:{run:{action:`mod_familyDetails_createEnrolment.arr_levelsfilter.empty();mod_familyDetails_createEnrolment.arr_levelsfilter.add(dd_fd_newenrol_selectedstudent.data.classlevel_uuid)`}}}}}])">
+                                        <option value="">Choose Student...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-group mb-3">
+                                    <label class="form-label col-form-label">Enrolment Type</label>
+                                    <select id="sel_fd_newenrolment_enrolmenttype" class="form-select" style="height: 30px;" dmx-on:updated="var_enrolmenttype.setValue(mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value)">
+                                        <option value="permanent">Permanent (Active/Trial)</option>
+                                        <option value="temporary">Temporary (Makeup/Casual)</option>
+                                        <option value="wait">Waitlist</option>
+                                    </select>
+                                </div>
+                                <div class="dropdown">
+
+                                    <div class="dropdown-menu overpl pt-0 shadow-sm" aria-labelledby="dd_instructorfilter" style="max-height: 250px; overflow-y: scroll !important;">
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-on:click="var_enrolmenttype.setValue(1)">Active</a>
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-on:click="var_enrolmenttype.setValue(1)">Trial</a>
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-on:click="var_enrolmenttype.setValue(1)">Makeup</a>
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-on:click="var_enrolmenttype.setValue(1)">Casual</a>
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-on:click="var_enrolmenttype.setValue(1)">Waitlist</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+                    <section is="dmx-if" id="cr_classfilters_studentselected" dmx-bind:condition="sel_fd_newenrolment_studentpicker.value">
+                        <p class="fw-900 mb-2">Filter Classes</p>
+                        <dmx-serverconnect id="sc_classeslist" url="/api/families/GET_CLASSES_NEW_ENROLMENT_FILTERED_list" dmx-param:filter_days="mod_familyDetails_createEnrolment.arr_daysfilter.items" dmx-param:filter_times="mod_familyDetails_createEnrolment.arr_timesfilter.items" dmx-param:filter_levels="mod_familyDetails_createEnrolment.arr_levelsfilter.items" dmx-param:filter_instructors="mod_familyDetails_createEnrolment.arr_instructorsfilter.items" dmx-param:checkavail_max="appSettings.enrol_availability_max_weeks" dmx-param:makeup_max_book_days="appSettings.enrol_makeup_book_ahead_days" dmx-param:startofweek="appSettings.weekstart" dmx-param:avails_type="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value" dmx-param:show_full_classes="(mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cr_show_full_classes.cb_showfull_classes.checked ? 1 : 0)"></dmx-serverconnect>
+                        <div class="row mb-3 align-items-end">
+                            <div class="col-auto">
+
+                                <label class="form-label col-form-label">Days</label>
+                                <div class="dropdown">
+                                    <button id="btn_daysfilter_dropdown" class="btn mb-0 filter-toggle dropdown-toggle no-caret text-start border" type="button" data-bs-auto-close="outside" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select Days <i class="fas fa-chevron-down fa-xs fa-fw ms-2"></i></button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-text="$value" dmx-on:click="arr_daysfilter.addUniq($key)" dmx-hide="arr_daysfilter.items.contains($key)" dmx-repeat:rp_daysfilter="appSettings.days_array">Action</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label col-form-label">Times</label>
+                                <div class="dropdown">
+                                    <button id="btn_timesfilter_dropdown" class="btn mb-0 filter-toggle dropdown-toggle no-caret text-start border" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Select Times<i class="fas fa-chevron-down fa-xs fa-fw ms-2"></i></button>
+                                    <div class="dropdown-menu overpl pt-0 shadow-sm" aria-labelledby="dd_timefilter" style="max-height: 250px; overflow-y: scroll !important;">
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-text="display" dmx-on:click="arr_timesfilter.addUniq($value.stringify())" dmx-hide="arr_timesfilter.items.contains($value.stringify())" dmx-repeat:rp_timesfilter="appSettings.ct_range_array">Action</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-auto">
+                                <label class="form-label col-form-label">Instructors</label>
+                                <div class="dropdown">
+                                    <button id="dd_instructorfilter" class="btn mb-0 filter-toggle dropdown-toggle no-caret text-start border" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Select Instructors...<i class="fas fa-chevron-down fa-xs fa-fw ms-2"></i></button>
+
+                                    <div class="dropdown-menu overpl pt-0 shadow-sm" aria-labelledby="dd_instructorfilter" style="max-height: 250px; overflow-y: scroll !important;">
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-text="firstName +' '+lastName.trunc(1,true,'.')" dmx-on:click="arr_instructorsfilter.addUniq(id)" dmx-hide="arr_instructorsfilter.items.contains(id)" dmx-repeat:rp_instructorsfilter="appSettings.instructors">Action</a>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="col-auto">
+                                <label class="form-label col-form-label">Class Levels</label>
+
+                                <div class="dropdown">
+                                    <button id="dd_levelfilter" class="btn mb-0 filter-toggle dropdown-toggle no-caret text-start border" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" dmx-bind:disabled="mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cb_restrict_level_to_student.checked">Select Levels...<i class="fas fa-chevron-down fa-xs fa-fw ms-2"></i></button>
+                                    <div class="dropdown-menu overpl pt-0 shadow-sm" aria-labelledby="dd_levelfilter" style="max-height: 250px; overflow-y: scroll !important;">
+                                        <a class="dropdown-item p-3 pe-5 fw-600" href="javascript:void(0)" dmx-text="name" dmx-on:click="arr_levelsfilter.addUniq($key)" dmx-hide="arr_levelsfilter.items.contains($key)" dmx-repeat:rp_levelsfilter="appSettings.classLevelsByID">Action</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col ps-0 align-self-stretch d-flex flex-row align-items-end justify-content-start">
+                                <div class="form-group mt-2">
+                                    <div class="form-check">
+                                        <dmx-toggle id="toggle_restrictlevel" dmx-bind:checked="mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cb_restrict_level_to_student.checked" dmx-on:updated="run([{run:{action:`mod_familyDetails_createEnrolment.arr_levelsfilter.empty()`}},{condition:{if:`mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cb_restrict_level_to_student.checked`,then:{steps:{run:{action:`mod_familyDetails_createEnrolment.arr_levelsfilter.empty();mod_familyDetails_createEnrolment.arr_levelsfilter.add(mod_familyDetails_createEnrolment.dd_fd_newenrol_selectedstudent.data.classlevel_uuid)`}}}}}])"></dmx-toggle><input class="form-check-input" type="checkbox" id="cb_restrict_level_to_student" checked>
+                                        <label class="form-check-label" for="cb_restrict_level_to_student">Restrict.</label><i class="fas fa-info-circle fa-fw ms-1" dmx-bs-tooltip="'Enabling will restrict class levels to students level. It is recommended to leave this checked to avoid overbookings.'" data-bs-trigger="hover" data-bs-placement="right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col d-flex flex-row justify-content-end align-items-end" is="dmx-if" id="cr_show_full_classes" dmx-bind:condition="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='permanent'">
+                                <div class="form-group">
+                                    <legend class="col-form-label">Show Full Classes</legend>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" value="" id="cb_showfull_classes">
+                                        <label class="form-check-label" for="cb_showfull_classes" dmx-html="((mod_familyDetails_createEnrolment.cr_classfilters_studentselected.cr_show_full_classes.cb_showfull_classes.checked)?'&lt;span class=&quot;fw-800 text-danger&quot;&gt;SHOW&lt;/span&gt;' : 'Hide')">Show/Hide</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="light my-3">
+                        <div class="row mb-3">
+                            <div class="col-auto d-flex flex-row justify-content-start align-items-center" dmx-hide="arr_daysfilter.count===0">
+                                <p class="mb-0 me-2 fw-900">Days: </p>
+                                <p class="badge fs-6 bg-secondary text-white mb-0 fw-500 me-2 clickable user-select-none" dmx-repeat:rp_classpage_filters_days="class_filter_store.data.fd_newenrol_filter_days" dmx-html="'<span class=&quot;text-decoration-underline&quot;>'+appSettings.days_array[$value]+' </span><small class=&quot;text-white-50&quot;>&#10006;</small>'" dmx-on:click="arr_daysfilter.removeAt($index)">Monday <small class="text-white-50">&#10006;</small> </p>
+                            </div>
+                            <div class="col-auto d-flex flex-row justify-content-start align-items-center" dmx-hide="arr_timesfilter.count===0">
+                                <p class="mb-0 me-2 fw-900">Times: </p>
+                                <p class="badge fs-6 bg-secondary text-white mb-0 fw-500 me-2 clickable user-select-none" dmx-repeat:rp_classpage_filters_times="class_filter_store.data.fd_newenrol_filter_times" dmx-html="'&lt;span class=&quot;text-decoration-underline&quot;&gt;'+$value.unstringify().display+' &lt;/span&gt;<small class=&quot;text-white-50&quot;>&#10006;</small>'" dmx-on:click="arr_timesfilter.removeAt($index)">3:00 - 4:00 PM <small class="text-white-50">&nbsp;&#10006;</small>
+                                </p>
+                            </div>
+                            <div class="col-auto d-flex flex-row justify-content-start align-items-center" dmx-hide="arr_levelsfilter.count===0">
+                                <p class="mb-0 me-2 fw-900">Levels: </p>
+                                <p class="badge fs-6 bg-secondary text-white mb-0 fw-500 me-2 clickable user-select-none" dmx-repeat:rp_classpage_filters_levels="class_filter_store.data.fd_newenrol_filter_levels" dmx-on:click="run({condition:{if:`!cb_restrict_level_to_student.checked`,then:{steps:{run:{action:`arr_levelsfilter.removeAt($index)`}}}}})">{{appSettings.classLevelsByID[$value].name}} <small class="text-white-50 ms-1" dmx-hide="cb_restrict_level_to_student.checked">&#10006;</small><i class="fas fa-info-circle fa-fw ms-1 fa-sm" dmx-hide="!cb_restrict_level_to_student.checked" dmx-bs-tooltip="'Cannot remove while class levels restricted.'" data-bs-trigger="hover"></i></p>
+                            </div>
+                            <div class="col-auto d-flex flex-row justify-content-start align-items-center" dmx-hide="arr_instructorsfilter.count===0">
+                                <p class="mb-0 me-2 fw-900">Instructors: </p>
+                                <p class="badge fs-6 bg-secondary text-white mb-0 fw-500 me-2 clickable user-select-none" dmx-repeat:rp_classpage_filters_instructors="class_filter_store.data.fd_newenrol_filter_instructors" dmx-html="'<span class=&quot;text-decoration-underline&quot;>'+appSettings.instructorsById[$value].trunc_name+' </span><small class=&quot;text-white-50&quot;>&#10006;</small>'" dmx-on:click="arr_instructorsfilter.removeAt($index)">Sarah J. <small class="text-white-50">&#10006;</small></p>
+                            </div>
+                        </div>
+                        <hr class="light my-3">
+                        <div class="row">
+                            <div class="col">
+                                <p class="text-danger">Note: Maximum of 25 classes are displayed. If you cannot find a class, further refine your filters.</p>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle bg-white table-bordered" style="">
+                                        <thead class="pdl-main-bg">
+                                            <tr class="fw-bold align-middle">
+
+
+                                                <th rowspan="2" class="text-center collapse-cell">Level</th>
+                                                <th rowspan="2" class="text-center">Day</th>
+                                                <th rowspan="2" class="text-center">Schedule</th>
+
+
+                                                <th rowspan="2" class="text-center">Instructor</th>
+                                                <th rowspan="2" class="text-center">Enrolments</th>
+                                                <th colspan="2" dmx-bind:colspan="1" class="text-center" dmx-hide="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='wait'">Enrolment Date</th>
+                                                <th rowspan="2" class="text-center collapse-cell">Enrol</th>
+                                            <tr class="fw-450 fst-italic small">
+                                                <th class="text-center fw-500" dmx-show="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='permanent'">Permanent (Active/Trial)</th>
+                                                <th class="text-center fw-500" dmx-show="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='temporary'">Temporary (Makeup/Casual)</th>
+                                            </tr>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_classeslist.data.nextavail.classes" id="rp_classes_table" dmx-hide="sc_classeslist.data.nextavail.classes.length===0">
+                                            <tr class="user-select-none">
+                                                <td class="d-flex align-items-center text-nowrap fw-900 ps-3 border-end-0">
+                                                    <div class="d-block circle position-relative m-1 me-3" dmx-style:background-color="'#'+appSettings.classLevelsByID[classlevel_uuid].colour">
+                                                        <p class="d-flex m-0 position-absolute w-100 h-100 align-items-center justify-content-center small fw-700" dmx-style:color.important="'#'+appSettings.classLevelsByID[classlevel_uuid].textcolour" dmx-text="appSettings.classLevelsByID[classlevel_uuid].name.substr(0, 1)" style="line-height: 0;">F</p>
+                                                    </div>
+                                                    <span class="me-3" dmx-text="appSettings.classLevelsByID[classlevel_uuid].name"></span>
+                                                </td>
+
+                                                <td dmx-text="appSettings.days_array[classday]" class="text-center"></td>
+                                                <td class="text-nowrap text-center position-relative">
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <i class="fas pdl-clock me-2" dmx-show="isrunning"></i>
+                                                        <span dmx-html="startTimeDisplay.lowercase().replace(' am','').replace(' pm','')+ ' - ' + endTimeDisplay.lowercase().replace(' ','')">11:00 - 11:30AM</span>
+                                                    </div>
+                                                </td>
+
+
+                                                <td dmx-text="appSettings.instructorsById[instructor_uuid].trunc_name" class="text-nowrap text-center"></td>
+                                                <td dmx-html="'<strong>'+details.total+'</strong> / '+max" class="text-center"></td>
+                                                <td class="text-center" dmx-show="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='permanent'">
+                                                    <span dmx-hide="details.nextavailable_permanent == false" dmx-text="(details.nextavailable_permanent !== false &amp;&amp; details.outofrange === false) ? details.nextavailable_permanent.formatDate(appSettings.localization_puddle_dateformat) : ''">Next Open:</span>
+                                                    <span class="text-end mb-0 fw-bold text-danger" dmx-show="details.total==max&amp;&amp;details.nextavailable_permanent==false&amp;&amp;details.outofrange===false">FULL</span>
+                                                    <span class="text-end mb-0 fw-bold text-danger" dmx-show="details.total>max&amp;&amp;details.outofrange===false">OVERBOOKED</span>
+                                                    <span class="mb-0 fst-italic fw-450 small" dmx-show="details.outofrange">Too far in future.</span>
+                                                </td>
+                                                <td class="text-nowrap text-center" dmx-show="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='temporary'">
+                                                    <p class="mb-0" dmx-repeat:rp_makeupavail_disp="details.makeup_availabilities" dmx-hide="details.makeup_response.code !== 100" dmx-html="'<strong>'+availabilities+' Avail.</strong> - '+date.formatDate('dd MMM')"><b>4</b> spots - 21 Nov</p>
+                                                    <span class="text-end mb-0 fw-bold text-danger" dmx-show="details.makeup_response.code !== 100" dmx-text="details.makeup_response.response">Too far in future.</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button id="btn_startenrolment" class="btn btn-primary text-nowrap" dmx-on:click="run([{run:{action:`mod_familyDetails_createEnrolment.dd_classdetails.select(uuid)`}},{wait:{delay:150}},{run:{action:`mod_familyDetails_createEnrolment.var_pagecount.setValue(2)`}}])" dmx-hide="(details.total==max&amp;&amp;details.nextavailable_permanent==false&amp;&amp;details.outofrange===false)||(details.total&gt;max&amp;&amp;details.outofrange===false)||(mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='wait')"><i class="fas fa-book-open me-2 fa-fw"></i>Enrol
+                                                    </button>
+                                                    <button id="btn_startwaitlist" class="btn btn-waitlist text-nowrap" dmx-show="(details.total==max&amp;&amp;details.nextavailable_permanent==false&amp;&amp;details.outofrange===false)||(details.total&gt;max&amp;&amp;details.outofrange===false)||(mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value=='wait')"><i class="fas fa-history me-2 fa-fw"></i>Wait</button>
+                                                </td>
+
+                                            </tr>
+
+                                        </tbody>
+                                        <tbody dmx-show="sc_classeslist.data.nextavail.classes.length===0">
+                                            <tr>
+                                                <td colspan="9" class="text-center p-4">No classes were found. Please adjust your filters and try again.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+                <section id="cr_fd_newenrol_classenrol" is="dmx-if" dmx-bind:condition="mod_familyDetails_createEnrolment.var_pagecount.value==2" class="p-4 bg-white rounded-3">
+                    <section dmx-animate-enter.duration:300.="fadeIn">
+                        <button id="btn_back" class="btn mb-3 btn-primary" dmx-on:click="var_pagecount.setValue(1)"><i class="far fa-arrow-alt-circle-left me-1 fa-sm fa-fw"></i>Go Back</button>
+                        <div class="row">
+                            <div class="col">
+                                <h4 class="fw-900 my-4" dmx-text="'Enrol '+mod_familyDetails_createEnrolment.dd_fd_newenrol_selectedstudent.data.firstName+' '+mod_familyDetails_createEnrolment.dd_fd_newenrol_selectedstudent.data.lastName+' into: '+appSettings.days_array[mod_familyDetails_createEnrolment.dd_classdetails.data.classday]+' - '+mod_familyDetails_createEnrolment.dd_classdetails.data.startTimeDisplay+' '+appSettings.classLevelsByID[mod_familyDetails_createEnrolment.dd_classdetails.data.classlevel_uuid].name+' - '+appSettings.instructorsById[mod_familyDetails_createEnrolment.dd_classdetails.data.instructor_uuid].trunc_name">Enrol Jane Doe into: Sunday - 9:00am Duckling - Freddy K.</h4>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+
+                                <h6 class="fw-900 mb-1">Enrolment Details</h6>
+                                <p class="mb-2">Please choose an enrolment type to continue.</p>
+                                <div class="row mb-1 pb-2">
+                                    <div class="col">
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="active_enroltype_toggle" autocomplete="off" value="active" dmx-bind:disabled="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='temporary'">
+                                        <label class="btn me-2 btn-active-outline" for="active_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('active')" dmx-hide="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='temporary'"><i class="fas fa-check-circle me-2 fa-fw fa-sm"></i>Active Enrolment</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="trial_enroltype_toggle" autocomplete="off" value="trial" dmx-bind:disabled="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='temporary'">
+                                        <label class="btn me-2 btn-trial-outline" for="trial_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('trial')" dmx-hide="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='temporary'"><i class="fas fa-question-circle me-2 fa-fw fa-sm text-trial-light"></i>Trial Enrolment</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="makeup_enroltype_toggle" autocomplete="off" value="makeup" dmx-bind:disabled="mod_familyDetails_createEnrolment.var_enrolmenttype.value!=='temporary'">
+                                        <label class="btn me-2 btn-makeup-outline" for="makeup_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('makeup')" dmx-hide="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='permanent'"><i class="fas fa-arrow-alt-circle-up me-2 fa-fw fa-sm text-makeup"></i>Makeup</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="casual_enroltype_toggle" autocomplete="off" value="casual" dmx-bind:disabled="mod_familyDetails_createEnrolment.var_enrolmenttype.value!=='temporary'">
+                                        <label class="btn me-2 btn-casual-outline" for="casual_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('casual')" dmx-hide="mod_familyDetails_createEnrolment.var_enrolmenttype.value==='permanent'"><i class="fas fa-bookmark me-2 fa-fw fa-sm text-casual"></i>Casual</label>
+
+                                        <input type="radio" class="btn-check d-none" name="radio_enrolsearch_enroltype" id="waitlist_enroltype_toggle" autocomplete="off" value="waitlist">
+                                        <label class="btn btn-sm me-2 btn-outline-dark d-none" for="waitlist_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('waitlist')"><i class="fas fa-history me-2 fa-fw fa-sm text-waitlist-light"></i>Waitlist</label>
+                                    </div>
+                                </div>
+                                <div class="row" dmx-show="mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.active_enroltype_toggle.checked||mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.trial_enroltype_toggle.checked||mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.makeup_enroltype_toggle.checked||mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.casual_enroltype_toggle.checked">
+                                    <div class="col-auto">
+                                        <dmx-value id="var_newenrol_startdate"></dmx-value>
+                                        <div class="row" is="dmx-if" id="cr_newtempenrol_dates" dmx-bind:condition="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value==='temporary'">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="sel_temporary_date" class="form-label col-form-label">Start Date</label>
+
+                                                    <select id="sel_temporary_date" class="form-select" dmx-bind:options="mod_familyDetails_createEnrolment.dd_classdetails.data.details.makeup_availabilities" optiontext="date.formatDate(appSettings.localization_puddle_dateformat)" optionvalue="date.formatDate('yyyy-MM-dd')">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" is="dmx-if" id="cr_newenrol_setdate" dmx-bind:condition="mod_familyDetails_createEnrolment.sel_fd_newenrolment_enrolmenttype.value==='permanent'">
+                                            <div class="col">
+                                                <label for="sel_temporary_date" class="form-label col-form-label">Start Date</label>
+                                                <input id="inp_newEnrolStartDate" class="form-control" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="dateAndTime_days.datetime.addDays(-7)" step="7" dmx-bind:value="(dd_classdetails.var_enroltype.value == 'makeup' || dd_classdetails.var_enroltype.value == 'casual' ? null : var_newenrol_startdate.value||dateAndTime_days.datetime.formatDate('yyyy-MM-dd'))" dmx-bind:maxdate="classesBase.data.nextavail.max_date" dmx-bind:customdates="dd_classdetails.data.details.makeup_availabilities" customdates-start="date.formatDate('yyyy-MM-dd')" customdates-end="date.formatDate('yyyy-MM-dd')">
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-0 mt-2 small fw-600 text-danger"><i class="fas fa-exclamation-triangle me-1 fa-fw fa-sm"></i>Always double check your start date.</p>
+                                    </div>
+                                    <div class="col-auto">
+                                        <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
+                                        <p class="col-form-label text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
+                                        <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" onkeydown="return false" dmxbind:format="appSettings.localization_dateformat" format="Do MMM YYYY" dmx-bind:mindate="cr_newtempenrol_dates.sel_temporary_date.value" step="7" dmx-bind:value="cr_newtempenrol_dates.sel_temporary_date.value">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

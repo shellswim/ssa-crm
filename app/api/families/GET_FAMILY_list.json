@@ -77,23 +77,93 @@
                       "operation": "="
                     }
                   ]
-                }
+                },
+                "primary": "uuid"
               }
             ],
-            "query": "SELECT families.*, guardians.firstName, guardians.lastName, guardians.default_email, guardians.default_phone\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid)\nORDER BY guardians.lastName ASC, guardians.firstName ASC",
-            "params": [],
+            "query": "SELECT families.*, guardians.firstName, guardians.lastName, guardians.default_email, guardians.default_phone\nFROM families\nLEFT JOIN guardians ON (guardians.uuid = families.guardian_uuid)\nWHERE (guardians.lastName LIKE :P1 /* {{$_GET.textfilter}} */ OR guardians.firstName LIKE :P2 /* {{$_GET.textfilter}} */)\nORDER BY guardians.lastName ASC, guardians.firstName ASC",
+            "params": [
+              {
+                "operator": "contains",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.textfilter}}"
+              },
+              {
+                "operator": "contains",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.textfilter}}"
+              }
+            ],
             "orders": [
               {
                 "table": "guardians",
                 "column": "lastName",
-                "direction": "ASC"
+                "direction": "ASC",
+                "recid": 1
               },
               {
                 "table": "guardians",
                 "column": "firstName",
-                "direction": "ASC"
+                "direction": "ASC",
+                "recid": 2
               }
-            ]
+            ],
+            "primary": "uuid",
+            "wheres": {
+              "condition": "OR",
+              "rules": [
+                {
+                  "condition": "OR",
+                  "rules": [
+                    {
+                      "id": "guardians.lastName",
+                      "field": "guardians.lastName",
+                      "type": "string",
+                      "operator": "contains",
+                      "value": "{{$_GET.textfilter}}",
+                      "data": {
+                        "table": "guardians",
+                        "column": "lastName",
+                        "type": "text",
+                        "columnObj": {
+                          "type": "string",
+                          "maxLength": 255,
+                          "primary": false,
+                          "nullable": true,
+                          "name": "lastName"
+                        }
+                      },
+                      "operation": "LIKE"
+                    },
+                    {
+                      "id": "guardians.firstName",
+                      "field": "guardians.firstName",
+                      "type": "string",
+                      "operator": "contains",
+                      "value": "{{$_GET.textfilter}}",
+                      "data": {
+                        "table": "guardians",
+                        "column": "firstName",
+                        "type": "text",
+                        "columnObj": {
+                          "type": "string",
+                          "maxLength": 255,
+                          "primary": false,
+                          "nullable": true,
+                          "name": "firstName"
+                        }
+                      },
+                      "operation": "LIKE"
+                    }
+                  ],
+                  "conditional": "{{$_GET.textfilter}}"
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            }
           }
         },
         "meta": [
@@ -166,10 +236,6 @@
                 "name": "specialDiscount"
               },
               {
-                "type": "number",
-                "name": "address"
-              },
-              {
                 "type": "text",
                 "name": "stripe_cust_id"
               },
@@ -180,6 +246,10 @@
               {
                 "type": "text",
                 "name": "default_address"
+              },
+              {
+                "type": "number",
+                "name": "address_old"
               },
               {
                 "type": "text",
@@ -480,10 +550,6 @@
             "type": "number"
           },
           {
-            "name": "address",
-            "type": "number"
-          },
-          {
             "name": "stripe_cust_id",
             "type": "text"
           },
@@ -494,6 +560,10 @@
           {
             "name": "default_address",
             "type": "text"
+          },
+          {
+            "name": "address_old",
+            "type": "number"
           },
           {
             "name": "firstName",

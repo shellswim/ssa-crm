@@ -1,0 +1,98 @@
+<!-- Wappler include is="dmx-app" id="_enrolments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5TableGenerator:{},dmxFormatter:{},dmxPreloader:{}}" -->
+<!-- Wappler include id="_enrolments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5TableGenerator:{}}" -->
+<dmx-preloader id="preloader1" head-page="layouts/layout2" spinner="wanderingCubes" bgcolor="rgba(255,255,255,1)"></dmx-preloader>
+<dmx-serverconnect id="sc_GET_ENROLMENTS_list" url="/api/families/GET_ENROLMENTS_list" dmx-param:family_uuid="query.familyid" dmx-param:enrolment_timeline="sel_family_enrolment_timeline.value" dmx-param:student_uuid="sel_family_enrolment_student.value" dmx-param:enrolment_type="sel_family_enrolment_type.value" dmx-param:show_deleted="inp_hd_showdeleted.value"></dmx-serverconnect>
+
+<main class="standard-max-width">
+    <div class="row">
+        <div class="col p-4 bg-white rounded-3">
+            <div class="row">
+                <div class="col">
+                    <h3 class="mb-3 fw-700"><i class="fas fa-book-open me-3 text-primary fa-sm"></i>Family Enrolments</h3>
+                </div>
+                <div class="col d-flex justify-content-end flex-row align-items-start">
+                    <button id="btn_newFamilyNote" class="btn btn-secondary" dmx-on:click="mod_familyDetails_createEnrolment.show()"><i class="fas fa-plus-circle fa-fw fa-sm me-2"></i>New Enrolment</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="row">
+                        <div class="col-auto">
+                            <div class="form-group mb-3">
+                                <label for="sel_family_enrolment_timeline" class="col-form-label">Enrolment Timeline</label>
+                                <select id="sel_family_enrolment_timeline" class="form-select" name="enrolment_timeline">
+                                    <option value="currentfuture" selected="">Current &amp; Future</option>
+                                    <option value="current">Current Only</option>
+                                    <option value="future">Future</option>
+                                    <option value="past">Past</option>
+                                    <option value="all">All</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-group mb-3">
+                                <label for="sel_family_enrolment_student" class="col-form-label">Students</label>
+                                <select id="sel_family_enrolment_student" class="form-select" name="student_uuid" dmx-bind:options="sc_GET_FAMILY_students.data.students" optiontext="firstName+' '+lastName" optionvalue="uuid">
+                                    <option value="" selected="">All</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-group mb-3">
+                                <label for="sel_family_enrolment_type" class="col-form-label">Enrolment Type</label>
+                                <select id="sel_family_enrolment_type" class="form-select" name="enrolment_type" optiontext="type" optionvalue="id" dmx-bind:options="appSettings.enrolTypesArray">
+                                    <option value="" selected="">All</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col d-flex flex-row justify-content-end align-items-end">
+                            <div class="form-group mb-3">
+                                <input id="inp_hd_showdeleted" name="show_deleted" type="hidden" class="form-control" dmx-bind:value="(cb_showdeleted.checked) ? 1 : 0">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="cb_showdeleted" name="cb_showdeleted">
+                                    <label class="form-check-label" for="cb_showdeleted">Show Deleted</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover big-small align-middle">
+                                    <thead class="pdl-main-bg">
+                                        <tr>
+                                            <th class="collapse-cell">Student</th>
+                                            <th class="collapse-cell">Type</th>
+                                            <th>Enrolment</th>
+                                            <th class="collapse-cell">Start date</th>
+                                            <th class="collapse-cell">Drop date</th>
+                                            <th class="collapse-cell" contenteditable="false" dmx-hide="!cb_showdeleted.checked">Deleted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_ENROLMENTS_list.data.query_enrolments" id="tb_rp_enrolments">
+                                        <tr>
+                                            <td dmx-text="firstName + ' ' + lastName" class="fw-600 text-nowrap">Jane Doe</td>
+                                            <td dmx-text="appSettings.enrolTypesById[enrolmentType].name.uppercase()" dmx-class:bg-active="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='active'" dmx-class:bg-trial="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='trial'" dmx-class:bg-makeup="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='makeup'" dmx-class:bg-casual="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='casual'" dmx-class:bg-waitlist="appSettings.enrolTypesById[enrolmentType].name.lowercase()==='waitlist'" class="no-hover small text-center fw-700">Active</td>
+                                            <td dmx-text="appSettings.days_array[class_day] + ' - '+ startTimeDisplay + ' ' + appSettings.classLevelsByID[classlevel_uuid].name + ' - ' + appSettings.instructorsById[instructor_uuid].trunc_name">Saturday Duckling - 10:30AM - Melanie M.</td>
+                                            <td dmx-text="startDate.formatDate(appSettings.localization_puddle_dateformat)"></td>
+                                            <td dmx-text="dropDate.formatDate(appSettings.localization_puddle_dateformat)"></td>
+                                            <td dmx-text="deleted_time.toDate().formatDate(appSettings.localization_puddle_dateformat)" contenteditable="false" dmx-hide="!cb_showdeleted.checked"></td>
+                                        </tr>
+
+                                    </tbody>
+                                    <tbody dmx-hide="sc_GET_ENROLMENTS_list.data.query_enrolments.length&gt;0">
+                                        <tr>
+                                            <td class="fw-600 text-nowrap" colspan="7">No enrolments could be found. You may need to adjust your filters.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>

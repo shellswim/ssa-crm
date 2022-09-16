@@ -4,11 +4,10 @@ const {
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
 const mathjs = require('mathjs');
-const { lastIndexOf } = require('underscore');
 
 exports.classAvail = async function (options) {
-    debugger;
     options = this.parse(options);
+    let show_full_classes = Boolean(Number(options.show_full_classes));
     let startdate = DateTime.fromSQL(options.weekdate).startOf('week');
     let enddate = DateTime.fromSQL(options.weekdate).endOf('week');
     // Start of week - Week starts on Sunday or Monday.
@@ -58,14 +57,14 @@ exports.classAvail = async function (options) {
     let enrolment_max_date = DateTime.now().plus({
         weeks: Number(_max_bookahead)
     }).setZone(_timezone);
-    
-    if(_max_bookahead_eow_push == 1) {
+
+    if (_max_bookahead_eow_push == 1) {
         enrolment_max_date = enrolment_max_date.endOf('week');
     }
 
     // Throw out of date range error if weekdate is greater than maximum enrolment date.
     let outofrange = (Number(DateTime.fromSQL(options.weekdate).toSeconds()) > Number(enrolment_max_date.toSeconds()));
-    if(outofrange) {
+    if (outofrange) {
         throw new RangeError('Date Range Error: Your chosen weekdate is further in the future than allowed. Please choose another date.');
     };
 
@@ -93,10 +92,10 @@ exports.classAvail = async function (options) {
         filtered_availabilities = options.avail_type ? true : false;
 
     // Check if time_filter is used, create min time and max time to create a range.
-    if(filters.time_filter.length > 0) {
+    if (filters.time_filter.length > 0) {
         let final_time_array = [];
         let tf = filters.time_filter;
-        for(let i=0;i<tf.length;i++) {
+        for (let i = 0; i < tf.length; i++) {
             let decimals = tf[i].decimals;
             final_time_array.push(decimals.startdecimal);
             final_time_array.push(decimals.enddecimal);
@@ -117,6 +116,7 @@ exports.classAvail = async function (options) {
         ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
         ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
     `)).count;
+
     // Set page variables.
     let limit = this.parse(options.limit),
         total = classcount,
@@ -135,6 +135,7 @@ exports.classAvail = async function (options) {
         next = (offset + limit) > total ? last_offset : (offset + limit),
         prev = (offset - limit) <= 0 ? 0 : (offset - limit);
 
+
     /** Classes */
     let classdump = await getclasses();
 
@@ -144,22 +145,30 @@ exports.classAvail = async function (options) {
         let c = classdump[i];
         if (startofweek == 'sunday') {
             if (c.classday == 7) {
-                c.weekday = DateTime.fromISO(startdate).plus({hours: c.endTimeDecimal}).setZone(_timezone,{keepLocalTime: true});
+                c.weekday = DateTime.fromISO(startdate).plus({
+                    hours: c.endTimeDecimal
+                }).setZone(_timezone, {
+                    keepLocalTime: true
+                });
             } else {
                 c.weekday = DateTime.fromISO(startdate).plus({
                     days: (c.classday),
                     hours: c.endTimeDecimal
-                }).setZone(_timezone,{keepLocalTime: true});
+                }).setZone(_timezone, {
+                    keepLocalTime: true
+                });
             }
         } else {
             c.weekday = DateTime.fromISO(startdate).plus({
                 days: (c.classday - 1),
                 hours: c.endTimeDecimal
-            }).setZone(_timezone,{keepLocalTime: true});
+            }).setZone(_timezone, {
+                keepLocalTime: true
+            });
         }
 
         // Set calculated class date.
-        if(c.weekday < DateTime.fromISO(options.weekdate) || c.weekday < DateTime.now().setZone(_timezone)) {
+        if (c.weekday < DateTime.fromISO(options.weekdate) || c.weekday < DateTime.now().setZone(_timezone)) {
             c.current_week_day = c.weekday;
             c.weekday = c.weekday.plus({
                 weeks: 1
@@ -177,6 +186,10 @@ exports.classAvail = async function (options) {
         c.details = {};
         let pstart = performance.now();
         c.details = await processClass(c.weekday, c.max, c);
+        if (c.details.remove) {
+            classdump.splice(i, 1);
+            i -= 1;
+        }
         let pend = performance.now();
         performance_array.push((pend - pstart) / 1000);
         c.waitlists = await processWaitlists(c);
@@ -191,6 +204,7 @@ exports.classAvail = async function (options) {
 
     // If classes are filtered, get ALL classes from SQL DB, then filter them with JS
     if (options.avail_type) {
+        debugger;
         if (options.avail_type == 'permanent') {
             filtered_classes = _.filter(classdump, function (o) {
                 let fc = (Number(o.max) - Number(o.details.total)) >= options.avail_amount;
@@ -203,15 +217,27 @@ exports.classAvail = async function (options) {
         }
     }
 
-    if (filtered_classes) {
+    if (filtered_classes && !options.list_only) {
         page.total = Math.ceil((filtered_classes.length / limit));
     }
+    let _weekdate_seconds = DateTime.fromISO(options.weekdate).toSeconds(),
+        _maxdate_seconds = enrolment_max_date.toSeconds(),
+        _classes = filtered_classes.length > 0 && !options.list_only ? filtered_classes.slice(offset, (offset + limit)) : options.class_uuid ? classdump[0] : classdump,
+        _maxdate_iso = enrolment_max_date.toISODate(),
+        _makeup_maxdate = makeup_max_date.toISODate(),
+        _limit = limit || null,
+        _offset = offset || null,
+        _page = page || null,
+        _last_offset = last_offset || null,
+        _prev = prev || null,
+        _next = next || null,
+        _total = total || null;
 
-    return {
+    let finalobj = {
         'outofrange': {
             'outofrange': outofrange,
-            'weekdate_seconds': Number(DateTime.fromISO(options.weekdate).toSeconds()),
-            'maxdate_seconds': Number(enrolment_max_date.toSeconds()),
+            'weekdate_seconds': _weekdate_seconds,
+            'maxdate_seconds': _maxdate_seconds,
             'weekdate': options.weekdate
         },
         "filters": {
@@ -221,22 +247,27 @@ exports.classAvail = async function (options) {
             "level": filters.level_filter
         },
         // Paginate classes when they're filtered with slice();
-        "classes": filtered_classes.length > 0 ? filtered_classes.slice(offset, (offset + limit)) : options.class_uuid ? classdump[0] : classdump,
-        'max_date': enrolment_max_date.toISODate(),
-        'makeup_max_date': makeup_max_date.toISODate(),
-        "limit": limit,
-        "offset": offset,
-        "page": page,
-        "last_offset": last_offset,
-        "prev": prev,
-        "next": next,
-        "total": total,
+        "classes": _classes,
+        'max_date': _maxdate_iso,
+        'makeup_max_date': _makeup_maxdate,
         'startofweek': startdate.toISODate(),
         'endofweek': enddate.toISODate(),
         'performance': performance_array,
-        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a,b) => {return a + b}) : [],
+        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a, b) => {
+            return a + b
+        }) : [],
         'times_array': calendar_timeslots
     }
+
+    if (_limit) finalobj.limit = _limit;
+    if (_offset) finalobj.offset = _offset;
+    if (_page) finalobj.page = _page;
+    if (_last_offset) finalobj.last_offset = _last_offset;
+    if (_prev) finalobj.prev = _prev;
+    if (_next) finalobj.next = _next;
+    if (_total) finalobj.total = _total;
+
+    return finalobj;
 
     /** Functions */
 
@@ -250,8 +281,7 @@ exports.classAvail = async function (options) {
     }
 
     async function processClass(weekday, classmax, classinfo) {
-        debugger;
-        let enrolments, 
+        let enrolments,
             wea = [], // weekly enrolment array
             maa = [], // makeup availability array
             aa, // absence array
@@ -267,22 +297,24 @@ exports.classAvail = async function (options) {
 
         // Get enrolment counts and availabilities.
         let idx = 0;
-        while(classprocess_weekday <= enrolment_max_date.plus({weeks: 1})) {
+        while (classprocess_weekday <= enrolment_max_date.plus({
+                weeks: 1
+            })) {
 
             // Break loop if over 1000.
-            if(idx > 1000) break;
+            if (idx > 1000) break;
 
             // Get enrolments and attendances.
-            let enrolments_processed = await processEnrolments(classinfo,classprocess_weekday);
+            let enrolments_processed = await processEnrolments(classinfo, classprocess_weekday);
 
             // Set all enrolments on first pass. Otherwise, later weeks will overwrite the first loop, thus there will be missing enrolments if there are drop dates on any enrolments.
-            if(idx === 0) enrolments = enrolments_processed.enrolments;
-            
+            if (idx === 0) enrolments = enrolments_processed.enrolments;
+
             // Set total number of enrolments, absences and makeup availabilities.
             wea.push(enrolments_processed.total);
             aa = enrolments_processed.absences;
             maa.push(classmax - (enrolments_processed.total - enrolments_processed.absences.length));
-            
+
             // Push the weekday being calculated. This will be used for calculating dates for availabilities.
             weekday_arr.push(classprocess_weekday);
 
@@ -300,7 +332,7 @@ exports.classAvail = async function (options) {
             // Increase index of the loop by 1.
             idx += 1;
         }
-        
+
         let mu_array_indexes = [],
             mu_avail = [],
             mu_avail_max,
@@ -309,8 +341,8 @@ exports.classAvail = async function (options) {
         // Find makeups.
         for (let i = 0; i < weekday_arr.length; i++) {
             const day = weekday_arr[i];
-            if(day <= makeup_max_date) { // current day being calulated <= maximum makeup date
-                if(maa[i] > 0) { // if makeup count is > 0  
+            if (day <= makeup_max_date) { // current day being calulated <= maximum makeup date
+                if (maa[i] > 0) { // if makeup count is > 0  
                     mu_avail.push({
                         'date': day,
                         'availabilities': maa[i],
@@ -321,24 +353,36 @@ exports.classAvail = async function (options) {
                 break;
             }
         }
-
+        debugger;
         // Create makeup response.
-        if(mu_avail.length > 0) { //check makeups available
+        if (mu_avail.length > 0) { //check makeups available
             mu_unavail_response = {
                 "code": 100,
                 "response": "Availabilities found."
             };
         } else {
-            mu_unavail_response = { // otherwise no availabilities
-                "code": 101,
-                "response": 'No availabilities.'
+            if (options.list_only && options.avail_type === 'temporary') {
+                return {
+                    "remove": true
+                };
+            } else {
+                mu_unavail_response = { // otherwise no availabilities
+                    "code": 101,
+                    "response": 'No availabilities.'
+                }
             }
         }
-        if(weekday > makeup_max_date) { // if current day > maximum makeup date.
-            mu_unavail_response = {
-                "code": 102,
-                "response": `Too far into future.`
-            } 
+        if (weekday > makeup_max_date) { // if current day > maximum makeup date.
+            if (options.list_only && options.avail_type === 'temporary') {
+                return {
+                    "remove": true
+                };
+            } else {
+                mu_unavail_response = {
+                    "code": 102,
+                    "response": `Too far into future.`
+                }
+            }
         }
 
         // Find overbookings.
@@ -346,15 +390,22 @@ exports.classAvail = async function (options) {
             let x = wea.find((a) => {
                 return a > classmax;
             });
-            if(x) return true; else return false;
+            if (x) return true;
+            else return false;
         }
 
         let last_max = wea.lastIndexOf(classmax); // get last found max booking
 
-        if(overbooked() || last_max == (wea.length - 1)) { // if overbooked === true OR last_max is the last week of calculations, class is full.
-            nextavailable_permanent = null; // null response
+        if (overbooked() || last_max == (wea.length - 1)) { // if overbooked === true OR last_max is the last week of calculations, class is full.
+            if(options.list_only && options.avail_type === 'permanent' && !show_full_classes) {
+                return {
+                    "remove": true
+                }
+            } else {
+                nextavailable_permanent = null; // null response
+            }
         } else {
-            if(last_max === -1) { // if no max booking found.
+            if (last_max === -1) { // if no max booking found.
                 nextavailable_permanent = weekday_arr[0]; // set next available date to first date.
             } else {
                 nextavailable_permanent = weekday_arr[last_max + 1];
@@ -363,7 +414,9 @@ exports.classAvail = async function (options) {
 
         // Is class currently running?
         classinfo.isrunning = false;
-        if(DateTime.now().setZone(_timezone) >= weekday.minus({hours: (classinfo.endTimeDecimal - classinfo.startTimeDecimal)}) && DateTime.now().setZone(_timezone) <= weekday) {
+        if (DateTime.now().setZone(_timezone) >= weekday.minus({
+                hours: (classinfo.endTimeDecimal - classinfo.startTimeDecimal)
+            }) && DateTime.now().setZone(_timezone) <= weekday) {
             classinfo.isrunning = true;
         }
 
@@ -385,9 +438,8 @@ exports.classAvail = async function (options) {
         };
     }
 
-    async function processEnrolments(classinfo,date) {
-        debugger;
-        
+    async function processEnrolments(classinfo, date) {
+
         let enrolobject = {
             'active_enrols': [],
             'trial_enrols': [],
@@ -436,11 +488,13 @@ exports.classAvail = async function (options) {
         // Loop and sort enrolments
         if (Array.isArray(enrolments)) {
             enrolmenttotal += enrolments.length;
-            for(let i = 0; i < enrolments.length; i++) {
+            for (let i = 0; i < enrolments.length; i++) {
                 const e = enrolments[i];
 
                 // Minus enrolment total for future enrolments.
-                if(DateTime.fromJSDate(e.startDate).setZone(_timezone,{keepLocalTime:true}) > date) enrolmenttotal -= 1;
+                if (DateTime.fromJSDate(e.startDate).setZone(_timezone, {
+                        keepLocalTime: true
+                    }) > date) enrolmenttotal -= 1;
 
                 // Create enrolment types array
                 switch (e.enrolmentType) {
@@ -460,7 +514,9 @@ exports.classAvail = async function (options) {
 
                 // Mark absences in enrolments array.
                 // Match enrolment with absences.
-                e.absent = Boolean(absences.find(({enrolment_uuid}) => enrolment_uuid = e.uuid));
+                e.absent = Boolean(absences.find(({
+                    enrolment_uuid
+                }) => enrolment_uuid = e.uuid));
             }
         }
 
@@ -511,7 +567,7 @@ exports.classAvail = async function (options) {
     }
 
     async function getclasses() {
-        if(options.class_uuid) {
+        if (options.class_uuid) {
             return dbClient(await db.raw(`
             SELECT c.uuid,
                 c.id,
@@ -574,7 +630,7 @@ exports.classAvail = async function (options) {
                 WHEN 'Monday' THEN
                     c.day
             END),c.startTimeDecimal,cl.id, i.id
-            ${filtered_availabilities || options.data_type === 'calendar' ? `` : `LIMIT `+ offset+`, `+limit}
+            ${(filtered_availabilities && !options.list_only) || options.data_type === 'calendar' ? `` : options.list_only ? `LIMIT ` + limit :  `LIMIT `+ offset+`, `+limit}
             `));
         }
     }
