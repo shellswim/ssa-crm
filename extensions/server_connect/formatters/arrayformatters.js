@@ -48,5 +48,13 @@ module.exports = {
                     return _.get(a,path).length < arg;
             }
         })
+    },
+    reduceArrayObjects: function(val,group) {
+        let newobj = [];
+        for(let i = 0;i<val.length;i++) {
+            let o = val[i];
+            newobj.push(o[group]);
+        }
+        return newobj;
     }
 }

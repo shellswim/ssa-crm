@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     waitfor_el('.offcanvas-backdrop').then((bd)=>{
         bd.addEventListener('click', (e)=>{
             e.stopPropagation();
+            e.preventDefault();
         });
     });
 });
