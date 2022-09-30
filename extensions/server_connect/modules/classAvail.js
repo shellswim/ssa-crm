@@ -361,7 +361,7 @@ exports.classAvail = async function (options) {
                 "response": "Availabilities found."
             };
         } else {
-            if (options.list_only && options.avail_type === 'temporary') {
+            if (options.list_only && options.avail_type === 'temporary' && !show_full_classes) {
                 return {
                     "remove": true
                 };
@@ -373,7 +373,7 @@ exports.classAvail = async function (options) {
             }
         }
         if (weekday > makeup_max_date) { // if current day > maximum makeup date.
-            if (options.list_only && options.avail_type === 'temporary') {
+            if (options.list_only && options.avail_type === 'temporary' && !show_full_classes) {
                 return {
                     "remove": true
                 };
@@ -536,6 +536,7 @@ exports.classAvail = async function (options) {
     }
     async function processWaitlists(c) {
         // GET WAITLIST
+        debugger;
         let waitlisted = dbClient(await db.raw(`
             SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family, s.uuid 
             FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
@@ -549,6 +550,13 @@ exports.classAvail = async function (options) {
                     OR w.classlevel_uuid IS NULL))
             ORDER BY w.request_date
         `));
+        if(Array.isArray(waitlisted)) {
+            for(let i=0;i<waitlisted.length;i++) {
+                let w = waitlisted[i];
+                w.request_date = DateTime.fromJSDate(w.request_date).toISODate();
+                w.dob = DateTime.fromJSDate(w.dob).toISODate();
+            }
+        }
 
         return waitlisted;
     }

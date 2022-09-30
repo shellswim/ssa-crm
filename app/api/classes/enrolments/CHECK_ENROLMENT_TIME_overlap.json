@@ -1,0 +1,1327 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "student_uuid"
+      },
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "startdate"
+      },
+      {
+        "type": "text",
+        "name": "newenrol_classuuid"
+      },
+      {
+        "type": "text",
+        "name": "weekdate"
+      },
+      {
+        "type": "text",
+        "name": "enrolment_type"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
+      },
+      {
+        "name": "overlap_exists",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{null}}",
+          "key": "overlap_exists"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": false
+      },
+      {
+        "name": "html_response",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{null}}",
+          "key": "html_response"
+        },
+        "meta": [],
+        "output": false,
+        "outputType": "text"
+      },
+      {
+        "name": "enrolment_type",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{$_GET.enrolment_type}}",
+          "key": "enrolment_type"
+        },
+        "meta": [],
+        "output": true,
+        "outputType": "text"
+      },
+      {
+        "name": "",
+        "options": {
+          "comment": "Get the time and day of the new class."
+        }
+      },
+      {
+        "name": "query_newclass_enrol",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "classes"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "classes.uuid",
+                  "field": "classes.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.newenrol_classuuid}}",
+                  "data": {
+                    "table": "classes",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM classes\nWHERE uuid = :P1 /* {{$_GET.newenrol_classuuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.newenrol_classuuid}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "startTimeDecimal"
+          },
+          {
+            "type": "number",
+            "name": "endTimeDecimal"
+          },
+          {
+            "type": "boolean",
+            "name": "isactive"
+          },
+          {
+            "type": "number",
+            "name": "instructor"
+          },
+          {
+            "type": "text",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "number",
+            "name": "classLevel"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "number",
+            "name": "day"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "endTimeDisplay"
+          },
+          {
+            "type": "number",
+            "name": "max"
+          },
+          {
+            "type": "number",
+            "name": "classType"
+          },
+          {
+            "type": "text",
+            "name": "classtype_uuid"
+          },
+          {
+            "type": "date",
+            "name": "startdate"
+          },
+          {
+            "type": "date",
+            "name": "enddate"
+          }
+        ],
+        "outputType": "object",
+        "output": true
+      },
+      {
+        "name": "query_enrolments",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "e",
+                "column": "uuid"
+              },
+              {
+                "table": "e",
+                "column": "student_uuid"
+              },
+              {
+                "table": "e",
+                "column": "startDate"
+              },
+              {
+                "table": "e",
+                "column": "dropDate"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDisplay"
+              },
+              {
+                "table": "c",
+                "column": "endTimeDisplay"
+              },
+              {
+                "table": "c",
+                "column": "startTimeDecimal"
+              },
+              {
+                "table": "c",
+                "column": "endTimeDecimal"
+              },
+              {
+                "table": "c",
+                "column": "day"
+              },
+              {
+                "table": "i",
+                "column": "firstName",
+                "alias": "instructor_first"
+              },
+              {
+                "table": "i",
+                "column": "lastName",
+                "alias": "instructor_last"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "classlevel"
+              },
+              {
+                "table": "c",
+                "column": "uuid",
+                "alias": "class_uuid"
+              }
+            ],
+            "table": {
+              "name": "enrolments",
+              "alias": "e"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "classes",
+                "column": "*",
+                "alias": "c",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "c",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "e",
+                        "column": "class_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "alias": "i",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "i",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "id",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "day"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "INNER",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "c",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "e.student_uuid",
+                  "field": "e.student_uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "e",
+                    "column": "student_uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "students",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "referenceType": "string",
+                      "name": "student_uuid"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "condition": "OR",
+                  "rules": [
+                    {
+                      "id": "e.dropDate",
+                      "field": "e.dropDate",
+                      "type": "date",
+                      "operator": "greater_or_equal",
+                      "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}",
+                      "data": {
+                        "table": "e",
+                        "column": "dropDate",
+                        "type": "date",
+                        "columnObj": {
+                          "type": "date",
+                          "primary": false,
+                          "nullable": true,
+                          "name": "dropDate"
+                        }
+                      },
+                      "operation": ">="
+                    },
+                    {
+                      "id": "e.dropDate",
+                      "field": "e.dropDate",
+                      "type": "date",
+                      "operator": "is_null",
+                      "value": null,
+                      "data": {
+                        "table": "e",
+                        "column": "dropDate",
+                        "type": "date",
+                        "columnObj": {
+                          "type": "date",
+                          "primary": false,
+                          "nullable": true,
+                          "name": "dropDate"
+                        }
+                      },
+                      "operation": "IS NULL"
+                    }
+                  ],
+                  "conditional": null
+                },
+                {
+                  "id": "e.isValid",
+                  "field": "e.isValid",
+                  "type": "boolean",
+                  "operator": "equal",
+                  "value": "{{1}}",
+                  "data": {
+                    "table": "e",
+                    "column": "isValid",
+                    "type": "boolean",
+                    "columnObj": {
+                      "type": "boolean",
+                      "primary": false,
+                      "nullable": true,
+                      "name": "isValid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT e.uuid, e.student_uuid, e.startDate, e.dropDate, c.startTimeDisplay, c.endTimeDisplay, c.startTimeDecimal, c.endTimeDecimal, c.day, i.firstName AS instructor_first, i.lastName AS instructor_last, days.dayname, classLevels.name AS classlevel, c.uuid AS class_uuid\nFROM enrolments AS e\nLEFT JOIN classes AS c ON (c.uuid = e.class_uuid) INNER JOIN staff AS i ON (i.uuid = c.instructor_uuid) LEFT JOIN days ON (days.id = c.day) INNER JOIN classLevels ON (classLevels.uuid = c.classlevel_uuid)\nWHERE e.student_uuid = :P1 /* {{$_GET.student_uuid}} */ AND (e.dropDate >= :P2 /* {{$_GET.startdate.formatDate('yyyy-MM-dd')}} */ OR e.dropDate IS NULL) AND e.isValid = :P3 /* {{1}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.student_uuid}}"
+              },
+              {
+                "operator": "greater_or_equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.startdate.formatDate('yyyy-MM-dd')}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P3",
+                "value": "{{1}}"
+              }
+            ]
+          }
+        },
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "date",
+            "name": "startDate"
+          },
+          {
+            "type": "date",
+            "name": "dropDate"
+          },
+          {
+            "type": "text",
+            "name": "startTimeDisplay"
+          },
+          {
+            "type": "text",
+            "name": "endTimeDisplay"
+          },
+          {
+            "type": "number",
+            "name": "startTimeDecimal"
+          },
+          {
+            "type": "number",
+            "name": "endTimeDecimal"
+          },
+          {
+            "type": "number",
+            "name": "day"
+          },
+          {
+            "type": "text",
+            "name": "instructor_first"
+          },
+          {
+            "type": "text",
+            "name": "instructor_last"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "text",
+            "name": "classlevel"
+          },
+          {
+            "type": "text",
+            "name": "class_uuid"
+          }
+        ],
+        "outputType": "array",
+        "output": true
+      },
+      {
+        "name": "query_student",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [],
+            "table": {
+              "name": "students"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "students.uuid",
+                  "field": "students.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "students",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 36,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM students\nWHERE uuid = :P1 /* {{$_GET.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "date",
+            "name": "dob"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetComments"
+          },
+          {
+            "type": "text",
+            "name": "rollSheetMedical"
+          },
+          {
+            "type": "text",
+            "name": "additionalMedical"
+          },
+          {
+            "type": "text",
+            "name": "gender"
+          },
+          {
+            "type": "number",
+            "name": "level"
+          },
+          {
+            "type": "text",
+            "name": "age"
+          },
+          {
+            "type": "number",
+            "name": "familyold"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "boolean",
+            "name": "hadtrial"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "enrolments",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_enrolments}}",
+          "outputFields": [],
+          "outputFilter": "exclude",
+          "exec": {
+            "steps": [
+              {
+                "name": "query_absences",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "absences"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "absences.enrolment_uuid",
+                          "field": "absences.enrolment_uuid",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{uuid}}",
+                          "data": {
+                            "table": "absences",
+                            "column": "enrolment_uuid",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "reference",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": false,
+                              "references": "uuid",
+                              "inTable": "enrolments",
+                              "onUpdate": "CASCADE",
+                              "onDelete": "NO ACTION",
+                              "name": "enrolment_uuid"
+                            }
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "absences.absence_date",
+                          "field": "absences.absence_date",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{$_GET.weekdate.toTimestamp()}}",
+                          "data": {
+                            "table": "absences",
+                            "column": "absence_date",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "bigInteger",
+                              "primary": false,
+                              "nullable": false,
+                              "name": "absence_date"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM absences\nWHERE enrolment_uuid = :P1 /* {{uuid}} */ AND absence_date = :P2 /* {{$_GET.weekdate.toTimestamp()}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{uuid}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{$_GET.weekdate.toTimestamp()}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "enrolment_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "absence_date"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "makeup_eligible"
+                  },
+                  {
+                    "type": "text",
+                    "name": "status"
+                  }
+                ],
+                "outputType": "array",
+                "type": "dbconnector_select",
+                "output": true
+              },
+              {
+                "name": "",
+                "options": {
+                  "comment": "Query current enrolments class."
+                }
+              },
+              {
+                "name": "query_currentenrol_class",
+                "module": "dbconnector",
+                "action": "single",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "classes"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "classes.uuid",
+                          "field": "classes.uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{class_uuid}}",
+                          "data": {
+                            "table": "classes",
+                            "column": "uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "primary": true,
+                              "nullable": false,
+                              "name": "uuid"
+                            }
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "classes.isactive",
+                          "field": "classes.isactive",
+                          "type": "boolean",
+                          "operator": "equal",
+                          "value": true,
+                          "data": {
+                            "table": "classes",
+                            "column": "isactive",
+                            "type": "boolean",
+                            "columnObj": {
+                              "type": "boolean",
+                              "primary": false,
+                              "nullable": false,
+                              "default": "'1'",
+                              "name": "isactive"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM classes\nWHERE uuid = :P1 /* {{class_uuid}} */ AND isactive = true",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{class_uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isactive"
+                  },
+                  {
+                    "type": "number",
+                    "name": "instructor"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classLevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "max"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classType"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classtype_uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startdate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "enddate"
+                  }
+                ],
+                "outputType": "object",
+                "output": true
+              },
+              {
+                "name": "",
+                "module": "core",
+                "action": "condition",
+                "options": {
+                  "if": "{{$_GET.enrolment_type=='permanent'}}",
+                  "then": {
+                    "steps": [
+                      {
+                        "name": "overlap",
+                        "module": "class_enrolmentOverlap",
+                        "action": "class_enrolmentOverlap",
+                        "options": {
+                          "originalclass_start": "{{query_newclass_enrol.startTimeDecimal}}",
+                          "originalclass_end": "{{query_newclass_enrol.endTimeDecimal}}",
+                          "newclass_start": "{{startTimeDecimal}}",
+                          "newclass_end": "{{endTimeDecimal}}",
+                          "classday": "{{day}}",
+                          "original_classday": "{{query_newclass_enrol.day}}",
+                          "new_classday": "{{day}}",
+                          "originalclass_day": "{{query_newclass_enrol.day}}",
+                          "newclass_day": "{{day}}",
+                          "originalclass_uuid": "{{query_newclass_enrol.uuid}}",
+                          "newclass_uuid": "{{class_uuid}}"
+                        },
+                        "meta": [
+                          {
+                            "name": "overlap_exists",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "overlap_between",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "start",
+                                "type": "number"
+                              },
+                              {
+                                "name": "end",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ],
+                        "output": true
+                      },
+                      {
+                        "name": "",
+                        "module": "core",
+                        "action": "condition",
+                        "options": {
+                          "if": "{{overlap.overlap_exists}}",
+                          "then": {
+                            "steps": [
+                              {
+                                "name": "overlap_exists",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                  "value": true,
+                                  "key": "overlap_exists"
+                                },
+                                "meta": [],
+                                "outputType": "text",
+                                "output": false
+                              },
+                              {
+                                "name": "html_response",
+                                "module": "core",
+                                "action": "setvalue",
+                                "options": {
+                                  "value": "<p>{{query_student.firstName}} {{query_student.lastName}} has an overlapping booking.</p>\n<p>You cannot book a student into multiple classes where time of the classes overlap.</p>\n<table class=\"table small align-middle table-bordered\">\n  <thead>\n    <tr>\n    \t<th colspan=\"2\"><strong>Enrolment: </strong> {{dayname}} - {{startTimeDisplay}} {{classlevel}} - {{instructor_first+' '+instructor_last.trunc(1, true, '.').uppercase()}}</th>\n    </tr>\n    <tr>\n      <th><strong>Start Date:</strong></th>\n      <th><strong>Drop Date:</strong></th>\n  </thead>\n  <tbody>\n    <tr>\n      <td>{{startDate.formatDate(times_formats.puddle_date_format)}}</td>\n      <td>{{dropDate ? dropDate.formatDate(times_formats.puddle_date_format) : 'No drop date.'}}</td>\n    </tr>\n  </tbody> \n</table>",
+                                  "key": "html_response"
+                                },
+                                "meta": [],
+                                "output": false,
+                                "outputType": "text"
+                              }
+                            ]
+                          }
+                        },
+                        "outputType": "boolean"
+                      }
+                    ]
+                  },
+                  "else": {
+                    "steps": {
+                      "name": "",
+                      "module": "core",
+                      "action": "condition",
+                      "options": {
+                        "if": "{{query_absences.length==0}}",
+                        "then": {
+                          "steps": [
+                            {
+                              "name": "overlap",
+                              "module": "class_enrolmentOverlap",
+                              "action": "class_enrolmentOverlap",
+                              "options": {
+                                "originalclass_start": "{{query_newclass_enrol.startTimeDecimal}}",
+                                "originalclass_end": "{{query_newclass_enrol.endTimeDecimal}}",
+                                "newclass_start": "{{startTimeDecimal}}",
+                                "newclass_end": "{{endTimeDecimal}}",
+                                "classday": "{{day}}",
+                                "original_classday": "{{query_newclass_enrol.day}}",
+                                "new_classday": "{{day}}",
+                                "originalclass_day": "{{query_newclass_enrol.day}}",
+                                "newclass_day": "{{day}}",
+                                "originalclass_uuid": "{{query_newclass_enrol.uuid}}",
+                                "newclass_uuid": "{{class_uuid}}"
+                              },
+                              "meta": [
+                                {
+                                  "name": "overlap_exists",
+                                  "type": "boolean"
+                                },
+                                {
+                                  "name": "overlap_between",
+                                  "type": "object",
+                                  "sub": [
+                                    {
+                                      "name": "start",
+                                      "type": "number"
+                                    },
+                                    {
+                                      "name": "end",
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "output": true
+                            },
+                            {
+                              "name": "",
+                              "module": "core",
+                              "action": "condition",
+                              "options": {
+                                "if": "{{overlap.overlap_exists}}",
+                                "then": {
+                                  "steps": [
+                                    {
+                                      "name": "overlap_exists",
+                                      "module": "core",
+                                      "action": "setvalue",
+                                      "options": {
+                                        "value": true,
+                                        "key": "overlap_exists"
+                                      },
+                                      "meta": [],
+                                      "outputType": "text",
+                                      "output": false
+                                    },
+                                    {
+                                      "name": "html_response",
+                                      "module": "core",
+                                      "action": "setvalue",
+                                      "options": {
+                                        "value": "<p>{{query_student.firstName}} {{query_student.lastName}} has an overlapping booking.</p>\n<p>You are trying to book a temporary class, however, there are no absences recorded for the current enrolment shown below.</p>\n<table class=\"table small align-middle table-bordered\">\n  <thead>\n    <tr>\n    \t<th colspan=\"2\"><strong>Enrolment: </strong> {{dayname}} - {{startTimeDisplay}} {{classlevel}} - {{instructor_first+' '+instructor_last.trunc(1, true, '.').uppercase()}}</th>\n    </tr>\n    <tr>\n      <th><strong>Start Date:</strong></th>\n      <th><strong>Drop Date:</strong></th>\n  </thead>\n  <tbody>\n    <tr>\n      <td>{{startDate.formatDate(times_formats.puddle_date_format)}}</td>\n      <td>{{dropDate ? dropDate.formatDate(times_formats.puddle_date_format) : 'No drop date.'}}</td>\n    </tr>\n  </tbody> \n</table>",
+                                        "key": "html_response"
+                                      },
+                                      "meta": [],
+                                      "output": false,
+                                      "outputType": "text"
+                                    }
+                                  ]
+                                }
+                              },
+                              "outputType": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      "outputType": "boolean"
+                    }
+                  }
+                },
+                "outputType": "boolean",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "student_uuid",
+            "type": "number"
+          },
+          {
+            "name": "startDate",
+            "type": "date"
+          },
+          {
+            "name": "dropDate",
+            "type": "date"
+          },
+          {
+            "name": "startTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "endTimeDisplay",
+            "type": "text"
+          },
+          {
+            "name": "startTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "endTimeDecimal",
+            "type": "number"
+          },
+          {
+            "name": "day",
+            "type": "number"
+          },
+          {
+            "name": "instructor_first",
+            "type": "text"
+          },
+          {
+            "name": "instructor_last",
+            "type": "text"
+          },
+          {
+            "name": "dayname",
+            "type": "text"
+          },
+          {
+            "name": "classlevel",
+            "type": "text"
+          },
+          {
+            "name": "class_uuid",
+            "type": "text"
+          },
+          {
+            "name": "query_absences",
+            "type": "array",
+            "sub": [
+              {
+                "type": "text",
+                "name": "uuid"
+              },
+              {
+                "type": "number",
+                "name": "enrolment_uuid"
+              },
+              {
+                "type": "number",
+                "name": "absence_date"
+              },
+              {
+                "type": "boolean",
+                "name": "makeup_eligible"
+              },
+              {
+                "type": "text",
+                "name": "status"
+              }
+            ]
+          },
+          {
+            "name": "query_currentenrol_class",
+            "type": "object",
+            "sub": [
+              {
+                "type": "text",
+                "name": "uuid"
+              },
+              {
+                "type": "number",
+                "name": "id"
+              },
+              {
+                "type": "number",
+                "name": "startTimeDecimal"
+              },
+              {
+                "type": "number",
+                "name": "endTimeDecimal"
+              },
+              {
+                "type": "boolean",
+                "name": "isactive"
+              },
+              {
+                "type": "number",
+                "name": "instructor"
+              },
+              {
+                "type": "text",
+                "name": "instructor_uuid"
+              },
+              {
+                "type": "number",
+                "name": "classLevel"
+              },
+              {
+                "type": "text",
+                "name": "classlevel_uuid"
+              },
+              {
+                "type": "number",
+                "name": "day"
+              },
+              {
+                "type": "text",
+                "name": "startTimeDisplay"
+              },
+              {
+                "type": "text",
+                "name": "endTimeDisplay"
+              },
+              {
+                "type": "number",
+                "name": "max"
+              },
+              {
+                "type": "number",
+                "name": "classType"
+              },
+              {
+                "type": "text",
+                "name": "classtype_uuid"
+              },
+              {
+                "type": "date",
+                "name": "startdate"
+              },
+              {
+                "type": "date",
+                "name": "enddate"
+              }
+            ]
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "overlap_exists",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{overlap_exists}}",
+          "key": "overlap_exists"
+        },
+        "meta": [],
+        "outputType": "text",
+        "output": true
+      },
+      {
+        "name": "html_response",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "{{html_response}}",
+          "key": "html_response"
+        },
+        "meta": [],
+        "output": true,
+        "outputType": "text"
+      }
+    ]
+  }
+}

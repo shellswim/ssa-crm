@@ -123,6 +123,7 @@ exports.tuitioncalc = async function (options) {
         student.all_enrolments = [], student.enrolment_uuids = [];
         let enrolments = students[i].enrolments;
         student.total_enrolments = 0;
+        let groupedenrolments = {};
 
         // Set student key in enrolments count global object
         enrolment_counts[student.uuid] = {};
@@ -139,14 +140,27 @@ exports.tuitioncalc = async function (options) {
             for (let k = 0; k < se.days.length; k++) {
                 dayint = se.calendar_days[k].dayint;
                 let enrolquery = await getEnrolments(student.uuid, se.start, se.end, dayint);
-                
                 // Remove enrolments whose dropdate is before current class date.
-
                 enrolquery.enrolments.map(e => {
                     // Filter enrolments falling outside of current month.
                     if(e.classdate_timestamp >= startofmonth.toSeconds() && e.classdate_timestamp <= endofmonth.toSeconds()) {
                         se.items.push(e);
                         student.all_enrolments.push(e);
+
+                        // Group enrolments for Quote table
+                        if(!Object.hasOwn(groupedenrolments, e.uuid)) {
+                            groupedenrolments[e.uuid] = {
+                                'classday': e.classday,
+                                'startDate': e.startDate,
+                                'dropDate': e.dropDate,
+                                'instructor_uuid': e.instructor_uuid,
+                                'classlevel_uuid': e.classlevel_uuid,
+                                'items': [],
+                                'total': 0
+                            };
+                        }
+                        groupedenrolments[e.uuid].items.push(e);
+
                         if(!student.enrolment_uuids.includes(e.uuid)) student.enrolment_uuids.push(e.uuid);
                         // Set enrolment count for current enrolment in global enrolments count object.
                         if(Object.hasOwn(enrolment_counts[student.uuid], e.uuid)) {
@@ -177,12 +191,18 @@ exports.tuitioncalc = async function (options) {
             });
             student.total_enrolments += se.items.length;
         }
+
+        student.groupedenrolments = groupedenrolments;
     }
+    debugger;
     /** Tuitions Calculations */
     // Filter out students who have no enrolments
     students = students.filter(s => {
         return s.total_enrolments > 0;
     });
+
+    // Group Enrolments for Quote Repeats
+
 
     // Process multienrolment discounts
     for (let i = 0; i < students.length; i++) {

@@ -15740,6 +15740,1411 @@ dmx.config({
     "dd_familydetails_charge_details": {
       "meta": null,
       "outputType": "object"
-    }
+    },
+    "rp_chargeStudents_existing": {
+      "meta": [
+        {
+          "name": "identity",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "times_formats",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "ipadd",
+          "type": "text",
+          "sub": []
+        },
+        {
+          "name": "family_charge",
+          "type": "object",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "family_uuid"
+            },
+            {
+              "type": "number",
+              "name": "family"
+            },
+            {
+              "type": "number",
+              "name": "total"
+            },
+            {
+              "type": "text",
+              "name": "title"
+            },
+            {
+              "type": "text",
+              "name": "reference"
+            },
+            {
+              "type": "text",
+              "name": "description"
+            },
+            {
+              "type": "date",
+              "name": "chargeFor_monthly"
+            },
+            {
+              "type": "date",
+              "name": "dueDate"
+            },
+            {
+              "type": "text",
+              "name": "chargeType"
+            },
+            {
+              "type": "number",
+              "name": "chargeFor_session"
+            },
+            {
+              "type": "number",
+              "name": "basetotal"
+            },
+            {
+              "type": "number",
+              "name": "discountotal"
+            },
+            {
+              "type": "date",
+              "name": "chargeDate"
+            },
+            {
+              "type": "object",
+              "name": "payments"
+            },
+            {
+              "type": "date",
+              "name": "created"
+            },
+            {
+              "type": "date",
+              "name": "updated"
+            },
+            {
+              "type": "number",
+              "name": "createdby"
+            },
+            {
+              "type": "number",
+              "name": "updatedby"
+            }
+          ]
+        },
+        {
+          "name": "query_payments",
+          "type": "array",
+          "sub": [
+            {
+              "type": "text",
+              "name": "uuid"
+            },
+            {
+              "type": "number",
+              "name": "id"
+            },
+            {
+              "type": "number",
+              "name": "amount"
+            },
+            {
+              "type": "number",
+              "name": "paymentType"
+            },
+            {
+              "type": "number",
+              "name": "family"
+            },
+            {
+              "type": "number",
+              "name": "family_uuid"
+            },
+            {
+              "type": "text",
+              "name": "payref"
+            },
+            {
+              "type": "text",
+              "name": "title"
+            },
+            {
+              "type": "text",
+              "name": "notes"
+            },
+            {
+              "type": "datetime",
+              "name": "paymentdate"
+            },
+            {
+              "type": "boolean",
+              "name": "stripe_payment"
+            },
+            {
+              "type": "text",
+              "name": "stripe_payment_id"
+            },
+            {
+              "type": "text",
+              "name": "stripe_receipt_number"
+            },
+            {
+              "type": "text",
+              "name": "stripe_receipt_url"
+            },
+            {
+              "type": "text",
+              "name": "stripe_payment_type"
+            }
+          ]
+        },
+        {
+          "name": "students",
+          "type": "array",
+          "sub": [
+            {
+              "name": "student_uuid",
+              "type": "text"
+            },
+            {
+              "name": "firstName",
+              "type": "text"
+            },
+            {
+              "name": "lastName",
+              "type": "text"
+            },
+            {
+              "name": "student_total",
+              "type": "number"
+            },
+            {
+              "name": "enrol_count",
+              "type": "number"
+            },
+            {
+              "name": "query_enrolments",
+              "type": "array",
+              "sub": [
+                {
+                  "type": "text",
+                  "name": "uuid"
+                },
+                {
+                  "type": "text",
+                  "name": "startTimeDisplay"
+                },
+                {
+                  "type": "number",
+                  "name": "classday"
+                },
+                {
+                  "type": "text",
+                  "name": "instructor_uuid"
+                },
+                {
+                  "type": "text",
+                  "name": "classlevel_uuid"
+                },
+                {
+                  "type": "date",
+                  "name": "startDate"
+                },
+                {
+                  "type": "date",
+                  "name": "dropDate"
+                }
+              ]
+            },
+            {
+              "name": "total_student_charge",
+              "type": "text",
+              "sub": []
+            },
+            {
+              "name": "rp_enrolments",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "startTimeDisplay",
+                  "type": "text"
+                },
+                {
+                  "name": "classday",
+                  "type": "number"
+                },
+                {
+                  "name": "instructor_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "classlevel_uuid",
+                  "type": "text"
+                },
+                {
+                  "name": "startDate",
+                  "type": "date"
+                },
+                {
+                  "name": "dropDate",
+                  "type": "date"
+                },
+                {
+                  "name": "query_enrolment_charges",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "type": "date",
+                      "name": "startofweek"
+                    },
+                    {
+                      "type": "text",
+                      "name": "class_uuid"
+                    },
+                    {
+                      "type": "text",
+                      "name": "instructor_uuid"
+                    },
+                    {
+                      "type": "text",
+                      "name": "classlevel_uuid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "classday"
+                    },
+                    {
+                      "type": "number",
+                      "name": "startTimeDecimal"
+                    },
+                    {
+                      "type": "text",
+                      "name": "startTimeDisplay"
+                    },
+                    {
+                      "type": "text",
+                      "name": "endTimeDisplay"
+                    },
+                    {
+                      "type": "date",
+                      "name": "dropDate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "student_uuid"
+                    },
+                    {
+                      "type": "date",
+                      "name": "startDate"
+                    },
+                    {
+                      "type": "date",
+                      "name": "classDate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "baseRate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "endisc"
+                    },
+                    {
+                      "type": "text",
+                      "name": "ennetrate"
+                    },
+                    {
+                      "type": "text",
+                      "name": "endiscdescription"
+                    },
+                    {
+                      "type": "text",
+                      "name": "endiscrate"
+                    },
+                    {
+                      "type": "text",
+                      "name": "familydiscountdesc"
+                    },
+                    {
+                      "type": "text",
+                      "name": "familydiscountrate"
+                    },
+                    {
+                      "type": "number",
+                      "name": "familydiscounttotal"
+                    },
+                    {
+                      "type": "number",
+                      "name": "enrolsubtotal"
+                    },
+                    {
+                      "type": "boolean",
+                      "name": "holding_fee"
+                    },
+                    {
+                      "type": "number",
+                      "name": "holding_fee_discount"
+                    },
+                    {
+                      "type": "number",
+                      "name": "enrolgrandtotal"
+                    },
+                    {
+                      "type": "number",
+                      "name": "charge_uuid"
+                    },
+                    {
+                      "type": "number",
+                      "name": "created"
+                    },
+                    {
+                      "type": "number",
+                      "name": "updated"
+                    },
+                    {
+                      "type": "text",
+                      "name": "created_by"
+                    },
+                    {
+                      "type": "text",
+                      "name": "updated_by"
+                    }
+                  ]
+                },
+                {
+                  "name": "enrolment_charges",
+                  "type": "array",
+                  "sub": [
+                    {
+                      "name": "startTimeDecimal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "classday",
+                      "type": "number"
+                    },
+                    {
+                      "name": "instructor_uuid",
+                      "type": "text"
+                    },
+                    {
+                      "name": "classlevel_uuid",
+                      "type": "text"
+                    },
+                    {
+                      "name": "startDate",
+                      "type": "date"
+                    },
+                    {
+                      "name": "dropDate",
+                      "type": "date"
+                    },
+                    {
+                      "name": "total_paid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "uuid",
+                      "type": "text"
+                    },
+                    {
+                      "name": "id",
+                      "type": "number"
+                    },
+                    {
+                      "name": "startofweek",
+                      "type": "date"
+                    },
+                    {
+                      "name": "class_uuid",
+                      "type": "text"
+                    },
+                    {
+                      "name": "student_uuid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "classtype_uuid",
+                      "type": "text"
+                    },
+                    {
+                      "name": "enrolment_uuid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "classDate",
+                      "type": "date"
+                    },
+                    {
+                      "name": "baseRate",
+                      "type": "number"
+                    },
+                    {
+                      "name": "endisc",
+                      "type": "number"
+                    },
+                    {
+                      "name": "ennetrate",
+                      "type": "text"
+                    },
+                    {
+                      "name": "endiscdescription",
+                      "type": "text"
+                    },
+                    {
+                      "name": "endiscrate",
+                      "type": "text"
+                    },
+                    {
+                      "name": "familydiscountdesc",
+                      "type": "text"
+                    },
+                    {
+                      "name": "familydiscountrate",
+                      "type": "text"
+                    },
+                    {
+                      "name": "familydiscounttotal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "enrolsubtotal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "holding_fee",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "holding_fee_discount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "enrolgrandtotal",
+                      "type": "number"
+                    },
+                    {
+                      "name": "charge_uuid",
+                      "type": "number"
+                    },
+                    {
+                      "name": "created",
+                      "type": "number"
+                    },
+                    {
+                      "name": "updated",
+                      "type": "number"
+                    },
+                    {
+                      "name": "created_by",
+                      "type": "text"
+                    },
+                    {
+                      "name": "updated_by",
+                      "type": "text"
+                    },
+                    {
+                      "name": "payments",
+                      "type": "array",
+                      "sub": [
+                        {
+                          "type": "text",
+                          "name": "uuid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "id"
+                        },
+                        {
+                          "type": "number",
+                          "name": "amount"
+                        },
+                        {
+                          "type": "number",
+                          "name": "student_uuid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "payment_uuid"
+                        },
+                        {
+                          "type": "number",
+                          "name": "enrolcharge_uuid"
+                        },
+                        {
+                          "type": "boolean",
+                          "name": "stripe_payment"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "has_payment",
+                      "type": "text",
+                      "sub": []
+                    }
+                  ]
+                },
+                {
+                  "name": "total_student_charge",
+                  "type": "text",
+                  "sub": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "outputType": "object"
+    },
+    "rp_chargeStudents": {
+      "meta": null,
+      "outputType": "object"
+    },
+    "flow_check_enrolment_exists": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "text",
+            "name": "class_uuid"
+          },
+          {
+            "type": "text",
+            "name": "startdate"
+          },
+          {
+            "type": "text",
+            "name": "student_firstname"
+          },
+          {
+            "type": "text",
+            "name": "student_lastname"
+          }
+        ]
+      },
+      {
+        "name": "sc_CHECK_ENROLMENT_exists",
+        "type": "object",
+        "sub": [
+          {
+            "name": "data",
+            "type": "object",
+            "sub": [
+              {
+                "name": "identity",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "times_formats",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "ipadd",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "query",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "number",
+                    "name": "classday"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dayname"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_first"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_last"
+                  },
+                  {
+                    "type": "text",
+                    "name": "enrolment_uuid"
+                  }
+                ]
+              },
+              {
+                "name": "get_details",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "exists",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "html_response",
+                "type": "text",
+                "sub": []
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "type": "object",
+            "sub": [
+              {
+                "name": "executing",
+                "type": "boolean"
+              },
+              {
+                "name": "uploading",
+                "type": "boolean"
+              },
+              {
+                "name": "processing",
+                "type": "boolean"
+              },
+              {
+                "name": "downloading",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "uploadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "downloadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "lastError",
+            "type": "object",
+            "sub": [
+              {
+                "name": "status",
+                "type": "number"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "response",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "flow_check_enrolment_overlap": [
+      {
+        "name": "$param",
+        "type": "object",
+        "sub": [
+          {
+            "type": "text",
+            "name": "weekdate"
+          },
+          {
+            "type": "text",
+            "name": "student_uuid"
+          },
+          {
+            "type": "text",
+            "name": "class_uuid"
+          },
+          {
+            "type": "text",
+            "name": "startdate"
+          },
+          {
+            "type": "text",
+            "name": "enrolment_type"
+          }
+        ]
+      },
+      {
+        "name": "sc_CHECK_ENROLMENT_overlap",
+        "type": "object",
+        "sub": [
+          {
+            "name": "data",
+            "type": "object",
+            "sub": [
+              {
+                "name": "identity",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "times_formats",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "ipadd",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "enrolment_type",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "query_newclass_enrol",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isactive"
+                  },
+                  {
+                    "type": "number",
+                    "name": "instructor"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classLevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "max"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classType"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classtype_uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startdate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "enddate"
+                  }
+                ]
+              },
+              {
+                "name": "query_enrolments",
+                "type": "array",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "student_uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startDate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dropDate"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_first"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_last"
+                  },
+                  {
+                    "type": "text",
+                    "name": "dayname"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "class_uuid"
+                  }
+                ]
+              },
+              {
+                "name": "query_student",
+                "type": "object",
+                "sub": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "text",
+                    "name": "firstName"
+                  },
+                  {
+                    "type": "text",
+                    "name": "lastName"
+                  },
+                  {
+                    "type": "date",
+                    "name": "dob"
+                  },
+                  {
+                    "type": "number",
+                    "name": "family"
+                  },
+                  {
+                    "type": "text",
+                    "name": "rollSheetComments"
+                  },
+                  {
+                    "type": "text",
+                    "name": "rollSheetMedical"
+                  },
+                  {
+                    "type": "text",
+                    "name": "additionalMedical"
+                  },
+                  {
+                    "type": "text",
+                    "name": "gender"
+                  },
+                  {
+                    "type": "number",
+                    "name": "level"
+                  },
+                  {
+                    "type": "text",
+                    "name": "age"
+                  },
+                  {
+                    "type": "number",
+                    "name": "familyold"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "trialLesson"
+                  }
+                ]
+              },
+              {
+                "name": "enrolments",
+                "type": "array",
+                "sub": [
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "student_uuid",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "dropDate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "day",
+                    "type": "number"
+                  },
+                  {
+                    "name": "instructor_first",
+                    "type": "text"
+                  },
+                  {
+                    "name": "instructor_last",
+                    "type": "text"
+                  },
+                  {
+                    "name": "dayname",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classlevel",
+                    "type": "text"
+                  },
+                  {
+                    "name": "class_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "query_absences",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "type": "text",
+                        "name": "uuid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "enrolment_uuid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "absence_date"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "makeup_eligible"
+                      },
+                      {
+                        "type": "text",
+                        "name": "status"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "query_currentenrol_class",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "type": "text",
+                        "name": "uuid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "id"
+                      },
+                      {
+                        "type": "number",
+                        "name": "startTimeDecimal"
+                      },
+                      {
+                        "type": "number",
+                        "name": "endTimeDecimal"
+                      },
+                      {
+                        "type": "boolean",
+                        "name": "isactive"
+                      },
+                      {
+                        "type": "number",
+                        "name": "instructor"
+                      },
+                      {
+                        "type": "text",
+                        "name": "instructor_uuid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classLevel"
+                      },
+                      {
+                        "type": "text",
+                        "name": "classlevel_uuid"
+                      },
+                      {
+                        "type": "number",
+                        "name": "day"
+                      },
+                      {
+                        "type": "text",
+                        "name": "startTimeDisplay"
+                      },
+                      {
+                        "type": "text",
+                        "name": "endTimeDisplay"
+                      },
+                      {
+                        "type": "number",
+                        "name": "max"
+                      },
+                      {
+                        "type": "number",
+                        "name": "classType"
+                      },
+                      {
+                        "type": "text",
+                        "name": "classtype_uuid"
+                      },
+                      {
+                        "type": "date",
+                        "name": "startdate"
+                      },
+                      {
+                        "type": "date",
+                        "name": "enddate"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "enroltimes",
+                    "type": "text",
+                    "sub": []
+                  },
+                  {
+                    "name": "enroltimes_copy",
+                    "type": "text",
+                    "sub": []
+                  },
+                  {
+                    "name": "classday_match",
+                    "type": "text",
+                    "sub": [
+                      {
+                        "name": "uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "id",
+                        "type": "number"
+                      },
+                      {
+                        "name": "startTimeDecimal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "endTimeDecimal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "isactive",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "instructor",
+                        "type": "number"
+                      },
+                      {
+                        "name": "instructor_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classLevel",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classlevel_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "day",
+                        "type": "number"
+                      },
+                      {
+                        "name": "startTimeDisplay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "endTimeDisplay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "max",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classType",
+                        "type": "number"
+                      },
+                      {
+                        "name": "classtype_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "startdate",
+                        "type": "date"
+                      },
+                      {
+                        "name": "enddate",
+                        "type": "date"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "overlap",
+                    "type": "text",
+                    "sub": [
+                      {
+                        "name": "overlap_exists",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "overlap_between",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "start",
+                            "type": "number"
+                          },
+                          {
+                            "name": "end",
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "overlap_exists",
+                "type": "text",
+                "sub": []
+              },
+              {
+                "name": "html_response",
+                "type": "text",
+                "sub": []
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "type": "object",
+            "sub": [
+              {
+                "name": "executing",
+                "type": "boolean"
+              },
+              {
+                "name": "uploading",
+                "type": "boolean"
+              },
+              {
+                "name": "processing",
+                "type": "boolean"
+              },
+              {
+                "name": "downloading",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "uploadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "downloadProgress",
+            "type": "object",
+            "sub": [
+              {
+                "name": "position",
+                "type": "number"
+              },
+              {
+                "name": "total",
+                "type": "number"
+              },
+              {
+                "name": "percent",
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "name": "lastError",
+            "type": "object",
+            "sub": [
+              {
+                "name": "status",
+                "type": "number"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "response",
+                "type": "text"
+              }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "number"
+          }
+        ]
+      }
+    ]
+  },
+  "oc_waitlist": {
+    "query": [
+      {
+        "type": "text",
+        "name": "queryparam"
+      }
+    ]
   }
 });

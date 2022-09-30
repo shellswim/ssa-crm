@@ -80,6 +80,10 @@
               {
                 "table": "students",
                 "column": "classlevel_uuid"
+              },
+              {
+                "table": "students",
+                "column": "hadtrial"
               }
             ],
             "table": {
@@ -119,7 +123,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT uuid, id, firstName, lastName, dob, family, rollSheetComments, rollSheetMedical, additionalMedical, gender, level, age, familyold, classlevel_uuid\nFROM students\nWHERE family = :P1 /* {{$_GET.family_uuid}} */",
+            "query": "SELECT uuid, id, firstName, lastName, dob, family, rollSheetComments, rollSheetMedical, additionalMedical, gender, level, age, familyold, classlevel_uuid, hadtrial\nFROM students\nWHERE family = :P1 /* {{$_GET.family_uuid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -188,6 +192,10 @@
           {
             "type": "text",
             "name": "classlevel_uuid"
+          },
+          {
+            "type": "boolean",
+            "name": "hadtrial"
           }
         ],
         "outputType": "array"
@@ -308,6 +316,119 @@
                 "outputType": "object"
               },
               {
+                "name": "query_makeup_tokens",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "makeup_tokens"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "id": "makeup_tokens.expiry_date",
+                          "field": "makeup_tokens.expiry_date",
+                          "type": "double",
+                          "operator": "greater_or_equal",
+                          "value": "{{TIMESTAMP}}",
+                          "data": {
+                            "table": "makeup_tokens",
+                            "column": "expiry_date",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "bigInteger",
+                              "primary": false,
+                              "nullable": true,
+                              "name": "expiry_date"
+                            }
+                          },
+                          "operation": ">="
+                        },
+                        {
+                          "id": "makeup_tokens.status",
+                          "field": "makeup_tokens.status",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "active",
+                          "data": {
+                            "table": "makeup_tokens",
+                            "column": "status",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "enum",
+                              "enumValues": [
+                                "active",
+                                "used",
+                                "expired",
+                                "cancelled"
+                              ],
+                              "default": "'active'",
+                              "maxLength": 9,
+                              "primary": false,
+                              "nullable": false,
+                              "name": "status"
+                            }
+                          },
+                          "operation": "="
+                        },
+                        {
+                          "id": "makeup_tokens.student_uuid",
+                          "field": "makeup_tokens.student_uuid",
+                          "type": "string",
+                          "operator": "equal",
+                          "value": "{{uuid}}",
+                          "data": {
+                            "table": "makeup_tokens",
+                            "column": "student_uuid",
+                            "type": "text",
+                            "columnObj": {
+                              "type": "reference",
+                              "maxLength": 50,
+                              "primary": false,
+                              "nullable": false,
+                              "references": "uuid",
+                              "inTable": "students",
+                              "onUpdate": "CASCADE",
+                              "onDelete": "CASCADE",
+                              "referenceType": "string",
+                              "name": "student_uuid"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM makeup_tokens\nWHERE expiry_date >= :P1 /* {{TIMESTAMP}} */ AND status = 'active' AND student_uuid = :P2 /* {{uuid}} */",
+                    "params": [
+                      {
+                        "operator": "greater_or_equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{TIMESTAMP}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{uuid}}"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [],
+                "outputType": "array"
+              },
+              {
                 "name": "notes_count_message",
                 "module": "core",
                 "action": "setvalue",
@@ -394,6 +515,10 @@
           {
             "name": "classlevel_uuid",
             "type": "text"
+          },
+          {
+            "name": "hadtrial",
+            "type": "boolean"
           },
           {
             "name": "query_student_notes",
