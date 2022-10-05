@@ -19,7 +19,7 @@
       },
       {
         "type": "text",
-        "name": "wl_fulfilled"
+        "name": "wl_status"
       }
     ]
   },
@@ -613,60 +613,48 @@
                   "operation": "="
                 },
                 {
-                  "condition": "OR",
-                  "rules": [
-                    {
-                      "id": "waitlists.fulfil_date",
-                      "field": "waitlists.fulfil_date",
-                      "type": "date",
-                      "operator": "is_not_null",
-                      "value": null,
-                      "data": {
-                        "table": "waitlists",
-                        "column": "fulfil_date",
-                        "type": "date",
-                        "columnObj": {
-                          "type": "date",
-                          "primary": false,
-                          "nullable": true,
-                          "name": "fulfil_date"
-                        }
-                      },
-                      "operation": "IS NOT NULL"
-                    },
-                    {
-                      "id": "waitlists.fulfil_date",
-                      "field": "waitlists.fulfil_date",
-                      "type": "date",
-                      "operator": "is_null",
-                      "value": null,
-                      "data": {
-                        "table": "waitlists",
-                        "column": "fulfil_date",
-                        "type": "date",
-                        "columnObj": {
-                          "type": "date",
-                          "primary": false,
-                          "nullable": true,
-                          "name": "fulfil_date"
-                        }
-                      },
-                      "operation": "IS NULL"
+                  "id": "waitlists.status",
+                  "field": "waitlists.status",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}",
+                  "data": {
+                    "table": "waitlists",
+                    "column": "status",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "enum",
+                      "enumValues": [
+                        "waiting",
+                        "fulfilled",
+                        "cancelled"
+                      ],
+                      "default": "'waiting'",
+                      "maxLength": 9,
+                      "primary": false,
+                      "nullable": true,
+                      "name": "status"
                     }
-                  ],
-                  "conditional": "{{$_GET.wl_fulfilled}}"
+                  },
+                  "operation": "="
                 }
               ],
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT *\nFROM waitlists\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */ AND (fulfil_date IS NOT NULL OR fulfil_date IS NULL)",
+            "query": "SELECT *\nFROM waitlists\nWHERE student_uuid = :P1 /* {{$_GET.student_uuid}} */ AND status = :P2 /* {{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}} */",
             "params": [
               {
                 "operator": "equal",
                 "type": "expression",
                 "name": ":P1",
                 "value": "{{$_GET.student_uuid}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}"
               }
             ]
           }
@@ -683,11 +671,15 @@
           },
           {
             "type": "number",
-            "name": "studentid"
+            "name": "student_uuid"
           },
           {
             "type": "number",
-            "name": "student_uuid"
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "number",
+            "name": "instructor_uuid"
           },
           {
             "type": "date",
@@ -699,7 +691,7 @@
           },
           {
             "type": "number",
-            "name": "classlevel"
+            "name": "dayint"
           },
           {
             "type": "number",
@@ -710,24 +702,28 @@
             "name": "endtimedec"
           },
           {
-            "type": "number",
-            "name": "dayint"
-          },
-          {
-            "type": "number",
-            "name": "instructor"
-          },
-          {
-            "type": "number",
-            "name": "instructor_uuid"
-          },
-          {
             "type": "text",
             "name": "notes"
           },
           {
             "type": "text",
-            "name": "classlevel_uuid"
+            "name": "status"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "number",
+            "name": "created"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          },
+          {
+            "type": "number",
+            "name": "updated"
           }
         ],
         "outputType": "array"

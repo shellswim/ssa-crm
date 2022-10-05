@@ -538,7 +538,7 @@ exports.classAvail = async function (options) {
         // GET WAITLIST
         debugger;
         let waitlisted = dbClient(await db.raw(`
-            SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family, s.uuid 
+            SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family, s.uuid as student_uuid
             FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
             WHERE (w.endtimedec >= ${c.endTimeDecimal} 
                 AND w.starttimedec <= ${c.startTimeDecimal} 

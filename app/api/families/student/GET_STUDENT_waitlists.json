@@ -1,0 +1,200 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "sort"
+      },
+      {
+        "type": "text",
+        "name": "dir"
+      },
+      {
+        "type": "text",
+        "name": "status"
+      },
+      {
+        "type": "text",
+        "name": "student_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
+      },
+      {
+        "name": "query_waitlists",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "w",
+                "column": "*"
+              }
+            ],
+            "table": {
+              "name": "waitlists",
+              "alias": "w"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "w.status",
+                  "field": "w.status",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.status?$_GET.status:'waiting'}}",
+                  "data": {
+                    "table": "w",
+                    "column": "status",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "enum",
+                      "enumValues": [
+                        "waiting",
+                        "fulfilled",
+                        "cancelled"
+                      ],
+                      "default": "'waiting'",
+                      "maxLength": 9,
+                      "primary": false,
+                      "nullable": true,
+                      "name": "status"
+                    }
+                  },
+                  "operation": "="
+                },
+                {
+                  "id": "w.student_uuid",
+                  "field": "w.student_uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.student_uuid}}",
+                  "data": {
+                    "table": "w",
+                    "column": "student_uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "reference",
+                      "maxLength": 50,
+                      "primary": false,
+                      "nullable": true,
+                      "references": "uuid",
+                      "inTable": "students",
+                      "referenceType": "string",
+                      "onUpdate": "CASCADE",
+                      "onDelete": "CASCADE",
+                      "name": "student_uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT *\nFROM waitlists AS w\nWHERE status = :P1 /* {{$_GET.status?$_GET.status:'waiting'}} */ AND student_uuid = :P2 /* {{$_GET.student_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.status?$_GET.status:'waiting'}}"
+              },
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P2",
+                "value": "{{$_GET.student_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "number",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "date",
+            "name": "request_date"
+          },
+          {
+            "type": "date",
+            "name": "fulfil_date"
+          },
+          {
+            "type": "number",
+            "name": "dayint"
+          },
+          {
+            "type": "number",
+            "name": "starttimedec"
+          },
+          {
+            "type": "number",
+            "name": "endtimedec"
+          },
+          {
+            "type": "text",
+            "name": "notes"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "number",
+            "name": "created"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          },
+          {
+            "type": "number",
+            "name": "updated"
+          }
+        ],
+        "outputType": "array"
+      }
+    ]
+  }
+}

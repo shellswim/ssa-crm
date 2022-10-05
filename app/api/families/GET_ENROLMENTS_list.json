@@ -28,6 +28,10 @@
       {
         "type": "boolean",
         "name": "show_deleted"
+      },
+      {
+        "type": "text",
+        "name": "wl_status"
       }
     ]
   },
@@ -586,6 +590,178 @@
           {
             "type": "number",
             "name": "deleted_time"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "query_waitlists",
+        "module": "dbconnector",
+        "action": "select",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "w",
+                "column": "*"
+              },
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "waitlists",
+              "alias": "w"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "w.status",
+                  "field": "w.status",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}",
+                  "data": {
+                    "table": "w",
+                    "column": "status",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "enum",
+                      "enumValues": [
+                        "waiting",
+                        "fulfilled",
+                        "cancelled"
+                      ],
+                      "default": "'waiting'",
+                      "maxLength": 9,
+                      "primary": false,
+                      "nullable": true,
+                      "name": "status"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT w.*, s.firstName, s.lastName\nFROM waitlists AS w\nLEFT JOIN students AS s ON (s.uuid = w.student_uuid)\nWHERE w.status = :P1 /* {{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "number",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "date",
+            "name": "request_date"
+          },
+          {
+            "type": "date",
+            "name": "fulfil_date"
+          },
+          {
+            "type": "number",
+            "name": "dayint"
+          },
+          {
+            "type": "number",
+            "name": "starttimedec"
+          },
+          {
+            "type": "number",
+            "name": "endtimedec"
+          },
+          {
+            "type": "text",
+            "name": "notes"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "number",
+            "name": "created"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          },
+          {
+            "type": "number",
+            "name": "updated"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
           }
         ],
         "outputType": "array"

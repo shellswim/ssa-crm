@@ -14365,6 +14365,83 @@ dmx.config({
         }
       ],
       "outputType": "array"
+    },
+    "rp_waitlists": {
+      "meta": [
+        {
+          "type": "text",
+          "name": "uuid"
+        },
+        {
+          "type": "number",
+          "name": "id"
+        },
+        {
+          "type": "number",
+          "name": "student_uuid"
+        },
+        {
+          "type": "number",
+          "name": "classlevel_uuid"
+        },
+        {
+          "type": "number",
+          "name": "instructor_uuid"
+        },
+        {
+          "type": "date",
+          "name": "request_date"
+        },
+        {
+          "type": "date",
+          "name": "fulfil_date"
+        },
+        {
+          "type": "number",
+          "name": "dayint"
+        },
+        {
+          "type": "number",
+          "name": "starttimedec"
+        },
+        {
+          "type": "number",
+          "name": "endtimedec"
+        },
+        {
+          "type": "text",
+          "name": "notes"
+        },
+        {
+          "type": "text",
+          "name": "status"
+        },
+        {
+          "type": "text",
+          "name": "created_by"
+        },
+        {
+          "type": "number",
+          "name": "created"
+        },
+        {
+          "type": "text",
+          "name": "updated_by"
+        },
+        {
+          "type": "number",
+          "name": "updated"
+        },
+        {
+          "type": "text",
+          "name": "firstName"
+        },
+        {
+          "type": "text",
+          "name": "lastName"
+        }
+      ],
+      "outputType": "array"
     }
   },
   "mod_classdetails": {
