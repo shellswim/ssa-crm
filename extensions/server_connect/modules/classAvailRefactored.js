@@ -3,409 +3,726 @@ const {
 } = require('luxon');
 const db = require('../../../lib/core/db');
 const _ = require('underscore');
-const {
-    performance
-} = require('perf_hooks');
 const mathjs = require('mathjs');
 
-exports.classAvailabilities = async function (options) {
+module.exports = {
 
-    options = this.parse(options);
+    options: (options) => {
+        return this.parse(options);
+    },
 
-    //////////// Database Connection //////////
-    const connection = this.parseRequired('db', 'string', 'connection is required.');
-    // get the database connection
-    const db = this.getDbConnection(connection);
-    // throw error if connection not found
-    if (!db) throw new Error(`Connection "${connection}" doesn't exist.`);
-    //////////// End database connection //////////
+    _dbase: () => {
+        let object = {
+            "connection": this.parseRequired('db', 'string', 'connection is required.'),
+            "db": this.getDbConnection(connection)
+        }
+        if (!object.db) throw new Error(`Connection "${object.connection}" doesn't exist.`);
+        Object.freeze(object);
+        return object;
+    },
 
+    settings: async (options = this.options()) => {
+        let _this = this;
+        let object = {
+            "show_full_classes": Boolean(Number(options.show_full_classes)),
+            "startdate": DateTime.fromSQL(options.weekdate).startOf('week'),
+            "enddate": DateTime.fromSQL(options.weekdate).endOf('week'),
+            "startofweek": options.startofweek.toLowerCase(),
+            get _makeup_max_days() {
+                return dbClientFlat(await _this._dbase.db.raw(`
+                    SELECT value
+                    FROM settings
+                    WHERE name = 'enrol_makeup_book_ahead_days'
+                `)).value;
+            },
+            get _max_bookahead() {
+                return dbClientFlat(await _this._dbase.db.raw(`
+                    SELECT value
+                    FROM settings
+                    WHERE name = 'enrol_availability_max_weeks'
+                `)).value;
+            },
+            get _max_bookahead_eow_push() {
+                return dbClientFlat(await this._dbase.db.raw(`
+                    SELECT value
+                    FROM settings
+                    WHERE name = 'enrol_availability_end_of_week'
+                `)).value;
+            },
+            get _timezone() {
+                dbClientFlat(await this._dbase.db.raw(`
+                    SELECT value
+                    FROM settings
+                    WHERE name = 'timezone'
+                `)).value;
+            }
+        }
+        if (object.startofweek == 'sunday') {
+            object.startdate = object.startdate.minus({
+                days: 1
+            });
+            object.enddate = object.enddate.minus({
+                days: 1
+            });
+        }
+        return object;
+    },
 
-    /** Get Relevant settings from db */
-    let _makeup_max_days = dbClientFlat(await db.raw(`
-        SELECT value
-        FROM settings
-        WHERE name = 'enrol_makeup_book_ahead_days'
-    `)).value;
-    let _max_bookahead = dbClientFlat(await db.raw(`
-        SELECT value
-        FROM settings
-        WHERE name = 'enrol_availability_max_weeks'
-    `)).value;
-    let _timezone = dbClientFlat(await db.raw(`
-        SELECT value
-        FROM settings
-        WHERE name = 'timezone'
-    `)).value;
+    dates: () => {
+        let makeup_max_date = DateTime.now().setZone(this.settings._timezone).plus({
+            days: (Number(this.settings._makeup_max_days) - 1)
+        });
+        let enrolment_max_date = DateTime.now().plus({
+            weeks: Number(_max_bookahead)
+        }).setZone(_timezone);
+        if (this.settings._max_bookahead_eow_push == 1) {
+            enrolment_max_date = enrolment_max_date.endOf('week');
+        }
+        // Throw out of date range error if weekdate is greater than maximum enrolment date.
+        if (Number(DateTime.fromSQL(this.options().weekdate).toSeconds()) > Number(enrolment_max_date.toSeconds())) {
+            throw new RangeError('Date Range Error: Your chosen weekdate is further in the future than allowed. Please choose another date.');
+        };
 
+        return {
+            "makeup_max_date": makeup_max_date,
+            "enrolment_max_date": enrolment_max_date,
+        }
+    },
 
-    /** Set up dates */
-    let makeup_max = DateTime.now().plus({
-        days: _makeup_max_days
-    }).setZone(_timezone);
 
     /** Get calendar settings */
-    let calendar_interval = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value);
-    let calendar_starttime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value);
-    let calendar_endtime = Number(dbClient(await db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value);
-    let calendar_timeslots = createCalendarTimeslots(calendar_starttime, calendar_endtime,calendar_interval);
+    calendar_settings: async () => {
+        return {
+            "calendar_interval": Number(dbClientFlat(await this._dbase.db.raw("SELECT value FROM settings WHERE name = 'calendar_intervals'")).value),
+            "calendar_starttime": Number(dbClientFlat(await this._dbase.db.raw("SELECT value FROM settings WHERE name = 'class_min_time'")).value),
+            "calendar_endtime": Number(dbClientFlat(await this._dbase.db.raw("SELECT value FROM settings WHERE name = 'class_max_time'")).value),
+            "calendar_timeslots": createCalendarTimeslots(calendar_starttime, calendar_endtime, calendar_interval)
+        }
+    },
 
-    /** Setup Filters */
-    let filters = {
-            "day_filter": this.parse(options.day_filter) == '' ? [] : this.parse(options.day_filter).map((i) => {
-                return Number(i)
-            }),
-            "time_filter": this.parse(options.time_filter) == '' ? [] : this.parse(options.time_filter).map((i) => {
-                return Number(i)
-            }),
-            "instructor_filter": this.parse(options.instructor_filter) == '' ? [] : this.parse(options.instructor_filter).map((i) => {
-                return `'` + i + `'`
-            }),
-            "level_filter": this.parse(options.level_filter) == '' ? [] : this.parse(options.level_filter).map((i) => {
-                return `'` + i + `'`
-            })
-        },
-        filters_applied = filters.day_filter.length > 0 || filters.instructor_filter.length > 0 || filters.level_filter.length > 0 || filters.time_filter.length > 0 ? true : false,
-        filtered_availabilities = options.avail_type ? true : false;
+    class_filters: () => {
+        let _this = this;
+        let filtered_classes = false; // Boolean switch for filters.
+        let filters = {
+                "day_filter": _this._day_filters,
+                "time_filter": _this._time_filters,
+                "instructor_filter": _this._instructor_filters,
+                "level_filter": _this._level_filters
+            },
+            filters_applied = filters.day_filter.length > 0 || filters.instructor_filter.length > 0 || filters.level_filter.length > 0 || filters.time_filter.length > 0 ? true : false,
+            filtered_availabilities = options.avail_type ? true : false;
 
-    /** Setup Pagination for Bootstrap */
-    let classcount = dbClient(await db.raw(`
-        SELECT COUNT(uuid) as t
-        FROM classes c
-        WHERE isactive = true ${filters_applied ? `AND` : ``}
-        ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
-        ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-        ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
-        ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-        ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
-        ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
-        ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
-    `)).t;
-
-    let limit = this.parse(options.limit),
-        total = classcount,
-        offset = this.parse(options.offset),
-        last_offset = (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
-        page = {
-            "total": Math.ceil((total / limit)),
-            "current": ((offset + limit) / limit),
-            "offset": {
-                "first": 0,
-                "last": (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
-                "next": (offset + limit) > total ? last_offset : (offset + limit),
-                "prev": (offset - limit) <= 0 ? 0 : (offset - limit)
+        // Check if time_filter is used, create min time and max time to create a range.
+        if (filters.time_filter.length > 0) {
+            let final_time_array = [];
+            let tf = filters.time_filter;
+            for (let i = 0; i < tf.length; i++) {
+                let decimals = tf[i].decimals;
+                final_time_array.push(decimals.startdecimal);
+                final_time_array.push(decimals.enddecimal);
             }
-        },
-        next = (offset + limit) > total ? last_offset : (offset + limit),
-        prev = (offset - limit) <= 0 ? 0 : (offset - limit);
+            filters.time_filter = final_time_array;
 
+            return {
+                "filtered_classes": filtered_classes,
+                "filters": filters,
+                "filters_applied": filters_applied,
+                "filtered_availabilities": filtered_availabilities
+            }
 
-        /** Classes */
-        let classdump = dbClientArray(await db.raw(`
-        SELECT c.uuid,
-            c.id,
-            c.uuid,
-            c.startTimeDecimal,
-            c.endTimeDecimal,
-            c.instructor_uuid,
-            c.classlevel_uuid,
-            c.day AS classday,
-            c.startTimeDisplay,
-            c.endTimeDisplay,
-            c.max,
-            c.classtype_uuid,
-            c.classType,
-            ct.baseRate,
-            ct.shortName,
+        }
+    },
 
-            JSON_OBJECT(
-                    'active_enrols',
-                    (
-                        SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                                'age', s.age,
-                                                'class_uuid', e.class_uuid,
-                                                'dob', s.dob,
-                                                'dropDate', e.dropDate,
-                                                'enrolmentType', e.enrolmentType,
-                                                'family', s.family,
-                                                'firstName', s.firstName,
-                                                'isTransferIn', e.isTransferIn,
-                                                'isTransferOut', e.isTransferOut,
-                                                'lastName', s.lastName,
-                                                'startDate', e.startDate,
-                                                'student_uuid', s.uuid,
-                                                'transferToStart', e.transferToStart,
-                                                'uuid', e.uuid
-                                            )
-                                    )
-                        FROM enrolments e
-                                    LEFT JOIN students s ON e.student_uuid = s.uuid
-                        WHERE e.enrolmentType = 1
-                            AND e.isValid = 1
-                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
-                            AND e.class_uuid = c.uuid
-                    ),
-                    'makeup_enrols',
-                    (
-                        SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                                'age', s.age,
-                                                'class_uuid', e.class_uuid,
-                                                'dob', s.dob,
-                                                'dropDate', e.dropDate,
-                                                'enrolmentType', e.enrolmentType,
-                                                'family', s.family,
-                                                'firstName', s.firstName,
-                                                'isTransferIn', e.isTransferIn,
-                                                'isTransferOut', e.isTransferOut,
-                                                'lastName', s.lastName,
-                                                'startDate', e.startDate,
-                                                'student_uuid', s.uuid,
-                                                'transferToStart', e.transferToStart,
-                                                'uuid', e.uuid
-                                            )
-                                    )
-                        FROM enrolments e
-                                    LEFT JOIN students s ON e.student_uuid = s.uuid
-                        WHERE e.enrolmentType = 3
-                            AND e.isValid = 1
-                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
-                            AND e.class_uuid = c.uuid
-                    ),
-                    'trial_enrols',
-                    (
-                        SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                                'age', s.age,
-                                                'class_uuid', e.class_uuid,
-                                                'dob', s.dob,
-                                                'dropDate', e.dropDate,
-                                                'enrolmentType', e.enrolmentType,
-                                                'family', s.family,
-                                                'firstName', s.firstName,
-                                                'isTransferIn', e.isTransferIn,
-                                                'isTransferOut', e.isTransferOut,
-                                                'lastName', s.lastName,
-                                                'startDate', e.startDate,
-                                                'student_uuid', s.uuid,
-                                                'transferToStart', e.transferToStart,
-                                                'uuid', e.uuid
-                                            )
-                                    )
-                        FROM enrolments e
-                                    LEFT JOIN students s ON e.student_uuid = s.uuid
-                        WHERE e.enrolmentType = 3
-                            AND e.isValid = 1
-                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
-                            AND e.class_uuid = c.uuid
-                    ),
-                    'casual_enrols',
-                    (
-                        SELECT JSON_ARRAYAGG(
-                                        JSON_OBJECT(
-                                                'age', s.age,
-                                                'class_uuid', e.class_uuid,
-                                                'dob', s.dob,
-                                                'dropDate', e.dropDate,
-                                                'enrolmentType', e.enrolmentType,
-                                                'family', s.family,
-                                                'firstName', s.firstName,
-                                                'isTransferIn', e.isTransferIn,
-                                                'isTransferOut', e.isTransferOut,
-                                                'lastName', s.lastName,
-                                                'startDate', e.startDate,
-                                                'student_uuid', s.uuid,
-                                                'transferToStart', e.transferToStart,
-                                                'uuid', e.uuid
-                                            )
-                                    )
-                        FROM enrolments e
-                                    LEFT JOIN students s ON e.student_uuid = s.uuid
-                        WHERE e.enrolmentType = 5
-                            AND e.isValid = 1
-                            AND (e.dropDate >= '${originalDates.startDate.format('YYYY-MM-DD')}' OR e.dropDate IS NULL)
-                            AND e.class_uuid = c.uuid
-                    )
-                ) AS enrolments
-        FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid
-        ${filters_applied ? `WHERE` : ``}
-        ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
-        ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-        ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
-        ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
-        ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
-        ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
-        ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
-        GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
-                 c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
-        ORDER BY
-        (CASE (SELECT value FROM settings WHERE name = 'weekstart')
-            WHEN 'Sunday' THEN
-                FIELD(day, 7, 1, 2, 3, 4, 5, 6)
-            WHEN 'Monday' THEN
-                c.day
-        END),c.startTimeDecimal
-        ${filtered_availabilities ? `` : `LIMIT `+ offset+`, `+limit}
-        `));
+    _day_filters: () => {
+        if (!!this.options().day_filter) {
+            return []
+        } else if (this.options().day_filter.includes(',')) {
+            return this.options().day_filter.split(',').map((i) => {
+                return Number(i)
+            });
+        } else {
+            return [Number(this.options().day_filter)];
+        }
+    },
+
+    _time_filters: () => {
+        if (!!this.options().time_filter) {
+            return [];
+        } else {
+            return JSON.parse(`[${this.options().time_filter}]`);
+        }
+    },
+    _instructor_filters: () => {
+        if (!!this.optiions.instructor_filter) {
+            return [];
+        } else {
+            return this.options().instructor_filter.split(',').map((i) => {
+                return `'` + i + `'`;
+            });
+        }
+    },
+
+    _level_filters: () => {
+        if(!!this.options().level_filter) {
+            return [];
+        } else {
+            return this.options().level_filter.split(',').map((i) => {
+                return `'` + i + `'`
+            });
+        }
+    },
+
+    _bs_pagination: async () => {
+        /** Setup Pagination for Bootstrap */
+        let classcount = dbClientFlat(await this._dbase.db.raw(`
+            SELECT COUNT(c.uuid) as count
+            FROM classes c
+            WHERE isactive = true ${filters_applied ? `AND` : ``}
+            ${filters.day_filter.length > 0 ? `c.day IN(${filters.day_filter})` : ``}
+            ${filters.day_filter.length > 0 && (filters.level_filter.length > 0 || filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.level_filter.length > 0 ? `c.classlevel_uuid IN(${filters.level_filter})` : ``}
+            ${filters.level_filter.length > 0 && (filters.instructor_filter.length > 0 || filters.time_filter.length > 0) ? `AND` : ``}
+            ${filters.instructor_filter.length > 0 ? `c.instructor_uuid IN(${filters.instructor_filter})`: ``}
+            ${filters.instructor_filter.length > 0 && filters.time_filter.length > 0 ? `AND` : ``}
+            ${filters.time_filter.length > 0 ? `c.startTimeDecimal IN(${filters.time_filter})`: ``}
+        `)).count;
+
+        // Set page variables.
+        let limit = this.options().limit,
+            total = classcount,
+            offset = this.options().offset,
+            last_offset = (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
+            page = {
+                "total": Math.ceil((total / limit)),
+                "current": ((offset + limit) / limit),
+                "offset": {
+                    "first": 0,
+                    "last": (total % limit) === 0 ? (total - limit) : (total - (total % limit)),
+                    "next": (offset + limit) > total ? last_offset : (offset + limit),
+                    "prev": (offset - limit) <= 0 ? 0 : (offset - limit)
+                }
+            },
+            next = (offset + limit) > total ? last_offset : (offset + limit),
+            prev = (offset - limit) <= 0 ? 0 : (offset - limit);
+    },
+
+    getclasses: async () => {
+        if (this.options().class_uuid) {
+            return dbClient(await this._dbase.db.raw(`
+            SELECT c.uuid,
+                c.id,
+                c.uuid,
+                c.startTimeDecimal,
+                c.endTimeDecimal,
+                c.instructor_uuid,
+                c.classlevel_uuid,
+                c.day AS classday,
+                c.startTimeDisplay,
+                c.endTimeDisplay,
+                c.max,
+                c.classtype_uuid,
+                c.classType,
+                c.startdate,
+                c.enddate,
+                ct.shortName,
+                ct.id,
+                i.id,
+                cl.id
+            FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
+            WHERE c.uuid = '${this._options().class_uuid}'`));
+        } else {
+            return dbClient(await this._dbase.db.raw(`
+            SELECT c.uuid,
+                c.id,
+                c.uuid,
+                c.startTimeDecimal,
+                c.endTimeDecimal,
+                c.instructor_uuid,
+                c.classlevel_uuid,
+                c.day AS classday,
+                c.startTimeDisplay,
+                c.endTimeDisplay,
+                c.max,
+                c.classtype_uuid,
+                c.classType,
+                c.startdate,
+                c.enddate,
+                ct.shortName,
+                ct.id,
+                i.id,
+                cl.id
         
-        // Start Class Details generation.
-        for (let i = 0; i < classdump.length; i++) {
-            let c = classdump[i];
-            c.weekday = DateTime.fromISO(options.startdate).plus({days: (c.classday - 1)});
-            c.details = {};
+            FROM classes c LEFT JOIN classTypes ct ON c.classtype_uuid = ct.uuid LEFT JOIN staff i ON c.instructor_uuid = i.uuid LEFT JOIN classLevels cl ON cl.uuid = c.classlevel_uuid
+            WHERE c.startdate <= '${enddate.toISODate()}' AND (c.enddate >= '${startdate.toISODate()}' OR ISNULL(c.enddate)) ${filters_applied ? 'AND':''}
+            ${this._day_filter.length > 0 ? `c.day IN(${this._day_filter})` : ``}
+            ${this._day_filter.length > 0 && (this._level_filter.length > 0 || this._instructor_filter.length > 0 || this._time_filter.length > 0) ? `AND` : ``}
+            ${this._level_filter.length > 0 ? `c.classlevel_uuid IN(${this._level_filter})` : ``}
+            ${this._level_filter.length > 0 && (this._instructor_filter.length > 0 || this._time_filter.length > 0) ? `AND` : ``}
+            ${this._instructor_filter.length > 0 ? `c.instructor_uuid IN(${this._instructor_filter})`: ``}
+            ${this._instructor_filter.length > 0 && this._time_filter.length > 0 ? `AND` : ``}
+            ${this._time_filter.length > 0 ? `c.startTimeDecimal BETWEEN ${Math.min(...this._time_filter)} AND ${Math.max(...this._time_filter)}`: ``}
+            GROUP BY c.uuid, c.id, c.startTimeDecimal, c.endTimeDecimal, c.instructor_uuid, c.classlevel_uuid, c.day,
+                        c.startTimeDisplay, c.endTimeDisplay, c.max, c.classtype_uuid
+            ORDER BY
+            (CASE (SELECT value FROM settings WHERE name = 'weekstart')
+                WHEN 'Sunday' THEN
+                    FIELD(day, 7, 1, 2, 3, 4, 5, 6)
+                WHEN 'Monday' THEN
+                    c.day
+            END),c.startTimeDecimal,cl.id, i.id
+            ${(filtered_availabilities && !this._options().list_only) || this._options().data_type === 'calendar' ? `` : this._options().list_only ? `LIMIT ` + this._bs_pagination().limit :  `LIMIT `+ this._bs_pagination().offset+`, `+this._bs_pagination().limit}
+            `));
+        }
+    },
 
-            // c.details = await processClass(weekday, c.uuid, c.max, c);
-            // c.waitlists = await waitlists(c);
+    evaluate_classes: (classdump) => {
 
-            // for (let i = 0; i < c.details.enrolments.length; i++) {
-            //     let e = c.details.enrolments[i];
-            //     // let att = await attendance(e);
-            //     // e.attendance = att || null;
-            // }
+    }
+
+
+}
+
+
+    /** Classes */
+    let classdump = await getclasses();
+
+    // Start Class Details generation.
+    let performance_array = [];
+
+    for (let i = 0; i < classdump.length; i++) {
+        let c = classdump[i];
+        if (startofweek == 'sunday') {
+            if (c.classday == 7) {
+                c.weekday = DateTime.fromISO(startdate).plus({
+                    hours: c.endTimeDecimal
+                }).setZone(_timezone, {
+                    keepLocalTime: true
+                });
+            } else {
+                c.weekday = DateTime.fromISO(startdate).plus({
+                    days: (c.classday),
+                    hours: c.endTimeDecimal
+                }).setZone(_timezone, {
+                    keepLocalTime: true
+                });
+            }
+        } else {
+            c.weekday = DateTime.fromISO(startdate).plus({
+                days: (c.classday - 1),
+                hours: c.endTimeDecimal
+            }).setZone(_timezone, {
+                keepLocalTime: true
+            });
         }
 
-        return classdump;
+        // Set calculated class date.
+        if (c.weekday < DateTime.fromISO(options.weekdate) || c.weekday < DateTime.now().setZone(_timezone)) {
+            c.current_week_day = c.weekday;
+            c.weekday = c.weekday.plus({
+                weeks: 1
+            });
+        }
 
+        c.baseRate = dbClientFlat(await this._dbase.db.raw(`
+            SELECT cb.baserate
+            FROM charges_baserates cb
+            WHERE 
+                '${c.weekday}' BETWEEN IFNULL(cb.effective_date,'1900-01-01') AND IFNULL(cb.end_date,'2999-01-01')
+                AND cb.classlevel_uuid = '${c.classlevel_uuid}';
+        `)).baserate;
 
+        c.details = {};
+        let pstart = performance.now();
+        c.details = await processClass(c.weekday, c.max, c);
+        if (c.details.remove) {
+            classdump.splice(i, 1);
+            i -= 1;
+        }
+        let pend = performance.now();
+        performance_array.push((pend - pstart) / 1000);
+        c.waitlists = await processWaitlists(c);
+        c.outofrange = c.weekday > enrolment_max_date;
 
+        // for (let i = 0; i < c.details.enrolments.length; i++) {
+        //     let e = c.details.enrolments[i];
+        //     // let att = await attendance(e);
+        //     // e.attendance = att || null;
+        // }
+    }
 
+    // If classes are filtered, get ALL classes from SQL DB, then filter them with JS
+    if (options.avail_type) {
+        debugger;
+        if (options.avail_type == 'permanent') {
+            this.class_filters.filtered_classes = _.filter(classdump, function (o) {
+                let fc = (Number(o.max) - Number(o.details.total)) >= options.avail_amount;
+                return fc;
+            });
+        } else if (options.avail_type == 'temporary') {
+            this.class_filters.filtered_classes = _.filter(classdump, function (o) {
+                return Number(o.details.makeup_avail_max) >= Number(options.avail_amount);
+            });
+        }
+    }
 
+    if (this.class_filters.filtered_classes && !options.list_only) {
+        page.total = Math.ceil((this.class_filters.filtered_classes.length / limit));
+    }
+    let _weekdate_seconds = DateTime.fromISO(options.weekdate).toSeconds(),
+        _maxdate_seconds = enrolment_max_date.toSeconds(),
+        _classes = this.class_filters.filtered_classes.length > 0 && !options.list_only ? this.class_filters.filtered_classes.slice(offset, (offset + limit)) : options.class_uuid ? classdump[0] : classdump,
+        _maxdate_iso = enrolment_max_date.toISODate(),
+        _makeup_maxdate = makeup_max_date.toISODate(),
+        _limit = limit || null,
+        _offset = offset || null,
+        _page = page || null,
+        _last_offset = last_offset || null,
+        _prev = prev || null,
+        _next = next || null,
+        _total = total || null;
+
+    let finalobj = {
+        'outofrange': {
+            'outofrange': outofrange,
+            'weekdate_seconds': _weekdate_seconds,
+            'maxdate_seconds': _maxdate_seconds,
+            'weekdate': options.weekdate
+        },
+        "filters": {
+            "day": filters.day_filter,
+            "time": filters.time_filter,
+            "instructor": filters.instructor_filter,
+            "level": filters.level_filter
+        },
+        // Paginate classes when they're filtered with slice();
+        "classes": _classes,
+        'max_date': _maxdate_iso,
+        'makeup_max_date': _makeup_maxdate,
+        'startofweek': startdate.toISODate(),
+        'endofweek': enddate.toISODate(),
+        'performance': performance_array,
+        'peformance_total': performance_array.length > 0 ? performance_array.reduce((a, b) => {
+            return a + b
+        }) : [],
+        'times_array': calendar_timeslots
+    }
+
+    if (_limit) finalobj.limit = _limit;
+    if (_offset) finalobj.offset = _offset;
+    if (_page) finalobj.page = _page;
+    if (_last_offset) finalobj.last_offset = _last_offset;
+    if (_prev) finalobj.prev = _prev;
+    if (_next) finalobj.next = _next;
+    if (_total) finalobj.total = _total;
+
+    return finalobj;
 
     /** Functions */
-    
+
     function createCalendarTimeslots(starttime, endtime, interval) {
         let timeslot_array = [];
-        while(starttime < endtime) {
+        while (starttime < endtime) {
             timeslot_array.push(starttime);
             starttime += interval;
         }
         return timeslot_array
     }
 
-    async function processClass(weekday, class_uuid, classmax, classinfo) {
-        // wd = Weekday, wda = Weekday Array
-        let classinfo = classinfo,
-            enrolments = JSON.parse(classinfo.enrolments),
-            enr_total = [],
+    async function processClass(weekday, classmax, classinfo) {
+        let enrolments,
+            wea = [], // weekly enrolment array
+            maa = [], // makeup availability array
+            aa, // absence array
+            mea = [], // makeup enrolments array
+            tae = [], // total active enrols array
+            naa, // next active available
+            att = [], // attendance array
+            nextavailable_permanent,
             weekday_arr = [],
-            enrolment_count = [],
-            att = [],
-            absence = [];
+            classprocess_startdate = startdate,
+            classprocess_enddate = enddate,
+            classprocess_weekday = weekday;
 
-        delete classinfo.enrolments;
+        // Get enrolment counts and availabilities.
+        let idx = 0;
+        while (classprocess_weekday <= enrolment_max_date.plus({
+                weeks: 1
+            })) {
 
-        let startd = moment(options.startdate),
-            endd = moment(options.enddate);
+            // Break loop if over 1000.
+            if (idx > 1000) break;
 
-        ///// Availabilities
-        for (let i = 0; i < max; i++) {
-            let enrolcount = {
-                "active_enrols": 0,
-                "makeup_enrols": 0,
-                "trial_enrols": 0,
-                "casual_enrols": 0,
-            };
-            enrolments.map(en => {
-                
-            })
-            Object.keys(enrolments).forEach(key => {
-                // et = enrolment type => loops through enrolment object from MySQL db.
-                let et = enrolments[key];
-                if (et !== null) {
-                    // Loop through enrolments in enrolment object.
-                    for (let j = 0; j < et.length; j++) {
-                        // **** en = current enrolment in loop.
-                        let en = et[j];
-                        let estart = moment(en.startDate),
-                            edrop = moment(en.dropDate);
-                        if (estart.isSameOrBefore(endd) && (!en.dropDate || edrop.isSameOrAfter(startd))) {
-                            enrolcount[key] += 1;
+            // Get enrolments and attendances.
+            let enrolments_processed = await processEnrolments(classinfo, classprocess_weekday);
 
-                            // // WHILE IN AVAILABILITIES, GET ATTENDANCE RECORDS AND GET ABSENCES FOR CURRENT WEEK.
-                            // (async () => {
-                            //     let att = await attendance(en);
-                            //     en.attendance = att || null;
-                            // })();
-                        }
-                    }
-                } else {
-                    enrolcount[key] = 0;
-                }
+            // Set all enrolments on first pass. Otherwise, later weeks will overwrite the first loop, thus there will be missing enrolments if there are drop dates on any enrolments.
+            if (idx === 0) enrolments = enrolments_processed.enrolments;
+
+            // Set total number of enrolments, absences and makeup availabilities.
+            wea.push(enrolments_processed.total);
+            aa = enrolments_processed.absences;
+            maa.push(classmax - (enrolments_processed.total - enrolments_processed.absences.length));
+
+            // Push the weekday being calculated. This will be used for calculating dates for availabilities.
+            weekday_arr.push(classprocess_weekday);
+
+            // Increment the week;
+            classprocess_startdate = classprocess_startdate.plus({
+                days: 7
             });
-            let val = 0;
-            Object.keys(enrolcount).forEach(key => {
-                val += enrolcount[key] || 0;
+            classprocess_enddate = classprocess_enddate.plus({
+                days: 7
             });
-            enr_total.push(val);
+            classprocess_weekday = classprocess_weekday.plus({
+                days: 7
+            });
 
-            weekday_arr.push(wd.format('YYYY-MM-DD'));
-            startd = startd.clone().add(7, 'days');
-            endd = endd.clone().add(7, 'days');
-            wd = wd.add(7, 'days');
+            // Increase index of the loop by 1.
+            idx += 1;
         }
 
         let mu_array_indexes = [],
             mu_avail = [],
-            mu_avail_max;
+            mu_avail_max,
+            mu_weekday_arr = [];
 
-        // Add makeup availability array
-        for (let i = 0; i < enr_total.length; i++) {
-            if (enr_total[i] < Number(classmax)) {
-                mu_array_indexes.push(i);
+        // Find makeups.
+        for (let i = 0; i < weekday_arr.length; i++) {
+            const day = weekday_arr[i];
+            if (day <= makeup_max_date) { // current day being calulated <= maximum makeup date
+                if (maa[i] > 0) { // if makeup count is > 0  
+                    mu_avail.push({
+                        'date': day,
+                        'availabilities': maa[i],
+                        'total': maa[i]
+                    });
+                }
+            } else {
+                break;
             }
         }
-        for (let i = 0; i < mu_array_indexes.length; i++) {
-            if (moment(weekday_arr[mu_array_indexes[i]]).isSameOrBefore(mumax) && moment(weekday_arr[mu_array_indexes[i]]).isSameOrAfter(moment())) {
-                mu_avail.push({
-                    'date': weekday_arr[mu_array_indexes[i]],
-                    'availabilities': classmax - enr_total[mu_array_indexes[i]]
-                });
+        debugger;
+        // Create makeup response.
+        if (mu_avail.length > 0) { //check makeups available
+            mu_unavail_response = {
+                "code": 100,
+                "response": "Availabilities found."
+            };
+        } else {
+            if (options.list_only && options.avail_type === 'temporary' && !show_full_classes) {
+                return {
+                    "remove": true
+                };
+            } else {
+                mu_unavail_response = { // otherwise no availabilities
+                    "code": 101,
+                    "response": 'No availabilities.'
+                }
+            }
+        }
+        if (weekday > makeup_max_date) { // if current day > maximum makeup date.
+            if (options.list_only && options.avail_type === 'temporary' && !show_full_classes) {
+                return {
+                    "remove": true
+                };
+            } else {
+                mu_unavail_response = {
+                    "code": 102,
+                    "response": `Too far into future.`
+                }
             }
         }
 
-        if (mu_avail.length > 0) {
-            let x = [];
-            for (let i = 0; i < mu_avail.length; i++) {
-                x.push(mu_avail[i].availabilities);
-            }
-            mu_avail_max = Math.max(...x);
+        // Find overbookings.
+        let overbooked = () => {
+            let x = wea.find((a) => {
+                return a > classmax;
+            });
+            if (x) return true;
+            else return false;
         }
 
-        // Set makeup response if no makeups available.
-        mu_unavail_response = moment(weekday_arr[0]).isAfter(mumax) ? mu_unavail_response = {
-            "code": 102,
-            "response": 'Too far into future.',
-            "total": 0
-        } : mu_avail.length == 0 && originalDates.startDate < mumax ? {
-            "code": 101,
-            "response": 'No availabilities.',
-            "total": 0
-        } : {
-            "code": 100,
-            "response": "Availabilities found.",
-            "total": mu_avail_max
-        };
+        let last_max = wea.lastIndexOf(classmax); // get last found max booking
 
-        let endmax = enr_total.lastIndexOf(classmax);
-        let nextactive = weekday_arr[endmax + 1] ? moment(weekday_arr[endmax + 1]) : null;
-        if (nextactive != 0 && nextactive != null) {
-            if (nextactive.isBefore(moment())) {
-                nextactive.add(7, 'd');
+        if (overbooked() || last_max == (wea.length - 1)) { // if overbooked === true OR last_max is the last week of calculations, class is full.
+            if (options.list_only && options.avail_type === 'permanent' && !show_full_classes) {
+                return {
+                    "remove": true
+                }
+            } else {
+                nextavailable_permanent = null; // null response
+            }
+        } else {
+            if (last_max === -1) { // if no max booking found.
+                nextavailable_permanent = weekday_arr[0]; // set next available date to first date.
+            } else {
+                nextavailable_permanent = weekday_arr[last_max + 1];
             }
         }
-        process_time_array.push(((pendclass - pstartclass) / 1000));
+
+        // Is class currently running?
+        classinfo.isrunning = false;
+        if (DateTime.now().setZone(_timezone) >= weekday.minus({
+                hours: (classinfo.endTimeDecimal - classinfo.startTimeDecimal)
+            }) && DateTime.now().setZone(_timezone) <= weekday) {
+            classinfo.isrunning = true;
+        }
+
         return {
-            'enrolcount': enrolment_count,
-            'active': nextactive ? nextactive.format('YYYY-MM-DD') : null,
-            'makeup': mu_avail,
+            'attendance': att,
+            'absence_array': aa,
+            'makeup_availabilities': mu_avail,
+            'maa': maa,
             'makeup_avail_max': mu_avail_max || null,
             'makeup_response': mu_unavail_response,
-            'total': Math.max(...enr_total),
-            'weekday': weekday,
-            'enrolments': enrolments
+            'makeup_avail_indexes': mu_array_indexes,
+            'nextavailable_permanent': nextavailable_permanent ? nextavailable_permanent.toISODate() : false,
+            'total': Math.max(...wea),
+            'weekday': weekday.toISODate(),
+            'weekday_arr': weekday_arr,
+            'weekly_total_enrols': wea,
+            'enrolments': enrolments,
+            'outofrange': weekday > enrolment_max_date
         };
     }
+
+    async function processEnrolments(classinfo, date) {
+
+        let enrolobject = {
+            'active_enrols': [],
+            'trial_enrols': [],
+            'makeup_enrols': [],
+            'casual_enrols': []
+        };
+        let enrolmenttotal = options.trial_convert ? -1 : 0;
+
+        let enrolments = dbClient(await this._dbase.db.raw(`
+            SELECT
+                e.uuid AS enrolment_uuid,
+                e.enrolmentType,
+                s.age,
+                e.class_uuid,
+                s.dob,
+                e.dropDate,
+                e.enrolmentType,
+                s.family,
+                s.firstName,
+                e.isTransferIn,
+                e.isTransferOut,
+                s.lastName,
+                e.startDate,
+                s.uuid,
+                e.transferToStart
+            FROM enrolments e
+                LEFT JOIN students s ON e.student_uuid = s.uuid LEFT JOIN classes c ON e.class_uuid = c.uuid
+            WHERE e.isValid = 1
+            AND (e.dropDate >= '${date.toISODate()}' OR e.dropDate IS NULL)
+            AND c.uuid = '${classinfo.uuid}';
+        `));
+        let absences = dbClient(await this._dbase.db.raw(`
+            SELECT 
+                a.*, 
+                s.firstName, 
+                s.lastName
+            FROM absences a 
+                LEFT JOIN enrolments e 
+                    on a.enrolment_uuid = e.uuid 
+                LEFT JOIN students s 
+                    on e.student_uuid = s.uuid
+            WHERE 
+                a.class_uuid = '${classinfo.uuid}' AND a.absence_date = ${Number(date.toSeconds())} AND a.status = 'active';
+        `));
+
+        // Loop and sort enrolments
+        if (Array.isArray(enrolments)) {
+            enrolmenttotal += enrolments.length;
+            for (let i = 0; i < enrolments.length; i++) {
+                const e = enrolments[i];
+
+                // Minus enrolment total for future enrolments.
+                if (DateTime.fromJSDate(e.startDate).setZone(_timezone, {
+                        keepLocalTime: true
+                    }) > date) enrolmenttotal -= 1;
+
+                // Create enrolment types array
+                switch (e.enrolmentType) {
+                    case 1:
+                        enrolobject.active_enrols.push(e)
+                        break;
+                    case 2:
+                        enrolobject.makeup_enrols.push(e)
+                        break;
+                    case 3:
+                        enrolobject.trial_enrols.push(e)
+                        break;
+                    case 5:
+                        enrolobject.casual_enrols.push(e)
+                        break;
+                }
+
+                // Mark absences in enrolments array.
+                // Match enrolment with absences.
+                e.absent = Boolean(absences.find(({
+                    enrolment_uuid
+                }) => enrolment_uuid = e.uuid));
+            }
+        }
+
+        let enrolmentcount_bytype = {
+            'active_enrols': enrolobject.active_enrols.length,
+            'trial_enrols': enrolobject.trial_enrols.length,
+            'makeup_enrols': enrolobject.makeup_enrols.length,
+            'casual_enrols': enrolobject.casual_enrols.length
+        }
+
+        return {
+            'enrolments': enrolobject,
+            'enrolmentcount_bytype': enrolmentcount_bytype,
+            'absences': absences,
+            'total': enrolmenttotal
+        };
+    }
+    async function processWaitlists(c) {
+        // GET WAITLIST
+        debugger;
+        let waitlisted = dbClient(await this._dbase.db.raw(`
+            SELECT w.*, s.firstName, s.lastName, s.dob, s.age, s.family, s.uuid as student_uuid
+            FROM waitlists w LEFT JOIN students s ON w.student_uuid = s.uuid  
+            WHERE (w.endtimedec >= ${c.endTimeDecimal} 
+                AND w.starttimedec <= ${c.startTimeDecimal} 
+                AND w.dayint = '${c.classday}' 
+                AND (w.instructor_uuid = '${c.instructor_uuid}' 
+                    OR w.instructor_uuid IS NULL) 
+                AND w.fulfil_date IS NULL 
+                AND (w.classlevel_uuid = '${c.classlevel_uuid}'
+                    OR w.classlevel_uuid IS NULL))
+            ORDER BY w.request_date
+        `));
+        if (Array.isArray(waitlisted)) {
+            for (let i = 0; i < waitlisted.length; i++) {
+                let w = waitlisted[i];
+                w.request_date = DateTime.fromJSDate(w.request_date).toISODate();
+                w.dob = DateTime.fromJSDate(w.dob).toISODate();
+            }
+        }
+
+        return waitlisted;
+    }
+
+    async function attendance(enrolment, classdate) {
+        let att = dbClient(await this._dbase.db.raw(`
+            SELECT *
+            FROM absences a 
+            WHERE 
+                a.enrolment_uuid = '${enrolment.uuid}' 
+                AND a.class_uuid = '${enrolment.class_uuid} 
+                AND a.absence_date = ${classdate}
+            ORDER BY absence_date DESC
+        `));
+        return att;
+    }
+
+
 
     /** Database Utilities */
     function dbClientFlat(v) {
