@@ -54,137 +54,657 @@
         }
       },
       {
-        "name": "update",
-        "module": "dbupdater",
-        "action": "update",
+        "name": "query_waitlist",
+        "module": "dbconnector",
+        "action": "single",
         "options": {
           "connection": "db",
           "sql": {
-            "type": "update",
-            "values": [
+            "type": "SELECT",
+            "columns": [
               {
                 "table": "waitlists",
-                "column": "classlevel_uuid",
-                "type": "text",
-                "value": "{{$_POST.classlevel}}"
+                "column": "starttimedec"
               },
               {
                 "table": "waitlists",
-                "column": "instructor_uuid",
-                "type": "text",
-                "value": "{{$_POST.instructor_uuid}}"
+                "column": "endtimedec"
               },
               {
                 "table": "waitlists",
-                "column": "dayint",
-                "type": "number",
-                "value": "{{$_POST.dayint}}"
+                "column": "status"
+              },
+              {
+                "table": "classLevels",
+                "column": "name",
+                "alias": "classlevel_name"
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "alias": "instructor_firstname"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "alias": "instructor_lastname"
+              },
+              {
+                "table": "students",
+                "column": "firstName"
+              },
+              {
+                "table": "students",
+                "column": "lastName"
+              },
+              {
+                "table": "students",
+                "column": "family",
+                "alias": "family_uuid"
               },
               {
                 "table": "waitlists",
-                "column": "starttimedec",
-                "type": "number",
-                "value": "{{$_POST.starttimedec}}"
+                "column": "instructor_uuid"
               },
               {
                 "table": "waitlists",
-                "column": "endtimedec",
-                "type": "number",
-                "value": "{{$_POST.endtimedec}}"
+                "column": "classlevel_uuid"
               },
               {
                 "table": "waitlists",
-                "column": "notes",
-                "type": "text",
-                "value": "{{$_POST.notes}}"
+                "column": "notes"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
               },
               {
                 "table": "waitlists",
-                "column": "updated_by",
-                "type": "text",
-                "value": "{{identity}}"
+                "column": "student_uuid"
               },
               {
                 "table": "waitlists",
-                "column": "updated",
-                "type": "number",
-                "value": "{{TIMESTAMP}}"
+                "column": "dayint"
               }
             ],
-            "table": "waitlists",
+            "table": {
+              "name": "waitlists"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "classLevels",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "classLevels",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "waitlists",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "waitlists",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "students",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "students",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "waitlists",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "dayint",
+                      "operator": "equal",
+                      "value": {
+                        "table": "waitlists",
+                        "column": "dayint"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              }
+            ],
+            "query": "SELECT waitlists.starttimedec, waitlists.endtimedec, waitlists.status, classLevels.name AS classlevel_name, staff.firstName AS instructor_firstname, staff.lastName AS instructor_lastname, students.firstName, students.lastName, students.family AS family_uuid, waitlists.instructor_uuid, waitlists.classlevel_uuid, waitlists.notes, days.dayname, waitlists.student_uuid, waitlists.dayint\nFROM waitlists\nLEFT JOIN classLevels ON (classLevels.uuid = waitlists.classlevel_uuid) LEFT JOIN staff ON (staff.uuid = waitlists.instructor_uuid) LEFT JOIN students ON (students.uuid = waitlists.student_uuid) LEFT JOIN days ON (days.dayint = waitlists.dayint)\nWHERE waitlists.uuid = :P1 /* {{$_POST.uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.uuid}}"
+              }
+            ],
             "wheres": {
               "condition": "AND",
               "rules": [
                 {
-                  "id": "uuid",
+                  "id": "waitlists.uuid",
+                  "field": "waitlists.uuid",
                   "type": "string",
                   "operator": "equal",
                   "value": "{{$_POST.uuid}}",
                   "data": {
-                    "column": "uuid"
+                    "table": "waitlists",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
                   },
                   "operation": "="
                 }
-              ]
+              ],
+              "conditional": null,
+              "valid": true
+            }
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "number",
+            "name": "starttimedec"
+          },
+          {
+            "type": "number",
+            "name": "endtimedec"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_name"
+          },
+          {
+            "type": "text",
+            "name": "instructor_firstname"
+          },
+          {
+            "type": "text",
+            "name": "instructor_lastname"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family_uuid"
+          },
+          {
+            "type": "number",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "number",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "text",
+            "name": "notes"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "dayint"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_newintructor",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "staff",
+                "column": "firstName"
+              },
+              {
+                "table": "staff",
+                "column": "lastName"
+              }
+            ],
+            "table": {
+              "name": "staff"
             },
-            "returning": "uuid",
-            "query": "UPDATE waitlists\nSET classlevel_uuid = :P1 /* {{$_POST.classlevel}} */, instructor_uuid = :P2 /* {{$_POST.instructor_uuid}} */, dayint = :P3 /* {{$_POST.dayint}} */, starttimedec = :P4 /* {{$_POST.starttimedec}} */, endtimedec = :P5 /* {{$_POST.endtimedec}} */, notes = :P6 /* {{$_POST.notes}} */, updated_by = :P7 /* {{identity}} */, updated = :P8 /* {{TIMESTAMP}} */\nWHERE uuid = :P9 /* {{$_POST.uuid}} */",
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "staff.uuid",
+                  "field": "staff.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.instructor_uuid}}",
+                  "data": {
+                    "table": "staff",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT firstName, lastName\nFROM staff\nWHERE uuid = :P1 /* {{$_POST.instructor_uuid}} */",
             "params": [
-              {
-                "name": ":P1",
-                "type": "expression",
-                "value": "{{$_POST.classlevel}}"
-              },
-              {
-                "name": ":P2",
-                "type": "expression",
-                "value": "{{$_POST.instructor_uuid}}"
-              },
-              {
-                "name": ":P3",
-                "type": "expression",
-                "value": "{{$_POST.dayint}}"
-              },
-              {
-                "name": ":P4",
-                "type": "expression",
-                "value": "{{$_POST.starttimedec}}"
-              },
-              {
-                "name": ":P5",
-                "type": "expression",
-                "value": "{{$_POST.endtimedec}}"
-              },
-              {
-                "name": ":P6",
-                "type": "expression",
-                "value": "{{$_POST.notes}}"
-              },
-              {
-                "name": ":P7",
-                "type": "expression",
-                "value": "{{identity}}"
-              },
-              {
-                "name": ":P8",
-                "type": "expression",
-                "value": "{{TIMESTAMP}}"
-              },
               {
                 "operator": "equal",
                 "type": "expression",
-                "name": ":P9",
-                "value": "{{$_POST.uuid}}"
+                "name": ":P1",
+                "value": "{{$_POST.instructor_uuid}}"
               }
             ]
           }
         },
+        "output": true,
         "meta": [
           {
-            "name": "affected",
-            "type": "number"
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
           }
         ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_newlevel",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "classLevels",
+                "column": "name"
+              }
+            ],
+            "table": {
+              "name": "classLevels"
+            },
+            "primary": "uuid",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "classLevels.uuid",
+                  "field": "classLevels.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_POST.classlevel}}",
+                  "data": {
+                    "table": "classLevels",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT name\nFROM classLevels\nWHERE uuid = :P1 /* {{$_POST.classlevel}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.classlevel}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "name"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "query_newday",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "days",
+                "column": "dayname"
+              }
+            ],
+            "table": {
+              "name": "days"
+            },
+            "primary": "id",
+            "joins": [],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "days.dayint",
+                  "field": "days.dayint",
+                  "type": "double",
+                  "operator": "equal",
+                  "value": "{{$_POST.dayint}}",
+                  "data": {
+                    "table": "days",
+                    "column": "dayint",
+                    "type": "number",
+                    "columnObj": {
+                      "type": "integer",
+                      "primary": false,
+                      "nullable": true,
+                      "name": "dayint"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT dayname\nFROM days\nWHERE dayint = :P1 /* {{$_POST.dayint}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_POST.dayint}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "dayname"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "update",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "waitlists",
+                      "column": "classlevel_uuid",
+                      "type": "text",
+                      "value": "{{$_POST.classlevel}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "instructor_uuid",
+                      "type": "text",
+                      "value": "{{($_POST.instructor_uuid === 'noinstructor') ? null : $_POST.instructor_uuid}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "dayint",
+                      "type": "number",
+                      "value": "{{$_POST.dayint}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "starttimedec",
+                      "type": "number",
+                      "value": "{{$_POST.starttimedec}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "endtimedec",
+                      "type": "number",
+                      "value": "{{$_POST.endtimedec}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "notes",
+                      "type": "text",
+                      "value": "{{$_POST.notes}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "updated_by",
+                      "type": "text",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "table": "waitlists",
+                      "column": "updated",
+                      "type": "number",
+                      "value": "{{TIMESTAMP}}"
+                    }
+                  ],
+                  "table": "waitlists",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_POST.uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ]
+                  },
+                  "returning": "uuid",
+                  "query": "UPDATE waitlists\nSET classlevel_uuid = :P1 /* {{$_POST.classlevel}} */, instructor_uuid = :P2 /* {{($_POST.instructor_uuid === 'noinstructor') ? null : $_POST.instructor_uuid}} */, dayint = :P3 /* {{$_POST.dayint}} */, starttimedec = :P4 /* {{$_POST.starttimedec}} */, endtimedec = :P5 /* {{$_POST.endtimedec}} */, notes = :P6 /* {{$_POST.notes}} */, updated_by = :P7 /* {{identity}} */, updated = :P8 /* {{TIMESTAMP}} */\nWHERE uuid = :P9 /* {{$_POST.uuid}} */",
+                  "params": [
+                    {
+                      "name": ":P1",
+                      "type": "expression",
+                      "value": "{{$_POST.classlevel}}"
+                    },
+                    {
+                      "name": ":P2",
+                      "type": "expression",
+                      "value": "{{($_POST.instructor_uuid === 'noinstructor') ? null : $_POST.instructor_uuid}}"
+                    },
+                    {
+                      "name": ":P3",
+                      "type": "expression",
+                      "value": "{{$_POST.dayint}}"
+                    },
+                    {
+                      "name": ":P4",
+                      "type": "expression",
+                      "value": "{{$_POST.starttimedec}}"
+                    },
+                    {
+                      "name": ":P5",
+                      "type": "expression",
+                      "value": "{{$_POST.endtimedec}}"
+                    },
+                    {
+                      "name": ":P6",
+                      "type": "expression",
+                      "value": "{{$_POST.notes}}"
+                    },
+                    {
+                      "name": ":P7",
+                      "type": "expression",
+                      "value": "{{identity}}"
+                    },
+                    {
+                      "name": ":P8",
+                      "type": "expression",
+                      "value": "{{TIMESTAMP}}"
+                    },
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P9",
+                      "value": "{{$_POST.uuid}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ],
+              "output": true
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "log",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "UPDATED WAITLIST: {{query_waitlist.firstName+' '+query_waitlist.lastName}} ({{query_waitlist.dayname + ' | ' + query_waitlist.starttimedec.pdl_decimal_to_time(true, false) + ' - ' + query_waitlist.endtimedec.pdl_decimal_to_time(true, false) + ' | ' +query_waitlist.classlevel_name + ' | ' + query_waitlist.instructor_firstname + ' ' + query_waitlist.instructor_lastname.pdl_truncate(1, '.','Any Instructor')}})\n{{($_POST.dayint != query_waitlist.dayint)?'\\\\nDay: '+query_waitlist.dayname + ' → ' + query_newday.dayname : ''}}\n{{(($_POST.starttimedec != query_waitlist.starttimedec) || ($_POST.endtimedec != query_waitlist.endtimedec)) ? '\\\\n Time: ' + query_waitlist.starttimedec.pdl_decimal_to_time(true, false) + ' - ' + query_waitlist.endtimedec.pdl_decimal_to_time(true, false) + ' → ' + $_POST.starttimedec.pdl_decimal_to_time(true, false) + ' - ' + $_POST.endtimedec.pdl_decimal_to_time(true, false):''}}\n{{($_POST.instructor_uuid != query_waitlist.instructor_uuid) ? '\\\\n Instructor: ' + query_waitlist.instructor_firstname + ' ' + query_waitlist.instructor_lastname.pdl_truncate(1, '.','Any Instructor') + ' → ' + query_newintructor.firstName + ' ' + query_newintructor.lastName.pdl_truncate(1, '.','Any Instructor') : ''}}\n{{($_POST.classlevel != query_waitlist.classlevel_uuid)?'\\\\n Level: '+query_waitlist.classlevel_name + ' → ' + query_newlevel.name : ''}}\n{{($_POST.notes != query_waitlist.notes) ? '\\\\n Note: '+ query_waitlist.notes + ' → ' + $_POST.notes : ''}}\n"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "log_edit",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_STUDENT_log",
+          "params": {
+            "family_uuid": "{{query_waitlist.family_uuid}}",
+            "log_category": "Waitlist",
+            "log_type": "updated",
+            "log": "{{log}}",
+            "student_uuid": "{{query_waitlist.student_uuid}}",
+            "family_log_category": "Waitlist",
+            "family_log_type": "updated"
+          }
+        },
         "output": true
       }
     ]

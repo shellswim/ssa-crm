@@ -14442,7 +14442,13 @@ dmx.config({
         }
       ],
       "outputType": "array"
-    }
+    },
+    "flow_waitlist_submitted": [
+      {
+        "name": "var",
+        "type": "text"
+      }
+    ]
   },
   "mod_classdetails": {
     "var_newtempenrol_selected": {

@@ -96,6 +96,15 @@
               {
                 "table": "e",
                 "column": "deleted_time"
+              },
+              {
+                "table": "e",
+                "column": "uuid"
+              },
+              {
+                "table": "s",
+                "column": "uuid",
+                "alias": "student_uuid"
               }
             ],
             "table": {
@@ -446,7 +455,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT s.firstName, s.lastName, classes.day AS class_day, classes.startTimeDisplay, classes.classlevel_uuid, classes.instructor_uuid, e.enrolmentType, e.startDate, e.dropDate, e.deleted_time\nFROM enrolments AS e\nLEFT JOIN students AS s ON (s.uuid = e.student_uuid) LEFT JOIN families AS f ON (f.uuid = s.family) LEFT JOIN classes ON (classes.uuid = e.class_uuid)\nWHERE f.uuid = :P1 /* {{$_GET.family_uuid}} */ AND (e.enrolmentType = :P2 /* {{$_GET.enrolment_type}} */) AND (s.uuid = :P3 /* {{$_GET.student_uuid}} */) AND ((e.dropDate < :P4 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate > :P5 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.dropDate IS NULL OR e.dropDate >= :P6 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate <= :P7 /* {{NOW.formatDate('yyyy-MM-dd')}} */ AND (e.dropDate IS NULL OR e.dropDate >= :P8 /* {{NOW.formatDate('yyyy-MM-dd')}} */))) AND (e.deleted = '\"0\"')\nORDER BY classes.day ASC, e.startDate ASC, e.dropDate ASC, s.lastName ASC, s.firstName ASC, classes.day ASC, classes.startTimeDecimal ASC, classes.endTimeDecimal ASC",
+            "query": "SELECT s.firstName, s.lastName, classes.day AS class_day, classes.startTimeDisplay, classes.classlevel_uuid, classes.instructor_uuid, e.enrolmentType, e.startDate, e.dropDate, e.deleted_time, e.uuid, s.uuid AS student_uuid\nFROM enrolments AS e\nLEFT JOIN students AS s ON (s.uuid = e.student_uuid) LEFT JOIN families AS f ON (f.uuid = s.family) LEFT JOIN classes ON (classes.uuid = e.class_uuid)\nWHERE f.uuid = :P1 /* {{$_GET.family_uuid}} */ AND (e.enrolmentType = :P2 /* {{$_GET.enrolment_type}} */) AND (s.uuid = :P3 /* {{$_GET.student_uuid}} */) AND ((e.dropDate < :P4 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate > :P5 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.dropDate IS NULL OR e.dropDate >= :P6 /* {{NOW.formatDate('yyyy-MM-dd')}} */) OR (e.startDate <= :P7 /* {{NOW.formatDate('yyyy-MM-dd')}} */ AND (e.dropDate IS NULL OR e.dropDate >= :P8 /* {{NOW.formatDate('yyyy-MM-dd')}} */))) AND (e.deleted = '\"0\"')\nORDER BY classes.day ASC, e.startDate ASC, e.dropDate ASC, s.lastName ASC, s.firstName ASC, classes.day ASC, classes.startTimeDecimal ASC, classes.endTimeDecimal ASC",
             "params": [
               {
                 "operator": "equal",
@@ -590,178 +599,14 @@
           {
             "type": "number",
             "name": "deleted_time"
-          }
-        ],
-        "outputType": "array"
-      },
-      {
-        "name": "query_waitlists",
-        "module": "dbconnector",
-        "action": "select",
-        "options": {
-          "connection": "db",
-          "sql": {
-            "type": "SELECT",
-            "columns": [
-              {
-                "table": "w",
-                "column": "*"
-              },
-              {
-                "table": "s",
-                "column": "firstName"
-              },
-              {
-                "table": "s",
-                "column": "lastName"
-              }
-            ],
-            "table": {
-              "name": "waitlists",
-              "alias": "w"
-            },
-            "primary": "uuid",
-            "joins": [
-              {
-                "table": "students",
-                "column": "*",
-                "alias": "s",
-                "type": "LEFT",
-                "clauses": {
-                  "condition": "AND",
-                  "rules": [
-                    {
-                      "table": "s",
-                      "column": "uuid",
-                      "operator": "equal",
-                      "value": {
-                        "table": "w",
-                        "column": "student_uuid"
-                      },
-                      "operation": "="
-                    }
-                  ]
-                },
-                "primary": "uuid"
-              }
-            ],
-            "wheres": {
-              "condition": "AND",
-              "rules": [
-                {
-                  "id": "w.status",
-                  "field": "w.status",
-                  "type": "string",
-                  "operator": "equal",
-                  "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}",
-                  "data": {
-                    "table": "w",
-                    "column": "status",
-                    "type": "text",
-                    "columnObj": {
-                      "type": "enum",
-                      "enumValues": [
-                        "waiting",
-                        "fulfilled",
-                        "cancelled"
-                      ],
-                      "default": "'waiting'",
-                      "maxLength": 9,
-                      "primary": false,
-                      "nullable": true,
-                      "name": "status"
-                    }
-                  },
-                  "operation": "="
-                }
-              ],
-              "conditional": null,
-              "valid": true
-            },
-            "query": "SELECT w.*, s.firstName, s.lastName\nFROM waitlists AS w\nLEFT JOIN students AS s ON (s.uuid = w.student_uuid)\nWHERE w.status = :P1 /* {{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}} */",
-            "params": [
-              {
-                "operator": "equal",
-                "type": "expression",
-                "name": ":P1",
-                "value": "{{($_GET.wl_status) ? $_GET.wl_status : 'waiting'}}"
-              }
-            ]
-          }
-        },
-        "output": true,
-        "meta": [
+          },
           {
             "type": "text",
             "name": "uuid"
           },
           {
-            "type": "number",
-            "name": "id"
-          },
-          {
-            "type": "number",
+            "type": "text",
             "name": "student_uuid"
-          },
-          {
-            "type": "number",
-            "name": "classlevel_uuid"
-          },
-          {
-            "type": "number",
-            "name": "instructor_uuid"
-          },
-          {
-            "type": "date",
-            "name": "request_date"
-          },
-          {
-            "type": "date",
-            "name": "fulfil_date"
-          },
-          {
-            "type": "number",
-            "name": "dayint"
-          },
-          {
-            "type": "number",
-            "name": "starttimedec"
-          },
-          {
-            "type": "number",
-            "name": "endtimedec"
-          },
-          {
-            "type": "text",
-            "name": "notes"
-          },
-          {
-            "type": "text",
-            "name": "status"
-          },
-          {
-            "type": "text",
-            "name": "created_by"
-          },
-          {
-            "type": "number",
-            "name": "created"
-          },
-          {
-            "type": "text",
-            "name": "updated_by"
-          },
-          {
-            "type": "number",
-            "name": "updated"
-          },
-          {
-            "type": "text",
-            "name": "firstName"
-          },
-          {
-            "type": "text",
-            "name": "lastName"
           }
         ],
         "outputType": "array"

@@ -1,0 +1,399 @@
+{
+  "meta": {
+    "$_GET": [
+      {
+        "type": "text",
+        "name": "waitlist_uuid"
+      }
+    ]
+  },
+  "exec": {
+    "steps": [
+      {
+        "name": "",
+        "module": "auth",
+        "action": "restrict",
+        "options": {
+          "provider": "security",
+          "loginUrl": "/public",
+          "forbiddenUrl": "/public"
+        }
+      },
+      {
+        "name": "query_waitlist",
+        "module": "dbconnector",
+        "action": "single",
+        "options": {
+          "connection": "db",
+          "sql": {
+            "type": "SELECT",
+            "columns": [
+              {
+                "table": "w",
+                "column": "*"
+              },
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
+              },
+              {
+                "table": "s",
+                "column": "family"
+              },
+              {
+                "table": "cl",
+                "column": "name",
+                "alias": "classlevel_name"
+              },
+              {
+                "table": "staff",
+                "column": "firstName",
+                "alias": "instructor_firstname"
+              },
+              {
+                "table": "staff",
+                "column": "lastName",
+                "alias": "instructor_lastname"
+              },
+              {
+                "table": "days",
+                "column": "dayname"
+              }
+            ],
+            "table": {
+              "name": "waitlists",
+              "alias": "w"
+            },
+            "primary": "uuid",
+            "joins": [
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "classLevels",
+                "column": "*",
+                "alias": "cl",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "cl",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "classlevel_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "staff",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "staff",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "instructor_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              },
+              {
+                "table": "days",
+                "column": "*",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "days",
+                      "column": "dayint",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "dayint"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "id"
+              }
+            ],
+            "wheres": {
+              "condition": "AND",
+              "rules": [
+                {
+                  "id": "w.uuid",
+                  "field": "w.uuid",
+                  "type": "string",
+                  "operator": "equal",
+                  "value": "{{$_GET.waitlist_uuid}}",
+                  "data": {
+                    "table": "w",
+                    "column": "uuid",
+                    "type": "text",
+                    "columnObj": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "primary": true,
+                      "nullable": false,
+                      "name": "uuid"
+                    }
+                  },
+                  "operation": "="
+                }
+              ],
+              "conditional": null,
+              "valid": true
+            },
+            "query": "SELECT w.*, s.firstName, s.lastName, s.family, cl.name AS classlevel_name, staff.firstName AS instructor_firstname, staff.lastName AS instructor_lastname, days.dayname\nFROM waitlists AS w\nLEFT JOIN students AS s ON (s.uuid = w.student_uuid) LEFT JOIN classLevels AS cl ON (cl.uuid = w.classlevel_uuid) LEFT JOIN staff ON (staff.uuid = w.instructor_uuid) LEFT JOIN days ON (days.dayint = w.dayint)\nWHERE w.uuid = :P1 /* {{$_GET.waitlist_uuid}} */",
+            "params": [
+              {
+                "operator": "equal",
+                "type": "expression",
+                "name": ":P1",
+                "value": "{{$_GET.waitlist_uuid}}"
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "type": "text",
+            "name": "uuid"
+          },
+          {
+            "type": "number",
+            "name": "id"
+          },
+          {
+            "type": "number",
+            "name": "student_uuid"
+          },
+          {
+            "type": "number",
+            "name": "classlevel_uuid"
+          },
+          {
+            "type": "number",
+            "name": "instructor_uuid"
+          },
+          {
+            "type": "date",
+            "name": "request_date"
+          },
+          {
+            "type": "date",
+            "name": "fulfil_date"
+          },
+          {
+            "type": "number",
+            "name": "dayint"
+          },
+          {
+            "type": "number",
+            "name": "starttimedec"
+          },
+          {
+            "type": "number",
+            "name": "endtimedec"
+          },
+          {
+            "type": "text",
+            "name": "notes"
+          },
+          {
+            "type": "text",
+            "name": "status"
+          },
+          {
+            "type": "text",
+            "name": "created_by"
+          },
+          {
+            "type": "number",
+            "name": "created"
+          },
+          {
+            "type": "text",
+            "name": "updated_by"
+          },
+          {
+            "type": "number",
+            "name": "updated"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          },
+          {
+            "type": "number",
+            "name": "family"
+          },
+          {
+            "type": "text",
+            "name": "classlevel_name"
+          },
+          {
+            "type": "text",
+            "name": "instructor_firstname"
+          },
+          {
+            "type": "text",
+            "name": "instructor_lastname"
+          },
+          {
+            "type": "text",
+            "name": "dayname"
+          }
+        ],
+        "outputType": "object"
+      },
+      {
+        "name": "",
+        "module": "core",
+        "action": "trycatch",
+        "options": {
+          "try": {
+            "steps": {
+              "name": "cancel_waitlist",
+              "module": "dbupdater",
+              "action": "update",
+              "options": {
+                "connection": "db",
+                "sql": {
+                  "type": "update",
+                  "values": [
+                    {
+                      "table": "waitlists",
+                      "column": "status",
+                      "type": "text",
+                      "value": "cancelled"
+                    }
+                  ],
+                  "table": "waitlists",
+                  "wheres": {
+                    "condition": "AND",
+                    "rules": [
+                      {
+                        "id": "uuid",
+                        "field": "uuid",
+                        "type": "string",
+                        "operator": "equal",
+                        "value": "{{$_GET.waitlist_uuid}}",
+                        "data": {
+                          "column": "uuid"
+                        },
+                        "operation": "="
+                      }
+                    ],
+                    "conditional": null,
+                    "valid": true
+                  },
+                  "returning": "uuid",
+                  "query": "UPDATE waitlists\nSET status = 'cancelled'\nWHERE uuid = :P1 /* {{$_GET.waitlist_uuid}} */",
+                  "params": [
+                    {
+                      "operator": "equal",
+                      "type": "expression",
+                      "name": ":P1",
+                      "value": "{{$_GET.waitlist_uuid}}"
+                    }
+                  ]
+                }
+              },
+              "meta": [
+                {
+                  "name": "affected",
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "catch": {
+            "steps": {
+              "name": "",
+              "module": "core",
+              "action": "response",
+              "options": {
+                "status": 500,
+                "data": "{{$_ERROR}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "log",
+        "module": "core",
+        "action": "setvalue",
+        "options": {
+          "value": "WAITLIST CANCELLED: {{query_waitlist.firstName+' '+query_waitlist.lastName}} \\n\n{{query_waitlist.dayname}} {{query_waitlist.starttimedec.pdl_decimal_to_time(true, false)}} - {{query_waitlist.endtimedec.pdl_decimal_to_time(true, false)}}\n{{(query_waitlist.instructor_uuid)?'\\\\n Instructor: '+query_waitlist.instructor_firstname+' '+query_waitlist.instructor_lastname.pdl_truncate(1, '.'):''}}\n{{(query_waitlist.classlevel_uuid) ? '\\\\n Class Level: ' + query_waitlist.classlevel_name : ''}}\n"
+        },
+        "meta": [],
+        "outputType": "text"
+      },
+      {
+        "name": "log_cancellation",
+        "module": "core",
+        "action": "exec",
+        "options": {
+          "exec": "base/logs/CREATE_STUDENT_log",
+          "params": {
+            "family_uuid": "{{query_waitlist.family}}",
+            "log_category": "Waitlist",
+            "log_type": "updated",
+            "student_uuid": "{{query_waitlist.student_uuid}}",
+            "family_log_category": "Waitlist",
+            "family_log_type": "updated",
+            "log": "{{log}}"
+          }
+        },
+        "output": true
+      }
+    ]
+  }
+}

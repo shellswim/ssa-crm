@@ -52,7 +52,7 @@ document.addEventListener('hidden.bs.modal', function (event) {
     let visible = document.querySelectorAll('.modal.show');
     if (visible.length > 0) {
         setTimeout(function () {
-            body.classList.add('modal-open');
+            document.body.classList.add('modal-open');
         });
     }
 });

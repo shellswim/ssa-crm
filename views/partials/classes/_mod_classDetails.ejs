@@ -1,9 +1,5 @@
-<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" moment_2="local with locales" id="mod_classdetails" components="{dmxDataTraversal:{},dmxBootstrap5Modal:{},dmxDatePicker:{},dmxAnimateCSS:{},dmxBootbox5:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxBootstrap5Collapse:{},dmxBootstrap5Tooltips:{}}" href="/partials/classes/_mod_x2_newEnrolment" -->
-<script is="dmx-flow" id="flow_waitlist_submitted" type="text/dmx-flow">{
-  run: {
-    action: "{{classDetailsModal.sc_GET_CLASS_details.load({uuid: classDetailsModal.dd_classdetails.data.uuid},true);classesBase.load({},true);classDetailsModal.oc_createWaitlist.hide();classDetailsModal.var_classdetails_page.setValue(1)}}"
-  }
-}</script>
+<!-- Wappler include head-page="layouts/layout2" appconnect="local" is="dmx-app" bootstrap5="local" bootstrap_icons="cdn" fontawesome_5="cdn" jquery_35="cdn" moment_2="local with locales" id="mod_classdetails" components="{dmxDataTraversal:{},dmxBootstrap5Modal:{},dmxDatePicker:{},dmxAnimateCSS:{},dmxBootbox5:{},dmxFormatter:{},dmxBootstrap5Offcanvas:{},dmxBootstrap5Collapse:{},dmxBootstrap5Tooltips:{},dmxAutocomplete:{}}" href="/partials/classes/_mod_x2_newEnrolment" -->
+<script is="dmx-flow" id="flow_dummyJSON" type="text/dmx-flow" src="/app/flows/enrolments/CREATE_DUMMY_ENROL_json.json"></script>
 
 <div class="modal fade" id="classDetailsModal" is="dmx-bs5-modal" tabindex="-1" dmx-on:hidden-bs-modal="var_classdetails_page.setValue(1);oc_quotedetails.createEnrolmentForm.reset()" nocloseonclick="true" dmx-on:show-bs-modal="run({runJS:{function:'modal_parent_backdrop',args:['#mod_edit_waitlist','#classDetailsModal'],name:'waitlist_modal_backdropToParent',disabled:true}})">
 
@@ -13,6 +9,7 @@
             <%- await include('/partials/classes/oc_editClassDetails', Object.assign({}, locals)) %>
             <%- await include('/partials/classes/_oc_quote_details', Object.assign({}, locals)) %>
             <%- await include('/partials/classes/_mod_createWaitlist', Object.assign({}, locals)) %>
+            <%- await include('/partials/families/_oc_chargedetails', Object.assign({}, locals)) %>
 
             <dmx-value id="var_classdetails_page" dmx-bind:value="1"></dmx-value>
             <div class="modal-header pdl-main-bg">
@@ -41,6 +38,7 @@
             <div class="modal-body light-blue-bg p-5 pt-4">
                 <dmx-data-detail id="dd_classdetails" dmx-bind:data="classesBase.data.nextavail.classes" key="uuid"></dmx-data-detail>
                 <dmx-serverconnect id="sc_GET_CLASS_details" url="/api/classes/GET_CLASS_details" noload></dmx-serverconnect>
+                <dmx-serverconnect id="sc_GET_STUDENT_details" url="/api/families/student/GET_STUDENT_details"></dmx-serverconnect>
 
                 <section class="p-4 bg-white rounded-3" dmx-show="var_classdetails_page.value==1">
                     <div class="row" is="dmx-if" id="cr_outofrange_false_enrolbuttons" dmx-bind:condition="!dd_classdetails.data.details.outofrange">
@@ -52,7 +50,7 @@
 
                         </div>
                         <div class="col-auto">
-                            <button id="btn_createEnrolment" class="btn btn-secondary mb-3" dmx-on:click="run({condition:{if:`!dd_classdetails.data.details.outofrange`,then:{steps:[{assign:{value:`(!dd_classdetails.data.details.nextavailable_permanent &amp;&amp; dd_classdetails.data.details.makeup_response.code !== 100)?false:true`,name:'var_availabilities'}},{assign:{value:`waitlists.length&gt;0`,name:'var_waitlists'}},{assign:{value:`true`,name:'var_continue'}},{condition:{if:`var_availabilities===false`,then:{steps:[{assign:{value:'&lt;p&gt;You\'re about to overbook this class.&lt;br&gt; Are you sure you want to continue?&lt;/p&gt;',name:'var_overbook_message'}},{runJS:{function:'swal_confirm',args:['warning','OVERBOOKING WARNING',`true`,'Cancel',`false`,'','OVERBOOK',`false`,`false`,`var_overbook_message`],name:'overbook_confirm'}},{condition:{if:`overbook_confirm === false`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_waitlists===true&amp;&amp;var_continue===true`,then:{steps:[{assign:{value:'&lt;p&gt;This class has waitlisted students.&lt;br&gt; Are you sure you want to enrol ahead of the waitlists?&lt;/p&gt;',name:'var_waitlist_message'}},{runJS:{function:'swal_confirm',args:['warning','Waitlists Active',`true`,'Cancel',`false`,'','Continue Anyway',`false`,`false`,`var_waitlist_message`],name:'waitlist_confirm'}},{condition:{if:`waitlist_confirm === false`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_continue === true`,then:{steps:[{condition:{if:`var_availabilities===false`,then:{steps:[{run:{action:`classDetailsModal.makeup_enroltype_toggle.disable();classDetailsModal.casual_enroltype_toggle.disable()`}}]}}},{run:{action:`dd_classdetails_searchenrol.select(dd_classdetails.data.uuid);var_newenrol_startdate.setValue(dd_classdetails.data.details.nextavailable_permanent||dateAndTime_days.datetime.formatDate('yyyy-MM-dd'))`}},{run:{action:`classDetailsModal.var_classdetails_page.setValue(2)`}}]}}}]}}})"><i class="fas fa-plus-circle fa-fw me-2"></i>
+                            <button id="btn_createEnrolment" class="btn btn-secondary mb-3" dmx-on:click="run({condition:{if:`!dd_classdetails.data.details.outofrange`,then:{steps:[{assign:{value:`(!dd_classdetails.data.details.nextavailable_permanent &amp;&amp; dd_classdetails.data.details.makeup_response.code !== 100)?false:true`,name:'var_availabilities'}},{assign:{value:`dd_classdetails.data.waitlists.length&gt;0`,name:'var_waitlists'}},{assign:{value:`true`,name:'var_continue'}},{condition:{if:`var_availabilities===false`,then:{steps:[{assign:{value:'&lt;p&gt;You\'re about to overbook this class.&lt;br&gt; Are you sure you want to continue?&lt;/p&gt;',name:'var_overbook_message'}},{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'OVERBOOKING WARNING\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'OVERBOOK\', message: var_overbook_message})`}},{condition:{if:`!flow_swal_confirm.data.confirm`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_waitlists===true&amp;&amp;var_continue===true`,then:{steps:[{assign:{value:'&lt;p&gt;This class has waitlisted students.&lt;br&gt; Are you sure you want to enrol this student before the waitlisted students?&lt;/p&gt;',name:'var_waitlist_message'}},{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'Waitlists Active\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Continue Anyway\', message: var_waitlist_message})`}},{condition:{if:`flow_swal_confirm.data.confirm===false`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_continue === true`,then:{steps:[{condition:{if:`var_availabilities===false`,then:{steps:{run:{action:`classDetailsModal.makeup_enroltype_toggle.disable();classDetailsModal.casual_enroltype_toggle.disable()`}}}}},{run:{action:`dd_classdetails_searchenrol.select(dd_classdetails.data.uuid);var_newenrol_startdate.setValue(dd_classdetails.data.details.nextavailable_permanent||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`classDetailsModal.var_classdetails_page.setValue(2)`,disabled:true}},{run:{action:`mod_familySearch.show()`}}]}}}]}}})"><i class="fas fa-plus-circle fa-fw me-2"></i>
                                 Create Enrolment</button>
                         </div>
                     </div>
@@ -68,9 +66,9 @@
                         <table class="table table-bordered align-middle big-small">
                             <tbody dmx-hide="dd_classdetails.data.details.enrolments.active_enrols.length==0" id="cd_active_enrols_table" is="dmx-if" dmx-bind:condition="dd_classdetails.data.details.enrolments.active_enrols.length>0">
                                 <tr>
-                                    <th colspan="4" class="text-active py-2"><i class="fas fa-check-circle me-2 fa-fw fa-sm text-active-light"></i>Active Enrolments</th>
+                                    <th colspan="4" class="bg-active py-2"><i class="fas fa-check-circle me-2 fa-fw fa-sm"></i>Active Enrolments</th>
                                 </tr>
-                                <tr class="fw-700">
+                                <tr>
                                     <th></th>
                                     <th class="fw-800">Student</th>
                                     <th class="fw-800">Start Date</th>
@@ -140,7 +138,7 @@
                             </tbody>
                             <tbody dmx-hide="dd_classdetails.data.details.enrolments.trial_enrols.length == 0" id="cd_trialenrols_table" is="dmx-if" dmx-bind:condition="dd_classdetails.data.details.enrolments.trial_enrols.length>0">
                                 <tr>
-                                    <th colspan="4" class="text-trial py-2"><i class="fas fa-question-circle me-2 fa-fw fa-sm text-trial-light"></i>Trial Enrolments</th>
+                                    <th colspan="4" class="bg-trial py-2"><i class="fas fa-question-circle me-2 fa-fw fa-sm"></i>Trial Enrolments</th>
                                 </tr>
                                 <tr>
                                     <th></th>
@@ -223,7 +221,7 @@
                             </tbody>
                             <tbody dmx-hide="dd_classdetails.data.details.enrolments.makeup_enrols.length == 0" id="cd_makeup_enrols_table" is="dmx-if" dmx-bind:condition="dd_classdetails.data.details.enrolments.makeup_enrols.length>0">
                                 <tr>
-                                    <th colspan="4" class="text-makeup py-2"><i class="fas fa-arrow-alt-circle-up me-2 fa-fw fa-sm text-makeup-light"></i>Makeup Enrolments</th>
+                                    <th colspan="4" class="bg-makeup py-2"><i class="fas fa-arrow-alt-circle-up me-2 fa-fw fa-sm text-makeup-light"></i>Makeup Enrolments</th>
                                 </tr>
                                 <tr>
                                     <th></th>
@@ -284,7 +282,7 @@
                             </tbody>
                             <tbody dmx-hide="dd_classdetails.data.details.enrolments.casual_enrols.length == 0" id="cd_casual_enrols_table" is="dmx-if" dmx-bind:condition="dd_classdetails.data.details.enrolments.casual_enrols.length>0">
                                 <tr>
-                                    <th colspan="4" class="text-casual py-2"><i class="fas fa-bookmark me-2 fa-fw fa-sm text-casual-light"></i>Casual Enrolments</th>
+                                    <th colspan="4" class="bg-casual py-2"><i class="fas fa-bookmark me-2 fa-fw fa-sm text-casual-light"></i>Casual Enrolments</th>
                                 </tr>
                                 <tr>
                                     <th></th>
@@ -355,7 +353,7 @@
                             </tbody>
                             <tbody dmx-hide="dd_classdetails.data.waitlists.length===0" id="cd_waitlists_table" is="dmx-if" dmx-bind:condition="dd_classdetails.data.waitlists.length>0">
                                 <tr>
-                                    <th colspan="4" class="text-waitlist py-2"><i class="fas fa-history me-2 fa-fw fa-sm text-waitlist-light"></i>Waitlist Enrolments</th>
+                                    <th colspan="4" class="bg-waitlist py-2"><i class="fas fa-history me-2 fa-fw fa-sm text-waitlist-light"></i>Waitlist Enrolments</th>
                                 </tr>
                                 <tr>
                                     <th></th>
@@ -431,7 +429,191 @@
                         </div>
                     </div>
                 </section>
-                <section class="light-blue-bg" dmx-show="var_classdetails_page.value==2">
+                <section dmx-show="var_classdetails_page.value==2">
+                    <section dmx-animate-enter.duration:300.="fadeIn" class="p-4 bg-white rounded-3">
+                        <dmx-value id="var_selectedstudent"></dmx-value>
+                        <dmx-value id="var_enroltype"></dmx-value>
+                        <button id="btn_back" class="btn mb-3 btn-primary" dmx-on:click="var_classdetails_page.setValue(1);sc_cl_newenrol_quote.reset()"><i class="far fa-arrow-alt-circle-left me-1 fa-sm fa-fw"></i>Go Back</button>
+                        <div class="row">
+                            <div class="col">
+                                <h4 class="fw-900 my-4" dmx-html="'&lt;span class=&quot;text-decoration-underline&quot;&gt;'+classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName+' '+classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName+'&lt;/span&gt;: '+appSettings.days_array[dd_classdetails.data.classday]+' - '+dd_classdetails.data.startTimeDisplay+' '+appSettings.classLevelsByID[dd_classdetails.data.classlevel_uuid].name+' - '+appSettings.instructorsById[dd_classdetails.data.instructor_uuid].trunc_name">Enrol Jane Doe into: Sunday - 9:00am Duckling - Freddy K.</h4>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+
+                                <h6 class="fw-900 mb-1">Enrolment Details</h6>
+                                <p class="mb-2">Please choose an enrolment type to continue.</p>
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="active_enroltype_toggle" autocomplete="off" value="active" dmx-on:updated="run({condition:{if:`sc_cl_newenrol_quote.data`,then:{steps:{run:{action:`sc_cl_newenrol_quote.reset()`}}}}})">
+                                        <label class="btn me-2 btn-active-outline" for="active_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('active')"><i class="fas fa-check-circle me-2 fa-fw fa-sm"></i>Active Enrolment</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="trial_enroltype_toggle" autocomplete="off" value="trial" dmx-on:updated="run({condition:{if:`sc_cl_newenrol_quote.data`,then:{steps:{run:{action:`sc_cl_newenrol_quote.reset()`}}}}})">
+                                        <label class="btn me-2 btn-trial-outline" for="trial_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('trial')"><i class="fas fa-question-circle me-2 fa-fw fa-sm text-trial-light"></i>Trial Enrolment</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="makeup_enroltype_toggle" autocomplete="off" value="makeup">
+                                        <label class="btn me-2 btn-makeup-outline" for="makeup_enroltype_toggle" dmx-on:click="run([{run:{action:`dd_classdetails.var_enroltype.setValue(\'makeup\')`}},{run:{action:`sc_ACTIVE_MAKEUP_tokens.load({student_uuid: dd_fd_newenrol_selectedstudent.data.uuid})`}}])"><i class="fas fa-arrow-alt-circle-up me-2 fa-fw fa-sm text-makeup"></i>Makeup</label>
+
+                                        <input type="radio" class="btn-check" name="radio_enrolsearch_enroltype" id="casual_enroltype_toggle" autocomplete="off" value="casual">
+                                        <label class="btn me-2 btn-casual-outline" for="casual_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('casual')"><i class="fas fa-bookmark me-2 fa-fw fa-sm text-casual"></i>Casual</label>
+
+                                        <input type="radio" class="btn-check d-none" name="radio_enrolsearch_enroltype" id="waitlist_enroltype_toggle" autocomplete="off" value="waitlist">
+                                        <label class="btn me-2 btn-outline-dark d-none" for="waitlist_enroltype_toggle" dmx-on:click="dd_classdetails.var_enroltype.setValue('waitlist')"><i class="fas fa-history me-2 fa-fw fa-sm text-waitlist-light"></i>Waitlist</label>
+                                    </div>
+                                </div>
+                                <div class="row gx-0">
+                                    <div class="col p-3 border rounded-3 mt-3" dmx-show="classDetailsModal.makeup_enroltype_toggle.checked">
+                                        <p class="fw-900"><i class="fas fa-coins me-1 fa-fw"></i>
+                                            Makeup Tokens
+                                        </p>
+                                        <h5 class="mb-0"><span class="fw-1000 text-danger me-1 fs-5" dmx-text="classDetailsModal.sc_GET_STUDENT_details.data.makeup_tokens.length||0">5</span> tokens available.</h5>
+                                        <p dmx-hide="!classDetailsModal.sc_GET_STUDENT_details.data.makeup_tokens.length" class="mt-2 mb-0">The oldest token/s will be automatically used first.</p>
+                                    </div>
+                                </div>
+                                <div class="row g-0" is="dmx-if" id="cr_selectedstudent_hadtrial" dmx-bind:condition="classDetailsModal.sc_GET_STUDENT_details.data.student_details.hadtrial&amp;&amp;trial_enroltype_toggle.checked">
+                                    <div class="col p-3 border rounded-3 mt-3">
+                                        <p class="text-danger mt-2 fw-700"><i class="fas pdl-warning fa-fw"></i>
+                                            TRIAL COMPLETED: Student has already completed their trial class.</p>
+                                    </div>
+                                </div>
+                                <hr class="light my-3">
+                                <div class="row mb-3 row-cols-5" dmx-show="active_enroltype_toggle.checked||trial_enroltype_toggle.checked||makeup_enroltype_toggle.checked||casual_enroltype_toggle.checked">
+                                    <div class="col">
+
+                                        <div class="row" is="dmx-if" id="cr_newtempenrol_dates" dmx-bind:condition="classDetailsModal.casual_enroltype_toggle.checked||classDetailsModal.makeup_enroltype_toggle.checked">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <label for="sel_temporary_date" class="form-label col-form-label">Start Date</label>
+
+                                                    <select id="sel_temporary_date" class="form-select" dmx-bind:options="dd_classdetails.data.details.makeup_availabilities" optiontext="date.formatDate(appSettings.localization_puddle_dateformat)" optionvalue="date.formatDate('yyyy-MM-dd')">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" is="dmx-if" id="cr_newenrol_setdate" dmx-bind:condition="classDetailsModal.active_enroltype_toggle.checked||classDetailsModal.trial_enroltype_toggle.checked">
+                                            <div class="col">
+                                                <label for="sel_temporary_date" class="form-label col-form-label">Start Date</label>
+                                                <input id="inp_newEnrolStartDate" class="form-control" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" onkeydown="return false" dmxbind:format="appSettings.localization_dateformat" dmx-bind:mindate="dateAndTime_days.datetime.addDays(-7)" step="7" dmx-bind:maxdate="classesBase.data.nextavail.max_date" dmx-bind:customdates="dd_classdetails.data.details.makeup_availabilities" customdates-start="date.formatDate('yyyy-MM-dd')" customdates-end="date.formatDate('yyyy-MM-dd')" dmx-bind:value="dd_classdetails.data.details.nextavailable_permanent" dmx-on:updated="run({condition:{if:`sc_cl_newenrol_quote.data`,then:{steps:{run:{action:`sc_cl_newenrol_quote.reset()`}}}}})">
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-3 mt-2 fw-800 text-danger"><i class="fas pdl-error me-1 fa-fw"></i>Confirm your start date.</p>
+                                    </div>
+                                    <div class="col">
+                                        <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
+                                        <p class="col-form-label text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
+                                        <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" dmx-bind:placeholder="appSettings.localization_dateformat" onkeydown="return false" dmxbind:format="appSettings.localization_dateformat" dmx-bind:mindate="cr_newtempenrol_dates.sel_temporary_date.value" step="7" dmx-bind:value="cr_newtempenrol_dates.sel_temporary_date.value" dmx-on:updated="run({condition:{if:`sc_cl_newenrol_quote.data`,then:{steps:{run:{action:`sc_cl_newenrol_quote.reset()`}}}}})" dmx-bind:readonly="cr_fd_newenrol_classenrol.makeup_enroltype_toggle.checked">
+                                    </div>
+                                    <div class="col-12 d-flex flex-column justify-content-center align-items-start">
+                                        <form id="form_create_nonactive_enrolment" is="dmx-serverconnect-form" method="post" action="/api/classes/enrolments/CREATE_enrolment" dmx-on:success="run({run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Enrolment Success\', message: dd_fd_newenrol_selectedstudent.data.firstName+\' \'+dd_fd_newenrol_selectedstudent.data.lastName+\' enrolled successfully to - \'+appSettings.days_array[dd_classdetails.data.day]+\' - \'+dd_classdetails.data.startTimeDisplay+\' \'+appSettings.classLevelsByID[dd_classdetails.data.classlevel_uuid].name+\' - with \'+appSettings.instructorsById[dd_classdetails.data.instructor_uuid].trunc_name, timer: 5000, timerprogressbar: true});hide();cr_familyoverview.oc_studentDetails.cr_studentdetails_oc_closed.cr_studentenrols.sc_GET_STUDENT_enrolments.load({},true);cr_familyenrolments.sc_GET_ENROLMENTS_list.load({},true)`}})">
+                                            <input id="inp_hd_ne_na_dummyenrol_json" name="dummyenrol" type="hidden" class="form-control" dmx-bind:value="flow_dummyJSON.data.dummyJSON">
+                                            <input id="inp_hd_ne_na_familyuuid" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="query.familyid">
+                                        </form>
+                                        <button id="btn_enrol_active" class="btn btn-secondary" dmx-on:click="run([{run:{action:`toggle_loadingquote.check()`}},{run:{action:`flow_dummyJSON.run({classday: dd_classdetails.data.classday, classtype_uuid: dd_classdetails.data.classtype_uuid, baserate: dd_classdetails.data.baseRate, shortname: dd_classdetails.data.shortName, firstName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName, lastName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName, instructor_uuid: dd_classdetails.data.instructor_uuid, classlevel_uuid: dd_classdetails.data.classlevel_uuid, startTimeDisplay: dd_classdetails.data.startTimeDisplay, dropDate: classDetailsModal.inp_newEnrolDropDate.value, isValid: 1, startDate: (classDetailsModal.cr_newenrol_setdate.inp_newEnrolStartDate.value || classDetailsModal.cr_newtempenrol_dates.sel_temporary_date.value), student_uuid: classDetailsModal.sc_GET_STUDENT_details.data.student_details.uuid, class_uuid: dd_classdetails.data.uuid, enrolmentType: 1, uuid: \'dummy\'})`}},{wait:{delay:200}},{run:{action:`sc_cl_newenrol_quote.load()`}}])" dmx-hide="sc_cl_newenrol_quote.data" dmx-show="classDetailsModal.active_enroltype_toggle.checked">
+                                            Continue Active Enrolment <span class="spinner-border spinner-border-sm ms-2" role="status" dmx-show="toggle_loadingquote.checked"></span></button>
+
+                                        <button id="btn_enrol_trial" class="btn btn-primary" dmx-on:click="run([{run:{action:`flow_dummyJSON.run({classday: dd_classdetails.data.classday, classtype_uuid: dd_classdetails.data.classtype_uuid, baserate: dd_classdetails.data.baseRate, shortname: dd_classdetails.data.shortName, firstName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName, lastName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName, instructor_uuid: dd_classdetails.data.instructor_uuid, classlevel_uuid: dd_classdetails.data.classlevel_uuid, startTimeDisplay: dd_classdetails.data.startTimeDisplay, dropDate: classDetailsModal.inp_newEnrolDropDate.value, isValid: 1, startDate: (classDetailsModal.cr_newenrol_setdate.inp_newEnrolStartDate.value || classDetailsModal.cr_newtempenrol_dates.sel_temporary_date.value), student_uuid: classDetailsModal.sc_GET_STUDENT_details.data.student_details.uuid, class_uuid: dd_classdetails.data.uuid, enrolmentType: 3, uuid: \'dummy\'})`}},{wait:{delay:500}},{run:{action:`form_create_nonactive_enrolment.submit()`}}])" dmx-show="classDetailsModal.trial_enroltype_toggle.checked">
+                                            Create Trial Enrolment <span class="spinner-border spinner-border-sm ms-2" role="status" dmx-show="toggle_loadingquote.checked"></span></button>
+
+                                        <button id="btn_enrol_casual" class="btn btn-primary" dmx-on:click="run([{run:{action:`flow_dummyJSON.run({classday: dd_classdetails.data.classday, classtype_uuid: dd_classdetails.data.classtype_uuid, baserate: dd_classdetails.data.baseRate, shortname: dd_classdetails.data.shortName, firstName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName, lastName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName, instructor_uuid: dd_classdetails.data.instructor_uuid, classlevel_uuid: dd_classdetails.data.classlevel_uuid, startTimeDisplay: dd_classdetails.data.startTimeDisplay, dropDate: classDetailsModal.inp_newEnrolDropDate.value, isValid: 1, startDate: (classDetailsModal.cr_newenrol_setdate.inp_newEnrolStartDate.value || classDetailsModal.cr_newtempenrol_dates.sel_temporary_date.value), student_uuid: classDetailsModal.sc_GET_STUDENT_details.data.student_details.uuid, class_uuid: dd_classdetails.data.uuid, enrolmentType: 5, uuid: \'dummy\'})`}},{wait:{delay:500}},{run:{action:`form_create_nonactive_enrolment.submit()`}}])" dmx-show="classDetailsModal.casual_enroltype_toggle.checked">
+                                            Create Casual Enrolment <span class="spinner-border spinner-border-sm ms-2" role="status" dmx-show="toggle_loadingquote.checked"></span></button>
+
+                                        <button id="btn_enrol_makeup" class="btn btn-primary" dmx-on:click="run([{assign:{value:`true`,name:'var_continue'}},{run:{action:`flow_dummyJSON.run({classday: dd_classdetails.data.classday, classtype_uuid: dd_classdetails.data.classtype_uuid, baserate: dd_classdetails.data.baseRate, shortname: dd_classdetails.data.shortName, firstName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName, lastName: classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName, instructor_uuid: dd_classdetails.data.instructor_uuid, classlevel_uuid: dd_classdetails.data.classlevel_uuid, startTimeDisplay: dd_classdetails.data.startTimeDisplay, dropDate: classDetailsModal.inp_newEnrolDropDate.value, isValid: 1, startDate: (classDetailsModal.cr_newenrol_setdate.inp_newEnrolStartDate.value || classDetailsModal.cr_newtempenrol_dates.sel_temporary_date.value), student_uuid: classDetailsModal.sc_GET_STUDENT_details.data.student_details.uuid, class_uuid: dd_classdetails.data.uuid, enrolmentType: 2, uuid: \'dummy\'})`}},{wait:{delay:500}},{condition:{if:`classDetailsModal.sc_GET_STUDENT_details.data.makeup_tokens.length===0`,then:{steps:[{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'No makeup token.\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Enrol Makeup Without Token\', message: \'There are no makeup tokens for this student. Are you sure you want to continue this enrolment?\'})`}},{condition:{if:`!flow_swal_confirm.data.confirm`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_continue===true`,then:{steps:{run:{action:`form_create_nonactive_enrolment.submit()`}}}}}])" dmx-show="classDetailsModal.makeup_enroltype_toggle.checked">
+                                            Create Makeup Enrolment <span class="spinner-border spinner-border-sm ms-2" role="status" dmx-show="toggle_loadingquote.checked"></span></button>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+                    <section class="mt-3">
+                        <dmx-toggle id="toggle_loadingquote"></dmx-toggle>
+                        <dmx-serverconnect id="sc_cl_newenrol_quote" url="/api/classes/enrolments/GENERATE_QUOTE_enrolment" dmx-param:enrolmentType="((mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.active_enroltype_toggle.checked) ? 1 : (mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.trial_enroltype_toggle.checked) ? 3 : (mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.makeup_enroltype_toggle.checked) ? 2 : 5)" dmx-param:dropDate="mod_familyDetails_createEnrolment.cr_fd_newenrol_classenrol.inp_newEnrolDropDate.value" dmx-param:student_uuid="classDetailsModal.var_selectedstudent.value.uuid" dmx-param:startdate="(classDetailsModal.cr_newenrol_setdate.inp_newEnrolStartDate.value||classDetailsModal.cr_newtempenrol_dates.sel_temporary_date.value)" dmx-param:class_uuid="classDetailsModal.sc_GET_CLASS_details.data.query.uuid" dmx-param:family_uuid="classDetailsModal.sc_GET_STUDENT_details.data.student_details.family" dmx-param:enabledummyenrol="1" dmx-param:dummyenroljson="flow_dummyJSON.data.dummyJSON" noload dmx-on:done="toggle_loadingquote.uncheck()"></dmx-serverconnect>
+
+                        <div class="row g-0" is="dmx-if" id="cr_quotedetails" dmx-bind:condition="sc_cl_newenrol_quote.data">
+                            <div class="col p-4 bg-white rounded-3">
+                                <form id="form_createActiveEnrolment" is="dmx-serverconnect-form" method="post" action="/api/classes/enrolments/CREATE_enrolment" dmx-on:success="run({run:{action:`flow_swal_toast_colored.run({icon: \'success\', title: \'Enrolment Success\', message: classDetailsModal.sc_GET_STUDENT_details.data.student_details.firstName+\' \'+classDetailsModal.sc_GET_STUDENT_details.data.student_details.lastName+\' enrolled successfully to - \'+appSettings.days_array[classDetailsModal.sc_GET_CLASS_details.data.query.day]+\' - \'+classDetailsModal.sc_GET_CLASS_details.data.query.startTimeDisplay+\' \'+appSettings.classLevelsByID[classDetailsModal.sc_GET_CLASS_details.data.query.classlevel_uuid].name+\' - with \'+appSettings.instructorsById[classDetailsModal.sc_GET_CLASS_details.data.query.instructor_uuid].trunc_name, timer: 5000, timerprogressbar: true}); flow_enrolment_submitted.run();var_classdetails_page.setValue(1)`}})" dmx-on:error="run({condition:{if:`newEnrolmentModal.createEnrolmentForm.lastError.status == 901`,then:{steps:{run:{action:`newEnrolEnterDueDate.var_chargeDates.setValue(createEnrolmentForm.inp_ne_startDate.value);newEnrolEnterDueDate.show()`}}}}})">
+                                    <h4 class="fw-900">New/Updated Family Charge Details</h4>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle big-small">
+                                            <thead class="pdl-main-bg">
+                                                <tr>
+                                                    <th scope="col"></th>
+                                                    <th scope="col">
+                                                        Charge Period
+                                                    </th>
+                                                    <th scope="col">
+                                                        Grand Total
+                                                    </th>
+                                                    <th scope="col">
+                                                        Discounts<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'Includes enrolment, family and holding fee discounts.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'All Discounts'"></i>
+                                                    </th>
+                                                    <th scope="col">
+                                                        Base Rate<i class="fas fa-question-circle ms-2 clickable user-select-none fa-sm" dmx-bs-popover="'The base rate is the price of all enrolments before enrolment discounts and family discounts have been applied.'" data-bs-trigger="hover" data-bs-placement="right" data-bs-html="true" dmx-bind:popover-title="'Base Rate'"></i>
+                                                    </th>
+                                                    <th scope="col">
+                                                        * Charge Date
+                                                    </th>
+                                                    <th scope="col">
+                                                        * Due Date
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr dmx-repeat:rp_ne_familycharges="sc_cl_newenrol_quote.data.exec_tuitioncalc.repeat">
+                                                    <td class="collapse-cell">
+                                                        <dmx-toggle id="toggle_open_details"></dmx-toggle>
+                                                        <button id="btn_showQuoteDetails" class="btn text-nowrap btn-secondary" style="width: 95px !important;" dmx-on:click="run([{condition:{if:`existingcharge.chargeexists`,then:{steps:{run:{action:`oc_familydetails_charge_details.sc_GET_EXISTING_CHARGE_detail.load({charge_uuid: existingcharge.details.uuid})`}}}}},{run:{action:`oc_familydetails_charge_details.var_charge_object.setValue($value)`}},{run:{action:`oc_familydetails_charge_details.show()`}}])"><i class="fas fa-plus-circle fa-sm fa-fw me-1"></i>Details
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <p class="mb-0 fw-550" dmx-html="chargefor+(monthlychargeexists.exists == true &amp;&amp; monthlychargeexists.status == 200 ? '<small class=&quot;fst-italic lh-1 text-danger fw-400&quot;>Monthly charge already exists. <br> Created: '+monthlychargeexists.created.formatDate('yyyy-MM-dd')+'.</small>': monthlychargeexists.exists == true &amp;&amp; monthlychargeexists.status == 409 ? '<small class=&quot;lh-1 fst-italic text-danger fw-400&quot;><i class=&quot;bi-exclamation-octagon-fill text-danger me-2&quot;></i>'+monthlychargeexists.chargeid+'</small>':'')">April 2022</p>
+                                                    </td>
+                                                    <td>
+                                                        <p class="mb-0 fw-550" dmx-text="tuitiontotals.enrolgrandtotal.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$77.50</p>
+                                                    </td>
+                                                    <td>
+                                                        <p class="mb-0 fw-500 text-ledger" dmx-text="((tuitiontotals.multienrol_discount + tuitiontotals.family_discount) + tuitiontotals.holding_fee).round(2).formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$22.50</p>
+                                                    </td>
+                                                    <td>
+                                                        <p class="mb-0 text-muted" dmx-text="tuitiontotals.baseRate.formatCurrency(localization.data.localization.currrency_symbol, appSettings.localization_num_separator, appSettings.localization_num_delimeter, 2)">$100.00</p>
+                                                    </td>
+                                                    <td><input id="inp_chargeDate" name="chargedate" type="text" class="form-control form-control-plaintext text-decoration-underline clickable" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:value="existingcharge.chargeexists ? existingcharge.details.chargeDate.formatDate('yyyy-MM-dd') : dateAndTime_days.datetime.formatDate('yyyy-MM-dd')" placeholder="dd/MM/yyyy" required="" data-msg-required="Charge date is required." dropsup="true">
+                                                    </td>
+                                                    <td dmx-class:border-2="!inp_dueDate.value" dmx-class:border-danger="!inp_dueDate.value"><input id="inp_dueDate" name="duedate" type="text" class="form-control form-control-plaintext text-decoration-underline clickable" is="dmx-date-picker" dmx-bind:format="appSettings.localization_dateformat" dmx-bind:placeholder="appSettings.localization_dateformat" dmx-bind:value="existingcharge.chargeexists ? existingcharge.details.dueDate.formatDate('yyyy-MM-dd') : ''" placeholder="dd/mm/yyyy" required="" data-msg-required="Due date is required." dmx-bind:mindate="inp_chargeDate.value" dropsup="true">
+
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <button id="btn_submit_active_enrolment" class="btn btn-primary" dmx-on:click="form_createActiveEnrolment.submit()">Create Active Enrolment</button>
+
+                                        </div>
+                                    </div>
+                                    <div class="row" id="newenrol_hiddeninputs">
+                                        <div class="col">
+                                            <input id="inp_hd_ne_dummyenrol_json" name="dummyenrol" type="hidden" class="form-control" dmx-bind:value="flow_dummyJSON.data.dummyJSON">
+                                            <input id="inp_hd_ne_familyuuid" name="family_uuid" type="hidden" class="form-control" dmx-bind:value="classDetailsModal.sc_GET_STUDENT_details.data.student_details.family">
+                                            <div class="row" id="rp_hiddeninput_percharge" is="dmx-repeat" dmx-bind:repeat="sc_cl_newenrol_quote.data.exec_tuitioncalc.repeat">
+                                                <input id="inp_hd_ne_title" name="title" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][title]" dmx-bind:value="'Family Tuition Charge: '+chargefor_date.formatDate('MMMM yyyy')">
+                                                <input id="inp_hd_ne_monthtoprocess" name="monthtoprocess" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][monthtoprocess]" dmx-bind:value="chargefor_date.formatDate('yyyy-MM-dd')">
+                                                <input id="inp_hd_ne_charge_date" name="charge_date" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][charge_date]" dmx-bind:value="mod_familyDetails_createEnrolment.cr_quotedetails.form_createActiveEnrolment.rp_ne_familycharges[$index].inp_chargeDate.value.formatDate('yyyy-MM-dd')">
+                                                <input id="inp_hd_ne_due_date" name="due_date" type="hidden" class="form-control" dmx-bind:name="record[{{$index}}][due_date]" dmx-bind:value="mod_familyDetails_createEnrolment.cr_quotedetails.form_createActiveEnrolment.rp_ne_familycharges[$index].inp_dueDate.value">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+                <!-- <section class="light-blue-bg" dmx-show="var_classdetails_page.value==3">
                     <button id="btn_back" class="btn mb-3 btn-primary" dmx-on:click="var_classdetails_page.setValue(1)"><i class="far fa-arrow-alt-circle-left me-1 fa-sm fa-fw"></i>Go Back</button>
                     <dmx-data-detail id="dd_classdetails_searchenrol" dmx-bind:data="classesBase.data.nextavail.classes" key="uuid">
                         <dmx-value id="var_enroltype" dmx-bind:value="active_enroltype_toggle.checked ? 'active' : waitlist_enroltype_toggle.checked ? 'waitlist' : trial_enroltype_toggle.checked ? 'trial' : makeup_enroltype_toggle.checked ? 'makeup' : 'casual'"></dmx-value>
@@ -487,7 +669,7 @@
 
                                     <div class="col" dmx-hide="classDetailsModal.waitlist_enroltype_toggle.checked">
                                         <dmx-value id="var_newenrol_startdate"></dmx-value>
-                                        <label for="inp_searchModal" class="col-form-label">Start Date</label>
+                                        <label for="inp_search_families_students" class="col-form-label">Start Date</label>
                                         <div class="row" is="dmx-if" id="cr_newtempenrol_dates" dmx-bind:condition="classDetailsModal.makeup_enroltype_toggle.checked||classDetailsModal.casual_enroltype_toggle.checked">
                                             <div class="col">
                                                 <dmx-value id="var_newtempenrol_selected" dmx-on:updated="inp_newEnrolStartDate.setValue(value)" dmx-bind:value="radio_newtempenrol_dates.value"></dmx-value>
@@ -507,7 +689,7 @@
                                         <p class="mb-0 mt-2 small fw-600 text-danger"><i class="fas fa-exclamation-triangle me-1 fa-fw fa-sm"></i>Always double check your start date.</p>
                                     </div>
                                     <div class="col" dmx-hide="classDetailsModal.waitlist_enroltype_toggle.checked">
-                                        <label for="inp_searchModal" class="col-form-label float-start">Drop Date</label>
+                                        <label for="inp_search_families_students" class="col-form-label float-start">Drop Date</label>
                                         <p class="small text-danger float-start ms-3 mb-0 clickable user-select-none" style="padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px);" dmx-on:click="inp_newEnrolDropDate.setValue(null)"><i class="far fa-times-circle fa-xs me-1"></i>Clear</p>
                                         <input id="inp_newEnrolDropDate" class="form-control mb-1" is="dmx-date-picker" placeholder="dd/mm/yyyy" onkeydown="return false" format="Do MMM YYYY" dmx-bind:mindate="inp_newEnrolStartDate.value" step="7" dmx-bind:value="classDetailsModal.cr_newtempenrol_dates.rg_newtempenrol.value">
 
@@ -584,11 +766,111 @@
 
                         </div>
                     </section>
-                </section>
+                </section> -->
 
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mod_familySearch" is="dmx-bs5-modal" tabindex="-1" dmx-on:shown-bs-modal="inp_search_families_students.focus()" nocloseonclick="true" dmx-on:hidden-bs-modal="inp_search_families_students.setValue(null);sel_enrolment_type.setValue(null)">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header pdl-main-bg">
+                <h5 class="modal-title">
+                    <i class="fas fa-search fa-fw me-2 text-primary"></i>
+                    <i class="fas fa-users fa-fw me-2"></i>Search for Family
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body light-blue-bg p-4">
+                <dmx-toggle id="toggle_loading_families" dmx-bind:checked="GET_FAMILIES_STUDENTS_FT_search.state.executing"></dmx-toggle>
+                <div class="row g-0">
+                    <div class="col p-4 bg-white rounded-3">
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary text-white border-0"><i class="fas fa-search"></i></span>
+                                    <input id="inp_search_families_students" name="inp_search_families_students" type="text" class="form-control fw-400" style="" dmx-bind:value="var_fulltextConvert.value" autocomplete="off" dmx-on:updated.debounce:500="run([{runJS:{function:'fulltextConvert',args:[`value`],name:'fullTextConvert'}},{run:{action:`queryManager.set(\'searchtextfilter\',fullTextConvert);searchAll_ResultsModal.var_fulltextConvert.setValue(value)`}},{wait:{delay:200}},{run:{action:`GET_FAMILIES_STUDENTS_FT_search.load({searchtextfilter: query.searchtextfilter})`}}])" placeholder="Search families or students." dmx-on:changed="toggle_loading_families.check()">
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row g-0 my-3" dmx-show="mod_familySearch.toggle_loading_families.checked">
+                            <div class="col d-flex flex-row justify-content-center align-items-center">
+                                <div class="spinner-border" role="status">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-0 my-3" dmx-show="!mod_familySearch.toggle_loading_families.checked&amp;&amp;!mod_familySearch.inp_search_families_students.value">
+                            <div class="col d-flex flex-row justify-content-center align-items-center p-3 border rounded-3">
+                                <p class="mb-0">Start searching above to find families.</p>
+                            </div>
+                        </div>
+                        <div class="row g-0 my-3" dmx-show="!mod_familySearch.toggle_loading_families.checked&amp;&amp;mod_familySearch.inp_search_families_students.value&amp;&amp;!GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies.length">
+                            <div class="col d-flex flex-row justify-content-center align-items-center p-3 border rounded-3">
+                                <p class="mb-0 text-danger">
+                                    <i class="fas pdl-error me-2 fa-fw"></i>No families could be found. Please adjust your search.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row row-cols-1 gx-0" id="rp_families" is="dmx-repeat" dmx-bind:repeat="GET_FAMILIES_STUDENTS_FT_search.data.studentsAndFamilies" dmx-hide="mod_familySearch.toggle_loading_families.checked">
+                            <div class="col mb-3 ">
+                                <div class="row gx-0 mt-3">
+                                    <div class="col">
+                                        <div class="row gx-2">
+
+                                            <div class="col d-flex flex-column align-items-start justify-content-center">
+                                                <h5 class="mb-0 fw-900" dmx-text="(primaryGuardian) ? primaryGuardian.firstName+' '+primaryGuardian.lastName : 'No primary guardian found.'"><i class="fas fa-users fa-fw text-primary me-2"></i>Jane Doe</h5>
+                                                <p class="mb-0 mt-1 text-muted" style="">{{guardians.values(`' ' + firstName +' '+lastName`)}}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2 g-0">
+                                            <div class="col">
+                                                <table class="table big-small align-middle table-bordered">
+                                                    <thead class="pdl-main-bg">
+                                                        <tr>
+                                                            <th scope="row" class="collapse-cell"></th>
+                                                            <th class="w-20">Student</th>
+                                                            <th class="w-20">Level</th>
+                                                            <th class="collapse-cell">Gender</th>
+                                                            <th class="w-20">Dob</th>
+                                                            <th class="w-20">Age</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="students" id="tb_es_repeatStudents">
+                                                        <tr>
+                                                            <td class="collapse-cell">
+
+                                                                <dmx-serverconnect id="sc_checkenrolexists" url="/api/classes/enrolments/CHECK_ENROLMENT_exists" dmx-param:enrolmenttype="1" dmx-param:student_uuid="uuid" dmx-param:startdate="2022-03-23" dmx-param:class_uuid="dd_classdetails_searchenrol.data.uuid" dmx-param:family_uuid="family" noload=""></dmx-serverconnect>
+                                                                <button id="btn_select_student" class="btn btn-primary" dmx-on:click="run([{assign:{value:`true`,name:'var_continue'}},{condition:{if:`classlevel_uuid!==classDetailsModal.sc_GET_CLASS_details.data.query.classlevel_uuid`,then:{steps:[{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'Level Conflict\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Continue Anyway\', message: \'Student\\\'s level does not match class\\\'s level. &lt;br&gt; Are you sure you want to continue?\'})`}},{condition:{if:`!flow_swal_confirm.data.confirm`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_continue`,then:{steps:[{run:{action:`classDetailsModal.sc_GET_STUDENT_details.load({student_uuid: uuid})`}},{run:{action:`classDetailsModal.var_classdetails_page.setValue(2)`}},{run:{action:`mod_familySearch.hide()`}}]}}}])"><i class="fas fa-check me-1 fa-fw"></i>Select
+
+                                                                </button>
+
+                                                            </td>
+                                                            <td dmx-text="firstName +' '+lastName">Jane Doe</td>
+                                                            <td><span dmx-text="level">Ducklings</span><i class="fas fa-not-equal fa-fw ms-2 clickable text-danger" dmx-bs-tooltip="'Student\'s level does not match class\'s level.'" data-bs-trigger="hover" dmx-show="classlevel_uuid!==classDetailsModal.sc_GET_CLASS_details.data.query.classlevel_uuid"></i></td>
+                                                            <td dmx-text="gender" class="text-center">F</td>
+                                                            <td dmx-text="dob.formatDate('dd-MM-yyyy')">13-12-2019</td>
+                                                            <td dmx-text="age">1y 11m</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
             </div>
         </div>
     </div>

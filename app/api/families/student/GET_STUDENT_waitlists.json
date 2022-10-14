@@ -32,7 +32,7 @@
         }
       },
       {
-        "name": "query_waitlists",
+        "name": "query_waitlists_bulk",
         "module": "dbconnector",
         "action": "select",
         "options": {
@@ -43,6 +43,14 @@
               {
                 "table": "w",
                 "column": "*"
+              },
+              {
+                "table": "s",
+                "column": "firstName"
+              },
+              {
+                "table": "s",
+                "column": "lastName"
               }
             ],
             "table": {
@@ -50,7 +58,30 @@
               "alias": "w"
             },
             "primary": "uuid",
-            "joins": [],
+            "joins": [
+              {
+                "table": "students",
+                "column": "*",
+                "alias": "s",
+                "type": "LEFT",
+                "clauses": {
+                  "condition": "AND",
+                  "rules": [
+                    {
+                      "table": "s",
+                      "column": "uuid",
+                      "operator": "equal",
+                      "value": {
+                        "table": "w",
+                        "column": "student_uuid"
+                      },
+                      "operation": "="
+                    }
+                  ]
+                },
+                "primary": "uuid"
+              }
+            ],
             "wheres": {
               "condition": "AND",
               "rules": [
@@ -109,7 +140,7 @@
               "conditional": null,
               "valid": true
             },
-            "query": "SELECT *\nFROM waitlists AS w\nWHERE status = :P1 /* {{$_GET.status?$_GET.status:'waiting'}} */ AND student_uuid = :P2 /* {{$_GET.student_uuid}} */",
+            "query": "SELECT w.*, s.firstName, s.lastName\nFROM waitlists AS w\nLEFT JOIN students AS s ON (s.uuid = w.student_uuid)\nWHERE w.status = :P1 /* {{$_GET.status?$_GET.status:'waiting'}} */ AND w.student_uuid = :P2 /* {{$_GET.student_uuid}} */",
             "params": [
               {
                 "operator": "equal",
@@ -191,6 +222,1436 @@
           {
             "type": "number",
             "name": "updated"
+          },
+          {
+            "type": "text",
+            "name": "firstName"
+          },
+          {
+            "type": "text",
+            "name": "lastName"
+          }
+        ],
+        "outputType": "array"
+      },
+      {
+        "name": "query_waitlists",
+        "module": "core",
+        "action": "repeat",
+        "options": {
+          "repeat": "{{query_waitlists_bulk}}",
+          "outputFields": [],
+          "outputFilter": "exclude",
+          "exec": {
+            "steps": [
+              {
+                "name": "query_matching_classes",
+                "module": "dbconnector",
+                "action": "select",
+                "options": {
+                  "connection": "db",
+                  "sql": {
+                    "type": "SELECT",
+                    "columns": [],
+                    "table": {
+                      "name": "classes"
+                    },
+                    "primary": "uuid",
+                    "joins": [],
+                    "wheres": {
+                      "condition": "AND",
+                      "rules": [
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "classes.instructor_uuid",
+                              "field": "classes.instructor_uuid",
+                              "type": "string",
+                              "operator": "equal",
+                              "value": "{{instructor_uuid}}",
+                              "data": {
+                                "table": "classes",
+                                "column": "instructor_uuid",
+                                "type": "text",
+                                "columnObj": {
+                                  "type": "string",
+                                  "maxLength": 50,
+                                  "primary": false,
+                                  "nullable": true,
+                                  "name": "instructor_uuid"
+                                }
+                              },
+                              "operation": "="
+                            }
+                          ],
+                          "conditional": "{{instructor_uuid}}"
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "classes.startTimeDecimal",
+                              "field": "classes.startTimeDecimal",
+                              "type": "double",
+                              "operator": "greater_or_equal",
+                              "value": "{{starttimedec}}",
+                              "data": {
+                                "table": "classes",
+                                "column": "startTimeDecimal",
+                                "type": "number",
+                                "columnObj": {
+                                  "type": "decimal",
+                                  "primary": false,
+                                  "nullable": false,
+                                  "name": "startTimeDecimal"
+                                }
+                              },
+                              "operation": ">="
+                            },
+                            {
+                              "id": "classes.startTimeDecimal",
+                              "field": "classes.startTimeDecimal",
+                              "type": "double",
+                              "operator": "less_or_equal",
+                              "value": "{{endtimedec}}",
+                              "data": {
+                                "table": "classes",
+                                "column": "startTimeDecimal",
+                                "type": "number",
+                                "columnObj": {
+                                  "type": "decimal",
+                                  "primary": false,
+                                  "nullable": false,
+                                  "name": "startTimeDecimal"
+                                }
+                              },
+                              "operation": "<="
+                            }
+                          ],
+                          "conditional": null
+                        },
+                        {
+                          "condition": "AND",
+                          "rules": [
+                            {
+                              "id": "classes.classlevel_uuid",
+                              "field": "classes.classlevel_uuid",
+                              "type": "string",
+                              "operator": "equal",
+                              "value": "{{classlevel_uuid}}",
+                              "data": {
+                                "table": "classes",
+                                "column": "classlevel_uuid",
+                                "type": "text",
+                                "columnObj": {
+                                  "type": "string",
+                                  "maxLength": 50,
+                                  "primary": false,
+                                  "nullable": true,
+                                  "name": "classlevel_uuid"
+                                }
+                              },
+                              "operation": "="
+                            }
+                          ],
+                          "conditional": null
+                        },
+                        {
+                          "id": "classes.day",
+                          "field": "classes.day",
+                          "type": "double",
+                          "operator": "equal",
+                          "value": "{{dayint}}",
+                          "data": {
+                            "table": "classes",
+                            "column": "day",
+                            "type": "number",
+                            "columnObj": {
+                              "type": "reference",
+                              "primary": false,
+                              "nullable": true,
+                              "references": "id",
+                              "inTable": "days",
+                              "onUpdate": "CASCADE",
+                              "onDelete": "NO ACTION",
+                              "referenceType": "integer",
+                              "name": "day"
+                            }
+                          },
+                          "operation": "="
+                        }
+                      ],
+                      "conditional": null,
+                      "valid": true
+                    },
+                    "query": "SELECT *\nFROM classes\nWHERE (instructor_uuid = :P1 /* {{instructor_uuid}} */) AND (startTimeDecimal >= :P2 /* {{starttimedec}} */ AND startTimeDecimal <= :P3 /* {{endtimedec}} */) AND (classlevel_uuid = :P4 /* {{classlevel_uuid}} */) AND day = :P5 /* {{dayint}} */",
+                    "params": [
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P1",
+                        "value": "{{instructor_uuid}}"
+                      },
+                      {
+                        "operator": "greater_or_equal",
+                        "type": "expression",
+                        "name": ":P2",
+                        "value": "{{starttimedec}}"
+                      },
+                      {
+                        "operator": "less_or_equal",
+                        "type": "expression",
+                        "name": ":P3",
+                        "value": "{{endtimedec}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P4",
+                        "value": "{{classlevel_uuid}}"
+                      },
+                      {
+                        "operator": "equal",
+                        "type": "expression",
+                        "name": ":P5",
+                        "value": "{{dayint}}"
+                      }
+                    ]
+                  }
+                },
+                "output": false,
+                "meta": [
+                  {
+                    "type": "text",
+                    "name": "uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "id"
+                  },
+                  {
+                    "type": "number",
+                    "name": "startTimeDecimal"
+                  },
+                  {
+                    "type": "number",
+                    "name": "endTimeDecimal"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "isactive"
+                  },
+                  {
+                    "type": "number",
+                    "name": "instructor"
+                  },
+                  {
+                    "type": "text",
+                    "name": "instructor_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classLevel"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "number",
+                    "name": "day"
+                  },
+                  {
+                    "type": "text",
+                    "name": "startTimeDisplay"
+                  },
+                  {
+                    "type": "text",
+                    "name": "endTimeDisplay"
+                  },
+                  {
+                    "type": "number",
+                    "name": "max"
+                  },
+                  {
+                    "type": "number",
+                    "name": "classType"
+                  },
+                  {
+                    "type": "text",
+                    "name": "classtype_uuid"
+                  },
+                  {
+                    "type": "date",
+                    "name": "startdate"
+                  },
+                  {
+                    "type": "date",
+                    "name": "enddate"
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "opening_availabilities",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{[]}}",
+                  "key": "opening_availabilities"
+                },
+                "meta": [],
+                "outputType": "text"
+              },
+              {
+                "name": "waitlist_availabilities",
+                "module": "core",
+                "action": "repeat",
+                "options": {
+                  "repeat": "{{query_matching_classes}}",
+                  "outputFields": [],
+                  "outputFilter": "exclude",
+                  "exec": {
+                    "steps": [
+                      {
+                        "name": "availabilities",
+                        "module": "classAvail",
+                        "action": "classAvail",
+                        "options": {
+                          "weekdate": "{{NOW.formatDate('yyyy-MM-dd')}}",
+                          "maxweeks": "",
+                          "makeup_max_days": "",
+                          "class_uuid": "{{uuid}}",
+                          "avail_type": "",
+                          "avail_amount": "",
+                          "startofweek": "",
+                          "data_type": "list",
+                          "day_filter": "",
+                          "instructor_filter": "",
+                          "time_filter": "",
+                          "level_filter": "",
+                          "limit": 0,
+                          "offset": 0
+                        },
+                        "meta": [
+                          {
+                            "name": "classes",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "classlevel_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "classtype_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "day",
+                                "type": "number"
+                              },
+                              {
+                                "name": "endTimeDecimal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "endTimeDisplay",
+                                "type": "text"
+                              },
+                              {
+                                "name": "id",
+                                "type": "number"
+                              },
+                              {
+                                "name": "instructor_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "max",
+                                "type": "number"
+                              },
+                              {
+                                "name": "optsd",
+                                "type": "text"
+                              },
+                              {
+                                "name": "startTimeDecimal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "startTimeDisplay",
+                                "type": "text"
+                              },
+                              {
+                                "name": "uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "waitlists",
+                                "type": "array",
+                                "sub": [
+                                  {
+                                    "name": "age",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "classlevel",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "classlevel_uuid",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "dayint",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "dob",
+                                    "type": "date"
+                                  },
+                                  {
+                                    "name": "endTimeDecimal",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "family",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "firstName",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "fulfil_date",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "id",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "instructor",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "instructor_uuid",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "lastName",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "notes",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "request_date",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "starttimedec",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "student_uuid",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "name": "studentid",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "uuid",
+                                    "type": "text"
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "wed",
+                                "type": "text"
+                              },
+                              {
+                                "name": "baseRate",
+                                "type": "number"
+                              },
+                              {
+                                "name": "shortName",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "limit",
+                            "type": "number"
+                          },
+                          {
+                            "name": "offset",
+                            "type": "number"
+                          },
+                          {
+                            "name": "last_offset",
+                            "type": "number"
+                          },
+                          {
+                            "name": "next",
+                            "type": "number"
+                          },
+                          {
+                            "name": "prev",
+                            "type": "number"
+                          },
+                          {
+                            "name": "page",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "current",
+                                "type": "number"
+                              },
+                              {
+                                "name": "total",
+                                "type": "number"
+                              },
+                              {
+                                "name": "offset",
+                                "type": "object",
+                                "sub": [
+                                  {
+                                    "name": "first",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "last",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "next",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "name": "prev",
+                                    "type": "number"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "limit",
+                            "type": "number"
+                          },
+                          {
+                            "name": "timesarray",
+                            "type": "array"
+                          }
+                        ],
+                        "output": true
+                      },
+                      {
+                        "name": "",
+                        "module": "core",
+                        "action": "condition",
+                        "options": {
+                          "if": "{{availabilities.classes.details.nextavailable_permanent}}",
+                          "then": {
+                            "steps": {
+                              "name": "array_test",
+                              "module": "core",
+                              "action": "setvalue",
+                              "options": {
+                                "key": "array_test",
+                                "value": "{{opening_availabilities.push(uuid)}}"
+                              },
+                              "meta": [],
+                              "outputType": "text"
+                            }
+                          }
+                        },
+                        "outputType": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "output": true,
+                "meta": [
+                  {
+                    "name": "$index",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$number",
+                    "type": "number"
+                  },
+                  {
+                    "name": "$name",
+                    "type": "text"
+                  },
+                  {
+                    "name": "$value",
+                    "type": "object"
+                  },
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "isactive",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "instructor",
+                    "type": "number"
+                  },
+                  {
+                    "name": "instructor_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classLevel",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classlevel_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "day",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "max",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classtype_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startdate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "enddate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "availabilities",
+                    "type": "text",
+                    "sub": [
+                      {
+                        "name": "classes",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "classlevel_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classtype_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "day",
+                            "type": "number"
+                          },
+                          {
+                            "name": "endTimeDecimal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "endTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "id",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "max",
+                            "type": "number"
+                          },
+                          {
+                            "name": "optsd",
+                            "type": "text"
+                          },
+                          {
+                            "name": "startTimeDecimal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "startTimeDisplay",
+                            "type": "text"
+                          },
+                          {
+                            "name": "uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "waitlists",
+                            "type": "array",
+                            "sub": [
+                              {
+                                "name": "age",
+                                "type": "text"
+                              },
+                              {
+                                "name": "classlevel",
+                                "type": "number"
+                              },
+                              {
+                                "name": "classlevel_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "dayint",
+                                "type": "number"
+                              },
+                              {
+                                "name": "dob",
+                                "type": "date"
+                              },
+                              {
+                                "name": "endTimeDecimal",
+                                "type": "number"
+                              },
+                              {
+                                "name": "family",
+                                "type": "text"
+                              },
+                              {
+                                "name": "firstName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "fulfil_date",
+                                "type": "text"
+                              },
+                              {
+                                "name": "id",
+                                "type": "number"
+                              },
+                              {
+                                "name": "instructor",
+                                "type": "number"
+                              },
+                              {
+                                "name": "instructor_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "lastName",
+                                "type": "text"
+                              },
+                              {
+                                "name": "notes",
+                                "type": "text"
+                              },
+                              {
+                                "name": "request_date",
+                                "type": "text"
+                              },
+                              {
+                                "name": "starttimedec",
+                                "type": "number"
+                              },
+                              {
+                                "name": "student_uuid",
+                                "type": "text"
+                              },
+                              {
+                                "name": "studentid",
+                                "type": "number"
+                              },
+                              {
+                                "name": "uuid",
+                                "type": "text"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "wed",
+                            "type": "text"
+                          },
+                          {
+                            "name": "baseRate",
+                            "type": "number"
+                          },
+                          {
+                            "name": "shortName",
+                            "type": "text"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "limit",
+                        "type": "number"
+                      },
+                      {
+                        "name": "offset",
+                        "type": "number"
+                      },
+                      {
+                        "name": "last_offset",
+                        "type": "number"
+                      },
+                      {
+                        "name": "next",
+                        "type": "number"
+                      },
+                      {
+                        "name": "prev",
+                        "type": "number"
+                      },
+                      {
+                        "name": "page",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "current",
+                            "type": "number"
+                          },
+                          {
+                            "name": "total",
+                            "type": "number"
+                          },
+                          {
+                            "name": "offset",
+                            "type": "object",
+                            "sub": [
+                              {
+                                "name": "first",
+                                "type": "number"
+                              },
+                              {
+                                "name": "last",
+                                "type": "number"
+                              },
+                              {
+                                "name": "next",
+                                "type": "number"
+                              },
+                              {
+                                "name": "prev",
+                                "type": "number"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "limit",
+                        "type": "number"
+                      },
+                      {
+                        "name": "timesarray",
+                        "type": "array"
+                      }
+                    ]
+                  }
+                ],
+                "outputType": "array"
+              },
+              {
+                "name": "availabilities",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{opening_availabilities}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              },
+              {
+                "name": "availability_length",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{('Class').pluralize(availabilities.length, true)}}"
+                },
+                "meta": [],
+                "outputType": "text",
+                "output": true
+              },
+              {
+                "name": "orphaned",
+                "module": "core",
+                "action": "setvalue",
+                "options": {
+                  "value": "{{query_matching_classes.length===0}}"
+                },
+                "meta": [
+                  {
+                    "name": "uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "id",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "endTimeDecimal",
+                    "type": "number"
+                  },
+                  {
+                    "name": "isactive",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "instructor",
+                    "type": "number"
+                  },
+                  {
+                    "name": "instructor_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classLevel",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classlevel_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "day",
+                    "type": "number"
+                  },
+                  {
+                    "name": "startTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "endTimeDisplay",
+                    "type": "text"
+                  },
+                  {
+                    "name": "max",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classType",
+                    "type": "number"
+                  },
+                  {
+                    "name": "classtype_uuid",
+                    "type": "text"
+                  },
+                  {
+                    "name": "startdate",
+                    "type": "date"
+                  },
+                  {
+                    "name": "enddate",
+                    "type": "date"
+                  }
+                ],
+                "outputType": "text",
+                "output": true
+              }
+            ]
+          }
+        },
+        "output": true,
+        "meta": [
+          {
+            "name": "$index",
+            "type": "number"
+          },
+          {
+            "name": "$number",
+            "type": "number"
+          },
+          {
+            "name": "$name",
+            "type": "text"
+          },
+          {
+            "name": "$value",
+            "type": "object"
+          },
+          {
+            "name": "uuid",
+            "type": "text"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "student_uuid",
+            "type": "number"
+          },
+          {
+            "name": "classlevel_uuid",
+            "type": "number"
+          },
+          {
+            "name": "instructor_uuid",
+            "type": "number"
+          },
+          {
+            "name": "request_date",
+            "type": "date"
+          },
+          {
+            "name": "fulfil_date",
+            "type": "date"
+          },
+          {
+            "name": "dayint",
+            "type": "number"
+          },
+          {
+            "name": "starttimedec",
+            "type": "number"
+          },
+          {
+            "name": "endtimedec",
+            "type": "number"
+          },
+          {
+            "name": "notes",
+            "type": "text"
+          },
+          {
+            "name": "status",
+            "type": "text"
+          },
+          {
+            "name": "created_by",
+            "type": "text"
+          },
+          {
+            "name": "created",
+            "type": "number"
+          },
+          {
+            "name": "updated_by",
+            "type": "text"
+          },
+          {
+            "name": "updated",
+            "type": "number"
+          },
+          {
+            "name": "firstName",
+            "type": "text"
+          },
+          {
+            "name": "lastName",
+            "type": "text"
+          },
+          {
+            "name": "waitlist_availabilities",
+            "type": "array",
+            "sub": [
+              {
+                "name": "uuid",
+                "type": "text"
+              },
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "endTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "isactive",
+                "type": "boolean"
+              },
+              {
+                "name": "instructor",
+                "type": "number"
+              },
+              {
+                "name": "instructor_uuid",
+                "type": "text"
+              },
+              {
+                "name": "classLevel",
+                "type": "number"
+              },
+              {
+                "name": "classlevel_uuid",
+                "type": "text"
+              },
+              {
+                "name": "day",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "endTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "max",
+                "type": "number"
+              },
+              {
+                "name": "classType",
+                "type": "number"
+              },
+              {
+                "name": "classtype_uuid",
+                "type": "text"
+              },
+              {
+                "name": "startdate",
+                "type": "date"
+              },
+              {
+                "name": "enddate",
+                "type": "date"
+              },
+              {
+                "name": "availabilities",
+                "type": "text",
+                "sub": [
+                  {
+                    "name": "classes",
+                    "type": "array",
+                    "sub": [
+                      {
+                        "name": "classlevel_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "classtype_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "day",
+                        "type": "number"
+                      },
+                      {
+                        "name": "endTimeDecimal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "endTimeDisplay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "id",
+                        "type": "number"
+                      },
+                      {
+                        "name": "instructor_uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "max",
+                        "type": "number"
+                      },
+                      {
+                        "name": "optsd",
+                        "type": "text"
+                      },
+                      {
+                        "name": "startTimeDecimal",
+                        "type": "number"
+                      },
+                      {
+                        "name": "startTimeDisplay",
+                        "type": "text"
+                      },
+                      {
+                        "name": "uuid",
+                        "type": "text"
+                      },
+                      {
+                        "name": "waitlists",
+                        "type": "array",
+                        "sub": [
+                          {
+                            "name": "age",
+                            "type": "text"
+                          },
+                          {
+                            "name": "classlevel",
+                            "type": "number"
+                          },
+                          {
+                            "name": "classlevel_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "dayint",
+                            "type": "number"
+                          },
+                          {
+                            "name": "dob",
+                            "type": "date"
+                          },
+                          {
+                            "name": "endTimeDecimal",
+                            "type": "number"
+                          },
+                          {
+                            "name": "family",
+                            "type": "text"
+                          },
+                          {
+                            "name": "firstName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "fulfil_date",
+                            "type": "text"
+                          },
+                          {
+                            "name": "id",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor",
+                            "type": "number"
+                          },
+                          {
+                            "name": "instructor_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "lastName",
+                            "type": "text"
+                          },
+                          {
+                            "name": "notes",
+                            "type": "text"
+                          },
+                          {
+                            "name": "request_date",
+                            "type": "text"
+                          },
+                          {
+                            "name": "starttimedec",
+                            "type": "number"
+                          },
+                          {
+                            "name": "student_uuid",
+                            "type": "text"
+                          },
+                          {
+                            "name": "studentid",
+                            "type": "number"
+                          },
+                          {
+                            "name": "uuid",
+                            "type": "text"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "wed",
+                        "type": "text"
+                      },
+                      {
+                        "name": "baseRate",
+                        "type": "number"
+                      },
+                      {
+                        "name": "shortName",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "limit",
+                    "type": "number"
+                  },
+                  {
+                    "name": "offset",
+                    "type": "number"
+                  },
+                  {
+                    "name": "last_offset",
+                    "type": "number"
+                  },
+                  {
+                    "name": "next",
+                    "type": "number"
+                  },
+                  {
+                    "name": "prev",
+                    "type": "number"
+                  },
+                  {
+                    "name": "page",
+                    "type": "object",
+                    "sub": [
+                      {
+                        "name": "current",
+                        "type": "number"
+                      },
+                      {
+                        "name": "total",
+                        "type": "number"
+                      },
+                      {
+                        "name": "offset",
+                        "type": "object",
+                        "sub": [
+                          {
+                            "name": "first",
+                            "type": "number"
+                          },
+                          {
+                            "name": "last",
+                            "type": "number"
+                          },
+                          {
+                            "name": "next",
+                            "type": "number"
+                          },
+                          {
+                            "name": "prev",
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "limit",
+                    "type": "number"
+                  },
+                  {
+                    "name": "timesarray",
+                    "type": "array"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "availabilities",
+            "type": "text",
+            "sub": []
+          },
+          {
+            "name": "availability_length",
+            "type": "text",
+            "sub": []
+          },
+          {
+            "name": "orphaned",
+            "type": "text",
+            "sub": [
+              {
+                "name": "uuid",
+                "type": "text"
+              },
+              {
+                "name": "id",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "endTimeDecimal",
+                "type": "number"
+              },
+              {
+                "name": "isactive",
+                "type": "boolean"
+              },
+              {
+                "name": "instructor",
+                "type": "number"
+              },
+              {
+                "name": "instructor_uuid",
+                "type": "text"
+              },
+              {
+                "name": "classLevel",
+                "type": "number"
+              },
+              {
+                "name": "classlevel_uuid",
+                "type": "text"
+              },
+              {
+                "name": "day",
+                "type": "number"
+              },
+              {
+                "name": "startTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "endTimeDisplay",
+                "type": "text"
+              },
+              {
+                "name": "max",
+                "type": "number"
+              },
+              {
+                "name": "classType",
+                "type": "number"
+              },
+              {
+                "name": "classtype_uuid",
+                "type": "text"
+              },
+              {
+                "name": "startdate",
+                "type": "date"
+              },
+              {
+                "name": "enddate",
+                "type": "date"
+              }
+            ]
           }
         ],
         "outputType": "array"

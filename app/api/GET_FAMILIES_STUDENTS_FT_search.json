@@ -66,7 +66,7 @@
                 "options": {
                   "connection": "db",
                   "sql": {
-                    "query": "SELECT DISTINCT score,\n                MAX(score) as max_score,\n                s.uuid,\n                s.firstName,\n                s.lastName,\n                cl.name    as level,\n                s.family,\n                s.gender,\n                s.dob,\n                s.age,\n                :P1        as term\nFROM (\n         SELECT MATCH(st.firstName, st.lastName) AGAINST(:P1 IN BOOLEAN MODE) AS score,\n                st.firstName,\n                st.lastName,\n                st.classlevel_uuid,\n                st.family,\n                st.gender,\n                st.dob,\n                st.uuid,\n                st.age\n         FROM students st) AS s\n         join families f ON s.family = f.uuid\n         join guardians g on f.uuid = g.family_uuid\n         join classLevels cl on s.classlevel_uuid = cl.uuid\nWHERE s.family = :P2\nGROUP BY score, s.uuid, s.firstName, s.lastName, s.classlevel_uuid, s.family, s.gender, s.dob, s.age\nORDER BY score desc, s.firstName, s.lastName;",
+                    "query": "SELECT DISTINCT score,\n                MAX(score) as max_score,\n                s.uuid,\n                s.firstName,\n                s.lastName,\n                cl.name    as level,\n                s.family,\n                s.gender,\n                s.dob,\n                s.age,\n                cl.uuid as classlevel_uuid,\n                :P1        as term\nFROM (\n         SELECT MATCH(st.firstName, st.lastName) AGAINST(:P1 IN BOOLEAN MODE) AS score,\n                st.firstName,\n                st.lastName,\n                st.classlevel_uuid,\n                st.family,\n                st.gender,\n                st.dob,\n                st.uuid,\n                st.age\n         FROM students st) AS s\n         join families f ON s.family = f.uuid\n         join guardians g on f.uuid = g.family_uuid\n         join classLevels cl on s.classlevel_uuid = cl.uuid\nWHERE s.family = :P2\nGROUP BY score, s.uuid, s.firstName, s.lastName, s.classlevel_uuid, s.family, s.gender, s.dob, s.age\nORDER BY score desc, s.firstName, s.lastName;",
                     "params": [
                       {
                         "name": ":P1",
@@ -125,6 +125,10 @@
                   },
                   {
                     "name": "term",
+                    "type": "text"
+                  },
+                  {
+                    "name": "classlevel_uuid",
                     "type": "text"
                   }
                 ],
@@ -231,6 +235,10 @@
                   {
                     "type": "text",
                     "name": "classlevel_uuid"
+                  },
+                  {
+                    "type": "boolean",
+                    "name": "hadtrial"
                   }
                 ],
                 "outputType": "array",
@@ -537,6 +545,10 @@
                 "type": "text"
               },
               {
+                "name": "classlevel_uuid",
+                "type": "text"
+              },
+              {
                 "type": "number",
                 "name": "id"
               },
@@ -557,8 +569,8 @@
                 "name": "familyold"
               },
               {
-                "type": "text",
-                "name": "classlevel_uuid"
+                "type": "boolean",
+                "name": "hadtrial"
               }
             ]
           },

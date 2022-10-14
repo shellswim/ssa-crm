@@ -1,13 +1,24 @@
-<!-- Wappler include is="dmx-app" id="_enrolments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5TableGenerator:{},dmxFormatter:{},dmxPreloader:{}}" -->
+<!-- Wappler include is="dmx-app" id="_enrolments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5TableGenerator:{},dmxFormatter:{},dmxPreloader:{},dmxBootstrap5Popovers:{}}" -->
+<script is="dmx-flow" id="flow_waitlist_submitted" type="text/dmx-flow">{
+  run: {action: "{{sc_GET_WAITLISTS_list.load({},true)}}"}
+}</script>
+<script is="dmx-flow" id="flow_enrolment_submitted" type="text/dmx-flow">{
+  run: {action: "{{sc_GET_ENROLMENTS_list.load({},true)}}"}
+}</script>
+<%- await include('/partials/families/elements/_mod_familyDetails_createEnrolment', Object.assign({}, locals)) %>
 <%- await include('/partials/classes/_mod_editWaitlist', Object.assign({}, locals)) %>
-<!-- Wappler include id="_enrolments" appconnect="local" fontawesome_5="cdn" bootstrap5="local" jquery_35="cdn" bootstrap_icons="cdn" head-page="layouts/layout2" components="{dmxBootstrap5TableGenerator:{}}" -->
+<%- await include('/partials/classes/_mod_editEnrolment', Object.assign({}, locals)) %>
+<%- await include('/partials/families/elements/_mod_familyDetail_waitlistAvailableClasses', Object.assign({}, locals)) %>
+
 <dmx-serverconnect id="sc_GET_ENROLMENTS_list" url="/api/families/GET_ENROLMENTS_list" dmx-param:family_uuid="query.familyid" dmx-param:enrolment_timeline="sel_family_enrolment_timeline.value" dmx-param:student_uuid="sel_family_enrolment_student.value" dmx-param:enrolment_type="sel_family_enrolment_type.value" dmx-param:show_deleted="inp_hd_showdeleted.value" dmx-on:start="toggle_enrolments_loading.check()" dmx-on:done="run([{wait:{delay:600}},{run:{action:`toggle_enrolments_loading.uncheck()`}}])"></dmx-serverconnect>
 <dmx-toggle id="toggle_enrolments_loading" checked="true"></dmx-toggle>
 
 <dmx-serverconnect id="sc_GET_WAITLISTS_list" url="/api/families/GET_WAITLISTS_list" dmx-on:start="toggle_waitlists_loading.check()" dmx-on:done="run([{wait:{delay:600}},{run:{action:`toggle_waitlists_loading.uncheck()`}}])" dmx-param:status="sel_family_waitlists_status.value" dmx-param:student_uuid="sel_family_waitlist_student.value" dmx-param:family_uuid="query.familyid"></dmx-serverconnect>
+<dmx-serverconnect id="sc_cancel_waitlist" url="/api/classes/waitlist/CANCEL_waitlist" noload dmx-on:success="flow_swal_toast_colored.run({icon: 'success', title: 'Waitlist Cancelled.', timer: 5000, timerprogressbar: true});sc_GET_WAITLISTS_list.load({},true)"></dmx-serverconnect>
+<dmx-serverconnect id="sc_reopen_waitlist" url="/api/classes/waitlist/REOPEN_waitlist" noload="" dmx-on:success="flow_swal_toast_colored.run({icon: 'success', title: 'Waitlist Reopened.', timer: 5000, timerprogressbar: true});sel_family_waitlists_status.setValue('waiting')"></dmx-serverconnect>
 
 <dmx-toggle id="toggle_waitlists_loading" checked="true"></dmx-toggle>
-<main class="standard-max-width">
+<main class="large-max-width">
     <div class="row">
         <div class="col p-4 bg-white rounded-3">
             <div class="row">
@@ -58,7 +69,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col d-flex flex-row justify-content-end">
+                <div class="col-auto d-flex flex-row justify-content-end">
 
                     <button id="btn_newFamilyNote" class="btn btn-secondary mb-3" dmx-on:click="mod_familyDetails_createEnrolment.show()"><i class="fas fa-plus-circle fa-fw fa-sm me-2"></i>New Enrolment</button>
                 </div>
@@ -115,9 +126,11 @@
                         </div>
                     </div>
                     <div class="row mb-4" dmx-show="toggle_enrolments_loading.checked">
-                        <div class="col d-flex flex-row justify-content-center align-items-center">
+                        <div class="col d-flex justify-content-center align-items-center flex-column">
                             <div class="spinner-border spinner-border-lg" role="status">
                             </div>
+                            <p class="mt-2 mb-0">Loading enrolments...</p>
+
                         </div>
                     </div>
 
@@ -166,32 +179,47 @@
                                 <tr>
                                     <th class="collapse-cell"></th>
                                     <th class="collapse-cell text-center">Status</th>
-                                    <th class="collapse-cell">Request Date</th>
+                                    <th class="collapse-cell">Availabilities</th>
+                                    <th class="collapse-cell">Requested</th>
                                     <th class="collapse-cell">Student</th>
                                     <th class="collapse-cell">Day</th>
-                                    <th class="collapse-cell">Start Time</th>
-                                    <th class="collapse-cell">End Time</th>
-                                    <th class="collapse-cell">Class Level</th>
-                                    <th class="collapse-cell">Instructor</th>
+                                    <th class="collapse-cell">Start</th>
+                                    <th class="collapse-cell">End</th>
+                                    <th class="collapse-cell">Level</th>
+                                    <th class="collapse-cell">Inst.</th>
                                     <th>Notes</th>
                                 </tr>
                             </thead>
-                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_WAITLISTS_list.data.query_waitlists" id="rp_waitlists" dmx-show="sc_GET_WAITLISTS_list.data.query_waitlists.length>0">
+                            <tbody is="dmx-repeat" dmx-generator="bs5table" dmx-bind:repeat="sc_GET_WAITLISTS_list.data.query_waitlists_list" id="rp_waitlists" dmx-show="sc_GET_WAITLISTS_list.data.query_waitlists_list.length&gt;0">
                                 <tr>
                                     <td>
 
                                         <div class="dropdown">
-                                            <button id="dd_enr_actions2" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i></button>
+                                            <button id="dd_enr_actions2" class="btn dropdown-toggle change-chevron" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" dmx-bind:disabled="status==='fulfilled'"><i class="fas fa-bars"></i></button>
                                             <div class="dropdown-menu" aria-labelledby="dropdown1">
                                                 <a class="dropdown-item border-bottom" href="#" dmx-on:click="mod_edit_waitlist.sc_GET_WAITLIST_details.load({uuid: uuid});mod_edit_waitlist.show()"><i class="fas fa-pen me-2 fa-sm fa-fw"></i>Edit Waitlist</a>
-                                                <a class="dropdown-item border-bottom" href="#">
-                                                    <i class="fas fa-arrow-circle-down me-2 fa-sm fa-fw"></i>Drop Enrolment</a>
-                                                <a class="dropdown-item" href="#"><i class="fas fa-random me-2 fa-sm fa-fw"></i>Transfer Enrolment</a>
+
+                                                <a class="dropdown-item" href="#" dmx-on:click="var_waitlist_object.setValue($value);sc_WAITLIST_AVAILABLE_classes.load({class_uuids: availabilities});mod_waitlist_available_classes.show();" dmx-hide="status!=='waiting'"><i class="fas fa-check-double me-2 fa-sm fa-fw"></i>Show Available Classes</a>
+
+                                                <a class="dropdown-item border-bottom" href="#" dmx-on:click="run([{run:{action:`flow_swal_confirm.run({alerticon: \'question\', alerttitle: \'Cancel Waitlist?\', showdeny: true, denytext: \'Go Back\', showcancel: false, confirmtext: \'Cancel Waitlist\', message: \'Are you sure you want to cancel this waitlist?\'})`}},{condition:{if:`flow_swal_confirm.data.confirm`,then:{steps:{run:{action:`sc_cancel_waitlist.load({waitlist_uuid: uuid})`}}}}}])" dmx-hide="status!=='waiting'">
+                                                    <i class="fas fa-ban me-2 fa-sm fa-fw"></i>Cancel Waitlist</a>
+
+                                                <a class="dropdown-item border-bottom" href="#" dmx-on:click="run([{run:{action:`flow_swal_confirm.run({alerticon: \'question\', alerttitle: \'Reopen Waitlist?\', showdeny: true, denytext: \'Go Back\', showcancel: false, confirmtext: \'Reopen Waitlist\', message: \'Are you sure you want to reopen this waitlist?\'})`}},{condition:{if:`flow_swal_confirm.data.confirm`,then:{steps:{run:{action:`sc_reopen_waitlist.load({waitlist_uuid: uuid})`}}}}}])" dmx-hide="status!=='cancelled'">
+                                                    <i class="far fa-circle me-2 fa-sm fa-fw"></i>Reopen Waitlist</a>
+
                                             </div>
                                         </div>
                                     </td>
                                     <td dmx-text="status.capitalize()" class="text-center px-3">
                                         Active</td>
+                                    <td style="white-space: nowrap;" class="text-center">
+                                        <span class="badge fs-6 bg-info fw-400 rounded-pill clickable" dmx-show="availabilities.length&gt;0&amp;&amp;status=='waiting'" dmx-on:click="var_waitlist_object.setValue($value);sc_WAITLIST_AVAILABLE_classes.load({class_uuids: availabilities});mod_waitlist_available_classes.show();">
+                                            <i class="fas fa-check-double me-1 fa-fw"></i><span dmx-text="availability_length">2 Classes</span>
+                                        </span>
+                                        <span class="badge fs-6 bg-danger fw-400 rounded-pill clickable" dmx-show="orphaned" dmx-bs-popover="'&lt;p&gt;An orphaned waitlist has no classes that it can ever be matched with.&lt;/p&gt;&lt;p&gt;E.g. Instructor has no classes with the current level and times&lt;/p&gt;&lt;p&gt;Please check available classes edit waitlist accordingly.&lt;/p&gt;'" dmx-bind:popover-title="'Waitlist Orphaned'" data-bs-trigger="hover focus" data-bs-html="true">
+                                            <i class="fas pdl-warning-white me-1 fa-fw"></i><span>Orphaned</span>
+                                        </span>
+                                    </td>
                                     <td dmx-text="request_date.formatDate(appSettings.localization_puddle_dateformat)" style="white-space: nowrap;">30/09/2022</td>
                                     <td style="white-space: nowrap;" dmx-text="firstName+' '+lastName">Jane Doe</td>
                                     <td style="white-space: nowrap;" dmx-text="appSettings.days_array[dayint]">Monday</td>
@@ -201,11 +229,11 @@
 
 
                                     <td dmx-text="appSettings.instructorsById[instructor_uuid].trunc_name" class="text-nowrap">Kate B.</td>
-                                    <td dmx-text="notes">
+                                    <td dmx-text="notes||'-'">
                                         -</td>
                                 </tr>
                             </tbody>
-                            <tbody dmx-hide="sc_GET_WAITLISTS_list.data.query_waitlists.length>0">
+                            <tbody dmx-hide="sc_GET_WAITLISTS_list.data.query_waitlists_list.length&gt;0">
                                 <tr>
                                     <td colspan="12">No waitlists could be found. You may need to adjust your filters.</td>
                                 </tr>
@@ -217,9 +245,10 @@
             <div class="row" dmx-show="toggle_waitlists_loading.checked">
                 <div class="col">
                     <div class="row">
-                        <div class="col d-flex flex-row justify-content-center align-items-center">
+                        <div class="col d-flex justify-content-center align-items-center flex-column">
                             <div class="spinner-border spinner-border-lg" role="status">
                             </div>
+                            <p class="mt-2 mb-0">Loading waitlists...</p>
                         </div>
                     </div>
                 </div>

@@ -5,7 +5,11 @@ module.exports = {
         return arr.lastIndexOf(val);
     },
     push: function(val, push) {
-        return moment(val).startOf('week');
+        let arr = val;
+        if(Array.isArray(val)) { 
+            arr.push(push);
+        }
+        return arr;
     },
     toNumbers: function(val) {
         let arr;
