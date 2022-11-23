@@ -20,7 +20,7 @@ exports.tuitioncalc = async function (options) {
     // throw error if connection not found
     if (!db) throw new Error(`Connection "${connection}" doesn't exist.`);
     //////////// End database connection //////////
-
+    debugger;
     /** Dates variables setup */
     let startofcalendarmonth = DateTime.fromISO(options.monthtoprocess).startOf('month').startOf('week');
     let endofcalendarmonth = DateTime.fromISO(options.monthtoprocess).endOf('month').endOf('week');

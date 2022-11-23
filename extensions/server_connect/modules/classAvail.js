@@ -547,7 +547,8 @@ exports.classAvail = async function (options) {
                     OR w.instructor_uuid IS NULL) 
                 AND w.fulfil_date IS NULL 
                 AND (w.classlevel_uuid = '${c.classlevel_uuid}'
-                    OR w.classlevel_uuid IS NULL))
+                    OR w.classlevel_uuid IS NULL)
+                AND w.status = 'waiting')
             ORDER BY w.request_date
         `));
         if(Array.isArray(waitlisted)) {
