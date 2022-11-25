@@ -28,7 +28,8 @@ exports.tuitioncalc_monthgen = async function (options) {
 
     let charges = await get_charges(startofmonth);
 
-    
+    debugger;
+
     if (Array.isArray(charges) && charges.length > 0) {
         chargearray = charges;
 
@@ -36,10 +37,9 @@ exports.tuitioncalc_monthgen = async function (options) {
         if (!charges.includes(startofmonth.toISODate())) {
             charges.push(startofmonth.toISODate());
         }
-
         // Add missing months && add next month if chargeahead is enabled.
-        let monthgoal = DateTime.now().startOf('month').toISODate();
-        if (chargeahead && !chargearray.includes(DateTime.fromISO(monthgoal).plus({months: 1}).toISODate())) {
+        let monthgoal = DateTime.now().startOf('month');
+        if (chargeahead && !chargearray.includes(monthgoal.plus({months: 1}).toISODate())) {
             monthgoal = DateTime.fromISO(monthgoal).plus({months: 1}).toISODate();
             chargearray.push(monthgoal);
         }
@@ -65,12 +65,12 @@ exports.tuitioncalc_monthgen = async function (options) {
         }
     } else {
         let months = [startofmonth.toISODate()];
-        if (chargeahead && startofmonth.month <= DateTime.now().plus({
-                months: 1
-            }).month) {
-            months.push(startofmonth.plus({
-                months: 1
-            }).toISODate());
+        if (chargeahead) {
+            if(startofmonth.month == DateTime.now().month) {
+                months.push(startofmonth.plus({
+                    months: 1
+                }).toISODate());
+            }
         }
         chargearray = months;
     }

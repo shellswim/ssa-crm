@@ -21,28 +21,29 @@
             <section>
                 <div class="row g-0 border-bottom px-4 py-3 d-flex flex-column">
                     <div class="col">
-                        <div class="row">
+                        <div class="row flex-wrap-reverse">
                             <div class="d-flex justify-content-start col flex-row align-items-center">
-                                <p class="d-flex align-items-center me-3 bg-light rounded-pill pe-3 fw-900 text-nowrap mb-0 lh-sm" dmx-class:bg-danger="!classDetailsModal.dd_classdetails.data.details.nextavailable_permanent" dmx-class:bg-light="classDetailsModal.dd_classdetails.data.details.nextavailable_permanent"><span class="badge bg-black py-1 px-3  me-2 rounded-pill fs-6">
+                                <p class="d-flex align-items-center me-3 fw-900 text-nowrap mb-0 lh-sm">
+                                    <span class="fs-6 me-2">
                                         <i class="fas fa-check-circle fa-fw text-active-light"></i>
                                         <i class="fas fa-question-circle fa-fw text-trial-light"></i>
                                         Next Permanent: </span>
-                                    <span dmx-html="classDetailsModal.dd_classdetails.data.details.nextavailable_permanent?classDetailsModal.dd_classdetails.data.details.nextavailable_permanent.formatDate(appSettings.localization_puddle_dateformat):'&lt;span class=&quot;fw-900 text-white&quot;&gt;FULL&lt;/span&gt;'" class="lh-1">20/10/2022</span>
+                                    <span dmx-html="classDetailsModal.dd_classdetails.data.details.nextavailable_permanent?classDetailsModal.dd_classdetails.data.details.nextavailable_permanent.formatDate(appSettings.localization_puddle_dateformat):'&lt;span class=&quot;fw-900 text-danger&quot;&gt;FULL&lt;/span&gt;'">20/10/2022</span>
                                 </p>
 
-                                <p class="d-flex align-items-center me-3 bg-light rounded-pill pe-3 fw-900 text-nowrap mb-0 lh-sm" dmx-class:bg-light="classDetailsModal.dd_classdetails.data.details.makeup_response.code==100" dmx-class:bg-danger="classDetailsModal.dd_classdetails.data.details.makeup_response.code!=100">
-                                    <span class="badge bg-black py-1 px-3 me-2 rounded-pill fs-6">
+                                <p class="d-flex align-items-center fw-900 text-nowrap mb-0 lh-sm">
+                                    <span class="py-1 ps-3 me-2 rounded-pill fs-6">
                                         <i class="fas fa-arrow-alt-circle-up fa-fw text-makeup-light"></i>
                                         <i class="fas fa-bookmark fa-fw text-casual-light"></i>
                                         Next Temporary:
                                     </span>
-                                    <span dmx-html="classDetailsModal.dd_classdetails.data.details.makeup_response.code==100?classDetailsModal.dd_classdetails.data.details.makeup_availabilities[0].date.formatDate(appSettings.localization_puddle_dateformat):classDetailsModal.dd_classdetails.data.details.makeup_response.code===102?'&lt;span class=&quot;fw-900 text-white&quot;&gt;Too Far In Future&lt;/span&gt;':'&lt;span class=&quot;fw-900 text-white&quot;&gt;FULL&lt;/span&gt;'" class="lh-1">
+                                    <span dmx-html="classDetailsModal.dd_classdetails.data.details.makeup_response.code==100?classDetailsModal.dd_classdetails.data.details.makeup_availabilities[0].date.formatDate(appSettings.localization_puddle_dateformat):classDetailsModal.dd_classdetails.data.details.makeup_response.code===102?'&lt;span class=&quot;fw-900 text-danger&quot;&gt;Too Far In Future&lt;/span&gt;':'&lt;span class=&quot;fw-900 text-danger&quot;&gt;FULL&lt;/span&gt;'">
                                         20/06/2022
                                     </span>
                                 </p>
 
                             </div>
-                            <div class="d-flex flex-row justify-content-start col-auto">
+                            <div class="d-flex flex-row justify-content-start col-auto mb-2">
                                 <div class="row flex-nowrap align-items-center">
                                     <div class="col-auto"><button id="btn_createWaitlist" class="btn btn-waitlist text-nowrap" dmx-on:click="mod_familySearch.var_searchtype.setValue('waitlist');mod_familySearch.show()"><i class="fas fa-history fa-fw me-2"></i>Create Waitlist</button></div>
                                     <div class="col-auto"><button id="btn_createEnrolment" class="btn btn-secondary text-nowrap" dmx-on:click="run({condition:{if:`!dd_classdetails.data.details.outofrange`,then:{steps:[{assign:{value:`(!dd_classdetails.data.details.nextavailable_permanent &amp;&amp; dd_classdetails.data.details.makeup_response.code !== 100)?false:true`,name:'var_availabilities'}},{assign:{value:`dd_classdetails.data.waitlists.length&gt;0`,name:'var_waitlists'}},{assign:{value:`true`,name:'var_continue'}},{condition:{if:`var_availabilities===false`,then:{steps:[{assign:{value:'&lt;p&gt;You\'re about to overbook this class.&lt;br&gt; Are you sure you want to continue?&lt;/p&gt;',name:'var_overbook_message'}},{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'OVERBOOKING WARNING\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'OVERBOOK\', message: var_overbook_message})`}},{condition:{if:`!flow_swal_confirm.data.confirm`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_waitlists===true&amp;&amp;var_continue===true`,then:{steps:[{assign:{value:'&lt;p&gt;This class has waitlisted students.&lt;br&gt; Are you sure you want to enrol this student before the waitlisted students?&lt;/p&gt;',name:'var_waitlist_message'}},{run:{action:`flow_swal_confirm.run({alerticon: \'warning\', alerttitle: \'Waitlists Active\', showdeny: true, denytext: \'Cancel\', showcancel: false, confirmtext: \'Continue Anyway\', message: var_waitlist_message})`}},{condition:{if:`flow_swal_confirm.data.confirm===false`,then:{steps:{assign:{value:`false`,name:'var_continue'}}}}}]}}},{condition:{if:`var_continue === true`,then:{steps:[{condition:{if:`var_availabilities===false`,then:{steps:{run:{action:`classDetailsModal.makeup_enroltype_toggle.disable();classDetailsModal.casual_enroltype_toggle.disable()`}}}}},{run:{action:`dd_classdetails_searchenrol.select(dd_classdetails.data.uuid);var_newenrol_startdate.setValue(dd_classdetails.data.details.nextavailable_permanent||dateAndTime_days.datetime.formatDate(\'yyyy-MM-dd\'))`}},{run:{action:`classDetailsModal.var_classdetails_page.setValue(2)`,disabled:true}},{run:{action:`mod_familySearch.show()`}}]}}}]}}})" dmx-bind:disabled="dd_classdetails.data.details.outofrange"><i class="fas fa-plus-circle fa-fw me-2"></i>
@@ -69,6 +70,15 @@
                 <dmx-serverconnect id="sc_GET_STUDENT_details" url="/api/families/student/GET_STUDENT_details"></dmx-serverconnect>
                 <dmx-serverconnect id="sc_cancel_waitlist" url="/api/classes/waitlist/CANCEL_waitlist" dmx-param:waitlist_uuid="" dmx-on:success="flow_waitlist_submitted.run();flow_swal_toast_colored.run({icon: 'success', title: 'Waitlist cancelled.', timer: 5000, timerprogressbar: true})" noload></dmx-serverconnect>
 
+                <section class="mt-n3 mb-3" dmx-show="dd_classdetails.data.enddate">
+                    <div class="row g-0">
+                        <div class="col rounded-3 bg-danger text-white px-3 py-2">
+                            <h6 class="mb-0 fw-800">
+                                <i class="fas pdl-warning-white fa-fw me-2"></i>Please be advised, this class ends on {{dd_classdetails.data.enddate.formatDate(appSettings.localization_puddle_dateformat)}}.
+                            </h6>
+                        </div>
+                    </div>
+                </section>
                 <section class="p-4 bg-white rounded-3" dmx-show="var_classdetails_page.value==1">
                     <div class="row mb-3 g-0" id="cr_outofrange_false_enrolerror" is="dmx-if" dmx-bind:condition="dd_classdetails.data.details.outofrange">
                         <div class="col p-4 border rounded-3">

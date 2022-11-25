@@ -4,6 +4,7 @@ const _ = require('underscore');
 const crypto = require('crypto');
 const http = require('http');
 const https = require('https');
+const e = require('express');
 
 exports.tuitioncharge = async function (options) {
 
@@ -144,11 +145,36 @@ exports.tuitioncharge = async function (options) {
                 return `'` + i + `'`
             }).toString();            
         }
+
+        // Get charge IDs (not uuids) for logs.
+        let charge_ids = dbClient(await db.raw(`
+            SELECT ce.id
+            FROM charges_enrolments ce
+            WHERE ce.uuid NOT IN(${arr === null ? '\'\'' : arr}) AND ce.charge_uuid = '${fcuuid}';
+        `));
+
         await db.raw(`
             DELETE
             FROM charges_enrolments ce
             WHERE ce.uuid NOT IN(${arr === null ? '\'\'' : arr}) AND ce.charge_uuid = '${fcuuid}';
         `);
+
+        await db.raw(`
+            INSERT INTO family_logs (
+                uuid, family_uuid, log_type, log_category, logged_at, logged_by, ip_address, log
+            )
+            VALUES (
+                '${'flo_' + (crypto.randomUUID()).replaceAll('-', '')}',
+                '${family_uuid}',
+                'deleted',
+                'Charge',
+                ${DateTime.now().toMillis()},
+                '${user_fullname}',
+                '${ip_address}',
+                'Deleted enrolment charges (${charge_ids.map(c => { return c.id }).join(', ')}) due to a change in enrolment.'
+            )
+        `)
+
     }
 
     async function familycharge_insert(d) {
