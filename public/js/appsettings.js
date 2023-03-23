@@ -188,6 +188,35 @@ function appSettingsObject() {
         { 'dayint': 7, 'dayname': 'Sunday' }
     ]
 
+    // Notes object
+    s['notes'] = {
+        1: {
+            'priority': 'lowest',
+            'bgcolour': '#def7d4',
+            'textcolour': '#267306'
+        },
+        2: {
+            'priority': 'low',
+            'bgcolour': '#a0e086',
+            'textcolour': '#267306'
+        },
+        3: {
+            'priority': 'medium',
+            'bgcolour': '#fab733',
+            'textcolour': '#2e0802'
+        },
+        4: {
+            'priority': 'high',
+            'bgcolour': '#FF4E11',
+            'textcolour': '#ffffff'
+        },
+        5: {
+            'priority': 'critical',
+            'bgcolour': '#FF0D0D',
+            'textcolour': '#ffffff'
+        },
+    }
+
     //Set appSettings
     dmx.app.set('appSettings', s);
 }
